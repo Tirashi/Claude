@@ -110,6 +110,14 @@ Free Game Assets n'a pas de chasseurs : ses plus petits vaisseaux sont les corve
 | Repérés, non essayés | | ad-sounddesign (4,99 $), Void Fleet (5,99 $), Kenney Space Kit (CC0, style plus jouet) | |
 Planche : `chasseurs-proposes.png` (scratchpad, envoyée à l'utilisateur). Outils d'essai : `essai_chasseurs/page.html` et `rendre.js` (scratchpad), à ranger dans `outils/` si on les garde.
 
+## Choix des chasseurs dans le hangar (17/11)
+À la demande de l'utilisateur, les 47 candidats sont dans le hangar de la maquette : 35 polyyai, 3 polyhangar (Kestrel, Anvil, Arrowhead) et 9 mehrasaur. Ils sont repeints au chargement (`repeint()`) en bleu pour le joueur et en rouge pour les ennemis.
+- Chaque ligne du hangar a deux boutons : le nom, pour **piloter** l'appareil, et **ENNEMI**, pour l'ajouter aux chasseurs ennemis (`localStorage` `escadrille.ennemis`).
+- En haut, un résumé « TOI : … / ENNEMIS : … » que l'utilisateur pourra recopier pour donner sa sélection.
+- Les bombardiers restent les corvettes et les frégates rouges.
+- Orientation : polyyai retournés de 180° ; polyhangar et mehrasaur dans le bon sens.
+- Poids : textures en 128 px sans lissage, géométrie quantifiée (`conversion/quantifie.py`, extension KHR_mesh_quantization, remise en coordonnées d'origine au chargement par `dequantifie()`). 3 gros vaisseaux qui ne servaient pas sont retirés. La page pèse 14 Mo (plafond : 16 Mo). Une fois le choix fait, on ne gardera que les modèles retenus.
+
 ## Licences à régler avant le jeu
 - **monogon** : réglé, tous retirés.
 - **niko** : réglé, retiré.

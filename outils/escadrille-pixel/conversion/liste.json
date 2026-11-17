@@ -35,13 +35,6 @@
   "pack": "fga2"
  },
  {
-  "cle": "fga_croiseur3",
-  "nom": "CROISEUR 3",
-  "f": "PACKS/fga2/x_Battle_SpaceShip/Light cruiser_03.fbx",
-  "tex": "PACKS/fga2/x_Battle_SpaceShip/Texture/T_Spase_blue.png",
-  "pack": "fga2"
- },
- {
   "cle": "fga_destroyer4",
   "nom": "DESTROYER 4",
   "f": "PACKS/fga2/x_Battle_SpaceShip/Destroyer_04.fbx",
@@ -53,20 +46,6 @@
   "nom": "CROISEUR 4",
   "f": "PACKS/fga2/x_Battle_SpaceShip/Light cruiser_04.fbx",
   "tex": "PACKS/fga2/x_Battle_SpaceShip/Texture/T_Spase_64.png",
-  "pack": "fga2"
- },
- {
-  "cle": "fga_destroyer5",
-  "nom": "DESTROYER 5",
-  "f": "PACKS/fga2/x_Battle_SpaceShip/Destroyer_05.fbx",
-  "tex": "PACKS/fga2/x_Battle_SpaceShip/Texture/T_Spase_64.png",
-  "pack": "fga2"
- },
- {
-  "cle": "fga_croiseur5",
-  "nom": "CROISEUR 5",
-  "f": "PACKS/fga2/x_Battle_SpaceShip/Light cruiser_05.fbx",
-  "tex": "PACKS/fga2/x_Battle_SpaceShip/Texture/T_Spase_blue.png",
   "pack": "fga2"
  },
  {
@@ -173,5 +152,287 @@
   "f": "PACKS/fga/x_Free_Battle_Spaceship_3D_Models/Frigate_05.fbx",
   "tex": "PACKS/fga/x_Free_Battle_Spaceship_3D_Models/Texture/T_Spase_64.png",
   "pack": "fga"
+ },
+ {
+  "cle": "py1",
+  "nom": "POLYYAI 1",
+  "f": "PACKS/polyyai/x/1.glb",
+  "pack": "polyyai"
+ },
+ {
+  "cle": "py2",
+  "nom": "POLYYAI 2",
+  "f": "PACKS/polyyai/x/2.glb",
+  "pack": "polyyai"
+ },
+ {
+  "cle": "py3",
+  "nom": "POLYYAI 3",
+  "f": "PACKS/polyyai/x/3.glb",
+  "pack": "polyyai"
+ },
+ {
+  "cle": "py4",
+  "nom": "POLYYAI 4",
+  "f": "PACKS/polyyai/x/4.glb",
+  "pack": "polyyai"
+ },
+ {
+  "cle": "py5",
+  "nom": "POLYYAI 5",
+  "f": "PACKS/polyyai/x/5.glb",
+  "pack": "polyyai"
+ },
+ {
+  "cle": "py6",
+  "nom": "POLYYAI 6",
+  "f": "PACKS/polyyai/x/6.glb",
+  "pack": "polyyai"
+ },
+ {
+  "cle": "py7",
+  "nom": "POLYYAI 7",
+  "f": "PACKS/polyyai/x/7.glb",
+  "pack": "polyyai"
+ },
+ {
+  "cle": "py8",
+  "nom": "POLYYAI 8",
+  "f": "PACKS/polyyai/x/8.glb",
+  "pack": "polyyai"
+ },
+ {
+  "cle": "py9",
+  "nom": "POLYYAI 9",
+  "f": "PACKS/polyyai/x/9.glb",
+  "pack": "polyyai"
+ },
+ {
+  "cle": "py10",
+  "nom": "POLYYAI 10",
+  "f": "PACKS/polyyai/x/10.glb",
+  "pack": "polyyai"
+ },
+ {
+  "cle": "py11",
+  "nom": "POLYYAI 11",
+  "f": "PACKS/polyyai/x/11.glb",
+  "pack": "polyyai"
+ },
+ {
+  "cle": "py12",
+  "nom": "POLYYAI 12",
+  "f": "PACKS/polyyai/x/12.glb",
+  "pack": "polyyai"
+ },
+ {
+  "cle": "py13",
+  "nom": "POLYYAI 13",
+  "f": "PACKS/polyyai/x/13.glb",
+  "pack": "polyyai"
+ },
+ {
+  "cle": "py14",
+  "nom": "POLYYAI 14",
+  "f": "PACKS/polyyai/x/14.glb",
+  "pack": "polyyai"
+ },
+ {
+  "cle": "py15",
+  "nom": "POLYYAI 15",
+  "f": "PACKS/polyyai/x/15.glb",
+  "pack": "polyyai"
+ },
+ {
+  "cle": "py16",
+  "nom": "POLYYAI 16",
+  "f": "PACKS/polyyai/x/16.glb",
+  "pack": "polyyai"
+ },
+ {
+  "cle": "py17",
+  "nom": "POLYYAI 17",
+  "f": "PACKS/polyyai/x/17.glb",
+  "pack": "polyyai"
+ },
+ {
+  "cle": "py18",
+  "nom": "POLYYAI 18",
+  "f": "PACKS/polyyai/x/18.glb",
+  "pack": "polyyai"
+ },
+ {
+  "cle": "py19",
+  "nom": "POLYYAI 19",
+  "f": "PACKS/polyyai/x/19.glb",
+  "pack": "polyyai"
+ },
+ {
+  "cle": "py20",
+  "nom": "POLYYAI 20",
+  "f": "PACKS/polyyai/x/20.glb",
+  "pack": "polyyai"
+ },
+ {
+  "cle": "py21",
+  "nom": "POLYYAI 21",
+  "f": "PACKS/polyyai/x/21.glb",
+  "pack": "polyyai"
+ },
+ {
+  "cle": "py22",
+  "nom": "POLYYAI 22",
+  "f": "PACKS/polyyai/x/22.glb",
+  "pack": "polyyai"
+ },
+ {
+  "cle": "py23",
+  "nom": "POLYYAI 23",
+  "f": "PACKS/polyyai/x/23.glb",
+  "pack": "polyyai"
+ },
+ {
+  "cle": "py24",
+  "nom": "POLYYAI 24",
+  "f": "PACKS/polyyai/x/24.glb",
+  "pack": "polyyai"
+ },
+ {
+  "cle": "py25",
+  "nom": "POLYYAI 25",
+  "f": "PACKS/polyyai/x/25.glb",
+  "pack": "polyyai"
+ },
+ {
+  "cle": "py26",
+  "nom": "POLYYAI 26",
+  "f": "PACKS/polyyai/x/26.glb",
+  "pack": "polyyai"
+ },
+ {
+  "cle": "py27",
+  "nom": "POLYYAI 27",
+  "f": "PACKS/polyyai/x/27.glb",
+  "pack": "polyyai"
+ },
+ {
+  "cle": "py28",
+  "nom": "POLYYAI 28",
+  "f": "PACKS/polyyai/x/28.glb",
+  "pack": "polyyai"
+ },
+ {
+  "cle": "py29",
+  "nom": "POLYYAI 29",
+  "f": "PACKS/polyyai/x/29.glb",
+  "pack": "polyyai"
+ },
+ {
+  "cle": "py30",
+  "nom": "POLYYAI 30",
+  "f": "PACKS/polyyai/x/30.glb",
+  "pack": "polyyai"
+ },
+ {
+  "cle": "py31",
+  "nom": "POLYYAI 31",
+  "f": "PACKS/polyyai/x/31.glb",
+  "pack": "polyyai"
+ },
+ {
+  "cle": "py32",
+  "nom": "POLYYAI 32",
+  "f": "PACKS/polyyai/x/32.glb",
+  "pack": "polyyai"
+ },
+ {
+  "cle": "py33",
+  "nom": "POLYYAI 33",
+  "f": "PACKS/polyyai/x/33.glb",
+  "pack": "polyyai"
+ },
+ {
+  "cle": "py34",
+  "nom": "POLYYAI 34",
+  "f": "PACKS/polyyai/x/34.glb",
+  "pack": "polyyai"
+ },
+ {
+  "cle": "py35",
+  "nom": "POLYYAI 35",
+  "f": "PACKS/polyyai/x/35.glb",
+  "pack": "polyyai"
+ },
+ {
+  "cle": "ph_kestrel",
+  "nom": "KESTREL",
+  "f": "PACKS/polyhangar/x/Polyhangar_04_Spaceships/01_kestrel_interceptor.glb",
+  "pack": "polyhangar"
+ },
+ {
+  "cle": "ph_anvil",
+  "nom": "ANVIL",
+  "f": "PACKS/polyhangar/x/Polyhangar_04_Spaceships/06_anvil_bomber.glb",
+  "pack": "polyhangar"
+ },
+ {
+  "cle": "ph_arrowhead",
+  "nom": "ARROWHEAD",
+  "f": "PACKS/polyhangar/x/Polyhangar_04_Spaceships/07_arrowhead_courier.glb",
+  "pack": "polyhangar"
+ },
+ {
+  "cle": "mh1",
+  "nom": "MEHRASAUR 1",
+  "f": "PACKS/mehrasaur/x/dist/obj_mtl/ship1.obj",
+  "pack": "mehrasaur"
+ },
+ {
+  "cle": "mh2",
+  "nom": "MEHRASAUR 2",
+  "f": "PACKS/mehrasaur/x/dist/obj_mtl/ship2.obj",
+  "pack": "mehrasaur"
+ },
+ {
+  "cle": "mh3",
+  "nom": "MEHRASAUR 3",
+  "f": "PACKS/mehrasaur/x/dist/obj_mtl/ship3.obj",
+  "pack": "mehrasaur"
+ },
+ {
+  "cle": "mh4",
+  "nom": "MEHRASAUR 4",
+  "f": "PACKS/mehrasaur/x/dist/obj_mtl/ship4.obj",
+  "pack": "mehrasaur"
+ },
+ {
+  "cle": "mh5",
+  "nom": "MEHRASAUR 5",
+  "f": "PACKS/mehrasaur/x/dist/obj_mtl/ship5.obj",
+  "pack": "mehrasaur"
+ },
+ {
+  "cle": "mh6",
+  "nom": "MEHRASAUR 6",
+  "f": "PACKS/mehrasaur/x/dist/obj_mtl/ship6.obj",
+  "pack": "mehrasaur"
+ },
+ {
+  "cle": "mh7",
+  "nom": "MEHRASAUR 7",
+  "f": "PACKS/mehrasaur/x/dist/obj_mtl/ship7.obj",
+  "pack": "mehrasaur"
+ },
+ {
+  "cle": "mh8",
+  "nom": "MEHRASAUR 8",
+  "f": "PACKS/mehrasaur/x/dist/obj_mtl/ship8.obj",
+  "pack": "mehrasaur"
+ },
+ {
+  "cle": "mh9",
+  "nom": "MEHRASAUR 9",
+  "f": "PACKS/mehrasaur/x/dist/obj_mtl/ship9.obj",
+  "pack": "mehrasaur"
  }
 ]
