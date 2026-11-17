@@ -94,6 +94,7 @@ button.btn.construire{bottom:96px;background:#efe3c8 var(--papier) center/cover;
 <div class="choixdir" role="group" aria-label="Direction">
   <button id="dirA" aria-pressed="true">A · Encre</button><button id="dirB" aria-pressed="false">B · Pixel</button>
 </div>
+<div class="choixdir" id="varPays" role="group" aria-label="Carte du pays"><button data-v="cadastre" aria-pressed="true">1 · Cadastre</button><button data-v="epure" aria-pressed="false">2 · Épurée</button><button data-v="vignettes" aria-pressed="false">3 · Vignettes</button></div>
 <div class="tel" id="tel">
   <canvas id="c" aria-label="Carte du jeu"></canvas>
   <div class="hud haut">
@@ -143,6 +144,9 @@ const BATS = {
   weaving: { nom: "Tissage", cout: 110, delai: 3, produit: "14 tissu" }, caserne: { nom: "Caserne", cout: 60, delai: 2, produit: "1 régiment" }
 };
 const COUT_DEFRICHER = 70;
+// 17/11 : trois versions de la carte du pays (cadastre, carte épurée, vignettes) ; couleur de chaque région
+let variante = "cadastre"; const ZONES = [];
+const RCOUL = { plaine: [205, 172, 64], collines: [138, 112, 92], vallee: [92, 150, 86], bourg: [184, 92, 108] };
 let tour = 12, or = 486, tailleCapitale = 3, mode = "encre";
 const ENCRE = [58, 42, 28], ROUGE = "#9b2a1f";
 
@@ -283,10 +287,10 @@ function rendu(B, px, net, pays){
     else { const id = nat[kk], col = NATIONS[IDS[id]].coul, df = dFront[kk];
       let a = 0.13 + 0.28 * Math.max(0, 1 - df / (net ? 3 : 9 * s));          // lavis plus soutenu le long des frontières
       if (pays && id !== 0){ a *= 0.5; mix([120, 110, 95], 0.18); if ((i + j) % (net ? 6 : Math.round(7 * s)) === 0) mix(ENCRE, net ? 0.1 : 0.18); }   // l'étranger hachuré
-      if (pays && id === 0) a *= 0.7;
+      if (pays && id === 0){ a = 0; mix(RCOUL[RIDS[reg[kk]]], 0.24 + 0.22 * Math.max(0, 1 - dReg[kk] / (net ? 3 : 10 * s))); }
       mix(col, a);
       if (df <= epFront && (Math.floor((i + j) / (net ? 2 : 5 * s)) % 2 === 0)) mix(ENCRE, 0.85);      // frontière en pointillés
-      if (pays && reg[kk] >= 0 && dReg[kk] <= epFront * 0.8 && (Math.floor((i + j) / (net ? 1 : 3 * s)) % 3 === 0)) mix(ENCRE, 0.7); // limites de régions
+      if (pays && reg[kk] >= 0 && dReg[kk] <= epFront * 1.5 && (Math.floor((i + j) / (net ? 2 : 6 * s)) % 2 === 0)) mix(ENCRE, 0.85); // limites de régions
       if (dCote[kk] <= epCote) mix(ENCRE, 0.95); }                                                    // le trait de côte
     if (net){ r = Math.round(r / 12) * 12; g = Math.round(g / 12) * 12; b = Math.round(b / 12) * 12; }
     p[q] = r; p[q + 1] = g; p[q + 2] = b; p[q + 3] = 255; }
@@ -304,6 +308,7 @@ function rendu(B, px, net, pays){
     const jx = x + (hache(Math.round(x * 9), Math.round(y * 9), 41) - .5) * pas * .8, jy = y + (hache(Math.round(x * 9), Math.round(y * 9), 42) - .5) * pas * .8;
     if (champ(jx, jy) < 0.08 || Object.values(NATIONS).some(N => Math.hypot(N.graine[0] - jx, N.graine[1] - jy) < (pays ? 1.4 : 1.1))) continue;
     if (presRoute(jx, jy, pays ? 0.35 : 0.45) || (pays && estLot(jx, jy, 0.75))) continue;
+    if (pays && nationEn(jx, jy) === 0 && hache(Math.round(jx * 5), Math.round(jy * 5), 46) > (montagneEn(jx, jy) ? .55 : .2)) continue;   // pays épuré
     if (montagneEn(jx, jy)) dec.push([jx, jy, "mount" + (1 + Math.floor(hache(Math.round(jx * 7), Math.round(jy * 7), 43) * 10)), pays ? 1.1 : 1.45]);
     else if (foretEn(jx, jy) && (!pays || bruit(jx / 3.2, jy / 3.2, 11) > 0.6)){ const pin = ROCHEUX.has(IDS[nationEn(jx, jy)]) || bruit(jx / 4, jy / 4, 44) > .5;
       const v = pin ? ["pine1", "pine3"] : ["tree1", "tree4", "tree6", "tree7", "tree8"];
@@ -339,6 +344,7 @@ const ecran = (x, y) => { const v = vue(); return [(x - cam.x) * cam.z + v.w / 2
 function frame(){
   const d = window.devicePixelRatio || 1, net = mode === "pixel", Rm = R[mode][carte], S = SPR[mode], v = vue();
   g.setTransform(d, 0, 0, d, 0, 0); g.imageSmoothingEnabled = !net; g.fillStyle = "#3b2c1f"; g.fillRect(0, 0, v.w, v.h);
+  if (carte === "pays" && variante !== "epure"){ planche(S, net, v); requestAnimationFrame(frame); return; }
   // la carte
   const [ax, ay] = ecran(Rm.B.x0, Rm.B.y0); g.drawImage(Rm.c, Math.round(ax), Math.round(ay), Math.round((Rm.B.x1 - Rm.B.x0) * cam.z), Math.round((Rm.B.y1 - Rm.B.y0) * cam.z));
   const sprite = (img, x, y, taille, bas, a, miroir) => { const k = taille * cam.z / Math.max(img.width, img.height), w = img.width * k, h = img.height * k, [X, Y] = ecran(x, y);
@@ -347,14 +353,18 @@ function frame(){
   if (carte === "monde"){ for (const id of IDS){ const N = NATIONS[id], [x, y] = N.graine;
       papierRond(x, y - .35, 0.85); sprite(id === "joueur" || N.grande ? S.ville : S.village, x, y + .25, id === "joueur" || N.grande ? 1.25 : 0.95, true); } }
   else { const [x, y] = CAP; papierRond(x, y - .5, .9); sprite(S.capitale, x, y + .3, 1.7, true);
-    MAISONS.slice(0, tailleCapitale).forEach(([dx, dy]) => sprite(S.maison, x + dx, y + dy, 0.42, true)); }
+    MAISONS.slice(0, tailleCapitale).forEach(([dx, dy]) => sprite(S.maison, x + dx, y + dy, 0.42, true)); fumee(...ecran(x + .3, y - 1.2), 1, 9);
+    // des passants sur les chemins de la capitale aux régions
+    RIDS.forEach((r, k) => { const [cx, cy] = CENTRES[r], mx = (CAP[0] + cx) / 2 + .6, my = (CAP[1] + cy) / 2 - .4;
+      for (const dec0 of [0, .5]){ let t = (performance.now() / 9000 + k * .27 + dec0) % 2; if (t > 1) t = 2 - t;
+        const px0 = (1 - t) ** 2 * CAP[0] + 2 * (1 - t) * t * mx + t * t * cx, py0 = (1 - t) ** 2 * CAP[1] + 2 * (1 - t) * t * my + t * t * cy; passant(...ecran(px0, py0), cam.z / 60); } }); }
   // emplacements et bâtiments
   if (carte === "pays") for (const r of RIDS) REGIONS[r].bat.forEach((b, i) => { const [x, y] = LOTS[r][i];
     if (!b){ const t = performance.now() / 500, k = 1 + .06 * Math.sin(t + i), sel = lotChoisi && lotChoisi[0] === r && lotChoisi[1] === i;
       const [X, Y] = ecran(x, y - .3); g.strokeStyle = ROUGE; g.lineWidth = net ? Math.max(2, cam.z / 8) : 2.2; g.setLineDash(net ? [] : [5, 4]);
       g.fillStyle = sel ? "rgba(155,42,31,.25)" : "rgba(239,227,200,.7)"; g.beginPath(); g.arc(X, Y, .42 * cam.z * k, 0, 6.3); g.fill(); g.stroke(); g.setLineDash([]);
       g.fillStyle = ROUGE; const a = .2 * cam.z, e = Math.max(2, .07 * cam.z); g.fillRect(Math.round(X - a), Math.round(Y - e / 2), Math.round(2 * a), Math.round(e)); g.fillRect(Math.round(X - e / 2), Math.round(Y - a), Math.round(e), Math.round(2 * a)); }
-    else { const ch = b[0] === "+", type = b.replace("+", ""); papierRond(x, y - .35, .5); sprite(S[type], x, y + .1, 0.95, true, ch ? .45 : 1);
+    else { const ch = b[0] === "+", type = b.replace("+", ""); papierRond(x, y - .35, .68); sprite(S[type], x, y + .25, 1.35, true, ch ? .45 : 1); if (!ch && FUME[type]) fumee(...ecran(x + .25, y - .9), .7, i);
       if (ch){ const [X, Y] = ecran(x, y - .35); g.strokeStyle = "rgb(58,42,28)"; g.lineWidth = 1.5; g.setLineDash([3, 3]); g.strokeRect(X - .45 * cam.z, Y - .45 * cam.z, .9 * cam.z, .9 * cam.z); g.setLineDash([]); } } });
   // région choisie : les autres voilées
   if (carte === "pays" && REGIONS[choix] && !aConstruire){ const m = masque(choix); g.globalAlpha = .45; g.drawImage(m, Math.round(ax), Math.round(ay), Math.round((Rm.B.x1 - Rm.B.x0) * cam.z), Math.round((Rm.B.y1 - Rm.B.y0) * cam.z)); g.globalAlpha = 1; }
@@ -366,6 +376,90 @@ function frame(){
     for (let k = 0; k < 7; k++){ const an = k / 7 * 6.283; g.fillRect(Math.round(X + Math.cos(an) * a * 22) - 2, Math.round(Y + Math.sin(an) * a * 12 - a * 18) - 2, 4, 4); } g.globalAlpha = 1; }
   requestAnimationFrame(frame);
 }
+// ---------- planches du pays : 1 cadastre, 3 vignettes ----------
+const FUME = { farm: 1, workshop: 1, weaving: 1, scierie: 1, caserne: 1 };
+function fumee(X, Y, k, graine){ const t = performance.now() / 1000; g.strokeStyle = "rgba(58,42,28,.55)"; g.lineWidth = 1.2;
+  for (let n = 0; n < 3; n++){ const a = (t * .45 + n / 3 + graine * .13) % 1; g.globalAlpha = 1 - a; g.beginPath();
+    g.arc(X + Math.sin(a * 5 + graine) * 4 * k, Y - a * 26 * k, (2.5 + a * 5) * k, 0, 6.3); g.stroke(); } g.globalAlpha = 1; }
+function passant(X, Y, k){ k = Math.max(.7, Math.min(1.4, k)); const t = performance.now() / 160; g.strokeStyle = "rgb(58,42,28)"; g.fillStyle = "rgb(58,42,28)"; g.lineWidth = 1.3;
+  g.beginPath(); g.arc(X, Y - 9 * k, 1.8 * k, 0, 6.3); g.fill(); g.beginPath(); g.moveTo(X, Y - 7 * k); g.lineTo(X, Y - 3 * k);
+  g.moveTo(X, Y - 3 * k); g.lineTo(X - 2 * k * Math.sin(t), Y); g.moveTo(X, Y - 3 * k); g.lineTo(X + 2 * k * Math.sin(t), Y); g.stroke(); }
+function ecrit(txt, x, y, taille, o){ o = o || {}; const px = mode === "pixel";
+  g.font = px ? `${o.gras ? 700 : 400} ${Math.round(taille * .85)}px 'Pixelify Sans', sans-serif` : `${o.ital ? "italic " : ""}${taille}px ${o.sc ? "'IM Fell English SC'" : "'IM Fell English'"}, Georgia, serif`;
+  g.textAlign = o.align || "center"; g.textBaseline = "middle"; let t = txt;
+  if (o.max) while (g.measureText(t).width > o.max && t.length > 3) t = t.slice(0, -2) + "…";
+  if (o.fond){ const w = g.measureText(t).width, x0 = o.align === "left" ? x - 3 : x - w / 2 - 4; g.fillStyle = o.fond; g.fillRect(Math.round(x0), Math.round(y - taille * .62), Math.round(w + 8), Math.round(taille * 1.24)); }
+  g.fillStyle = o.coul || "rgb(43,33,24)"; g.fillText(t, x, y); }
+function trait(x, y, w, h, ep, graine){ // rectangle à main levée, double filet
+  g.strokeStyle = "rgb(58,42,28)"; for (const [e, dd] of [[ep, 0], [ep * .5, 4]]){ g.lineWidth = e; g.beginPath();
+    const pts = [[x + dd, y + dd], [x + w - dd, y + dd], [x + w - dd, y + h - dd], [x + dd, y + h - dd]];
+    pts.forEach(([a, b], k) => { const j = (hache(k, graine, 71) - .5) * 1.6; k ? g.lineTo(a + j, b - j) : g.moveTo(a + j, b + j); }); g.closePath(); g.stroke(); } }
+function cercleLibre(X, Y, r, sel){ g.strokeStyle = ROUGE; g.lineWidth = 2; g.setLineDash(mode === "pixel" ? [] : [4, 3]); g.fillStyle = sel ? "rgba(155,42,31,.22)" : "rgba(250,243,226,.8)";
+  g.beginPath(); g.arc(X, Y, r, 0, 6.3); g.fill(); g.stroke(); g.setLineDash([]); g.fillStyle = ROUGE; g.fillRect(Math.round(X - r * .45), Math.round(Y - 1.5), Math.round(r * .9), 3); g.fillRect(Math.round(X - 1.5), Math.round(Y - r * .45), 3, Math.round(r * .9)); }
+function dessineBat(S, type, X, Ybas, taille, ch){ const im = S[type], k = taille / Math.max(im.width, im.height);
+  g.globalAlpha = ch ? .4 : 1; g.drawImage(im, Math.round(X - im.width * k / 2), Math.round(Ybas - im.height * k), Math.round(im.width * k), Math.round(im.height * k)); g.globalAlpha = 1;
+  if (ch){ g.strokeStyle = "rgb(58,42,28)"; g.lineWidth = 1.3; for (const dx of [-.4, 0, .4]){ g.beginPath(); g.moveTo(X + dx * taille, Ybas); g.lineTo(X + dx * taille, Ybas - taille * .8); g.stroke(); }
+    g.beginPath(); g.moveTo(X - .45 * taille, Ybas - taille * .3); g.lineTo(X + .45 * taille, Ybas - taille * .3); g.moveTo(X - .45 * taille, Ybas - taille * .6); g.lineTo(X + .45 * taille, Ybas - taille * .6); g.stroke(); } }
+function planche(S, net, v){
+  ZONES.length = 0; const t = performance.now() / 1000;
+  g.drawImage(IMG.papier, 0, 0, v.w, v.h);
+  const haut = 150, bas = v.h - 156, A = { x: 10, y: haut + 50, w: v.w - 20, h: bas - haut - 50 }, gap = 8, pw = (A.w - gap) / 2, ph = (A.h - gap) / 2;
+  // la capitale : un bandeau où les maisons s'ajoutent
+  const cy = haut + 22; trait(A.x, haut, A.w, 44, 1.6, 9);
+  const c0 = S.capitale, kc = 38 / c0.height; g.drawImage(c0, A.x + 10, cy + 18 - c0.height * kc, c0.width * kc, c0.height * kc); fumee(A.x + 30, cy - 8, .8, 3);
+  ecrit("Capitale", A.x + 18 + c0.width * kc, cy - 7, 16, { sc: true, align: "left" }); ecrit(`${tailleCapitale + 4} quartiers · grandit à chaque tour`, A.x + 18 + c0.width * kc, cy + 10, 12, { ital: true, align: "left" });
+  for (let k = 0; k < tailleCapitale; k++){ const m = S.maison, km = 17 / m.height; g.drawImage(m, A.x + A.w - 16 - (k + 1) * 19, cy + 12 - m.height * km, m.width * km, m.height * km); }
+  RIDS.forEach((r, n) => { const R0 = REGIONS[r], x = A.x + (n % 2) * (pw + gap), y = A.y + Math.floor(n / 2) * (ph + gap), col = RCOUL[r], sel = choix === r;
+    g.fillStyle = `rgba(${col.join(",")},${variante === "cadastre" ? .2 : .1})`; g.fillRect(x, y, pw, ph);
+    if (variante === "vignettes") scene(r, x, y, pw, ph, t);
+    trait(x, y, pw, ph, sel ? 3 : 1.6, n); if (sel){ g.strokeStyle = ROUGE; g.lineWidth = 2; g.strokeRect(x + 2, y + 2, pw - 4, ph - 4); }
+    // titre et terrain
+    g.fillStyle = `rgba(${col.join(",")},.9)`; g.fillRect(x + 8, y + 8, pw - 16, 22); ecrit(R0.nom, x + pw / 2, y + 19.5, 16, { sc: true, coul: "#fbf3e0" });
+    const bon = Object.entries(TERRAINS[R0.terrain].bonus).map(([k2, vv]) => BATS[k2].nom.replace("Mine de ", "") + " ×" + String(vv).replace(".", ",")).join(" · ");
+    ecrit(`${TERRAINS[R0.terrain].nom} : ${bon}`, x + pw / 2, y + 40, 11.5, { ital: true, max: pw - 14 });
+    ZONES.push({ x, y, w: pw, h: ph, region: r });
+    // les places
+    const nb = LOTS[r].length;
+    for (let i = 0; i < nb; i++){ let X, Yb, tl;
+      if (variante === "cadastre"){ const col0 = i % 3, row = Math.floor(i / 3), cw = (pw - 12) / 3, ch0 = (ph - 56) / 2; X = x + 6 + cw * (col0 + .5); Yb = y + 52 + ch0 * row + ch0 * .62; tl = Math.min(cw, ch0) * .62;
+        g.strokeStyle = "rgba(58,42,28,.35)"; g.lineWidth = 1; g.strokeRect(Math.round(x + 6 + cw * col0) + .5, Math.round(y + 52 + ch0 * row) + .5, Math.round(cw - 2), Math.round(ch0 - 2)); }
+      else { const row = Math.floor(i / 3), col0 = i % 3; X = x + pw * (.19 + .31 * col0); Yb = y + (row ? ph * .9 : ph * .58); tl = row ? 42 : 38; }
+      const b = R0.bat[i];
+      if (i >= R0.bat.length){ if (variante === "cadastre") ecrit("friche · à défricher", X, Yb - tl * .3, 10.5, { ital: true, coul: "rgba(43,33,24,.5)", max: (pw - 12) / 3 - 4 }); continue; }
+      if (!b){ const sel2 = lotChoisi && lotChoisi[0] === r && lotChoisi[1] === i;
+        if (variante === "vignettes"){ g.strokeStyle = "rgb(58,42,28)"; g.lineWidth = 2; g.beginPath(); g.moveTo(X, Yb); g.lineTo(X, Yb - tl * .7); g.stroke(); }
+        cercleLibre(X, Yb - tl * (variante === "vignettes" ? .78 : .45), Math.max(11, tl * .3), sel2);
+        if (aConstruire){ const q = prodIci(aConstruire, r); ecrit(q.txt + (q.k > 1 ? " ★" : ""), X, Yb + 10, 12, { fond: q.k > 1 ? "rgba(155,42,31,.92)" : "rgba(250,243,226,.95)", coul: q.k > 1 ? "#fbf3e0" : null, gras: true }); }
+        else ecrit("libre", X, Yb + 9, 11.5, { ital: true, coul: ROUGE });
+        ZONES.push({ x: X - 24, y: Yb - tl - 6, w: 48, h: tl + 22, region: r, lot: i }); continue; }
+      const ch = b[0] === "+", type = b.replace("+", "");
+      dessineBat(S, type, X, Yb, tl, ch); if (!ch && FUME[type]) fumee(X + tl * .22, Yb - tl * .9, .6, i + n);
+      ecrit(BATS[type].nom.replace("Mine de ", "Mine "), X, Yb + 9, 11.5, { fond: variante === "vignettes" ? "rgba(250,243,226,.85)" : null, max: variante === "cadastre" ? (pw - 12) / 3 : 70 });
+      if (ch) ecrit("chantier", X, Yb + 22, 10.5, { ital: true, coul: ROUGE });
+      else if (variante === "cadastre") ecrit(prodIci(type, r).txt, X, Yb + 22, 10.5, { ital: true, coul: "rgba(43,33,24,.75)" });
+      ZONES.push({ x: X - 26, y: Yb - tl, w: 52, h: tl + 26, region: r }); } });
+  // les charrettes passent au bord, du côté de chaque voisin (bandeau du haut)
+  for (const c of caravanes){ const N = NATIONS[c.nation], L = longueur(ROUTES[c.nation]), f = c.s / L, im = S.charrette, k = 26 / im.width;
+    const X = A.x + 40 + f * (A.w - 80), Y = haut + 50 - 2; g.save(); g.translate(X, Y); if (c.sens < 0) g.scale(-1, 1); g.drawImage(im, -13, -im.height * k, 26, im.height * k); g.restore(); }
+  for (let i = fumees.length - 1; i >= 0; i--) if ((performance.now() - fumees[i].t) > 900) fumees.splice(i, 1);
+}
+// le décor d'une vignette, selon la région
+function scene(r, x, y, w, h, t){ const yG = y + h * .9 - 6, enc = "rgb(58,42,28)"; g.save(); g.beginPath(); g.rect(x, y, w, h); g.clip();
+  g.strokeStyle = enc; g.lineWidth = 1.4;
+  // nuages et oiseaux qui passent
+  const nx = x + ((t * 6 + r.length * 37) % (w + 60)) - 30; g.beginPath(); g.arc(nx, y + 62, 7, Math.PI, 0); g.arc(nx + 11, y + 59, 9, Math.PI, 0); g.arc(nx + 22, y + 62, 6, Math.PI, 0); g.stroke();
+  const ox = x + w - ((t * 14 + r.length * 53) % (w + 40)); for (const [dx, dy] of [[0, 0], [9, 5]]){ const bb = 3 + Math.sin(t * 6 + dx) * 1.5; g.beginPath(); g.moveTo(ox + dx - 4, y + 72 + dy - bb); g.lineTo(ox + dx, y + 72 + dy); g.lineTo(ox + dx + 4, y + 72 + dy - bb); g.stroke(); }
+  // le relief
+  const S = SPR[mode];
+  if (r === "collines"){ for (const [k, nom] of [[.12, "mount3"], [.5, "mount7"], [.85, "mount5"]]){ const tp = IMG[nom], s2 = w * .42 / tp.width; g.globalAlpha = .55; g.drawImage(tp, x + w * k - tp.width * s2 / 2, yG - 34 - tp.height * s2, tp.width * s2, tp.height * s2); g.globalAlpha = 1; } }
+  if (r === "plaine"){ g.beginPath(); g.moveTo(x, yG - 30); g.quadraticCurveTo(x + w * .5, yG - 52, x + w, yG - 28); g.stroke(); for (let k = 0; k < 18; k++){ const sx = x + 8 + k * (w - 16) / 18; g.beginPath(); g.moveTo(sx, yG + 22); g.lineTo(sx + 2, yG + 16); g.stroke(); } }
+  if (r === "vallee"){ g.lineWidth = 1.2; for (const o of [0, 5]){ g.beginPath(); for (let k = 0; k <= 30; k++){ const sx = x + k * w / 30, sy = yG + 18 + o + Math.sin(k * .6 + t) * 2; k ? g.lineTo(sx, sy) : g.moveTo(sx, sy); } g.stroke(); }
+    for (const k of [.06, .94]){ const tp = IMG.pine3, s2 = 40 / tp.height; g.drawImage(tp, x + w * k - tp.width * s2 / 2, yG - 4 - 40, tp.width * s2, 40); } }
+  if (r === "bourg"){ g.beginPath(); g.moveTo(x, yG - 36); for (let k = 0; k < w; k += 12){ g.lineTo(x + k, yG - 36); g.lineTo(x + k, yG - 42); g.lineTo(x + k + 6, yG - 42); g.lineTo(x + k + 6, yG - 36); } g.stroke(); }
+  g.beginPath(); g.moveTo(x, yG + 6); g.lineTo(x + w, yG + 6); g.stroke();
+  // un passant
+  let a = (t / 14 + r.length * .2) % 2; if (a > 1) a = 2 - a; passant(x + 12 + a * (w - 24), yG + 6, 1);
+  g.restore(); }
 const MAISONS = [[-.9, .2], [.9, .25], [-.5, .75], [.55, .8], [-1.3, -.35], [1.3, -.3], [0, 1.05], [-1.05, .9]];
 function papierRond(x, y, r){ const [X, Y] = ecran(x, y); g.fillStyle = mode === "pixel" ? "rgba(226,208,166,.85)" : "rgba(236,224,196,.75)"; g.beginPath(); g.ellipse(X, Y, r * cam.z, r * cam.z * .8, 0, 0, 6.3); g.fill(); }
 const MASQUES = {};
@@ -389,14 +483,14 @@ function etiquettes(){
       if (N.rel != null) etiquette((N.rel > 0 ? "+" : "") + N.rel + " · " + N.dist + " étape" + (N.dist > 1 ? "s" : "") + (N.traite ? " · traité" : ""), x, y + 1.45, 13, { sc: false, ital: true, coul: N.rel < 0 ? ROUGE : "rgb(48,34,22)" }); } }
   else {
     for (const r of RIDS){ const [x, y] = CENTRES[r], R0 = REGIONS[r], libres = R0.bat.filter(b => !b).length;
-      etiquette(R0.nom, x, y - 1.15, 18, { fond: choix === r ? "rgba(155,42,31,.9)" : null, coul: choix === r ? "#efe3c8" : null });
-      etiquette(`terrain ${TERRAINS[R0.terrain].nom}${libres ? " · " + libres + " libre" + (libres > 1 ? "s" : "") : ""}`, x, y - .55, 13, { sc: false, ital: true }); }
+      etiquette(R0.nom, x, y - 1.15, 18, { fond: choix === r ? "rgba(155,42,31,.9)" : `rgba(${RCOUL[r].join(",")},.85)`, coul: "#fbf3e0", cadre: "rgb(58,42,28)" });
+      if (variante !== "epure") etiquette(`terrain ${TERRAINS[R0.terrain].nom}${libres ? " · " + libres + " libre" + (libres > 1 ? "s" : "") : ""}`, x, y - .55, 13, { sc: false, ital: true }); }
     for (const id of IDS) if (id !== "joueur"){ const p = ROUTES[id].find(([x, y]) => (x < PAYS_B.x0 + 2.2 || y < PAYS_B.y0 + 2.2 || x > PAYS_B.x1 - 2.2 || y > PAYS_B.y1 - 2.2));
       if (p) etiquette(NATIONS[id].nom + " →", p[0], p[1] - .5, 14, { sc: false, ital: true }); }
-    const z = cam.z >= (mode === "pixel" ? 48 : 90);
+    const z = variante === "epure" || cam.z >= (mode === "pixel" ? 48 : 90);
     for (const r of RIDS) REGIONS[r].bat.forEach((b, i) => { const [x, y] = LOTS[r][i];
       if (aConstruire && !b){ const q = prodIci(aConstruire, r); etiquette(q.txt + (q.k > 1 ? " ★" : ""), x, y + .45, 14, { sc: false, fond: q.k > 1 ? "rgba(155,42,31,.92)" : "rgba(239,227,200,.95)", coul: q.k > 1 ? "#efe3c8" : null, cadre: "rgb(58,42,28)" }); }
-      else if (b && z) etiquette(BATS[b.replace("+", "")].nom + (b[0] === "+" ? " (chantier)" : ""), x, y + .45, 12, { sc: false, ital: true }); });
+      else if (b && z) etiquette(BATS[b.replace("+", "")].nom.replace("Mine de ", "Mine ") + (b[0] === "+" ? " ·  chantier" : ""), x, y + .55, 12, { sc: false, fond: "rgba(239,227,200,.92)" }); });
   } }
 
 // ---------- charrettes ----------
@@ -421,7 +515,14 @@ document.getElementById("zMoins").onclick = () => zoom(-1);
 function zoom(sens){ const base = PX[mode][carte];
   if (mode === "pixel"){ const k = Math.max(1, Math.min(5, Math.round(cam.z / base) + sens)); cam.z = k * base; }
   else cam.z = Math.max(base * (carte === "pays" ? .35 : .3), Math.min(base * 1.6, cam.z * (sens > 0 ? 1.3 : 1 / 1.3))); }
-function touche(e){ const r = cv.getBoundingClientRect(), v = vue(), x = (e.clientX - r.left - v.w / 2) / cam.z + cam.x, y = (e.clientY - r.top - v.h / 2) / cam.z + cam.y;
+function touche(e){
+  if (carte === "pays" && variante !== "epure"){ const r0 = cv.getBoundingClientRect(), X = e.clientX - r0.left, Y = e.clientY - r0.top;
+    const z = [...ZONES].reverse().find(q => X >= q.x && X <= q.x + q.w && Y >= q.y && Y <= q.y + q.h);
+    if (!z){ fermeFiche(); return; }
+    if (z.lot != null){ if (aConstruire) batir(aConstruire, z.region, z.lot); else { choix = z.region; menuConstruire(z.region, z.lot); } return; }
+    if (aConstruire){ toast("Touchez un cercle rouge + pour y bâtir."); return; }
+    choix = z.region; ficheRegion(z.region); return; }
+  const r = cv.getBoundingClientRect(), v = vue(), x = (e.clientX - r.left - v.w / 2) / cam.z + cam.x, y = (e.clientY - r.top - v.h / 2) / cam.z + cam.y;
   if (carte === "pays"){ let lot = null; for (const rr of RIDS) REGIONS[rr].bat.forEach((b, i) => { const [a, bb] = LOTS[rr][i]; if (Math.hypot(a - x, bb - .3 - y) < .55) lot = [rr, i]; });
     if (aConstruire){ if (lot && !REGIONS[lot[0]].bat[lot[1]]) batir(aConstruire, lot[0], lot[1]); else toast("Touchez un cercle rouge + pour y bâtir."); return; }
     if (lot && !REGIONS[lot[0]].bat[lot[1]]){ choix = lot[0]; menuConstruire(lot[0], lot[1]); return; } }
@@ -474,16 +575,20 @@ document.getElementById("fin").onclick = () => { tour++; or += 38;
 function maj(){ document.getElementById("tour").textContent = `Tour ${tour}/40`; document.getElementById("or").textContent = `${or} or`; }
 function cadrePays(){ const v = vue(), B = PAYS_B, iw = B.x1 - B.x0 - 4, ih = B.y1 - B.y0 - 4;
   cam.x = (B.x0 + B.x1) / 2; cam.y = (B.y0 + B.y1) / 2 + 1.2;
-  const z = Math.min(v.w / iw, (v.h - 250) / ih); cam.z = mode === "pixel" ? Math.max(1, Math.round(z / PX.pixel.pays)) * PX.pixel.pays : z; }
+  const z = Math.min(v.w / iw, (v.h - 250) / ih) * (variante === "epure" ? 1.35 : 1); cam.z = mode === "pixel" ? Math.max(1, Math.round(z / PX.pixel.pays)) * PX.pixel.pays : z; }
 function change(c){ carte = c; fermeFiche(); const v = vue();
   if (c === "monde"){ cam.x = W / 2; cam.y = H / 2 + 1; const z = Math.min(v.w / (W - 4), (v.h - 200) / H); cam.z = mode === "pixel" ? Math.max(1, Math.round(z / PX.pixel.monde)) * PX.pixel.monde : z; }
   else cadrePays();
   document.getElementById("titre").textContent = c === "monde" ? "Le continent" : "Notre pays";
   document.getElementById("bascule").textContent = c === "monde" ? "Mon pays ▸" : "◂ Le continent";
-  document.getElementById("construire").hidden = c === "monde"; }
+  document.getElementById("construire").hidden = c === "monde"; majVariante(); }
 document.getElementById("bascule").onclick = () => change(carte === "monde" ? "pays" : "monde");
 document.getElementById("construire").onclick = menuGeneral;
 function changeMode(m){ mode = m; tel.classList.toggle("px", m === "pixel"); document.getElementById("dirA").setAttribute("aria-pressed", m === "encre"); document.getElementById("dirB").setAttribute("aria-pressed", m === "pixel"); prepare(); change(carte); }
+function majVariante(){ document.querySelectorAll("#varPays button").forEach(b => b.setAttribute("aria-pressed", b.dataset.v === variante));
+  document.querySelector(".zoom").style.display = carte === "pays" && variante !== "epure" ? "none" : "";
+  document.getElementById("varPays").style.visibility = carte === "pays" ? "visible" : "hidden"; }
+document.querySelectorAll("#varPays button").forEach(b => b.onclick = () => { variante = b.dataset.v; majVariante(); if (carte === "pays") cadrePays(); });
 document.getElementById("dirA").onclick = () => changeMode("encre");
 document.getElementById("dirB").onclick = () => changeMode("pixel");
 document.getElementById("factions").innerHTML = FACTIONS.map(([c, p]) => `<span style="width:${p / 1.68}%;background:${c}"></span>`).join("");

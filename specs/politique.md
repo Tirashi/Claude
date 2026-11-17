@@ -482,3 +482,9 @@ Retours sur la maquette 4 (17/11) : « la A rend vraiment bien » ; menus à ret
 - **Distances lisibles** : notre pays passe sur la côte ouest (une baie au nord) ; seuls les deux voisins à 1 étape (Val-Roc, Contreforts) le touchent ; routes d'environ 10 cases (1 étape), 16 à 19 (2), 26 (3) ; la distance est écrite sous chaque nation (« +38 · 2 étapes · traité ») ; les charrettes vont à la même vitesse, donc mettent plus longtemps vers les nations lointaines.
 - **Menus façon carte ancienne** : cartouche en haut (tour, titre de la carte, or, Autorité, barre des factions) sur le papier du pack avec double filet d'encre ; onglet « Mon pays ▸ » accroché dessous ; ruban Lois / Budget / Armée / Journal ; **sceau de cire rouge** « Tour suivant » ; fiches au même papier.
 
+Carte du pays (17/11) : ce qui gêne : bâtiments peu lisibles, régions pas claires, pas assez vivante ; l'utilisateur demande une maquette des trois pistes proposées (boutons 1 · 2 · 3 sur la carte du pays) :
+1. **Cadastre** : une feuille à part, bandeau de la capitale (maisons ajoutées à chaque tour, fumée) ; 4 parcelles (disposées comme sur la carte : plaine en haut à gauche, collines en haut à droite, vallée, bourg) au lavis de leur couleur, titre et bonus du terrain ; 6 cases par parcelle : bâtiment + nom + production, cercle rouge « libre », « friche · à défricher ».
+2. **Épurée** : la même carte, beaucoup moins de décor dans le pays, chaque région lavée de sa couleur avec une limite en tirets marqués, titres en cartouches colorés, bâtiments plus grands et toujours nommés, fumées, passants sur les chemins de la capitale aux régions.
+3. **Vignettes** : 4 petites gravures (champs ondulés, montagnes, rivière et sapins, rempart du bourg), nuages et oiseaux qui passent, un passant, bâtiments sur deux rangs avec leur nom, panneaux « + » pour les places libres.
+Le parcours Construire marche dans les trois (production affichée sur chaque place libre).
+
