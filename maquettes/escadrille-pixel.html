@@ -38,7 +38,7 @@ ul{margin:0;padding-left:22px;display:grid;gap:6px;max-width:76ch}
 <main>
 <header style="display:grid;gap:10px">
 <h1>ESCADRILLE PIXEL · MAQUETTE</h1>
-<p>Le style de ta capture : de la vraie 3D (on peut piquer, faire des loopings et des tonneaux), mais calculée en très petite résolution (180 × 320 pixels), avec une palette réduite et un tramage, puis agrandie sans lissage. Pouce gauche : un joystick apparaît là où tu poses le doigt (vers le haut : piqué). Pouce droit : FEU (à garder appuyé), MISSILE, LOOP et TONNEAU. Sans toucher, le pilote automatique vole tout seul.</p>
+<p>Le style de ta capture : de la vraie 3D (on peut piquer, faire des loopings et des tonneaux), mais calculée en très petite résolution (180 × 320 pixels), avec une palette réduite et un tramage, puis agrandie sans lissage. Pouce gauche : un joystick apparaît là où tu poses le doigt (vers le haut : l'avion monte ; vers le bas : il descend). Pouce droit : FEU (à garder appuyé), MISSILE, LOOP et TONNEAU. Sans toucher, le pilote automatique vole tout seul.</p>
 </header>
 <section class="jeu"><div class="tel" id="t"><div class="charge">CHARGEMENT…</div>
 <div class="hud" id="hud"></div>
@@ -195,7 +195,7 @@ function image(m){const dt=Math.min(.05,(m-av)/1000);av=m;requestAnimationFrame(
     if(c){const d=c.g.position.clone().sub(S.p);const a=Math.atan2(-d.x,-d.z);let da=a-S.yaw;da=Math.atan2(Math.sin(da),Math.cos(da));tyaw=Math.max(-1,Math.min(1,da*2));tp=Math.max(-.6,Math.min(.6,(c.g.position.y-S.p.y)*.03));
       S.tir=Math.abs(da)<.3&&d.length()<170;}else{tyaw=Math.sin(S.t*.35)*.6;tp=(40-S.p.y)*.02;S.tir=false;}
     if(S.p.y<14)tp=.5;if(S.t%11<dt&&S.t>3)tonneau();}
-  else{tyaw=-S.dx*1.2;tp=S.dy*1.1;/* pousser vers le haut : piqué ; tirer vers le bas : cabré */}
+  else{tyaw=-S.dx*1.2;tp=-S.dy*1.1;/* joystick vers le haut : l'avion monte ; vers le bas : il descend */}
   S.yaw+=tyaw*dt;S.bank+=((tyaw*.9)-S.bank)*Math.min(1,dt*4);
   if(S.loopT>=0){S.loopT+=dt/2.6;S.pitch+=Math.PI*2*dt/2.6;if(S.loopT>=1){S.loopT=-1;S.pitch=Math.round(S.pitch/(Math.PI*2))*Math.PI*2;}}
   else{S.pitch+=(Math.max(-1,Math.min(1,tp))-S.pitch)*Math.min(1,dt*2.2);}
