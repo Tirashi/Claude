@@ -104,3 +104,4 @@ L'utilisateur : « ce n'est pas ce que je veux : dynamique, low poly fluide, dé
 - En mode souris, ZQSD/WASD deviennent des manœuvres : Z accélère (boost), S freine (×0,62), Q/D écart de côté (22 m/s) ; **double appui** (moins de 0,3 s) : Z = looping, Q/D = tonneau de ce côté (avec un écart). Les flèches pilotent toujours comme un joystick.
 - Les mouvements de plus de 150 px d'un coup sont ignorés (saut parasite de Chrome à la capture). Le hangar libère la souris.
 - Test Playwright : le double appui avec `keyboard.press` échoue sous swiftshader (images trop lentes, les deux appuis arrivent à plus de 0,3 s) ; envoyer les `KeyboardEvent` dans un même `evaluate`.
+- **Avions à hélices retirés** (17/11, décision de l'utilisateur : des vaisseaux, pas d'avions) : les 6 monogon voxel plane et le Corsaire sortent du hangar et de `modeles.json` ; on garde Faucon, Hirondelle, Vipère et Spectre.

@@ -1,41 +1,5 @@
 [
  {
-  "cle": "mono_plane01",
-  "nom": "MONOGON P-01",
-  "f": "PACKS/monoplane/x_Plane_01/Package/Plane01.obj",
-  "pack": "monoplane"
- },
- {
-  "cle": "mono_plane02",
-  "nom": "MONOGON P-02",
-  "f": "PACKS/monoplane/x_Plane_02/Package/Plane02.obj",
-  "pack": "monoplane"
- },
- {
-  "cle": "mono_plane03",
-  "nom": "MONOGON P-03",
-  "f": "PACKS/monoplane/x_Plane_03/Package/Plane_03.obj",
-  "pack": "monoplane"
- },
- {
-  "cle": "mono_plane04",
-  "nom": "MONOGON P-04",
-  "f": "PACKS/monoplane/x_Plane_04/Package/Plane04-0.obj",
-  "pack": "monoplane"
- },
- {
-  "cle": "mono_plane05",
-  "nom": "MONOGON P-05",
-  "f": "PACKS/monoplane/x_Plane_05/Package/Plane05.obj",
-  "pack": "monoplane"
- },
- {
-  "cle": "mono_plane06",
-  "nom": "MONOGON P-06",
-  "f": "PACKS/monoplane/x_Plane_06/Package/Plane_06.obj",
-  "pack": "monoplane"
- },
- {
   "cle": "mono_microrecon",
   "nom": "MICRO RECON",
   "f": "PACKS/monoship/x_MicroRecon/Package/MicroRecon.obj",

@@ -58,7 +58,7 @@ ul{margin:0;padding-left:22px;display:grid;gap:6px;max-width:76ch}
 <li><b>Ciel du crépuscule peint par la carte graphique</b> : dégradé lavande, rose, pêche et jaune, soleil bas avec son halo, traînées de nuages roses.</li>
 <li><b>Décor peint pixel par pixel</b> : forêts d'automne (vert, jaune, orange, rouge, olive) mouchetées, roche mauve sur les pentes, plages, mer qui passe du turquoise au bleu profond selon la profondeur, écume des côtes et moutons qui bougent. Le monde est infini.</li>
 <li><b>Traînées blanches</b> au bout des ailes, flamme du réacteur, ombre sous l'avion : ce sont elles qui donnent la vitesse.</li>
-<li><b>Avions 3D low poly</b> construits dans le code, avec un contour fin : parfaitement fluides. Le bouton AVION ouvre le hangar : nos 5 avions et 21 modèles des packs que tu as choisis (monogon, niko, Texnist, Free Game Assets, Majadroid) ; la touche C passe au suivant. <b>Nuages en volume</b> éclairés en trois tons.</li>
+<li><b>Avions 3D low poly</b> construits dans le code, avec un contour fin : parfaitement fluides. Le bouton AVION ouvre le hangar : nos 4 chasseurs et les vaisseaux des packs que tu as choisis (monogon, niko, Texnist, Free Game Assets, Majadroid) ; les avions à hélices ont été retirés le 17/11; la touche C passe au suivant. <b>Nuages en volume</b> éclairés en trois tons.</li>
 </ul></section>
 <section class="q"><h2>A CHOISIR</h2>
 <p>1. Le rendu est-il proche de tes captures ? Qu'est-ce qui manque le plus : le décor, la lumière, l'avion ?</p>
@@ -208,7 +208,7 @@ const MODELES3D={
     for(const s of[1,-1]){piece(g,new THREE.BoxGeometry(.6,.1,.2),c.accent,3.3*s,-.05,1.35);piece(g,new THREE.BoxGeometry(.5,.16,.3),'#1a1c22',.55*s,0,1.35);}
     return{g,tuy:[[.55,0,1.55],[-.55,0,1.55]],env:3.6};}};
 const COULEURS={FAUCON:{m:'faucon',corps:'#7f7896',aile:'#a49dba',accent:'#e2682e',verriere:'#ffcf7a'},HIRONDELLE:{m:'hirondelle',corps:'#2f5690',aile:'#5f8cc4',accent:'#f2c94c',verriere:'#ffb040'},
-  CORSAIRE:{m:'corsaire',corps:'#4a6236',aile:'#6f8a52',accent:'#f2c94c',verriere:'#86bdea'},VIPERE:{m:'vipere',corps:'#6a2a26',aile:'#a04e36',accent:'#ffe080',verriere:'#7fd0ff'},
+  VIPERE:{m:'vipere',corps:'#6a2a26',aile:'#a04e36',accent:'#ffe080',verriere:'#7fd0ff'},
   SPECTRE:{m:'spectre',corps:'#3a3a48',aile:'#565668',accent:'#7fd0ff',verriere:'#ffcf7a'}};
 // modèles importés (GLB en base64, GLBS) : analysés une seule fois, puis clonés ; matériaux convertis en Phong à facettes ; textures lues telles quelles (sans décodage sRGB, qui assombrissait tout)
 const IMPORTS={};const b64=s=>{const b=atob(s);const u=new Uint8Array(b.length);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return u.buffer;};
@@ -240,14 +240,8 @@ function construire(c,flammes){if(c.m==='import'){const r=importe(c.cle,c.rot,c.
   const r=MODELES3D[c.m](c);r.flammes=[];if(flammes)for(const t of r.tuy){const f=new THREE.Group();const a=new THREE.Mesh(new THREE.BoxGeometry(.4,.4,1.1),new THREE.MeshBasicMaterial({color:'#ffb040',fog:false}));a.position.z=.55;
     const b=new THREE.Mesh(new THREE.BoxGeometry(.22,.22,.6),new THREE.MeshBasicMaterial({color:'#ffe080',fog:false}));b.position.z=.3;f.add(a,b);f.position.set(t[0],t[1],t[2]);r.g.add(f);r.flammes.push(f);}return r;}
 function chasseur(c){return construire(Object.assign({m:'faucon'},c),false).g;}
-const PACKS={"monoplane": "MONOGON \u00b7 VOXEL PLANE (CC BY-ND)", "monoship": "MONOGON \u00b7 VOXEL SPACESHIPS (CC BY-ND)", "niko": "NIKO-3D-MODELS", "texnist": "TEXNIST \u00b7 VOXEL SPACESHIPS (CC BY)", "fga": "FREE GAME ASSETS (craftpix)", "fga2": "FREE GAME ASSETS \u00b7 BATTLE SPACESHIP (craftpix)", "maja": "MAJADROID (CC0)"};
-Object.assign(COULEURS,{'mono_plane01':{m:'import',cle:'mono_plane01',rot:Math.PI/2,pack:'{PACK_mono_plane01}',helice:1},
-  'mono_plane02':{m:'import',cle:'mono_plane02',rot:Math.PI/2,pack:'{PACK_mono_plane02}',helice:1},
-  'mono_plane03':{m:'import',cle:'mono_plane03',rot:Math.PI/2,pack:'{PACK_mono_plane03}',helice:1},
-  'mono_plane04':{m:'import',cle:'mono_plane04',rot:Math.PI/2,pack:'{PACK_mono_plane04}',helice:1},
-  'mono_plane05':{m:'import',cle:'mono_plane05',rot:Math.PI/2,pack:'{PACK_mono_plane05}',helice:1},
-  'mono_plane06':{m:'import',cle:'mono_plane06',rot:Math.PI/2,pack:'{PACK_mono_plane06}',helice:1},
-  'mono_microrecon':{m:'import',cle:'mono_microrecon',rot:Math.PI,pack:'{PACK_mono_microrecon}'},
+const PACKS={"monoship": "MONOGON \u00b7 VOXEL SPACESHIPS (CC BY-ND)", "niko": "NIKO-3D-MODELS", "texnist": "TEXNIST \u00b7 VOXEL SPACESHIPS (CC BY)", "fga": "FREE GAME ASSETS (craftpix)", "fga2": "FREE GAME ASSETS \u00b7 BATTLE SPACESHIP (craftpix)", "maja": "MAJADROID (CC0)"};
+Object.assign(COULEURS,{  'mono_microrecon':{m:'import',cle:'mono_microrecon',rot:Math.PI,pack:'{PACK_mono_microrecon}'},
   'mono_redfighter':{m:'import',cle:'mono_redfighter',rot:Math.PI,pack:'{PACK_mono_redfighter}'},
   'mono_camo':{m:'import',cle:'mono_camo',rot:Math.PI,pack:'{PACK_mono_camo}'},
   'mono_infrared':{m:'import',cle:'mono_infrared',rot:Math.PI,pack:'{PACK_mono_infrared}'},

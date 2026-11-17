@@ -47,7 +47,7 @@ Historique des directions : *Escadrille pixel* (gros pixels, sprite dessiné), p
   - les rouges visent aussi le joueur à moins de 260 m, les bleus les chasseurs ennemis ;
   - **les tourelles rouges sont destructibles** (8 balles ou un missile, +300) ;
   - un vaisseau sans tourelles prend feu et tombe (+2000).
-- **Hangar** : 5 avions faits dans le code et une quarantaine de modèles issus de 7 packs. Les hélices des avions monogon tournent, les flammes sont placées sur les tuyères, et le sens de chaque modèle a été vérifié sur les aperçus des packs.
+- **Hangar** : 4 chasseurs construits dans le code et 30 vaisseaux issus de 6 packs. Les flammes sont placées sur les tuyères, et le sens de chaque modèle a été vérifié sur les aperçus des packs. Les avions à hélices ont été retirés le 17/11.
 
 ## Ce que l'utilisateur veut (17/11 : « toutes tes idées me conviennent »)
 1. **Missions courtes**, au lieu des vagues sans fin, avec un écran de fin (score, étoiles) :
@@ -77,8 +77,11 @@ Historique des directions : *Escadrille pixel* (gros pixels, sprite dessiné), p
 | 4 · monde | Ailiers, cibles au sol, décors (nuit, orage, désert, neige) | opusplan |
 | 5 · progression | Réglages par avion, déblocages, classements, défi du jour éventuel | opusplan |
 
+## Décision du 17/11 : des vaisseaux, pas d'avions
+Le joueur et les ennemis volent sur des **vaisseaux**. Les avions à hélices sont retirés : les 6 monogon voxel plane et le Corsaire. On garde ce qui ressemble à des avions de chasse : Faucon, Hirondelle, Vipère et Spectre, construits dans le code. Le hangar de la maquette est mis à jour. Les outils des hélices (`vox_glb.py`, `helices.py`) restent dans `outils/escadrille-pixel/conversion/`.
+
 ## Licences à régler avant le jeu
-- **monogon (maxparata)** : CC BY-ND, donc **pas de modification**. Or on a refait les avions en voxels avec des hélices à part, et réduit les vaisseaux. Il faut demander l'accord de l'auteur, ou ne garder que les modèles d'origine non modifiés, ou s'en passer.
+- **monogon (maxparata)** : CC BY-ND, donc **pas de modification**. Les avions à hélices sont retirés, mais il reste les 5 vaisseaux voxel, convertis et réduits. Il faut demander l'accord de l'auteur, ou ne garder que les modèles d'origine non modifiés, ou s'en passer.
 - **niko-3d-models** : prix libre, sans licence écrite sur la page. À vérifier (commentaire ou message à l'auteur) avant de les mettre dans le jeu.
 - **Free Game Assets (craftpix)** : licence craftpix, utilisable dans un jeu, pas de revente. **Texnist** : CC BY 4.0. **Majadroid** : CC0. Ces trois-là sont bons.
 - Taille : la maquette pèse 12 Mo avec tous les modèles. Le jeu ne garde que les avions retenus, à choisir avec l'utilisateur en session 1.
