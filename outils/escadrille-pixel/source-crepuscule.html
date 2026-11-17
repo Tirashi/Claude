@@ -314,7 +314,9 @@ const quad=new THREE.Mesh(new THREE.PlaneGeometry(2,2),post),scPost=new THREE.Sc
 function choisir(k){choix=k;nav.remove(moi);modele=construire(COULEURS[NOMS[choix]],true);moi=modele.g;moi.scale.setScalar(.66);nav.add(moi);versCalque(moi);try{localStorage.setItem('escadrille.avion3d',NOMS[choix]);}catch(e){}annonce(`HANGAR<b>${COULEURS[NOMS[choix]].nom}</b>${COULEURS[NOMS[choix]].pack}`);}
 const hangar=document.getElementById('hangar');
 function ouvrirHangar(){let h='<b>HANGAR</b>';let pk='';NOMS.forEach((n,k)=>{const c=COULEURS[n];if(c.pack!==pk){pk=c.pack;h+=`<i>${pk}</i>`;}h+=`<button data-k="${k}" class="${k===choix?'on':''}">${c.nom}</button>`;});h+='<button data-k="x" class="fermer">FERMER</button>';hangar.innerHTML=h;hangar.style.display='flex';}
-hangar.addEventListener('pointerdown',e=>{e.stopPropagation();const b=e.target.closest('button');if(!b)return;if(b.dataset.k!=='x')choisir(+b.dataset.k);hangar.style.display='none';});
+/* on choisit au « click » (un vrai toucher, pas le début d'un glissement) : sur téléphone, glisser pour faire défiler la liste ne doit rien choisir */
+for(const t of ['pointerdown','pointermove','pointerup','touchstart','touchmove'])hangar.addEventListener(t,e=>e.stopPropagation(),{passive:true});
+hangar.addEventListener('click',e=>{e.stopPropagation();const b=e.target.closest('button');if(!b)return;if(b.dataset.k!=='x')choisir(+b.dataset.k);hangar.style.display='none';});
 function changerAvion(){choix=(choix+1)%NOMS.length;nav.remove(moi);modele=construire(COULEURS[NOMS[choix]],true);moi=modele.g;moi.scale.setScalar(.66);nav.add(moi);versCalque(moi);try{localStorage.setItem('escadrille.avion3d',NOMS[choix]);}catch(e){}annonce(`HANGAR<b>${NOMS[choix]}</b>Bon vol !`);}
 el.querySelector('.charge').remove();
 // pilotage
