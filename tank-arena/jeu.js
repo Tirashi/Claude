@@ -80,7 +80,8 @@ function modele(nom, remap = {}, ombre = true) {
 }
 
 // ---------- terrain ----------
-let OBS = [];
+let OBS = [], PIV = [0, 0];
+const CANON = .38, HAUT_CANON = .39;   // longueur du canon depuis le pivot, hauteur du canon
 function hauteurSol(x, z) { const d = Math.hypot(x + .08, z - .17); return d < 1.5 ? .24 : d < 1.78 ? .24 * (1.78 - d) / .28 : 0; }
 function collision(o, r) {
   for (const b of OBS) {
@@ -144,10 +145,13 @@ function majFx(dt) {
 function creerTank(eq) {
   const g = new THREE.Group(), m = modele("tank", { "Material.018": eq.c });
   m.rotation.y = Math.PI / 2; g.add(m);
+  // tourelle : tourne autour de son pivot (repère du modèle : le canon pointe vers -x)
+  const tg = new THREE.Group(), tm = modele("tourelle", { "Material.018": eq.c });
+  tg.position.set(PIV[0], 0, PIV[1]); tm.position.set(-PIV[0], 0, -PIV[1]); tg.add(tm); m.add(tg);
   const bulle = new THREE.Mesh(new THREE.SphereGeometry(.48, 16, 10), new THREE.MeshBasicMaterial({ color: lin("#7ad8ff"), transparent: true, opacity: .28, depthWrite: false }));
   bulle.position.y = .25; bulle.visible = false; g.add(bulle);
   scene.add(g);
-  return { g, m, bulle, eq, x: 0, z: 0, h: 0, pv: 100, mort: false, cad: 0, t: Math.random() * 9, kills: 0, effets: {} };
+  return { g, m, tg, tm, ta: 0, bulle, eq, x: 0, z: 0, h: 0, pv: 100, mort: false, cad: 0, t: Math.random() * 9, kills: 0, effets: {} };
 }
 function placer(t) { t.g.position.set(t.x, hauteurSol(t.x, t.z), t.z); t.g.rotation.y = t.h; }
 function tourner(t, cible, v, dt) {
@@ -174,18 +178,23 @@ function nouvellePartie() {
   }
   for (const o of (S ? S.obus : [])) scene.remove(o.g);
   S = { tanks, obus: [], temps: DUREE, depart: 3.4, fin: false, caisse: null, tc: 5, pause: false };
-  DEPARTS.forEach(([x, z], i) => { const t = tanks[i]; Object.assign(t, { x, z, h: Math.atan2(-x, -z), pv: 100, mort: false, cad: .5, kills: 0, effets: {}, inv: 0, recul: 0, coince: 0 }); t.g.visible = true; placer(t); });
+  DEPARTS.forEach(([x, z], i) => { const t = tanks[i]; Object.assign(t, { x, z, h: Math.atan2(-x, -z), ta: Math.atan2(-x, -z), pv: 100, mort: false, cad: .5, kills: 0, effets: {}, inv: 0, recul: 0, coince: 0 }); t.g.visible = true; placer(t); });
   caisseM.visible = halo.visible = false;
   const j = tanks[0]; cam.position.set(j.x * .85, 10.5, j.z * .85 + 5); vise.set(j.x, 0, j.z - .3);
   joy.actif = false; touches.clear();
 }
 
-function tirer(t, cible) {
-  const a = angle(t, cible), n = t.effets.tri > 0 ? 3 : 1;
+// centre de la tourelle dans l'arène (le modèle est tourné d'un quart de tour dans le tank)
+function pivot(t) { return { x: t.x - PIV[0] * Math.sin(t.h) + PIV[1] * Math.cos(t.h), z: t.z - PIV[0] * Math.cos(t.h) - PIV[1] * Math.sin(t.h) }; }
+function tirer(t) {
+  const a = t.ta, n = t.effets.tri > 0 ? 3 : 1, p = pivot(t);
   for (let k = 0; k < n; k++) {
     const b = a + (k - (n - 1) / 2) * .22, g = new THREE.Group(), m = modele("obus", {}, false);
     m.rotation.y = Math.PI / 2; g.add(m); g.rotation.y = b; scene.add(g);
-    S.obus.push({ g, x: t.x + Math.sin(b) * .36, z: t.z + Math.cos(b) * .36, vx: Math.sin(b) * 7, vz: Math.cos(b) * 7, de: t, vie: 1.1 });
+    // l'obus part du bout du canon
+    const x = p.x + Math.sin(a) * CANON, z = p.z + Math.cos(a) * CANON;
+    S.obus.push({ g, x, z, vx: Math.sin(b) * 7, vz: Math.cos(b) * 7, de: t, vie: 1.1 });
+    g.position.set(x, HAUT_CANON + hauteurSol(x, z), z);
   }
   t.recul = .12;
   Sons.tir(t !== tanks[0] && Math.hypot(t.x - tanks[0].x, t.z - tanks[0].z) > 4);
@@ -199,7 +208,7 @@ function renaitre(t) {
   let best = DEPARTS[0], bd = -1;
   for (const p of DEPARTS) { const d = Math.min(...tanks.filter(u => u !== t && !u.mort).map(u => Math.hypot(u.x - p[0], u.z - p[1])), 99); if (d > bd) { bd = d; best = p; } }
   Object.assign(t, { x: best[0], z: best[1], pv: 100, mort: false, inv: 1.5, effets: {} }); t.g.visible = true;
-  t.h = Math.atan2(-t.x, -t.z);
+  t.h = t.ta = Math.atan2(-t.x, -t.z);
 }
 function prendreBonus(t) {
   const b = S.caisse.b;
@@ -243,14 +252,17 @@ function majTank(t, dt) {
   }
   const vit = (joueur ? 2.7 : 2.1) * (t.effets.vit > 0 ? 1.6 : 1), l = Math.hypot(mx, mz);
   if (l > .05) { t.x += mx * vit * dt; t.z += mz * vit * dt; tourner(t, Math.atan2(mx, mz), 9, dt); }
-  else if (cible) tourner(t, angle(t, cible), 7, dt);
+  // la tourelle vise la cible (ou revient dans l'axe), indépendamment de la coque
+  const p = pivot(t), va = cible ? Math.atan2(cible.x - p.x, cible.z - p.z) : t.h;
+  { let d = va - t.ta; d = Math.atan2(Math.sin(d), Math.cos(d)); t.ta += Math.max(-6 * dt, Math.min(6 * dt, d)); }
   collision(t, .3);
   for (const u of tanks) if (u !== t && !u.mort) { const dx = t.x - u.x, dz = t.z - u.z, d = Math.hypot(dx, dz); if (d < .58 && d > 1e-3) { t.x = u.x + dx / d * .58; t.z = u.z + dz / d * .58; } }
   if (!joueur && l > .05 && Math.hypot(t.x - ox, t.z - oz) < vit * dt * .25 && !(t.coince > 0)) { const a = Math.random() * 6.3; t.coince = .8; t.ex = Math.cos(a); t.ez = Math.sin(a); }
-  if (cible && t.cad <= 0 && (joueur || ecartAngle(angle(t, cible), t.h) < .3)) { tirer(t, cible); t.cad = joueur ? .55 : 1 + Math.random() * .6; }
+  if (cible && t.cad <= 0 && ecartAngle(va, t.ta) < .12) { tirer(t); t.cad = joueur ? .55 : 1 + Math.random() * .6; }
   if (S.caisse && Math.hypot(S.caisse.x - t.x, S.caisse.z - t.z) < .5) prendreBonus(t);
   t.recul = Math.max(0, t.recul - dt);
-  placer(t); t.m.position.set(0, l > .05 ? Math.abs(Math.sin(t.t * 22)) * .015 : 0, -t.recul * .6);
+  placer(t); t.m.position.set(0, l > .05 ? Math.abs(Math.sin(t.t * 22)) * .015 : 0, 0);
+  t.tg.rotation.y = t.ta - t.h; t.tm.position.x = -PIV[0] + t.recul * .5;
   t.bulle.visible = t.effets.bou > 0;
   t.g.visible = !t.inv || Math.sin(t.inv * 30) > 0;
 }
@@ -409,6 +421,7 @@ async function demarrer() {
     const bin = Uint8Array.from(atob(window.TA_MODELES), c => c.charCodeAt(0));
     M = JSON.parse(await new Response(new Blob([bin]).stream().pipeThrough(new DecompressionStream("gzip"))).text());
   } catch (e) { $("tRecord").textContent = "IMPOSSIBLE DE CHARGER LES MODELES"; return; }
+  PIV = [M.pivot[0] / 1000, M.pivot[1] / 1000];
   OBS = M.obstacles.filter(o => o[4] !== "Cylinder" && o[3] > .3).map(([x, z, r, h]) => ({ x, z, r, h }));
   DEPARTS = DEPARTS.map(place);
   construire(); brancher(); montrer("titre"); window.TankArena.pret = true;
@@ -419,7 +432,7 @@ window.TankArena = {
   pret: false, jouer, finir: () => { if (S && !S.fin) { S.temps = 0; S.depart = 0; finir(); } }, pause,
   etat: () => S && { temps: S.temps, depart: S.depart, fin: S.fin, caisse: S.caisse && S.caisse.b.k,
     tanks: tanks.map(t => ({ x: t.x, z: t.z, pv: t.pv, kills: t.kills, mort: t.mort, effets: { ...t.effets } })) },
-  S: () => S, tanks: () => tanks, bonus: (k) => { S.caisse = { x: tanks[0].x, z: tanks[0].z, b: BONUS.find(b => b.k === k) }; },
+  S: () => S, tanks: () => tanks, vue: (px, py, pz, x, z) => { cam.position.set(px, py, pz); vise.set(x, 0, z); }, bonus: (k) => { S.caisse = { x: tanks[0].x, z: tanks[0].z, b: BONUS.find(b => b.k === k) }; },
 };
 demarrer();
 })();

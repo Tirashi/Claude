@@ -32,6 +32,7 @@ for g,(names,grid) in groupes.items():
     else: o=[0,2.62,0]
     mats={}
     for a,b,c,m in tris:
+        if g=='tank' and (V[a][1]+V[b][1]+V[c][1])/3-o[1]>0.27: m=m+'|T'   # tourelle : au-dessus de la coque
         d=mats.setdefault(m,{'map':{},'p':[],'i':[]})
         key=[]
         for vi in (a,b,c):
@@ -52,6 +53,12 @@ for g,(names,grid) in groupes.items():
             seen.add(t); ni+=d['i'][k:k+3]
         d['i']=ni
     res[g]={m:{'p':[round(x) for x in d['p']],'i':d['i']} for m,d in mats.items()}
+    if g=='tank':  # coque et tourelle séparées ; pivot = milieu du bas de la tourelle
+        res['tourelle']={m[:-2]:v for m,v in res[g].items() if m.endswith('|T')}
+        res[g]={m:v for m,v in res[g].items() if not m.endswith('|T')}
+        bas=[(v['p'][i],v['p'][i+2]) for v in res['tourelle'].values() for i in range(0,len(v['p']),3) if v['p'][i+1]<330]
+        res['pivot']=[round((min(q[0] for q in bas)+max(q[0] for q in bas))/2),round((min(q[1] for q in bas)+max(q[1] for q in bas))/2)]
+        print('pivot', res['pivot'], 'tourelle', {m:len(v['i'])//3 for m,v in res['tourelle'].items()})
     print(g, {m:len(d['i'])//3 for m,d in res[g].items()}, 'taille', [round(mx[k]-mn[k],2) for k in range(3)])
 # obstacles du terrain : coupe de chaque objet à 0,13 au-dessus du sol
 Y0=2.75
