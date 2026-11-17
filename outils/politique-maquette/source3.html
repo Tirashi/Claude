@@ -109,8 +109,8 @@ const BATS = { // icône = case de la planche (colonne, rangée)
   farm:         { nom: "Ferme",           cout: 60,  delai: 2, produit: "20 grain",   icone: [0, 1] },
   vignoble:     { nom: "Vignoble",        cout: 90,  delai: 3, produit: "10 vin",     icone: [4, 1] },
   scierie:      { nom: "Scierie",         cout: 60,  delai: 2, produit: "15 bois",    icone: [0, 0] },
-  mine:         { nom: "Mine de fer",     cout: 80,  delai: 3, produit: "15 fer",     icone: [3, 18] },
-  mine_charbon: { nom: "Mine de charbon", cout: 80,  delai: 3, produit: "12 charbon", icone: [3, 18] },
+  mine:         { nom: "Mine de fer",     cout: 80,  delai: 3, produit: "15 fer",     icone: [2, 0] },
+  mine_charbon: { nom: "Mine de charbon", cout: 80,  delai: 3, produit: "12 charbon", icone: [10, 19] },
   workshop:     { nom: "Atelier d'outils", cout: 90, delai: 3, produit: "15 outils",  icone: [1, 0] },
   weaving:      { nom: "Tissage",         cout: 110, delai: 3, produit: "14 tissu",   icone: [13, 17] },
   caserne:      { nom: "Caserne",         cout: 60,  delai: 2, produit: "1 régiment", icone: [15, 3] }
@@ -331,7 +331,8 @@ function dessineLot([r, i], X, Y){ const R = REGIONS[r], t = performance.now();
   const ch = b[0] === "+", type = ch ? b.slice(1) : b, a = ch ? 0.45 : 1;
   if (type === "farm") cellule(Math.floor(t / 160) % 4, 1, X, Y, a);
   else if (type === "vignoble") cellule(4, 1, X, Y, a);
-  else if (type === "mine" || type === "mine_charbon") cellule(3, 18, X, Y, a);
+  else if (type === "mine") cellule(2, 0, X, Y, a);      // entrée de galerie (la rangée 18 était des coffres)
+  else if (type === "mine_charbon") cellule(10, 19, X, Y, a); // tas de charbon
   else if (type === "scierie") cellule(0, 0, X, Y, a);
   else if (type === "caserne") cellule(15, 3, X, Y, a);
   else if (type === "workshop") cellule(1, 0, X, Y, a);
