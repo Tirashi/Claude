@@ -49,3 +49,8 @@ Référence de l'utilisateur : captures de « fighterv2 » sur forge.ui8.ai (sho
 ## Commandes PC (17/11)
 - Clavier (codes physiques, donc AZERTY et QWERTY) : ↑/Z/W monter, ↓/S descendre, ←/Q/A et →/D virer (rampe de 0,25 s comme un joystick, `clavierPilote`) ; Espace canon (maintenu), E missile, R looping, F ou Maj tonneau, V vue. Les touches déclenchent les mêmes gestionnaires que les boutons ronds (`PointerEvent` envoyé au bouton) ; flèches et Espace ne font pas défiler la page quand le jeu est visible.
 - Aide des touches en bas à gauche sur écran à souris (`@media (hover:hover) and (pointer:fine)`), estompée dès qu'on joue au clavier ; la souris garde le joystick (cliquer-glisser) et les boutons.
+
+## Chasseurs qu'on ne pouvait pas semer (17/11)
+- Avant : le rôle `chasse` visait un point 32 m derrière le joueur, recalculé à chaque image (il suivait instantanément virages et loopings) et la vitesse tournait sans limite : flèches rouges permanentes, ennemis jamais visibles.
+- Maintenant : poursuite du joueur lui-même (avance ≤ 25 m) ; **virage limité** (1,1 rad/s, 1,5 pour un as : `applyAxisAngle`) ; **pente limitée à 33°** (ils ne peuvent pas suivre un looping) ; vitesse 1,06 × celle du joueur au-delà de 60 m, 0,97 entre 30 et 60, 0,88 plus près ; s'il passe devant le joueur → `tournoi` 6 s, après 10 s de chasse → `passe` 5 s, puis retour à la chasse (`roleDepart`).
+- Test : `test-chasseurs.js` (Playwright, page servie avec three depuis `lib/`) : 3 chasseurs placés 40 m derrière ; après un looping, ils sont 50 à 75 m devant, en `tournoi`.
