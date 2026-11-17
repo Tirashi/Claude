@@ -125,6 +125,9 @@ Leviers possibles (à mesurer par balayage en M4/M5, pas à l'intuition) : trés
 
 **Pistes du backlog les plus prometteuses** (ordre proposé) : B4 stock militaire distinct du trésor (règle 1 et 2) ; B1 prix dynamiques (règle 3, et rend embargos et traités systémiques) ; B2 deck d'événements (règle 6, tensions de milieu de partie) ; B5 capital politique dégressif et lois rapportables (règle 4) ; coûts croissants de l'apaisement (A1 « coûts croissants », règle 5).
 
+## 36. Maquette de l'écran principal (17/11)
+Demande de l'utilisateur : joli, sobre, clair et très lisible. Trois directions sur un écran de téléphone, même tour de jeu (tour 12, ambition Autorité, Laïcité en débat, conservateurs qui grondent) : **A. La Gazette** (journal d'époque, papier ivoire, serif, hémicycle et colères) ; **B. Le Cabinet** (moderne et sombre, cartes, anneau du tour, barre de chance du débat) ; **C. L'Atlas** (la carte des quatre régions au centre, emplacements visibles, fiche de la région choisie). Canevas : https://claude.ai/artifact/3PHDH9RQUgYvKLzJEwC8XJ — source `maquettes/politique-ecran/project/`. En attente du choix de l'utilisateur.
+
 ## 35. Les quatre points avant la maquette (16/11)
 1. **Répression** : les bots ne réprimaient que 0 à 2 fois par partie ; dès que possible (6 à 8 fois), +3 à +12 d'Autorité sans plus de révolutions. Les bots extrêmes répriment maintenant dès que c'est utile ; règle inchangée (à revoir après des parties réelles).
 2. **Classe moyenne** : le bot centre finissait sans or ; cause : l'atelier rapportait 4 % de son prix par tour et le tissage 10 % (18 à 28 % pour les autres). Validé : **atelier 15 outils, tissage 14 tissus** ; bot centre (ateliers d'abord, lois du centre peu coûteuses), référence de l'Autorité.
