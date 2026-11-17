@@ -28,3 +28,6 @@ Référence de l'utilisateur : captures de « fighterv2 » sur forge.ui8.ai (sho
 ## Version 6 (17/11 : ennemis à reculons, boutons carrés peu pratiques)
 - Ennemis : `Object3D.lookAt` tourne l'axe +Z vers la cible, le chasseur a le nez en −Z : modèle retourné (`rotation.y = π`) dans son groupe.
 - Commandes de jeu de tir sur téléphone : **joystick** qui apparaît sous le pouce gauche (anneau 104 px, bille bornée à 46 px ; joystick vers le haut = l'avion monte, vers le bas = il descend (choix de l'utilisateur)), suivi par `pointerId` ; **boutons ronds** à droite en arc : FEU (84 px, à garder appuyé), MISSILE, LOOP, TONNEAU ; VUE en petit en haut à droite. Le pilote automatique reprend 4 s après qu'on a tout lâché.
+
+## Sensibilité (17/11 : « ça va trop vite »)
+- Zone morte de 12 % au centre du joystick ; virage en courbe (dx × |dx| × 0,75, au lieu de dx × 1,7) avec une vitesse de virage lissée (`S.vyaw`) ; tangage plus doux (−dy × 0,7, borné à ± 0,75 rad, suivi en 1/1,3 s au lieu de 1/2,2 s).
