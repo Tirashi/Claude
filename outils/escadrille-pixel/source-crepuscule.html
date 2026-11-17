@@ -221,8 +221,8 @@ function dequantifie(sc0){sc0.updateMatrixWorld(true);sc0.traverse(o=>{if(!o.isM
   o.geometry.setAttribute('position',new THREE.BufferAttribute(f,3));const u=o.geometry.attributes.uv;
   if(u&&!(u.array instanceof Float32Array)){const g=new Float32Array(u.count*2),q=u.array instanceof Uint16Array?65535:255;for(let i=0;i<u.count;i++){g[i*2]=u.getX(i)/q;g[i*2+1]=u.getY(i)/q;}o.geometry.setAttribute('uv',new THREE.BufferAttribute(g,2));}
   o.position.set(0,0,0);o.scale.set(1,1,1);o.geometry.boundingBox=null;o.geometry.boundingSphere=null;});}
-// repeinture aux couleurs d'un camp (packs polyyai, polyhangar, mehrasaur) : la teinte dominante (la coque) devient un gris teinté du camp, les autres couleurs vives prennent la couleur du camp, le reste devient gris
-const REPEINTS={polyyai:1,polyhangar:1,mehrasaur:1},HUE={b:.6,r:0};
+// repeinture aux couleurs d'un camp (pack polyyai) : la teinte dominante (la coque) devient un gris teinté du camp, les autres couleurs vives prennent la couleur du camp, le reste devient gris
+const REPEINTS={polyyai:1},HUE={b:.6,r:0};
 function teinte(c,h){const o={};c.getHSL(o);if(o.s>.3&&o.l>.12&&o.l<.9)c.setHSL(h,.62,Math.min(.62,Math.max(.4,o.l)));else c.setHSL(0,0,Math.min(.82,o.l*.95+.04));}
 function texRepeinte(t,h){const im=t.image;if(!im||!im.width)return t;const cv=document.createElement('canvas');cv.width=im.width;cv.height=im.height;const x=cv.getContext('2d');x.drawImage(im,0,0);
   const d=x.getImageData(0,0,cv.width,cv.height),A=d.data,c=new THREE.Color(),o={},hist=new Float32Array(24);
@@ -270,8 +270,8 @@ function construire(c,flammes,camp='b'){if(c.m==='import'){const r=importe(c.cle
     return r;}
   const r=MODELES3D[c.m](c);r.flammes=[];if(flammes)for(const t of r.tuy){const f=flamme(.36,camp);f.position.set(t[0],t[1],t[2]-.1);r.g.add(f);r.flammes.push(f);}return r;}
 function chasseur(c){return construire(Object.assign({m:'faucon'},c),false).g;}
-const PACKS={"fga": "CORVETTES BLEUES \u00b7 FREE GAME ASSETS (craftpix)","polyyai":"POLYYAI (CC0) \u00b7 A ESSAYER","polyhangar":"POLYHANGAR (CC0) \u00b7 A ESSAYER","mehrasaur":"MEHRASAUR \u00b7 INBORN NINJA (CC0) \u00b7 A ESSAYER"};
-const ROT_PACK={polyyai:Math.PI,polyhangar:0,mehrasaur:0},ROT_MOD={};
+const PACKS={"fga": "CORVETTES BLEUES \u00b7 FREE GAME ASSETS (craftpix)","polyyai":"POLYYAI (CC0) \u00b7 A ESSAYER"};
+const ROT_PACK={polyyai:Math.PI},ROT_MOD={};
 Object.assign(COULEURS,{'fga_corvette1_b':{m:'import',cle:'fga_corvette1_b',rot:-Math.PI/2},'fga_corvette2_b':{coupe:.3,m:'import',cle:'fga_corvette2_b',rot:-Math.PI/2},'fga_corvette3_b':{coupe:.34,m:'import',cle:'fga_corvette3_b',rot:-Math.PI/2},'fga_corvette4_b':{coupe:.3,m:'import',cle:'fga_corvette4_b',rot:-Math.PI/2},'fga_corvette5_b':{m:'import',cle:'fga_corvette5_b',rot:-Math.PI/2}});
 for(const k in GLBS)if(REPEINTS[GLBS[k].pack])COULEURS[k]={m:'import',cle:k,repeint:1,rot:ROT_MOD[k]!==undefined?ROT_MOD[k]:ROT_PACK[GLBS[k].pack]};/* candidats à essayer, repeints en bleu (joueur) ou en rouge (ennemis) */
 for(const k in COULEURS){const c=COULEURS[k];c.pack=c.m==='import'?(PACKS[GLBS[c.cle].pack]||''):'CHASSEURS BLEUS (construits dans le code)';c.nom=c.m==='import'?GLBS[c.cle].nom:k;}

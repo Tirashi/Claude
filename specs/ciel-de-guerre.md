@@ -117,6 +117,7 @@ Planche : `chasseurs-proposes.png` (scratchpad, envoyée à l'utilisateur). Outi
 - Les bombardiers restent les corvettes et les frégates rouges.
 - Orientation : polyyai retournés de 180° ; polyhangar et mehrasaur dans le bon sens.
 - Poids : textures en 128 px sans lissage, géométrie quantifiée (`conversion/quantifie.py`, extension KHR_mesh_quantization, remise en coordonnées d'origine au chargement par `dequantifie()`). 3 gros vaisseaux qui ne servaient pas sont retirés. La page pèse 14 Mo (plafond : 16 Mo). Une fois le choix fait, on ne gardera que les modèles retenus.
+- Le même jour, l'utilisateur retire **polyhangar et mehrasaur** : il ne reste que les 35 polyyai à essayer.
 
 ## Licences à régler avant le jeu
 - **monogon** : réglé, tous retirés.
