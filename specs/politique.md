@@ -478,3 +478,7 @@ Retour : « rien ne donne vraiment comme je voudrais » ; recherche de packs de 
 - **B · Pixel** : la même carte rendue à 10 px par case (16 pour le pays), parchemin au pixel, couleurs réduites, contours tranchés, zoom par multiples entiers.
 - Le parcours « + Construire » (bâtiment puis place, production affichée) est repris.
 
+Retours sur la maquette 4 (17/11) : « la A rend vraiment bien » ; menus à retravailler ; carte du pays : « pas super fan » ; « notre pays est au centre alors que les distances sont différentes : le joueur ne voit pas qu'il est plus loin d'une nation que d'une autre ». Corrections :
+- **Distances lisibles** : notre pays passe sur la côte ouest (une baie au nord) ; seuls les deux voisins à 1 étape (Val-Roc, Contreforts) le touchent ; routes d'environ 10 cases (1 étape), 16 à 19 (2), 26 (3) ; la distance est écrite sous chaque nation (« +38 · 2 étapes · traité ») ; les charrettes vont à la même vitesse, donc mettent plus longtemps vers les nations lointaines.
+- **Menus façon carte ancienne** : cartouche en haut (tour, titre de la carte, or, Autorité, barre des factions) sur le papier du pack avec double filet d'encre ; onglet « Mon pays ▸ » accroché dessous ; ruban Lois / Budget / Armée / Journal ; **sceau de cire rouge** « Tour suivant » ; fiches au même papier.
+

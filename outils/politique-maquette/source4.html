@@ -63,6 +63,31 @@ button.btn.construire{position:absolute;left:10px;bottom:76px;padding:0 16px;bac
 .pc.ch{border-style:dashed}
 .pc.libre{border:2px dashed #9b2a1f;color:#9b2a1f}
 .legende{font-size:14px;max-width:390px;padding:0 16px;text-align:center;opacity:.85}
+
+/* 17/11 : menus façon carte ancienne (papier du pack, filets d'encre, sceau de cire) */
+.panneau{background:#efe3c8 var(--papier) center/cover;border:none;outline:1.5px solid #3a2a1c;outline-offset:-5px;box-shadow:0 0 0 2px #3a2a1c,0 4px 10px rgba(0,0,0,.45);border-radius:2px}
+.px .panneau{background:#e2d0a6;outline:none;box-shadow:0 0 0 3px #3a2a1c,0 3px 0 4px rgba(0,0,0,.4);border-radius:0}
+.cartouche{padding:9px 14px 9px;display:flex;flex-direction:column;gap:6px}
+.cartouche .l1{display:flex;align-items:baseline;gap:8px;font:16px 'IM Fell English SC',Georgia,serif}
+.cartouche .titre{flex:1;text-align:center;font-size:21px;letter-spacing:.04em}
+.cartouche .l2{display:flex;align-items:center;gap:8px}
+.cartouche .factions{height:7px;border:1px solid #3a2a1c}
+.onglet{align-self:flex-end;margin-top:-8px;min-height:38px!important;padding:0 12px;border-radius:0 0 6px 6px!important;border-top:none!important;background:#e4d3ae var(--papier) center/cover!important}
+.pied{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center}
+.ruban{display:grid;grid-template-columns:repeat(4,1fr);padding:4px}
+.ruban button{min-height:48px;background:none;border:none;border-right:1px solid rgba(58,42,28,.55);font:16px 'IM Fell English SC',Georgia,serif;color:#2b2118;cursor:pointer}
+.ruban button:last-child{border-right:none}
+.px .ruban button{font-family:'Pixelify Sans',sans-serif;font-size:14px}
+.sceau{width:70px;height:70px;border-radius:50%;border:none;cursor:pointer;color:#f3e6cf;font:15px/1.05 'IM Fell English SC',Georgia,serif;
+  background:radial-gradient(circle at 38% 32%,#c4473a,#8c2219 62%,#6d1912);box-shadow:0 3px 6px rgba(0,0,0,.5),inset 0 0 0 4px rgba(255,255,255,.12),inset 0 0 0 6px #8c2219,inset 0 0 0 7px rgba(255,255,255,.25)}
+.px .sceau{border-radius:0;font-family:'Pixelify Sans',sans-serif;font-size:13px;background:#9b2a1f;box-shadow:0 0 0 3px #3a2a1c,0 3px 0 4px rgba(0,0,0,.4)}
+button.btn{background:#e8d8b4;border:1.5px solid #3a2a1c;box-shadow:inset 0 0 0 2px #e8d8b4,inset 0 0 0 3px rgba(58,42,28,.5)}
+button.btn.construire{bottom:96px;background:#efe3c8 var(--papier) center/cover;color:#9b2a1f;border:none;box-shadow:0 0 0 2px #3a2a1c,0 4px 10px rgba(0,0,0,.45);outline:1.5px solid #9b2a1f;outline-offset:-5px;font-size:18px;min-height:50px}
+.zoom{top:200px}
+.fiche{gap:9px;padding:16px 16px 14px}
+.fiche h2{text-align:center;border-bottom:1px solid rgba(58,42,28,.5);padding-bottom:4px}
+.choix{background:rgba(255,250,235,.55)}
+.toast{top:130px}
 </style>
 </head>
 <body>
@@ -72,19 +97,19 @@ button.btn.construire{position:absolute;left:10px;bottom:76px;padding:0 16px;bac
 <div class="tel" id="tel">
   <canvas id="c" aria-label="Carte du jeu"></canvas>
   <div class="hud haut">
-    <div class="barre panneau">
-      <b id="tour">Tour 12/40</b><span class="puce">Autorité 1/3</span>
-      <div class="factions" id="factions" aria-label="Puissance des cinq factions"></div>
-      <b class="or" id="or">486 or</b>
+    <div class="cartouche panneau">
+      <div class="l1"><span id="tour">Tour 12/40</span><span class="titre" id="titre">Le continent</span><span id="or">486 or</span></div>
+      <div class="l2"><span class="puce">Autorité 1/3</span><div class="factions" id="factions" aria-label="Puissance des cinq factions"></div></div>
     </div>
-    <div class="titre panneau"><span id="titre">Le continent</span><button class="btn" id="bascule">Mon pays ▸</button></div>
+    <button class="btn onglet" id="bascule">Mon pays ▸</button>
   </div>
   <button class="btn construire" id="construire" hidden>+ Construire</button>
   <div class="zoom"><button class="btn" id="zPlus" aria-label="Rapprocher">+</button><button class="btn" id="zMoins" aria-label="Éloigner">−</button></div>
   <div class="toast panneau" id="toast" role="status"></div>
   <div class="hud bas">
     <div class="fiche panneau" id="fiche"></div>
-    <div class="actions-bas"><button class="btn">Lois</button><button class="btn">Budget</button><button class="btn">Armée</button><button class="btn">Journal</button><button class="btn fin" id="fin">Tour suivant</button></div>
+    <div class="pied"><nav class="ruban panneau" aria-label="Menus"><button>Lois</button><button>Budget</button><button>Armée</button><button>Journal</button></nav>
+      <button class="sceau" id="fin">Tour<br>suivant</button></div>
   </div>
 </div>
 <p class="legende">Carte sur papier : A à l'encre (pack Fantasy Map Assets Lite, Deface Games), B la même carte en pixel art. Touchez une nation (contrat : une charrette part), « Mon pays », puis « + Construire ».</p>
@@ -92,13 +117,13 @@ button.btn.construire{position:absolute;left:10px;bottom:76px;padding:0 16px;bac
 "use strict";
 // ======================= la partie (valeurs du moteur) =======================
 const NATIONS = {
-  joueur:      { nom: "Notre pays",  graine: [18, 20], coul: [61, 110, 190], rel: null, grande: true },
-  val_roc:     { nom: "Val-Roc",     graine: [27, 11], coul: [196, 72, 56],  rel: 12, dist: 1, vend: "fer, charbon", achete: "grain, tissu, vin", grande: true },
-  contreforts: { nom: "Contreforts", graine: [8, 25],  coul: [140, 88, 180], rel: 20, dist: 1, vend: "outils, bois", achete: "grain, charbon" },
-  brume:       { nom: "Brume",       graine: [9, 9],   coul: [214, 168, 52], rel: 38, dist: 2, vend: "tissu, vin", achete: "fer, grain, bois", traite: "Entente des Ports", grande: true },
-  hautefage:   { nom: "Hautefage",   graine: [28, 28], coul: [96, 100, 112], rel: 5,  dist: 2, vend: "bois, fer", achete: "charbon, grain" },
-  aurele:      { nom: "Aurèle",      graine: [18, 4],  coul: [214, 118, 48], rel: -4, dist: 3, vend: "grain, vin", achete: "outils, fer, tissu" },
-  port_salin:  { nom: "Port-Salin",  graine: [17, 33], coul: [52, 150, 136], rel: -8, dist: 3, vend: "tissu, outils", achete: "bois, vin, charbon", grande: true }
+  joueur:      { nom: "Notre pays",  graine: [8, 19], coul: [61, 110, 190], rel: null, grande: true },
+  val_roc:     { nom: "Val-Roc",     graine: [17, 16], coul: [196, 72, 56],  rel: 12, dist: 1, vend: "fer, charbon", achete: "grain, tissu, vin", grande: true },
+  contreforts: { nom: "Contreforts", graine: [9, 29],  coul: [140, 88, 180], rel: 20, dist: 1, vend: "outils, bois", achete: "grain, charbon" },
+  brume:       { nom: "Brume",       graine: [16, 6],   coul: [214, 168, 52], rel: 38, dist: 2, vend: "tissu, vin", achete: "fer, grain, bois", traite: "Entente des Ports", grande: true },
+  hautefage:   { nom: "Hautefage",   graine: [20, 27], coul: [96, 100, 112], rel: 5,  dist: 2, vend: "bois, fer", achete: "charbon, grain" },
+  aurele:      { nom: "Aurèle",      graine: [29, 9],  coul: [214, 118, 48], rel: -4, dist: 3, vend: "grain, vin", achete: "outils, fer, tissu" },
+  port_salin:  { nom: "Port-Salin",  graine: [29, 30], coul: [52, 150, 136], rel: -8, dist: 3, vend: "tissu, outils", achete: "bois, vin, charbon", grande: true }
 };
 const IDS = Object.keys(NATIONS);
 const FACTIONS = [["#B23A2E", 27], ["#C98A1B", 36], ["#3E8E7E", 31], ["#2F5D9E", 41], ["#5B3B6E", 33]];
@@ -127,11 +152,11 @@ function bruit(x, y, s){ const xi = Math.floor(x), yi = Math.floor(y), fx = x - 
   const a = hache(xi, yi, s), b = hache(xi + 1, yi, s), c = hache(xi, yi + 1, s), d = hache(xi + 1, yi + 1, s);
   return a + (b - a) * l(fx) + (c - a) * l(fy) + (a - b - c + d) * l(fx) * l(fy); }
 const W = 37, H = 38;
-const BLOBS = [[18, 19, 13, 15], [9, 9, 6, 6], [27, 11, 6, 7], [8, 26, 6, 6], [28, 28, 6, 7], [17, 33, 6, 4], [18, 4, 5, 3.5]];
+const BLOBS = [[19, 19, 11, 13], [8, 19, 6, 7], [10, 29, 6, 5], [16, 6, 7, 4], [29, 9, 6, 5.5], [29, 30, 6, 5.5], [24, 19, 9, 6]]; // 17/11 : notre pays à l'ouest, les distances se voient
 function champ(x, y){ let f = -9;
   for (const [cx, cy, rx, ry] of BLOBS) f = Math.max(f, 1 - ((x - cx) / rx) ** 2 - ((y - cy) / ry) ** 2);
   f += 0.5 * (bruit(x / 3.5, y / 3.5, 3) - 0.5) + 0.12 * (bruit(x / 1.1, y / 1.1, 4) - 0.5);
-  if (((x - 1.5) / 3) ** 2 + ((y - 17) / 4) ** 2 < 1 || ((x - 35) / 3) ** 2 + ((y - 19) / 3) ** 2 < 1) f -= 1.2;
+  if (((x - 6) / 4.5) ** 2 + ((y - 10.5) / 2.6) ** 2 < 1 || ((x - 35) / 3) ** 2 + ((y - 19) / 3) ** 2 < 1) f -= 1.2;   // la baie au nord de notre pays
   const bord = Math.min(x - 1.5, y - 1.5, W - 2.5 - x, H - 2.5 - y); if (bord < 1) f -= (1 - bord) * 0.6;
   return f - 0.1; }
 const terre = (x, y) => champ(x, y) > 0;
@@ -287,8 +312,8 @@ function rendu(B, px, net, pays){
   const cache = {};
   for (const [x, y, nom, t] of dec){ const cle = nom + t; const tp = cache[cle] || (cache[cle] = tampon(nom, t * px, null, net));
     e.drawImage(tp, Math.round(X(x) - tp.width / 2), Math.round(Y(y) - tp.height)); }
-  if (!pays){ const tp = tampon("compass", 3.4 * px, null, net); e.globalAlpha = .8; e.drawImage(tp, X(30.5) - tp.width / 2, Y(33) - tp.height / 2); e.globalAlpha = 1;
-    const v = tampon("waves_2", 1.6 * px, null, net); for (const [x, y] of [[3, 4], [33, 4], [3.5, 34], [33, 15]]) if (!terre(x, y)) e.drawImage(v, X(x), Y(y)); }
+  if (!pays){ const tp = tampon("compass", 3.4 * px, null, net); e.globalAlpha = .8; e.drawImage(tp, X(4) - tp.width / 2, Y(33.5) - tp.height / 2); e.globalAlpha = 1;
+    const v = tampon("waves_2", 1.6 * px, null, net); for (const [x, y] of [[3, 4], [4, 10], [3.5, 34], [34, 19]]) if (!terre(x, y)) e.drawImage(v, X(x), Y(y)); }
   if (net) tranche(L);
   k.drawImage(L, 0, 0);
   return { c, B, px };
@@ -361,7 +386,7 @@ function etiquette(txt, x, y, taille, opts){ const o = opts || {}, net = mode ==
 function etiquettes(){
   if (carte === "monde"){ for (const id of IDS){ const N = NATIONS[id], [x, y] = N.graine, sel = choix === id;
       etiquette(id === "joueur" ? "Notre pays" : N.nom, x, y + .75, 17, { fond: sel ? "rgba(155,42,31,.9)" : null, coul: sel ? "#efe3c8" : null });
-      if (N.rel != null) etiquette((N.rel > 0 ? "+" : "") + N.rel + (N.traite ? " · traité" : ""), x, y + 1.45, 13, { sc: false, ital: true, coul: N.rel < 0 ? ROUGE : "rgb(48,34,22)" }); } }
+      if (N.rel != null) etiquette((N.rel > 0 ? "+" : "") + N.rel + " · " + N.dist + " étape" + (N.dist > 1 ? "s" : "") + (N.traite ? " · traité" : ""), x, y + 1.45, 13, { sc: false, ital: true, coul: N.rel < 0 ? ROUGE : "rgb(48,34,22)" }); } }
   else {
     for (const r of RIDS){ const [x, y] = CENTRES[r], R0 = REGIONS[r], libres = R0.bat.filter(b => !b).length;
       etiquette(R0.nom, x, y - 1.15, 18, { fond: choix === r ? "rgba(155,42,31,.9)" : null, coul: choix === r ? "#efe3c8" : null });
@@ -453,8 +478,8 @@ function cadrePays(){ const v = vue(), B = PAYS_B, iw = B.x1 - B.x0 - 4, ih = B.
 function change(c){ carte = c; fermeFiche(); const v = vue();
   if (c === "monde"){ cam.x = W / 2; cam.y = H / 2 + 1; const z = Math.min(v.w / (W - 4), (v.h - 200) / H); cam.z = mode === "pixel" ? Math.max(1, Math.round(z / PX.pixel.monde)) * PX.pixel.monde : z; }
   else cadrePays();
-  document.getElementById("titre").textContent = c === "monde" ? "Le continent" : "Notre pays — 4 régions";
-  document.getElementById("bascule").textContent = c === "monde" ? "Mon pays ▸" : "◂ Continent";
+  document.getElementById("titre").textContent = c === "monde" ? "Le continent" : "Notre pays";
+  document.getElementById("bascule").textContent = c === "monde" ? "Mon pays ▸" : "◂ Le continent";
   document.getElementById("construire").hidden = c === "monde"; }
 document.getElementById("bascule").onclick = () => change(carte === "monde" ? "pays" : "monde");
 document.getElementById("construire").onclick = menuGeneral;
@@ -464,7 +489,7 @@ document.getElementById("dirB").onclick = () => changeMode("pixel");
 document.getElementById("factions").innerHTML = FACTIONS.map(([c, p]) => `<span style="width:${p / 1.68}%;background:${c}"></span>`).join("");
 window.addEventListener("resize", dimensionne);
 Promise.all([charge("papier", "__PAPIER__"), ...Object.entries(T).map(([n, s]) => charge(n, s))]).then(() => {
-  dimensionne(); prepare(); caravanes.push({ nation: "brume", s: 2, sens: 1 }, { nation: "val_roc", s: 1, sens: 1 }); change("monde"); requestAnimationFrame(frame); });
+  document.documentElement.style.setProperty("--papier", `url(${IMG.papier.src})`); dimensionne(); prepare(); caravanes.push({ nation: "brume", s: 2, sens: 1 }, { nation: "val_roc", s: 1, sens: 1 }); change("monde"); requestAnimationFrame(frame); });
 </script>
 </body>
 </html>
