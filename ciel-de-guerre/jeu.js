@@ -306,12 +306,16 @@ function ouvrirHangar(){try{document.exitPointerLock();}catch(x){}const barres=n
   h+='<button data-k="x" class="fermer">FERMER</button>';hangar.innerHTML=h;hangar.style.display='flex';}
 /* on choisit au « click » (un vrai toucher, pas le début d'un glissement) : sur téléphone, glisser pour faire défiler la liste ne doit rien choisir */
 for(const t of ['pointerdown','pointermove','pointerup','touchstart','touchmove'])hangar.addEventListener(t,e=>e.stopPropagation(),{passive:true});
-hangar.addEventListener('click',e=>{e.stopPropagation();const b=e.target.closest('button');if(!b)return;if(b.dataset.e){const n=b.dataset.e,i=ENNEMIS.indexOf(n);if(i<0)ENNEMIS.push(n);else ENNEMIS.splice(i,1);try{localStorage.setItem('escadrille.ennemis',JSON.stringify(ENNEMIS));}catch(x){}const t=hangar.scrollTop;ouvrirHangar();hangar.scrollTop=t;return;}if(b.dataset.k!=='x')choisir(+b.dataset.k);hangar.style.display='none';});
-function changerAvion(){choisir((choix+1)%NOMS.length);return;nav.remove(moi);modele=construire(COULEURS[NOMS[choix]],true);moi=modele.g;moi.scale.setScalar(.66);nav.add(moi);versCalque(moi);try{localStorage.setItem('cieldeguerre.avion',NOMS[choix]);}catch(e){}annonce(`HANGAR<b>${NOMS[choix]}</b>Bon vol !`);}
+hangar.addEventListener('click',e=>{e.stopPropagation();const b=e.target.closest('button');if(!b)return;if(b.dataset.k!=='x')choisir(+b.dataset.k);hangar.style.display='none';});
+function changerAvion(){choisir((choix+1)%NOMS.length);}
 document.getElementById('charge').remove();
 // pilotage
 const S={mode:'titre',vies:3,dx:0,dy:0,blindage:100,p:new THREE.Vector3(0,40,0),yaw:0,pitch:0,bank:0,roll:0,rollT:-1,loopT:-1,v:46,boost:0,auto:true,doigt:null,dernier:0,vue:0,tir:false,munB:300,munM:5,t:0,score:0};
 S.munM=FAM().mis;const Q=new THREE.Quaternion(),E=new THREE.Euler(0,0,0,'YXZ');window.CielDeGuerre={S,get ennemis(){return ennemis;},FLOTTE,nouvellePartie:()=>nouvellePartie(),abattu:()=>abattu(),pause:()=>pause(),reprendre:()=>reprendre(),get mode(){return S.mode;},get vague(){return V.n;}};/* pour les tests */
+// visée : au doigt et au clavier, droit devant ; à la souris, la direction de la souris, ramenée dans un cône de 25° autour du nez
+// (le réticule et les balles la suivent tout de suite, sans attendre que l'appareil ait fini de tourner)
+const CONE=.44;function visee(fwd){if(!S.souris||S.auto||S.mode!=='jeu'||S.loopT>=0)return fwd;const cm=Math.cos(S.mp),D=new THREE.Vector3(-Math.sin(S.my)*cm,Math.sin(S.mp),-Math.cos(S.my)*cm);
+  const a=D.angleTo(fwd);S.horsCone=a>CONE;return a<=CONE?D:fwd.clone().lerp(D,CONE/a).normalize();}
 const tonneau=(cote)=>{if(S.rollT<0){S.rollT=0;S.rollD=cote||(S.bank>0?-1:1);}};
 const joy=document.getElementById('joy'),bille=joy.firstElementChild,RJ=46;const manuel=(ms=4000)=>{if(S.mode!=='jeu')return;S.auto=false;clearTimeout(S.to);S.to=setTimeout(()=>{S.tir=false;},ms);};/* en partie, le pilote automatique ne reprend jamais la main */
 // souris (PC) : elle pilote. Le repère rond est une direction fixe dans le monde, l'avion tourne vers lui ; clic gauche : feu, clic droit : missile
@@ -389,7 +393,7 @@ function image(m){const dt=Math.min(.05,(m-av)/1000);av=m;requestAnimationFrame(
   // traînées
   for(const[k,t]of tr.entries()){t.pos.copyWithin(3,0,(t.n-1)*3);const w=new THREE.Vector3((k?1:-1)*modele.env*.66,0,1).applyQuaternion(Q).add(S.p);t.pos[0]=w.x;t.pos[1]=w.y;t.pos[2]=w.z;if(S.t<.1)for(let i=0;i<t.n;i++)t.pos.set([w.x,w.y,w.z],i*3);t.g.attributes.position.needsUpdate=true;}
   // canon
-  if(S.tir&&S.munB>0&&(S.cad=(S.cad||0)-dt)<=0){S.cad=.07;S.munB--;S.canon=-(S.canon||1);/* deux canons, un coup chacun */const b=new THREE.Mesh(GEO_BALLE,MAT_BALLE);b.position.copy(S.p).addScaledVector(fwd,3).add(new THREE.Vector3(S.canon*modele.env*.3,0,0).applyQuaternion(Q));b.quaternion.copy(Q);sc.add(b);balles.push({b,v:fwd.clone().multiplyScalar(v+160),t:1.1});}
+  if(S.tir&&S.munB>0&&(S.cad=(S.cad||0)-dt)<=0){S.cad=.07;S.munB--;S.canon=-(S.canon||1);/* deux canons, un coup chacun */const vis=visee(fwd);const b=new THREE.Mesh(GEO_BALLE,MAT_BALLE);b.position.copy(S.p).addScaledVector(fwd,3).add(new THREE.Vector3(S.canon*modele.env*.3,0,0).applyQuaternion(Q));b.lookAt(b.position.clone().add(vis));sc.add(b);balles.push({b,v:vis.clone().multiplyScalar(v+160),t:1.1});}
   for(const b of balles){b.t-=dt;b.b.position.addScaledVector(b.v,dt);for(const e of ennemis)if(e.vie>0&&b.b.position.distanceTo(e.g.position)<e.rayon){b.t=0;e.vie--;if(e.vie<=0){boom(e.g.position);sc.remove(e.g);S.score+=100;}}
     if(b.t>0)for(const t of TOURS)if(t.vie>0&&b.b.position.distanceTo(t.g.position)<t.rayon){b.t=0;t.vie--;boom(b.b.position,5,['#ffffff','#ffe066','#ff8a2a']);break;}/* tourelles rouges : 8 balles */
     if(b.t>0)for(const n of FLOTTE)if(b.b.position.distanceTo(n.g.position)<n.lg*.3){b.t=0;boom(b.b.position,4,['#ffffff','#ffe066']);break;}/* les balles ricochent sur les grands vaisseaux */}
@@ -449,7 +453,7 @@ function image(m){const dt=Math.min(.05,(m-av)/1000);av=m;requestAnimationFrame(
   cam.position.copy(cp);cam.quaternion.copy(S.qc);ciel.position.copy(cam.position);
   hud.innerHTML=`SCORE ${String(S.score).padStart(6,'0')} · ${'✈'.repeat(Math.max(0,S.vies))}<br>VAGUE ${V.n} · ENNEMIS ${ennemis.length}<br>BLINDAGE ${'▮'.repeat(Math.ceil(S.blindage/10))}${'▯'.repeat(10-Math.ceil(S.blindage/10))}`;document.getElementById('nTir').textContent=S.munB;document.getElementById('nMis').textContent='▮'.repeat(S.munM)||'—';
   if(S.munB<=0)S.munB=300;if(S.munM<=0&&!S.rech){S.rech=1;setTimeout(()=>{S.munM=FAM().mis;S.rech=0;},6000);}
-  rendre();if(S.mode==='jeu')viseur(fwd,dt);else ox.clearRect(0,0,OW,OH);}
+  rendre();if(S.mode==='jeu')viseur(visee(fwd),dt);else ox.clearRect(0,0,OW,OH);}
 function rendre(){cam.layers.set(0);R.setRenderTarget(cible);R.setClearColor(0x000000,1);R.clear();R.render(sc,cam);
   cam.layers.set(AVIONS);R.setRenderTarget(cibleAvions);R.setClearColor(0x000000,0);R.clear();R.render(sc,cam);
   R.setRenderTarget(null);R.render(scPost,camPost);}
@@ -474,7 +478,7 @@ function viseur(fwd,dt){ox.clearRect(0,0,OW,OH);
     if(prs&&Math.floor(S.t*6)%2)continue;ox.save();ox.translate(Math.round(x),Math.round(y));ox.rotate(Math.atan2(dy,dx));
     ox.fillStyle='#1a1c22';ox.beginPath();ox.moveTo(6,0);ox.lineTo(-4,-5);ox.lineTo(-4,5);ox.fill();ox.fillStyle=prs?'#ff4a2a':'#e2682e';ox.beginPath();ox.moveTo(4,0);ox.lineTo(-3,-3);ox.lineTo(-3,3);ox.fill();ox.restore();}
   // le repère de la souris : la direction vers laquelle l'avion tourne
-  if(S.souris&&!S.auto){const cm=Math.cos(S.mp);const q=versEcran(S.p.clone().add(new THREE.Vector3(-Math.sin(S.my)*cm,Math.sin(S.mp),-Math.cos(S.my)*cm).multiplyScalar(120)));
+  if(S.souris&&!S.auto&&S.horsCone){const cm=Math.cos(S.mp);/* le rond pointillé : seulement quand on vise au-delà du cône (là où l'appareil tourne) */const q=versEcran(S.p.clone().add(new THREE.Vector3(-Math.sin(S.my)*cm,Math.sin(S.mp),-Math.cos(S.my)*cm).multiplyScalar(120)));
     if(q){const[x,y]=[Math.round(q[0]),Math.round(q[1])];for(let a=0;a<16;a++){const ang=a/16*Math.PI*2;px(x+Math.round(Math.cos(ang)*5),y+Math.round(Math.sin(ang)*5),1,1,a%2?'#ffffff':'#1a1c22');}}}
   // le viseur : là où vont les balles, 120 m devant
   const v=versEcran(S.p.clone().addScaledVector(fwd,120));if(v){const[x,y]=[Math.round(v[0]),Math.round(v[1])];

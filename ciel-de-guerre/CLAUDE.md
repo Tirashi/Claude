@@ -4,6 +4,7 @@ Combat aérien 3D low poly. Cahier des charges : [`specs/ciel-de-guerre.md`](../
 - **jeu.js est fabriqué** depuis la source de la maquette par `outils/escadrille-pixel/vers_jeu.py` pendant la session 1 ; désormais on modifie `jeu.js` directement.
 - **Modèles** : chargés à la demande (`chargerModele`) ; au démarrage la flotte, les bombardiers, l'appareil du joueur et les polyvalents, le reste en fond. Pas dans `FILES` de `sw.js` (9 Mo) : le service worker les garde au fil du jeu. Copie artefact : `window.CDG_B64` (base64) remplace les fichiers.
 - **Repeinture** : `repeint()` fait `<cle>_b` et `<cle>_r` (bleu joueur, rouge ennemi). **Quantifiés** (`conversion/quantifie.py`) : `dequantifie()` remet les coordonnées d'origine (tourelles et tuyères en dépendent).
+- **Visée** : `visee(fwd)` = direction des canons (souris : cône `CONE` = 25° autour du nez) ; balles, réticule et verrouillage l'utilisent.
 - **Familles** `FAMILLES` (vitesse, virage, blindage, missiles, vie ennemie) ; `FAM()` = celle de l'appareil du joueur.
 - **Écrans** : `S.mode` = titre | jeu | pause | fin ; hors partie, pilote automatique et pas de dégâts.
 - **Tests** : `window.CielDeGuerre` (`S`, `ennemis`, `nouvellePartie()`, `abattu()`, `pause()`, `mode`, `vague`). Les `.glb` se chargent en `http://` (serveur local), pas en `file://`.

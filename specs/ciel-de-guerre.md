@@ -76,6 +76,7 @@ Historique des directions : *Escadrille pixel* (gros pixels, sprite dessiné), p
 - **Écrans** : titre (le combat continue derrière, en pilote automatique), pause (bouton ❚❚, touche P ou Échap ; Échap rend la souris), fin de partie (score, vague, record). Commandes, hangar, et retour à la Ludothèque depuis le titre et la pause.
 - **Partie** : 3 appareils ; on démarre avec le polyvalent 7 ; tout le hangar est ouvert (les déblocages viendront plus tard). Record dans `cieldeguerre.record` (score, vague, parties) ; appareil choisi dans `cieldeguerre.avion`.
 - **Modèles** : 52 fichiers `.glb` dans `modeles/` (9,6 Mo), chargés à la demande et gardés par le service worker au fil du jeu (pas préchargés pour toute la Ludothèque).
+- **Visée à la souris** (18/11, retour de l'utilisateur : « sur PC le gameplay est encore compliqué ; le réticule devrait suivre la souris sans latence ») : les canons visent la direction de la souris dans un cône de 25° autour du nez (`visee()`). Le réticule, les balles et le verrouillage des missiles la suivent tout de suite, et l'appareil continue de tourner vers elle. Au-delà du cône, le réticule reste au bord et le rond pointillé montre la direction voulue.
 - **Artefact** : le jeu remplace la maquette au même lien (copie de 12,9 Mo avec les modèles en base64).
 
 ## Plan des sessions (proposition)
