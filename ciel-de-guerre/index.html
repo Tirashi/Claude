@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ciel de guerre</title>
+<meta name="description" content="Ciel de guerre : combat aérien en 3D low poly au-dessus d'un archipel, au milieu d'une bataille de grands vaisseaux.">
+<link rel="manifest" href="../manifest.webmanifest">
+<meta name="theme-color" content="#2a1f38">
+<link rel="icon" href="../icons/icon-192.png">
+<link rel="apple-touch-icon" href="../icons/apple-touch-icon.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="tel" id="t"><div class="charge" id="charge">CHARGEMENT…</div>
+<div class="hud" id="hud"></div>
+<div class="bandeau" id="bandeau"></div>
+<div class="joy" id="joy"><i></i></div><div class="aidejoy" id="aidejoy">POUCE GAUCHE :<br>PILOTER</div>
+<div class="clavier" id="clavier"></div>
+<div class="hangar" id="hangar"></div>
+<button class="rond" id="bPause" aria-label="Pause">❚❚</button><button class="rond" id="bAvion">AVION</button><button class="rond" id="bVue">VUE</button><button class="rond" id="bLoop">LOOP</button><button class="rond" id="bRoll">TON-<br>NEAU</button><button class="rond" id="bMis">MIS.<small id="nMis">▮▮▮▮▮</small></button><button class="rond" id="bTir">FEU<small id="nTir">300</small></button>
+
+<div class="ecran" id="eTitre">
+  <div class="carte">
+    <h1>CIEL<br>DE GUERRE</h1>
+    <p class="sous">Combat aérien au-dessus de l'archipel, au milieu de la bataille des grands vaisseaux.</p>
+    <button id="tJouer" class="grand">JOUER</button>
+    <button id="tHangar">HANGAR</button>
+    <button id="tAide">COMMANDES</button>
+    <p class="record" id="tRecord"></p>
+    <a class="lien ludo-retour" href="../index.html">◀ LUDOTHEQUE</a>
+  </div>
+</div>
+<div class="ecran" id="ePause" hidden>
+  <div class="carte">
+    <h2>PAUSE</h2>
+    <button id="pReprendre" class="grand">REPRENDRE</button>
+    <button id="pHangar">HANGAR</button>
+    <button id="pAide">COMMANDES</button>
+    <button id="pQuitter">ABANDONNER</button>
+    <a class="lien ludo-retour" href="../index.html">◀ LUDOTHEQUE</a>
+  </div>
+</div>
+<div class="ecran" id="eFin" hidden>
+  <div class="carte">
+    <h2>FIN DE MISSION</h2>
+    <p class="score" id="fScore"></p>
+    <p class="sous" id="fDetail"></p>
+    <p class="record" id="fRecord"></p>
+    <button id="fRejouer" class="grand">REJOUER</button>
+    <button id="fMenu">MENU</button>
+  </div>
+</div>
+<div class="ecran" id="eAide" hidden>
+  <div class="carte aide">
+    <h2>COMMANDES</h2>
+    <p><b>TELEPHONE</b><br>Pose le pouce gauche n'importe où : un joystick apparaît (vers le haut : on monte). Boutons ronds à droite : FEU, MISSILE, LOOP, TONNEAU.</p>
+    <p><b>PC, A LA SOURIS</b><br>Clique dans le jeu : la souris dirige l'appareil vers le repère rond. Clic gauche : feu ; clic droit : missile. Z accélère, S freine, Q et D font un écart ; deux appuis rapides sur Z : looping, sur Q ou D : tonneau. Échap rend la souris (et met en pause).</p>
+    <p><b>PC, AU CLAVIER</b><br>Flèches : piloter. Espace : feu ; E : missile ; R : looping ; F : tonneau ; V : vue ; C : appareil suivant ; P : pause.</p>
+    <p class="sous">Le missile se verrouille sur la cible dans l'axe (cadre jaune puis LOCK). Les tourelles rouges des grands vaisseaux se détruisent aussi.</p>
+    <button id="aRetour" class="grand">RETOUR</button>
+  </div>
+</div>
+</div>
+<script src="../lib/three.min.js"></script>
+<script src="../lib/GLTFLoader.js"></script>
+<script src="catalogue.js"></script>
+<script src="jeu.js"></script>
+<script>
+/* Ludothèque : mode hors connexion. Pas de bouton « ◀ MENU » ajouté par-dessus le jeu :
+   le retour à la Ludothèque est dans les menus du jeu (écran titre, pause). */
+(function () {
+  try {
+    if ("serviceWorker" in navigator && (location.protocol === "https:" || /^(localhost|127\.0\.0\.1)$/.test(location.hostname)))
+      navigator.serviceWorker.register("../sw.js").catch(function () {});
+  } catch (e) {}
+})();
+</script>
+</body>
+</html>

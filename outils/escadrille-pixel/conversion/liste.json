@@ -1,0 +1,331 @@
+[
+ {
+  "cle": "fga_destroyer1",
+  "nom": "DESTROYER 1",
+  "f": "PACKS/fga2/x_Battle_SpaceShip/Destroyer_01.fbx",
+  "tex": "PACKS/fga2/x_Battle_SpaceShip/Texture/T_Spase_64.png",
+  "pack": "fga2"
+ },
+ {
+  "cle": "fga_croiseur1",
+  "nom": "CROISEUR 1",
+  "f": "PACKS/fga2/x_Battle_SpaceShip/Light cruiser_01.fbx",
+  "tex": "PACKS/fga2/x_Battle_SpaceShip/Texture/T_Spase_blue.png",
+  "pack": "fga2"
+ },
+ {
+  "cle": "fga_destroyer2",
+  "nom": "DESTROYER 2",
+  "f": "PACKS/fga2/x_Battle_SpaceShip/Destroyer_02.fbx",
+  "tex": "PACKS/fga2/x_Battle_SpaceShip/Texture/T_Spase_blue.png",
+  "pack": "fga2"
+ },
+ {
+  "cle": "fga_croiseur2",
+  "nom": "CROISEUR 2",
+  "f": "PACKS/fga2/x_Battle_SpaceShip/Light cruiser_02.fbx",
+  "tex": "PACKS/fga2/x_Battle_SpaceShip/Texture/T_Spase_64.png",
+  "pack": "fga2"
+ },
+ {
+  "cle": "fga_destroyer3",
+  "nom": "DESTROYER 3",
+  "f": "PACKS/fga2/x_Battle_SpaceShip/Destroyer_03.fbx",
+  "tex": "PACKS/fga2/x_Battle_SpaceShip/Texture/T_Spase_64.png",
+  "pack": "fga2"
+ },
+ {
+  "cle": "fga_destroyer4",
+  "nom": "DESTROYER 4",
+  "f": "PACKS/fga2/x_Battle_SpaceShip/Destroyer_04.fbx",
+  "tex": "PACKS/fga2/x_Battle_SpaceShip/Texture/T_Spase_blue.png",
+  "pack": "fga2"
+ },
+ {
+  "cle": "fga_croiseur4",
+  "nom": "CROISEUR 4",
+  "f": "PACKS/fga2/x_Battle_SpaceShip/Light cruiser_04.fbx",
+  "tex": "PACKS/fga2/x_Battle_SpaceShip/Texture/T_Spase_64.png",
+  "pack": "fga2"
+ },
+ {
+  "cle": "fga_corvette1_r",
+  "nom": "CORVETTE 1",
+  "f": "PACKS/fga/x_Free_Battle_Spaceship_3D_Models/Corvette_01.fbx",
+  "tex": "PACKS/fga/x_Free_Battle_Spaceship_3D_Models/Texture/T_Spase_64.png",
+  "pack": "fga"
+ },
+ {
+  "cle": "fga_fregate1_r",
+  "nom": "FREGATE 1",
+  "f": "PACKS/fga/x_Free_Battle_Spaceship_3D_Models/Frigate_01.fbx",
+  "tex": "PACKS/fga/x_Free_Battle_Spaceship_3D_Models/Texture/T_Spase_64.png",
+  "pack": "fga"
+ },
+ {
+  "cle": "fga_corvette2_r",
+  "nom": "CORVETTE 2",
+  "f": "PACKS/fga/x_Free_Battle_Spaceship_3D_Models/Corvette_02.fbx",
+  "tex": "PACKS/fga/x_Free_Battle_Spaceship_3D_Models/Texture/T_Spase_64.png",
+  "pack": "fga"
+ },
+ {
+  "cle": "fga_fregate2_r",
+  "nom": "FREGATE 2",
+  "f": "PACKS/fga/x_Free_Battle_Spaceship_3D_Models/Frigate_02.fbx",
+  "tex": "PACKS/fga/x_Free_Battle_Spaceship_3D_Models/Texture/T_Spase_64.png",
+  "pack": "fga"
+ },
+ {
+  "cle": "fga_corvette3_r",
+  "nom": "CORVETTE 3",
+  "f": "PACKS/fga/x_Free_Battle_Spaceship_3D_Models/Corvette_03.fbx",
+  "tex": "PACKS/fga/x_Free_Battle_Spaceship_3D_Models/Texture/T_Spase_64.png",
+  "pack": "fga"
+ },
+ {
+  "cle": "fga_fregate3_r",
+  "nom": "FREGATE 3",
+  "f": "PACKS/fga/x_Free_Battle_Spaceship_3D_Models/Frigate_03.fbx",
+  "tex": "PACKS/fga/x_Free_Battle_Spaceship_3D_Models/Texture/T_Spase_64.png",
+  "pack": "fga"
+ },
+ {
+  "cle": "fga_corvette4_r",
+  "nom": "CORVETTE 4",
+  "f": "PACKS/fga/x_Free_Battle_Spaceship_3D_Models/Corvette_04.fbx",
+  "tex": "PACKS/fga/x_Free_Battle_Spaceship_3D_Models/Texture/T_Spase_64.png",
+  "pack": "fga"
+ },
+ {
+  "cle": "fga_fregate4_r",
+  "nom": "FREGATE 4",
+  "f": "PACKS/fga/x_Free_Battle_Spaceship_3D_Models/Frigate_04.fbx",
+  "tex": "PACKS/fga/x_Free_Battle_Spaceship_3D_Models/Texture/T_Spase_64.png",
+  "pack": "fga"
+ },
+ {
+  "cle": "fga_corvette5_r",
+  "nom": "CORVETTE 5",
+  "f": "PACKS/fga/x_Free_Battle_Spaceship_3D_Models/Corvette_05.fbx",
+  "tex": "PACKS/fga/x_Free_Battle_Spaceship_3D_Models/Texture/T_Spase_64.png",
+  "pack": "fga"
+ },
+ {
+  "cle": "fga_fregate5_r",
+  "nom": "FREGATE 5",
+  "f": "PACKS/fga/x_Free_Battle_Spaceship_3D_Models/Frigate_05.fbx",
+  "tex": "PACKS/fga/x_Free_Battle_Spaceship_3D_Models/Texture/T_Spase_64.png",
+  "pack": "fga"
+ },
+ {
+  "cle": "py1",
+  "nom": "POLYYAI 1",
+  "f": "PACKS/polyyai/x/1.glb",
+  "pack": "polyyai"
+ },
+ {
+  "cle": "py2",
+  "nom": "POLYYAI 2",
+  "f": "PACKS/polyyai/x/2.glb",
+  "pack": "polyyai"
+ },
+ {
+  "cle": "py3",
+  "nom": "POLYYAI 3",
+  "f": "PACKS/polyyai/x/3.glb",
+  "pack": "polyyai"
+ },
+ {
+  "cle": "py4",
+  "nom": "POLYYAI 4",
+  "f": "PACKS/polyyai/x/4.glb",
+  "pack": "polyyai"
+ },
+ {
+  "cle": "py5",
+  "nom": "POLYYAI 5",
+  "f": "PACKS/polyyai/x/5.glb",
+  "pack": "polyyai"
+ },
+ {
+  "cle": "py6",
+  "nom": "POLYYAI 6",
+  "f": "PACKS/polyyai/x/6.glb",
+  "pack": "polyyai"
+ },
+ {
+  "cle": "py7",
+  "nom": "POLYYAI 7",
+  "f": "PACKS/polyyai/x/7.glb",
+  "pack": "polyyai"
+ },
+ {
+  "cle": "py8",
+  "nom": "POLYYAI 8",
+  "f": "PACKS/polyyai/x/8.glb",
+  "pack": "polyyai"
+ },
+ {
+  "cle": "py9",
+  "nom": "POLYYAI 9",
+  "f": "PACKS/polyyai/x/9.glb",
+  "pack": "polyyai"
+ },
+ {
+  "cle": "py10",
+  "nom": "POLYYAI 10",
+  "f": "PACKS/polyyai/x/10.glb",
+  "pack": "polyyai"
+ },
+ {
+  "cle": "py11",
+  "nom": "POLYYAI 11",
+  "f": "PACKS/polyyai/x/11.glb",
+  "pack": "polyyai"
+ },
+ {
+  "cle": "py12",
+  "nom": "POLYYAI 12",
+  "f": "PACKS/polyyai/x/12.glb",
+  "pack": "polyyai"
+ },
+ {
+  "cle": "py13",
+  "nom": "POLYYAI 13",
+  "f": "PACKS/polyyai/x/13.glb",
+  "pack": "polyyai"
+ },
+ {
+  "cle": "py14",
+  "nom": "POLYYAI 14",
+  "f": "PACKS/polyyai/x/14.glb",
+  "pack": "polyyai"
+ },
+ {
+  "cle": "py15",
+  "nom": "POLYYAI 15",
+  "f": "PACKS/polyyai/x/15.glb",
+  "pack": "polyyai"
+ },
+ {
+  "cle": "py16",
+  "nom": "POLYYAI 16",
+  "f": "PACKS/polyyai/x/16.glb",
+  "pack": "polyyai"
+ },
+ {
+  "cle": "py17",
+  "nom": "POLYYAI 17",
+  "f": "PACKS/polyyai/x/17.glb",
+  "pack": "polyyai"
+ },
+ {
+  "cle": "py18",
+  "nom": "POLYYAI 18",
+  "f": "PACKS/polyyai/x/18.glb",
+  "pack": "polyyai"
+ },
+ {
+  "cle": "py19",
+  "nom": "POLYYAI 19",
+  "f": "PACKS/polyyai/x/19.glb",
+  "pack": "polyyai"
+ },
+ {
+  "cle": "py20",
+  "nom": "POLYYAI 20",
+  "f": "PACKS/polyyai/x/20.glb",
+  "pack": "polyyai"
+ },
+ {
+  "cle": "py21",
+  "nom": "POLYYAI 21",
+  "f": "PACKS/polyyai/x/21.glb",
+  "pack": "polyyai"
+ },
+ {
+  "cle": "py22",
+  "nom": "POLYYAI 22",
+  "f": "PACKS/polyyai/x/22.glb",
+  "pack": "polyyai"
+ },
+ {
+  "cle": "py23",
+  "nom": "POLYYAI 23",
+  "f": "PACKS/polyyai/x/23.glb",
+  "pack": "polyyai"
+ },
+ {
+  "cle": "py24",
+  "nom": "POLYYAI 24",
+  "f": "PACKS/polyyai/x/24.glb",
+  "pack": "polyyai"
+ },
+ {
+  "cle": "py25",
+  "nom": "POLYYAI 25",
+  "f": "PACKS/polyyai/x/25.glb",
+  "pack": "polyyai"
+ },
+ {
+  "cle": "py26",
+  "nom": "POLYYAI 26",
+  "f": "PACKS/polyyai/x/26.glb",
+  "pack": "polyyai"
+ },
+ {
+  "cle": "py27",
+  "nom": "POLYYAI 27",
+  "f": "PACKS/polyyai/x/27.glb",
+  "pack": "polyyai"
+ },
+ {
+  "cle": "py28",
+  "nom": "POLYYAI 28",
+  "f": "PACKS/polyyai/x/28.glb",
+  "pack": "polyyai"
+ },
+ {
+  "cle": "py29",
+  "nom": "POLYYAI 29",
+  "f": "PACKS/polyyai/x/29.glb",
+  "pack": "polyyai"
+ },
+ {
+  "cle": "py30",
+  "nom": "POLYYAI 30",
+  "f": "PACKS/polyyai/x/30.glb",
+  "pack": "polyyai"
+ },
+ {
+  "cle": "py31",
+  "nom": "POLYYAI 31",
+  "f": "PACKS/polyyai/x/31.glb",
+  "pack": "polyyai"
+ },
+ {
+  "cle": "py32",
+  "nom": "POLYYAI 32",
+  "f": "PACKS/polyyai/x/32.glb",
+  "pack": "polyyai"
+ },
+ {
+  "cle": "py33",
+  "nom": "POLYYAI 33",
+  "f": "PACKS/polyyai/x/33.glb",
+  "pack": "polyyai"
+ },
+ {
+  "cle": "py34",
+  "nom": "POLYYAI 34",
+  "f": "PACKS/polyyai/x/34.glb",
+  "pack": "polyyai"
+ },
+ {
+  "cle": "py35",
+  "nom": "POLYYAI 35",
+  "f": "PACKS/polyyai/x/35.glb",
+  "pack": "polyyai"
+ }
+]
