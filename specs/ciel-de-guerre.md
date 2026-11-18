@@ -112,6 +112,10 @@ Historique des directions : *Escadrille pixel* (gros pixels, sprite dessiné), p
   - Le **réacteur** est un souffle continu qui monte avec la vitesse et le boost (seulement en partie).
   - **Musique** : boucle de combat en la mineur (basse, arpège, nappe, batterie), mixée sous les bruitages.
   - Réglages BRUITAGES et MUSIQUE sur le titre et en pause (`cieldeguerre.son`). L'AudioContext ne démarre qu'après un geste, et jamais si tout est coupé.
+- **Explosions et réacteur refaits** (18/11, retour de l'utilisateur : « revoir le bruit des explosions et du réacteur ; les balles sont parfaites »). Trois variantes de chacun (`CDGSons.variantes`), à choisir sur le [banc des sons](../maquettes/ciel-de-guerre-sons.html) :
+  - explosions : A tonnerre (claquement, corps saturé, boum grave), B sourde, C crépitante ; les lointaines sont étouffées ;
+  - réacteur : A turbine (grondement grave et doux, léger sifflement), B grondement qui pulse, C réacteur plus présent ; une poussée qui rugit au boost.
+  - Niveaux mesurés dans le navigateur (analyseur branché sur la sortie, `niveaux.js` du scratchpad), comparés aux rafales du canon : le réacteur est ramené sous elles (moyenne 0,012 contre 0,026 avant), les explosions baissées de 20 %. A est la variante par défaut en attendant le choix.
 - **Secousses** de la caméra : coup reçu, appareil abattu, explosion à moins de 80 m.
 - **Épaves** : un ennemi abattu tombe en tournoyant dans une traînée de fumée (feu au début), puis explose au sol (`abattre`, `EPAVES`).
 - **Vitesse** en km/h dans le panneau de gauche ; **énergie du boost** (jauge bleue) : 100, le boost en consomme 28 par seconde, elle revient à 14 par seconde ; vide, il faut attendre 30. Le bouton BOOST du téléphone se grise quand elle est vide.

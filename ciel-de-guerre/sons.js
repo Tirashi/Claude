@@ -37,28 +37,66 @@ const CDGSons = (function () {
 
   // ---------- bruitages ----------
   let dernierTir = 0;
+  const VAR = { boom: "A", moteur: "A" };   /* variantes choisies (banc d'essai : maquettes/ciel-de-guerre-sons.html) */
   const SONS = {
     tir(t, v) { if (t - dernierTir < .05) return; dernierTir = t; bruit(t, "bandpass", 2400, 1.2, .002, .05, .22 * v, 900); note(t, 180, "square", .002, .04, .05 * v, null, 90); },
     missile(t, v) { bruit(t, "bandpass", 500, 2, .02, .7, .3 * v, 2600); note(t, 220, "sawtooth", .01, .35, .04 * v, null, 660); },
-    boom(t, v) { bruit(t, "lowpass", 1400, .7, .005, .5, .55 * v, 120); note(t, 90, "sine", .005, .35, .35 * v, null, 35); },
-    boomGros(t, v) { bruit(t, "lowpass", 1100, .8, .01, 1.3, .8 * v, 70); note(t, 70, "sine", .01, .9, .5 * v, null, 25); bruit(t + .12, "lowpass", 600, .7, .02, .9, .35 * v, 60); },
+    boom(t, v, d) { explosion(t, v, d, false); },
+    boomGros(t, v, d) { explosion(t, v, d, true); },
     touche(t, v) { bruit(t, "highpass", 1800, .8, .002, .09, .3 * v); note(t, 140, "square", .002, .08, .1 * v, null, 70); },
     verrou(t, v) { note(t, 1320, "square", .002, .06, .07 * v); note(t + .08, 1760, "square", .002, .1, .07 * v); },
     annonce(t, v) { note(t, 660, "triangle", .01, .25, .08 * v); note(t + .12, 990, "triangle", .01, .35, .07 * v); },
     victoire(t, v) { [523, 659, 784, 1047].forEach((f, i) => note(t + i * .13, f, "triangle", .01, .45, .12 * v)); },
     defaite(t, v) { [392, 330, 262, 196].forEach((f, i) => note(t + i * .18, f, "triangle", .01, .5, .11 * v)); }
   };
-  function jouer(nom, v = 1) { if (!R.bruitages || !ctx || ctx.state !== "running" || !SONS[nom] || v <= .01) return; SONS[nom](ctx.currentTime, Math.min(1, v)); }
+  function jouer(nom, v = 1, d = 0) { if (!R.bruitages || !ctx || ctx.state !== "running" || !SONS[nom] || v <= .01) return; SONS[nom](ctx.currentTime, Math.min(1, v), d); }
 
-  // ---------- réacteur : un souffle filtré et un grondement, qui montent avec la vitesse ----------
+  // ---------- explosions : trois variantes (VAR.boom) ; d = distance relative (0 tout près, 1 très loin : étouffé) ----------
+  // A « tonnerre » : claquement sec, corps grondant un peu saturé, boum grave. B « sourde » : grave et roulante, sans claquement. C « crépitante » : corps et éclats qui crépitent.
+  let sature = null;
+  function saturation() { if (!sature) { sature = ctx.createWaveShaper(); const n = 1024, k = new Float32Array(n); for (let i = 0; i < n; i++) { const x = i / (n - 1) * 2 - 1; k[i] = Math.tanh(x * 2.4); } sature.curve = k; sature.connect(busB); } return sature; }
+  function couche(t, f1, f2, q, a, dur, v, sortieN) { const s = souffle(), fl = ctx.createBiquadFilter(), g = ctx.createGain(); fl.type = "lowpass"; fl.Q.value = q;
+    fl.frequency.setValueAtTime(f1, t); fl.frequency.exponentialRampToValueAtTime(Math.max(30, f2), t + a + dur); g.gain.setValueAtTime(.0001, t); g.gain.linearRampToValueAtTime(v, t + a); g.gain.exponentialRampToValueAtTime(.0001, t + a + dur);
+    s.connect(fl); fl.connect(g); g.connect(sortieN || busB); s.start(t, Math.random()); s.stop(t + a + dur + .05); }
+  function explosion(t, v, d, gros) {
+    v *= .8;
+    const loin = Math.max(0, Math.min(1, d || 0)), etouffe = 1 - loin * .75, k = gros ? 1.35 : 1, va = VAR.boom, r = .85 + Math.random() * .3;
+    if (va === "A") {
+      if (loin < .6) bruit(t, "highpass", 1500, .7, .001, .035, .35 * v * (1 - loin), 0);                                              // claquement
+      couche(t, 1600 * etouffe * r, 90, .8, .006, .9 * k, .7 * v, saturation());                                                      // corps saturé
+      note(t, 75 * r, "sine", .004, .45 * k, .55 * v, null, 32);                                                                        // boum grave
+      if (gros) couche(t + .15, 700 * etouffe, 60, .6, .05, 1.2, .35 * v);                                                             // queue qui roule
+    } else if (va === "B") {
+      couche(t, 520 * etouffe * r, 55, .9, .02, 1.5 * k, .85 * v);
+      note(t, 55 * r, "sine", .01, .8 * k, .6 * v, null, 24); note(t + .05, 42 * r, "triangle", .02, .9 * k, .25 * v, null, 22);
+    } else {
+      couche(t, 1300 * etouffe * r, 110, .7, .005, .7 * k, .6 * v, saturation()); note(t, 80 * r, "sine", .004, .35 * k, .45 * v, null, 35);
+      const n = gros ? 12 : 7; for (let i = 0; i < n; i++) { const ti = t + .08 + Math.random() * .7 * k; bruit(ti, "bandpass", 1800 + Math.random() * 2600, 1.5, .001, .03 + Math.random() * .04, .12 * v * etouffe, 0); }   // éclats
+    }
+  }
+
+  // ---------- réacteur (VAR.moteur), appelé à chaque image ; le boost ajoute une poussée qui rugit ----------
+  // A « turbine » : grondement grave et doux, léger sifflement de turbine. B « grondement » : seulement le grave, qui pulse un peu. C « réacteur » : souffle chaud et ronflement plus présent.
   let mot = null;
+  function arreterMoteur() { if (!mot) return; for (const n of mot.sources) { try { n.stop(); } catch (e) {} } mot.g.disconnect(); mot = null; }
+  function creerMoteur() {
+    const g = ctx.createGain(); g.gain.value = 0; g.connect(busB); const sources = [], va = VAR.moteur;
+    const s = souffle(); s.loop = true; const lp = ctx.createBiquadFilter(); lp.type = "lowpass"; lp.Q.value = .7; const gs = ctx.createGain(); gs.gain.value = va === "C" ? .7 : 1; s.connect(lp); lp.connect(gs); gs.connect(g); s.start(); sources.push(s);
+    const s2 = souffle(); s2.loop = true; const bp = ctx.createBiquadFilter(); bp.type = "bandpass"; bp.frequency.value = 900; bp.Q.value = .6; const gb = ctx.createGain(); gb.gain.value = 0; s2.connect(bp); bp.connect(gb); gb.connect(g); s2.start(.3); sources.push(s2);   // poussée du boost
+    let w1 = null, w2 = null, gw = null, lfo = null;
+    if (va === "A") { gw = ctx.createGain(); gw.gain.value = .05; w1 = ctx.createOscillator(); w1.type = "sine"; w2 = ctx.createOscillator(); w2.type = "sine"; w1.connect(gw); w2.connect(gw); gw.connect(g); w1.start(); w2.start(); sources.push(w1, w2); }
+    if (va === "C") { gw = ctx.createGain(); gw.gain.value = .22; w1 = ctx.createOscillator(); w1.type = "triangle"; const f = ctx.createBiquadFilter(); f.type = "lowpass"; f.frequency.value = 300; w1.connect(f); f.connect(gw); gw.connect(g); w1.start(); sources.push(w1); }
+    if (va === "B") { lfo = ctx.createOscillator(); lfo.frequency.value = 7; const lg = ctx.createGain(); lg.gain.value = .25; lfo.connect(lg); lg.connect(gs.gain); lfo.start(); sources.push(lfo); }
+    mot = { va, g, lp, gb, bp, w1, w2, sources };
+  }
   function moteur(vit, boost, actif) {
     if (!ctx || ctx.state !== "running") return;
-    if (!mot) { const s = souffle(); s.loop = true; const fl = ctx.createBiquadFilter(); fl.type = "bandpass"; fl.Q.value = .9;
-      const o = ctx.createOscillator(); o.type = "sawtooth"; const fo = ctx.createBiquadFilter(); fo.type = "lowpass"; fo.frequency.value = 260;
-      const g = ctx.createGain(); g.gain.value = 0; s.connect(fl); fl.connect(g); o.connect(fo); fo.connect(g); g.connect(busB); s.start(); o.start(); mot = { fl, o, g }; }
-    const t = ctx.currentTime, cible = actif && R.bruitages ? .07 + (boost ? .07 : 0) : 0;
-    mot.g.gain.setTargetAtTime(cible, t, .15); mot.fl.frequency.setTargetAtTime(380 + vit * 520 + (boost ? 700 : 0), t, .2); mot.o.frequency.setTargetAtTime(48 + vit * 30 + (boost ? 22 : 0), t, .2);
+    if (mot && mot.va !== VAR.moteur) arreterMoteur(); if (!mot) creerMoteur();
+    const t = ctx.currentTime, va = mot.va, on = actif && R.bruitages;
+    mot.g.gain.setTargetAtTime(on ? (va === "B" ? .22 : va === "C" ? .12 : .17) : 0, t, .2);   /* réglé à la mesure : le réacteur reste sous les rafales du canon */
+    mot.lp.frequency.setTargetAtTime((va === "B" ? 140 : va === "C" ? 380 : 220) + vit * (va === "C" ? 260 : 160) + (boost ? 260 : 0), t, .25);
+    mot.gb.gain.setTargetAtTime(boost ? (va === "C" ? .22 : .16) : 0, t, boost ? .12 : .4); mot.bp.frequency.setTargetAtTime(boost ? 1200 + vit * 300 : 700, t, .3);
+    if (mot.w1) { const f = va === "A" ? 320 + vit * 210 + (boost ? 120 : 0) : 70 + vit * 40 + (boost ? 25 : 0); mot.w1.frequency.setTargetAtTime(f, t, .3); if (mot.w2) mot.w2.frequency.setTargetAtTime(f * 1.503, t, .3); }
   }
 
   // ---------- musique : boucle de combat en la mineur (basse, arpège, nappe, batterie), mixée sous les bruitages ----------
@@ -89,6 +127,8 @@ const CDGSons = (function () {
     else if (voulu()) demarrer();
     return Object.assign({}, R);
   }
-  return { jouer, moteur, reglages };
+  // banc d'essai : choisir une variante, ou la faire entendre
+  function variantes(v) { if (v) Object.assign(VAR, v); return Object.assign({}, VAR); }
+  return { jouer, moteur, reglages, variantes, demarrer };
 })();
 window.CDGSons = CDGSons;
