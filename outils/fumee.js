@@ -152,6 +152,16 @@ const shots = process.argv[2];
         T.finir(); await wait(1200);
         if (document.getElementById('eFin').hidden) return "pas d'écran de fin";
         if (!(JSON.parse(localStorage.getItem('tankarena.stats') || '{}').parties >= 1)) return 'la manche ne compte pas';
+        // survie : la vague 1 arrive ; les 3 vies perdues terminent la partie, la vague est enregistrée
+        T.jouer('survie'); T.S().depart = 0; await wait(600);
+        if (T.etat().vague !== 1 || T.etat().vies !== 3) return 'la survie ne lance pas la vague 1';
+        const attendre = async (f, ms) => { for (let i = 0; i < ms / 100 && !f(); i++) await wait(100); return f(); };
+        for (let k = 0; k < 3; k++) {
+          if (!await attendre(() => !T.joueur().mort, 15000)) return "le tank ne revient pas après sa destruction";
+          T.joueur().inv = 0; T.joueur().effets = {}; T.detruire(T.joueur());
+        }
+        if (!await attendre(() => T.etat().fin, 15000)) return 'la survie ne finit pas après 3 vies';
+        if (!(JSON.parse(localStorage.getItem('tankarena.survie') || '{}').vague >= 1)) return "la survie n'est pas enregistrée";
         return 'ok';
       });
       if (r !== 'ok') errs.push('Tank Arena : ' + r);

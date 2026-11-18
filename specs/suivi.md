@@ -116,3 +116,6 @@ Décision : moulin immobile (image d'origine), l'animation des ailes n'étant pa
 ## Politique, l'écran (17/11)
 Maquettes de la carte 2 à 4 (isométrique, puis papier à l'encre validée), écran sessions 1 et 2 dans `politique/` (démo sur une disquette de l'accueil), sur main le 17/11 ; nouvelle du journal de l'accueil ajoutée après coup (oubliée à la session 1). Détails : [`specs/politique.md`](politique.md) § 38 à 42.
 
+
+- **18/11 — Sudoku, écran fantôme** (capture de la femme de l'utilisateur : menu sous la grille, traînées roses) : fond préparé vidé par Android en arrière-plan ; écran effacé d'une couleur pleine et fond refait au retour ; sur main. Relevé des autres jeux exposés noté dans le mémo (leçon « Toiles préparées vidées »), à corriger à leur prochaine retouche.
+- **18/11 — Tank Arena, mode survie** : vagues (1 + n ennemis, 3 à 6 à la fois), 4 types (soldat, chasseur, blindé, tireur) qui se renforcent, 3 vies, caisse à chaque vague ; camps (les ennemis ne se tirent plus dessus) ; classement `tankarena`/`survie` (vague), transfert, `SYNC` 29, fumée.
