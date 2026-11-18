@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#2a2119">
+<title>Politique</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IM+Fell+English+SC&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
+<style>
+:root{--fond:#2a2119;--texte:#efe3c8}
+@media (prefers-color-scheme: light){:root:not([data-theme="dark"]){--fond:#e9e1cf;--texte:#2b2118}}
+:root[data-theme="dark"]{--fond:#2a2119;--texte:#efe3c8}
+*{box-sizing:border-box}
+html,body{height:100%}body{margin:0;background:#2a2119;color:#efe3c8;font-family:'IM Fell English',Georgia,serif;overflow:hidden}
+.choixdir{display:flex;gap:6px}
+.choixdir button{font:16px 'IM Fell English SC',Georgia,serif;padding:8px 14px;border-radius:6px;border:2px solid #3a2a1c;background:#efe3c8;color:#3a2a1c;cursor:pointer;min-height:44px}
+.choixdir button[aria-pressed="true"]{background:#3a2a1c;color:#efe3c8}
+.tel{position:relative;width:100%;max-width:520px;height:100%;margin:0 auto;overflow:hidden;box-shadow:0 10px 40px rgba(0,0,0,.5);touch-action:none;user-select:none;-webkit-user-select:none;background:#3b2c1f}
+canvas{display:block;width:100%;height:100%}
+.hud{position:absolute;left:0;right:0;pointer-events:none}
+.hud *{pointer-events:auto}
+.haut{top:0;padding:10px 10px 0;display:flex;flex-direction:column;gap:6px}
+.panneau{background:#efe3c8;color:#2b2118;border:2px solid #3a2a1c;box-shadow:0 2px 0 rgba(0,0,0,.35), inset 0 0 18px rgba(120,80,30,.25);border-radius:4px}
+.px .panneau{border-radius:0;border-width:3px;box-shadow:0 3px 0 #3a2a1c}
+.barre{display:flex;align-items:center;gap:8px;padding:6px 10px}
+.barre b{font:17px 'IM Fell English SC',Georgia,serif}
+.or{margin-left:auto}
+.puce{font-size:14px;padding:1px 7px;border-radius:3px;background:#9b2a1f;color:#efe3c8}
+.factions{display:flex;height:8px;overflow:hidden;flex:1;min-width:50px;border:1px solid #3a2a1c}
+.factions span{display:block;height:100%}
+.titre{padding:4px 6px 4px 10px;display:flex;align-items:center;gap:8px;font:17px 'IM Fell English SC',Georgia,serif}
+.titre .btn{min-height:38px;padding:0 10px;font-size:15px;margin-left:auto}
+button.btn{font:15px 'IM Fell English SC',Georgia,serif;min-height:44px;border-radius:4px;cursor:pointer;background:#e4d3ae;color:#2b2118;border:2px solid #3a2a1c}
+.px button.btn,.px .barre b,.px .titre,.px .choix,.px .fiche h2{font-family:'Pixelify Sans',sans-serif}
+.px button.btn{border-radius:0}
+button.btn:disabled{opacity:.5}
+.bas{bottom:0;padding:0 10px 12px;display:flex;flex-direction:column;gap:8px}
+.fiche{padding:12px;display:none;flex-direction:column;gap:8px;max-height:52vh;overflow:auto}
+.fiche.ouverte{display:flex}
+.fiche h2{margin:0;font:400 22px 'IM Fell English SC',Georgia,serif}
+.fiche p{margin:0;font-size:15px;line-height:1.35}
+.aide{font-style:italic;opacity:.85}
+.fiche .actions{display:flex;gap:8px}
+.fiche .actions .btn{flex:1}
+.actions-bas{display:grid;grid-template-columns:repeat(4,minmax(0,1fr)) 1.5fr;gap:6px}
+.btn.fin{background:#9b2a1f;color:#efe3c8}
+button.btn.construire{position:absolute;left:10px;bottom:76px;padding:0 16px;background:#9b2a1f;color:#efe3c8;font-size:17px}
+.tel:has(.fiche.ouverte) .construire{display:none}
+.zoom{position:absolute;right:10px;top:112px;display:flex;flex-direction:column;gap:6px}
+.zoom .btn{width:44px;height:44px;font-size:22px;padding:0}
+.toast{position:absolute;left:50%;top:116px;transform:translateX(-50%);padding:8px 12px;font-size:15px;opacity:0;transition:opacity .3s;pointer-events:none;max-width:290px;text-align:center}
+.toast.vue{opacity:1}
+.menu{display:flex;flex-direction:column;gap:6px}
+.choix{display:grid;grid-template-columns:44px 1fr auto;grid-template-rows:auto auto;column-gap:10px;align-items:center;text-align:left;padding:4px 10px 4px 4px;min-height:54px;border-radius:4px;border:2px solid #3a2a1c;background:#f4ead4;color:#2b2118;font:15px 'IM Fell English',Georgia,serif;cursor:pointer}
+.choix:disabled{opacity:.45}
+.choix img{grid-row:1/3;width:44px;height:44px}
+.px .choix img{image-rendering:pixelated}
+.choix .n{font-weight:700}
+.choix .d{grid-column:2;font-size:13px;font-style:italic}
+.choix .c{grid-column:3;grid-row:1/3;font-weight:700;color:#9b2a1f}
+.puces{display:flex;flex-wrap:wrap;gap:5px}
+.pc{font-size:14px;padding:2px 7px;border:1px solid #3a2a1c;border-radius:3px}
+.pc.ch{border-style:dashed}
+.pc.libre{border:2px dashed #9b2a1f;color:#9b2a1f}
+.legende{font-size:14px;max-width:390px;padding:0 16px;text-align:center;opacity:.85}
+
+/* 17/11 : menus façon carte ancienne (papier du pack, filets d'encre, sceau de cire) */
+.panneau{background:#efe3c8 var(--papier) center/cover;border:none;outline:1.5px solid #3a2a1c;outline-offset:-5px;box-shadow:0 0 0 2px #3a2a1c,0 4px 10px rgba(0,0,0,.45);border-radius:2px}
+.px .panneau{background:#e2d0a6;outline:none;box-shadow:0 0 0 3px #3a2a1c,0 3px 0 4px rgba(0,0,0,.4);border-radius:0}
+.cartouche{padding:9px 14px 9px;display:flex;flex-direction:column;gap:6px}
+.cartouche .l1{display:flex;align-items:baseline;gap:8px;font:16px 'IM Fell English SC',Georgia,serif}
+.cartouche .titre{flex:1;text-align:center;font-size:21px;letter-spacing:.04em}
+.cartouche .l2{display:flex;align-items:center;gap:8px}
+.cartouche .factions{height:7px;border:1px solid #3a2a1c}
+.onglet{align-self:flex-end;margin-top:-8px;min-height:38px!important;padding:0 12px;border-radius:0 0 6px 6px!important;border-top:none!important;background:#e4d3ae var(--papier) center/cover!important}
+.pied{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center}
+.ruban{display:grid;grid-template-columns:repeat(4,1fr);padding:4px}
+.ruban button{min-height:48px;background:none;border:none;border-right:1px solid rgba(58,42,28,.55);font:16px 'IM Fell English SC',Georgia,serif;color:#2b2118;cursor:pointer}
+.ruban button:last-child{border-right:none}
+.px .ruban button{font-family:'Pixelify Sans',sans-serif;font-size:14px}
+.sceau{width:70px;height:70px;border-radius:50%;border:none;cursor:pointer;color:#f3e6cf;font:15px/1.05 'IM Fell English SC',Georgia,serif;
+  background:radial-gradient(circle at 38% 32%,#c4473a,#8c2219 62%,#6d1912);box-shadow:0 3px 6px rgba(0,0,0,.5),inset 0 0 0 4px rgba(255,255,255,.12),inset 0 0 0 6px #8c2219,inset 0 0 0 7px rgba(255,255,255,.25)}
+.px .sceau{border-radius:0;font-family:'Pixelify Sans',sans-serif;font-size:13px;background:#9b2a1f;box-shadow:0 0 0 3px #3a2a1c,0 3px 0 4px rgba(0,0,0,.4)}
+button.btn{background:#e8d8b4;border:1.5px solid #3a2a1c;box-shadow:inset 0 0 0 2px #e8d8b4,inset 0 0 0 3px rgba(58,42,28,.5)}
+.outils-pays{position:absolute;left:10px;right:10px;bottom:96px;display:flex;gap:8px}
+.tel:has(.fiche.ouverte) .outils-pays{display:none}
+.outils-pays[hidden]{display:none}
+.outils-pays button.btn.construire{position:static}
+button.btn.registre{min-height:50px;padding:0 14px;font-size:17px;background:#efe3c8 var(--papier) center/cover;border:none;box-shadow:0 0 0 2px #3a2a1c,0 4px 10px rgba(0,0,0,.45);outline:1.5px solid #3a2a1c;outline-offset:-5px;margin-left:auto}
+button.btn.construire{bottom:96px;background:#efe3c8 var(--papier) center/cover;color:#9b2a1f;border:none;box-shadow:0 0 0 2px #3a2a1c,0 4px 10px rgba(0,0,0,.45);outline:1.5px solid #9b2a1f;outline-offset:-5px;font-size:18px;min-height:50px}
+.zoom{top:200px}
+.fiche{gap:9px;padding:16px 16px 14px}
+.fiche h2{text-align:center;border-bottom:1px solid rgba(58,42,28,.5);padding-bottom:4px}
+.choix{background:rgba(255,250,235,.55)}
+.toast{top:130px}
+
+/* écran du jeu (17/11) */
+.voile{position:absolute;inset:0;background:rgba(30,22,14,.55);display:none;align-items:center;justify-content:center;padding:16px;z-index:5}
+.voile.ouvert{display:flex}
+.modale{width:100%;max-height:88%;overflow:auto;padding:18px 16px;display:flex;flex-direction:column;gap:10px}
+.modale h1{margin:0;font:400 30px 'IM Fell English SC',Georgia,serif;text-align:center}
+.modale h2{margin:0;font:400 22px 'IM Fell English SC',Georgia,serif;text-align:center;border-bottom:1px solid rgba(58,42,28,.5);padding-bottom:4px}
+.modale p{margin:0;font-size:15px;line-height:1.4}
+.liste{display:flex;flex-direction:column;gap:6px}
+.ligne{display:flex;align-items:center;gap:8px;justify-content:space-between;font-size:15px;padding:3px 0;border-bottom:1px dotted rgba(58,42,28,.35)}
+.ligne .btn{min-height:40px;padding:0 10px;font-size:14px;flex-shrink:0}
+.section{font:16px 'IM Fell English SC',Georgia,serif;margin-top:6px;color:#6b2a1a}
+.jauge{height:8px;background:rgba(58,42,28,.15);border:1px solid #3a2a1c;flex:1;min-width:60px}
+.jauge span{display:block;height:100%}
+.carte-pays{text-align:left;padding:10px 12px;border:1.5px solid #3a2a1c;background:rgba(255,250,235,.55);border-radius:3px;cursor:pointer;font:15px 'IM Fell English',Georgia,serif;color:#2b2118}
+.carte-pays b{font:18px 'IM Fell English SC',Georgia,serif}
+.ordres{font-size:13px;font-style:italic;opacity:.85}
+.compte{position:absolute;top:-6px;right:-4px;background:#efe3c8;color:#9b2a1f;border:1.5px solid #3a2a1c;border-radius:10px;font:12px Georgia,serif;padding:0 5px}
+.sceau{position:relative}
+</style>
+</head>
+<body>
+<div class="tel" id="tel">
+  <canvas id="c" aria-label="Carte du jeu"></canvas>
+  <div class="hud haut">
+    <div class="cartouche panneau">
+      <div class="l1"><span id="tour">Tour 1/40</span><span class="titre" id="titre">Le continent</span><span id="or">0 or</span></div>
+      <div class="l2"><span class="puce" id="ambition">Ambition ?</span><div class="factions" id="factions" role="button" aria-label="Les cinq factions"></div></div>
+    </div>
+    <button class="btn onglet" id="bascule">Mon pays ▸</button>
+  </div>
+  <div class="outils-pays" id="outilsPays" hidden><button class="btn construire" id="construire">+ Construire</button><button class="btn registre" id="registre">▤ Registre</button></div>
+  <div class="zoom"><button class="btn" id="zPlus" aria-label="Rapprocher">+</button><button class="btn" id="zMoins" aria-label="Éloigner">−</button></div>
+  <div class="toast panneau" id="toast" role="status"></div>
+  <div class="hud bas">
+    <div class="fiche panneau" id="fiche"></div>
+    <div class="pied"><nav class="ruban panneau" aria-label="Menus"><button id="mLois">Lois</button><button id="mBudget">Budget</button><button id="mArmee">Armée</button><button id="mJournal">Journal</button></nav>
+      <button class="sceau" id="fin">Tour<br>suivant</button></div>
+  </div>
+  <div class="voile" id="voile"><div class="modale panneau" id="modale"></div></div>
+</div>
+<script src="donnees/batiments.js"></script>
+<script src="donnees/carte.js"></script>
+<script src="donnees/champs.js"></script>
+<script src="donnees/diplomatie.js"></script>
+<script src="donnees/economie.js"></script>
+<script src="donnees/evenements.js"></script>
+<script src="donnees/factions.js"></script>
+<script src="donnees/guerre.js"></script>
+<script src="donnees/institutions.js"></script>
+<script src="donnees/lois.js"></script>
+<script src="donnees/objectifs.js"></script>
+<script src="donnees/pays.js"></script>
+<script src="donnees/personas.js"></script>
+<script src="moteur/alea.js"></script>
+<script src="moteur/calcul.js"></script>
+<script src="moteur/factions.js"></script>
+<script src="moteur/diplomatie.js"></script>
+<script src="moteur/lois.js"></script>
+<script src="moteur/batiments.js"></script>
+<script src="moteur/evenements.js"></script>
+<script src="moteur/economie.js"></script>
+<script src="moteur/guerre.js"></script>
+<script src="moteur/objectifs.js"></script>
+<script src="moteur/etat.js"></script>
+<script src="moteur/tour.js"></script>
+<script src="ecran/carte.js"></script>
+<script src="ecran/ecran.js"></script>
+</body>
+</html>

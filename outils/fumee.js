@@ -5,7 +5,7 @@
    node outils/fumee.js [dossier-captures]   (code de sortie 1 en cas d'erreur) */
 const { BASE, phone } = require('./pw');
 const PAGES = ['index.html', 'classements/index.html#sudoku-1', 'queens/index.html', 'picross/index.html', 'lignee/index.html', 'injagility/index.html', 'injagility/parcours.html',
-  'touche-coule/index.html', 'amiral/index.html', 'club/index.html', 'orbite/index.html', 'lune-rover/index.html', 'pont-stellaire/index.html', 'sudoku/index.html', 'calculator/index.html', 'alunissage/index.html', 'nebula/index.html', 'ile/index.html', 'empilage/index.html', 'odyssee/index.html', 'yams/index.html', 'escadrille/index.html', 'capitaine-du-port/index.html', 'magasinier/index.html', 'ciel-de-guerre/index.html', 'romet/index.html', 'dragon-simulator/index.html', 'bastion/index.html', 'terres-franches/index.html', 'duche/index.html', 'bannieres/index.html', 'boutique/index.html', 'mineur-de-l-espace/index.html', 'the-des-jarls/index.html', 'doggy-saga/index.html',
+  'touche-coule/index.html', 'amiral/index.html', 'club/index.html', 'orbite/index.html', 'lune-rover/index.html', 'pont-stellaire/index.html', 'sudoku/index.html', 'calculator/index.html', 'alunissage/index.html', 'nebula/index.html', 'ile/index.html', 'empilage/index.html', 'odyssee/index.html', 'yams/index.html', 'escadrille/index.html', 'capitaine-du-port/index.html', 'magasinier/index.html', 'ciel-de-guerre/index.html', 'tank-arena/index.html', 'romet/index.html', 'dragon-simulator/index.html', 'bastion/index.html', 'terres-franches/index.html', 'duche/index.html', 'bannieres/index.html', 'boutique/index.html', 'mineur-de-l-espace/index.html', 'the-des-jarls/index.html', 'doggy-saga/index.html',
   'mot-d-or/index.html', 'lanterne/index.html', 'tetris/index.html', 'snake/index.html', 'asteroids/index.html', 'solitaire/index.html', 'jeu-de-la-vie/index.html', 'pokedex/index.html'];
 const shots = process.argv[2];
 (async () => {
@@ -140,6 +140,22 @@ const shots = process.argv[2];
       });
       if (r !== 'ok') errs.push('Le Magasinier : ' + r);
       if (shots) await p.screenshot({ path: `${shots}/fumee-magasinier.png` });
+    }
+    if (url === 'tank-arena/index.html') {
+      // Tank Arena : une manche commence, le compte à rebours passe, un bonus se prend, la fin de manche s'affiche et s'enregistre
+      const r = await p.evaluate(async () => {
+        const T = window.TankArena, wait = ms => new Promise(r => setTimeout(r, ms));
+        for (let i = 0; i < 60 && !(T && T.pret); i++) await wait(100);
+        T.jouer(); const e = T.etat(); if (!e || e.fin || e.tanks.length !== 4) return 'la manche ne commence pas';
+        T.S().depart = 0; await wait(400); if (!(T.etat().temps < 90)) return 'le temps ne passe pas';
+        T.bonus('bou'); await wait(400); if (!(T.etat().tanks[0].effets.bou > 0)) return 'le bouclier ne se prend pas';
+        T.finir(); await wait(1200);
+        if (document.getElementById('eFin').hidden) return "pas d'écran de fin";
+        if (!(JSON.parse(localStorage.getItem('tankarena.stats') || '{}').parties >= 1)) return 'la manche ne compte pas';
+        return 'ok';
+      });
+      if (r !== 'ok') errs.push('Tank Arena : ' + r);
+      if (shots) await p.screenshot({ path: `${shots}/fumee-tank-arena.png` });
     }
     if (url === 'bastion/index.html') {
       // Bastion : BAC A SABLE ; un cercle du village ouvre l'anneau, une maison se paie ; le château ouvre son anneau ; le robot tient la première vague ;

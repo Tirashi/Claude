@@ -1,0 +1,107 @@
+/* Politique : économie d'un tour (RULES_V1 § Ressources et économie).
+   production = bâtiments × rendement (× lois × grèves et révoltes des factions) ; consommation = familles × besoins + armée + bâtiments ;
+   contrats et livraisons de traités à prix fixe (M3a) ; le reste de la balance vendu (surplus) ou acheté (déficit)
+   au prix du tour (tarifs de l'Entente), sans stock ; trésor += ventes − achats + contrats + impôts − entretiens ; puis la démographie. */
+(function(racine){
+"use strict";
+const NODE = typeof module !== "undefined" && module.exports;
+const ECO = NODE ? require("../donnees/economie.js") : racine.Politique.ECONOMIE;
+const BAT = NODE ? require("../donnees/batiments.js") : racine.Politique.BATIMENTS;
+const Lois = NODE ? require("./lois.js") : racine.Politique.Lois;
+const Factions = NODE ? require("./factions.js") : racine.Politique.Factions;
+const Diplomatie = NODE ? require("./diplomatie.js") : racine.Politique.Diplomatie;
+const TERRAINS = NODE ? require("../donnees/carte.js") : racine.Politique.TERRAINS;
+const GU = NODE ? require("../donnees/guerre.js") : racine.Politique.GUERRE;
+const Evenements = NODE ? require("./evenements.js") : racine.Politique.Evenements;
+const INST = NODE ? require("../donnees/institutions.js") : racine.Politique.INSTITUTIONS;
+const DIPLO = NODE ? require("../donnees/diplomatie.js") : racine.Politique.DIPLOMATIE;
+
+const { arrondi } = NODE ? require("./calcul.js") : racine.Politique.Calcul;
+// institutions (budget de fin de partie) : niveau et dépense par tour
+const inst = (e, id) => (e.institutions || {})[id] || 0;
+const coutInstitutions = e => Object.keys(INST.INSTITUTIONS).reduce((t, id) => t + INST.INSTITUTIONS[id].cout[inst(e, id)], 0);
+const zero = () => Object.fromEntries(ECO.biens.map(b => [b, 0]));
+
+// prix du tour : prix de base × modificateurs en cours (événements ; traités en M3)
+function prix(e){
+  const p = { ...ECO.prix };
+  for (const m of e.modifPrix) if (m.jusqua >= e.tour) for (const b in m.prix) p[b] *= m.prix[b];
+  return p;
+}
+
+function bilan(e){
+  const fx = Lois.effets(e), fa = Factions.effetsEco(e), prod = zero(), conso = zero(), p = prix(e);
+  let entretienBat = 0;
+  // région par région (bonus de terrain, V2) ; une région occupée ne produit ni ne consomme rien (V2 étape 2)
+  for (const reg in e.regions){
+    if ((e.occupations || {})[reg]) continue;
+    const bonus = TERRAINS[e.regions[reg].terrain].bonus;
+    for (const id in e.regions[reg].batiments){
+      const b = BAT[id];
+      if (!e.regions[reg].batiments[id]) continue;
+      // niveaux (budget de fin de partie) : n bâtiments, k niveaux ajoutés → comptent pour n + 0,5 × k
+      const n = e.regions[reg].batiments[id] + INST.NIVEAUX.gain * ((e.regions[reg].niveaux || {})[id] || 0);
+      const mult = fx.production * (b.artisans ? 1 + fx.artisans + inst(e, "enseignement") * INST.INSTITUTIONS.enseignement.artisans : 1) * (fa.batiments[id] == null ? 1 : fa.batiments[id]) * (bonus[id] || 1)
+        * ((e.bonusRendement || {})[id] || 1);                                      // Inventeur (événement)
+      for (const r in b.produit || {}) prod[r] += n * b.produit[r] * mult * Evenements.multProduction(e, r);   // sécheresse, quarantaine…
+      for (const r in b.consomme || {}) conso[r] += n * b.consomme[r];
+      if (b.entretien) entretienBat += n * b.entretien;
+    }
+  }
+  entretienBat *= ECO.entretienFacteur * fx.entretienBatiments;  // V2 budget : entretien des bâtiments (lois : collectivisation, privé)
+  entretienBat += (e.regiments || 0) * GU.regiment.entretien;   // V2 : entretien des régiments
+  // transport (16/11) : entretien des caravanes achetées (celles du départ sont gratuites)
+  if (DIPLO.transport.actif) entretienBat += Math.max(0, (e.caravanes || 0) - DIPLO.transport.caravanes) * DIPLO.transport.entretienCaravane;
+  for (const r in ECO.besoinsParFamille) conso[r] += e.familles * ECO.besoinsParFamille[r];
+  for (const r in ECO.besoinsArmee) conso[r] += ECO.besoinsArmee[r];
+  // ressources (15/11) : chaque chantier en cours consomme du bois (sauf en région occupée)
+  if (ECO.boisParChantier) conso.bois += ECO.boisParChantier * (e.chantiers || []).filter(c => !(e.occupations || {})[c.region]).length;
+  let ventes = 0, achats = 0, contrats = 0;
+  const balance = {}, pv = {}, pa = {}, fl = Diplomatie.flux(e), t = Diplomatie.tarifs(e);
+  for (const r of ECO.biens){
+    prod[r] = arrondi(prod[r]); conso[r] = arrondi(conso[r]);
+    balance[r] = prod[r] - conso[r];
+  }
+  // contrats et livraisons à prix fixe : ils remplacent le marché pour leur volume
+  // Savoir-faire national (16/11) : nos contrats de vente de produits finis rapportent plus
+  const fini = b => ECO.finis.includes(b) ? fx.finis : 1;
+  for (const f of fl){ balance[f.bien] += f.volume; contrats -= f.volume * f.prix * (f.volume < 0 && e.offres[f.source] ? fini(f.bien) : 1); }
+  for (const r of ECO.biens){
+    balance[r] = arrondi(balance[r]);
+    // marché (V2) : le prix baisse avec la quantité vendue, monte avec la quantité achetée, dans le tour
+    // lois : pente du marché (libre-échange), part des ventes gardée par l'État (privé), prix d'achat (protectionnisme)
+    const q = Math.abs(balance[r]), M = ECO.marche, pente = M.pente * fx.pente;
+    if (balance[r] > 0){ pv[r] = arrondi(p[r] * Math.max(M.min, 1 - pente * q) * fini(r)); ventes += q * pv[r] * t.vente * fx.ventes; }
+    else if (balance[r] < 0){ pa[r] = arrondi(p[r] * Math.min(M.max, 1 + pente * q) * fx.achat); achats += q * pa[r] * t.achat; }
+  }
+  contrats = arrondi(contrats);
+  const niveau = ECO.niveauxImpot[e.impots || "normal"];
+  const impots = arrondi(e.familles * ECO.impotParFamille * fx.impots * fa.impots * niveau.impots);
+  // dette (V2 budget) : intérêts sur ce qui est dû
+  const interets = e.tresor < 0 ? arrondi(-e.tresor * ECO.dette.taux) : 0;
+  const institutions = coutInstitutions(e);   // budget de fin de partie : dépense des institutions
+  const dividendes = arrondi(Diplomatie.dividendes(e) * fx.dividendes);   // investissements à l'étranger (16/11)
+  const entretiens = arrondi(fx.entretien + entretienBat + interets + institutions);
+  ventes = arrondi(ventes); achats = arrondi(achats);
+  return { interets, production: prod, consommation: conso, balance, prix: p, prixVente: pv, prixAchat: pa, ventes, achats, contrats, impots, entretiens,
+           solde: arrondi(ventes - achats + contrats + impots + dividendes - entretiens), institutions, dividendes,
+           croissance: ECO.croissance + fx.croissance + inst(e, "enseignement") * INST.INSTITUTIONS.enseignement.croissance };
+}
+
+// applique le tour : trésor (peut passer sous zéro : ASSUMPTION validée, sans conséquence en V1), puis familles
+function appliquer(e){
+  const b = bilan(e);
+  e.tresor = arrondi(e.tresor + b.solde);
+  // (en essai) réserves plafonnées : l'excédent est perdu
+  if (ECO.reserves && e.tresor > ECO.reserves * b.impots){
+    b.perdu = arrondi(e.tresor - ECO.reserves * b.impots); e.tresor = arrondi(ECO.reserves * b.impots);
+    e.journal.push(`Réserves pleines : ${b.perdu} or perdus.`);
+  }
+  e.familles = arrondi(Math.min(ECO.plafondFamilles, e.familles * (1 + b.croissance)));
+  e.bilan = b;
+  return b;
+}
+
+const Economie = { prix, bilan, appliquer };
+if (NODE) module.exports = Economie; else (racine.Politique = racine.Politique || {}).Economie = Economie;
+})(typeof window !== "undefined" ? window : globalThis);
