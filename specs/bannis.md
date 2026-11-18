@@ -1,0 +1,116 @@
+# Les Bannis (nom provisoire) — cahier des charges
+
+Idée de l'utilisateur du 18/11 : un **autobattler rogue-lite** où, au début, presque tout est laissé au **hasard** (classe des recrues, caractéristiques, équipement, vagues), et où le joueur apprend à **maîtriser le hasard** : pendant la run avec des consommables et des reliques, puis pour de bon avec un **arbre de compétences** entre les runs. RPG (stats, équipement, niveaux), plusieurs classes, **classes légendaires** à débloquer (guerrier → paladin, magicien → sorcier…), **dés** (nombre de faces, multiplicateurs, diviseurs, nombre de lancers). Beaucoup d'effets, d'animations et un bon son : ça doit être **satisfaisant**.
+
+Statut : **chantier**, étape maquette (règle « maquette d'abord »). Dossier prévu : `bannis/`.
+
+## 1. Histoire
+- Le joueur est **le Mage instable** : un magicien très puissant, **banni** parce que ses sorts sont imprévisibles (un sort de soin qui fait pousser un arbre, une boule de feu qui tombe trois fois…). C'est la justification du hasard : **c'est lui qui lance les dés**.
+- On l'envoie sur **l'Île des Bannis**, au pied de **la Gueule** (un volcan, ou une montagne fendue) d'où sortent des **hordes** chaque nuit. Façon le Mur et la Garde de nuit : les condamnés (voleurs, déserteurs, chevaliers déchus, sorcières) peuvent choisir l'île plutôt que la prison ou la corde, et tenir **la Muraille** pour protéger le continent.
+- Le Mage commande une **escouade de bannis** qui change à chaque run (des recrues tirées au sort, débarquées par le bateau-prison). Il ne se bat pas lui-même : il **place**, **lance les dés** et **lance ses sorts instables** (parchemins, potions).
+- Pistes à broder :
+  - Le **Registre de la Muraille** : chaque recrue tombée y laisse son nom ; on le relit entre les runs (et les légendaires débloquées sont des bannis célèbres).
+  - Les **forts de la Muraille** : chaque run part d'un fort différent (ruiné, à reconstruire grâce à l'arbre).
+  - Un fil rouge : pourquoi la Gueule s'est réveillée ? Le Mage découvre au fil des runs que **son propre bannissement** est lié au volcan (son pouvoir vient de la même source). Fin : descendre dans la Gueule (boss final), choisir de refermer la faille ou d'en prendre le pouvoir.
+  - Personnages récurrents au fort : le **Lord-Commandant** (donne les objectifs), le **forgeron borgne** (équipement), la **sorcière des marais** (dés et reliques), le **passeur** (les recrues).
+
+## 2. Boucle de jeu
+**Une run** = une **nuit** sur la Muraille, découpée en **vagues** (10 à 15, boss tous les 5) ; durée visée 15 à 25 min, reprise possible (sauvegarde de la run en cours).
+1. **Recrutement** (début de run) : le bateau débarque des recrues tirées au sort ; on en garde quelques-unes (3 au départ, jusqu'à 6 avec l'arbre).
+2. **Avant chaque vague** : on voit la vague annoncée (en partie cachée au début), on **place** l'escouade sur la grille (2 rangs × 3 cases : avant / arrière), on équipe, on utilise des consommables.
+3. **Combat automatique** : les unités frappent seules selon leur vitesse ; le joueur peut **lancer les dés** quand une jauge est pleine (ou à des moments précis : début de vague, coup critique, sauvetage), et **activer** potions et parchemins.
+4. **Après la vague** : butin (or, objets, XP), **montée de niveau** (choix d'un bonus parmi deux ou trois, au hasard), **marchand** ou **événement** de temps en temps.
+5. **Fin de run** (escouade tombée ou nuit tenue) : on gagne des **éclats de Gueule** (monnaie permanente) selon la vague atteinte, à investir dans l'**arbre de compétences**.
+
+## 3. Personnages (RPG)
+- **Stats** : PV, Attaque, Défense, Vitesse, Critique (chance et dégâts), Magie, Chance (pèse sur les dés). Valeurs de départ tirées au hasard autour d'une base par classe.
+- **Équipement** : arme, armure, bijou (3 emplacements). Rareté (commun, rare, épique, légendaire) et **affixes** tirés au hasard (+ATQ, vol de vie, épines, +1 face de dé…).
+- **Niveaux** : XP à chaque vague ; à chaque niveau, un bonus au choix parmi des propositions tirées au hasard.
+- **Traits** (1 par recrue, au hasard) : « Ivrogne » (+ATQ, −précision), « Déserteur » (fuit sous 20 % de PV), « Pieux », « Cleptomane » (+or)… petits textes drôles qui donnent du caractère.
+- **Classes de départ** (à confirmer avec le pack retenu) : Guerrier, Archer, Lancier, Magicien, Prêtre, Voleur, Soldat.
+- **Classes légendaires** (évolution d'une classe, débloquée dans l'arbre puis obtenue en jeu par une condition) : Guerrier → **Paladin**, Magicien → **Sorcier** (ou Nécromancien), Archer → **Rôdeur**, Prêtre → **Inquisiteur**, Voleur → **Assassin**, Lancier → **Dragon-lancier**. Condition possible : atteindre le niveau 5 + trouver l'**insigne** de la classe (relique rare).
+
+## 4. Les dés
+- Le Mage possède une **réserve de dés** (au départ : 2 d6). Lancer de dés = résolution d'un **sort instable** ou d'un **renfort** : la somme (avec multiplicateurs) donne la puissance.
+- Types : **d4, d6, d8, d10, d12, d20**. Faces spéciales à ajouter : **×2**, **÷2**, **crâne** (rate), **étoile** (relance gratuite), **éclair** (effet élémentaire).
+- Leviers : nombre de **dés**, nombre de **lancers** (relances), **garder** un dé (façon Yams), **dés pipés** (une face plus probable), faces gravées (remplacer une face), **multiplicateurs** de combinaison (paire, brelan, suite, tout identique = « miracle »).
+- Lien avec l'existant : le **Yams** a déjà des dés 3D avec physique (Three.js + cannon.js) ; on peut réutiliser ce lancer pour un « plateau de dés » qui s'ouvre par-dessus le combat (très satisfaisant), ou rester en 2D dans le style du pack (à trancher sur la maquette).
+
+## 5. Inventaire de tout ce qui est aléatoire, et comment le maîtriser
+| Aléatoire | Au début | Pendant la run (consommables, reliques) | Pour de bon (arbre) |
+|---|---|---|---|
+| Classe des recrues | tirée au sort | **Lettre de recommandation** (choisir la classe d'une recrue) | voir 1 recrue de plus ; **classe favorite** (plus probable) ; recrue légendaire possible |
+| Nombre de recrues proposées | 3 | **Pot-de-vin au passeur** (+1) | +1 recrue proposée, +1 place dans l'escouade |
+| Stats des recrues | base ± 30 % | **Élixir d'entraînement** (relancer les stats d'une recrue) | fourchette resserrée (± 20 %, ± 10 %), plancher plus haut |
+| Trait de la recrue | au hasard, parfois mauvais | **Absolution** (retirer un trait) | traits négatifs plus rares ; choix entre 2 traits |
+| Équipement de départ | au hasard ou rien | — | équipement de départ garanti, rareté minimale |
+| Butin après vague | 1 objet au hasard | **Clé de coffre** (choisir parmi 3) ; **Pierre de forge** (relancer un affixe) | choix parmi 2 puis 3 ; chance de rareté |
+| Bonus de niveau | 2 propositions | **Parchemin de relance** | 3 propositions ; relance gratuite par run |
+| Dés : nombre et faces | 2 d6 | dés trouvés (d8, d12…), **dé pipé** (relique) | dé de départ en plus ; d4 → d6 → d8… ; 1 relance par lancer |
+| Résultat du lancer | pur hasard | **garder** des dés, **Plume du destin** (tourner un dé d'une face) | relances, faces ×2, la Chance pèse sur le lancer |
+| Composition des vagues | annonce partielle (« ??? ») | **Longue-vue** (voir la vague suivante en entier) ; **Torche** (révéler le boss) | annonce de plus en plus précise ; voir 2 vagues à l'avance |
+| Modificateurs de vague (brouillard, ennemis enragés, pluie de cendres) | au hasard | **Encens** (annuler un modificateur) | modificateurs moins fréquents ; choisir entre 2 chemins (vague « or » ou vague « butin ») |
+| Événements entre les vagues | au hasard | — | plus de marchands, sorcière qui vend des dés |
+| Critiques et esquives en combat | chances de base | potions de rage, d'adresse | +Chance pour toute l'escouade |
+| Sorts du Mage | effet au hasard dans une liste | **Grimoire** (enlever un effet indésirable de la liste) | sorts plus stables (moins de « ratés »), nouveaux sorts |
+
+L'idée de fond : au début le joueur **subit** le hasard, à la fin il le **sculpte** (comme le Mage qui apprend à dompter ses sorts).
+
+## 6. Arbre de compétences (entre les runs)
+- Monnaie : **éclats de Gueule** (selon vague atteinte, boss tués, recrues survivantes).
+- Branches (à équilibrer) :
+  - **Le Passeur** (recrues) : plus de choix, classes favorites, légendaires.
+  - **La Forge** (équipement) : rareté, choix du butin, relances d'affixes.
+  - **Le Grimoire** (dés et sorts) : dés de départ, faces spéciales, relances, sorts plus stables.
+  - **La Vigie** (vagues) : annonces, modificateurs, chemins.
+  - **La Muraille** (bonus d'escouade) : PV, place supplémentaire, défense du fort.
+- Chaque nœud débloqué se voit tout de suite dans la run suivante (satisfaction immédiate).
+
+## 7. Effets et son (la « satisfaction »)
+- Coups : arrêt sur image de 40 à 80 ms (« hit-stop »), secousse proportionnelle, chiffres de dégâts qui sautent (jaunes, rouges pour les critiques, verts pour les soins), éclats.
+- Dés : roulement, rebonds, cliquetis, ralenti sur le dernier dé, **combo** qui s'affiche en grand (PAIRE, BRELAN, MIRACLE) avec chœur.
+- Montées de niveau : colonne de lumière, jingle. Évolution légendaire : petite cinématique (silhouette blanche, éclair, nouveau sprite).
+- Sorts instables : un sort qui « déraille » doit être **drôle** (pluie de poulets, mouton géant, la boule de feu qui revient).
+- Son : sons synthétisés dans le code (comme les autres jeux de la Ludothèque) **ou** packs gratuits (voir § 9) ; musique de nuit qui monte en intensité avec les vagues.
+
+## 8. Classement et défi du jour (à trancher)
+- Classement : vague atteinte la plus haute.
+- Défi du jour (règle de la Ludothèque : une tentative classée par jour) : même graine pour tous (mêmes recrues, mêmes vagues, mêmes dés), sans l'arbre (ou arbre figé).
+
+## 9. Recherche de graphismes (18/11)
+Fouille des flux itch.io (`https://itch.io/game-assets/free/tag-….xml`) par mots-clés : dés, auto-battler, side-view, rpg, icônes, gui, sorts, sons. Packs téléchargés et regardés (scratchpad, pas dans le dépôt) :
+
+**Personnages et monstres (vue de côté, faits pour un combat de face-à-face)**
+- **Tiny RPG Character Asset Pack 01** et **02** (Zerie) — https://zerie.itch.io/tiny-rpg-character-asset-pack et https://zerie.itch.io/tiny-rpg-character-asset-pack-02 : cases 100 × 100, personnages ~20 px très lisibles, animés (repos, marche, 2 ou 3 attaques, blocage, blessure, mort), projectiles. Pack 01 : Soldat, Chevalier, **Chevalier templier** (= paladin !), Épéiste, Hachier en armure, Lancier, **Magicien**, **Prêtre**, Archer, **Nécromancien** (= sorcier !) + orcs, squelettes, loups-garous, ours-garou, slime, chauve-souris. Pack 02 : **démons** (20, thème enfer = la Gueule). **Gratuit : Soldat + Orc, Démon + Monstre de sang** ; complet **2,50 $ chacun** (prix libre au-dessus). Licence : jeux commerciaux ou non, pas de redistribution du pack. **Le plus cohérent avec l'histoire** (héros contre hordes de l'enfer, classes légendaires déjà là).
+- **Pixel Champions** (alexpixels, gratuit) — https://alexpixels.itch.io/pixel-champions : 8 héros façon Final Fantasy VI (format RPG Maker MV, animés : repos, attaque, sort, garde, blessure, victoire, K.O.), 3 couleurs chacun. Beau, mais ce sont des **personnages nommés** (Mercenaire, Sorcière du temps…), pas des classes génériques.
+- **Free Mythic Monsters** (Willibab, gratuit) — https://willibab.itch.io/free-mythic-monsters : 31 monstres 8 bits détaillés, vue de côté, 3 couleurs, **fixes** (on les anime par le code : sautillement, élan, éclair blanc). 100 de plus dans *Mythic Monsters I* (7,49 $).
+- **Free SV Battlers** (Willibab, CC-BY) — https://willibab.itch.io/free-sv-battlers : générateur en calques (corps, cheveux, casques, armures, capes) pour assembler des héros dont **l'équipement se voit** ; inachevé, pas d'armes, petit. Piste « équipement visible » ; la version complète *8 Bit Sideview Battle Character Creator* coûte 3,74 $.
+- **Tiny Swords** (Pixel Frog, **déjà acheté** pour Bastion) : guerrier, archer, lancier, moine + gobelins, gnolls, trolls (Enemy Pack), grandes animations ; cohérent avec Bastion, mais style refusé une fois (Escarmouche, 23/10).
+- Écartés : *Tiny Battle Armies* (riekahq, 4 $) et *50 Free Chibi Characters Kit* (24thforce) : **faits avec l'aide d'une IA** ; *Chibi Fantasy Heroes* (robe-of-fire) : généré depuis une image ; *Fantasy Battle Pack* (déjà acheté, Résistance) : unités de carte trop petites pour des combats de face.
+
+**Dés**
+- **Fantasy Dices Pack** (aeynit, gratuit, usage libre) — https://aeynit.itch.io/fantasy-dices-pack : d4, d6, d8, d10, d12, d20 en 12 couleurs, **peints** (pas en pixels), grands (≈ 400 px).
+- **Hi Res Dice Pack** (ci, gratuit) — https://ci.itch.io/hi-res-dice-pack : 546 images, D2 à D20, 7 couleurs, 1080 px (style plat).
+- Pixel : *Pixel Dice* (snoblin, d6 avec états survol / glissé), *Dice Asset Pack* (clovertea, d6 qui roulent, dés à ailes de chauve-souris), *Squares Dungeons and Dice* (crossoftware, héros et monstres **sur des dés**, 32 × 32, idée amusante).
+- Ou **dés 3D du Yams** (rien à télécharger, déjà dans le dépôt) : n'importe quel nombre de faces se dessine dans le code.
+
+**Icônes d'armes, d'armures, de consommables**
+- **Shikashi's Fantasy Icons Pack** (gratuit, 284 icônes 32 × 32, crédit « Matt Firth (shikashipx) » et « game-icons.net ») — https://shikashipx.itch.io/shikashis-fantasy-icons-pack : armes, armures, potions, parchemins, statuts, buffs ; version 607 icônes payante.
+- Willibab : *Simple Weapon Icons* (261 armes) et *Simple 32x32 Armor Icons* (casques, plastrons, boucliers, centaines de couleurs), gratuits, usage commercial.
+- Autres : Admurin's Armory (90 gratuits, 1725 payants), Clockwork Raven (potions, armures, sorts, 16/32/64 px), Kyrise 16 × 16.
+
+**Interface**
+- Tiny RPG – Mana Soul GUI (tiopalada, déjà utilisé par Résistance), Kenney Fantasy UI Borders (CC0), Crimson Fantasy GUI, Complete UI Book Styles ; *Auto-Battler UI: Free Pixel Sample* (infi76 : cartes de boutique, jetons, barres de PV, bouton relancer).
+- Fonds de combat : *Willibab's Free Pixel Battle Backgrounds* (5 lieux, 4 couleurs) — un peu bruités en petit ; sinon fond peint dans le code (volcan, muraille).
+
+**Effets et sons**
+- Effets : Frostwindz *Pixel Art VFX* (versions gratuites Prêtre, Démoniste, Mage de feu, Mage de sang, Astromancien : un pack d'effets **par classe**), Willibab *Simple Pixel Spell Effects*, Pimen, pinogames (magie noire, glace).
+- Sons : Leohpaz *RPG Essentials SFX* (48 gratuits : UI, sorts, soins, buffs, coups), *Minifantasy Dungeon Audio*, Halfwits *SFX Pack – Rolling Dice* (gratuit : **1 à 10 dés de d4 à d20 qui roulent**), *FREE Pixel Combat SFX* (heltonyan, 2100 sons). Musique : *Battle Background Music* (mululavgmloops, 6 boucles).
+
+## 10. Maquette 1 (18/11)
+[Artefact](https://claude.ai/artifact/NxUw5hLPN5uD9e3ZatdGn3), source `maquettes/bannis.html` (fabriquée par `python3 -I outils/bannis-maquette/fabriquer.py <dossier des packs>` depuis `outils/bannis-maquette/source.html`) : un écran de téléphone, une vague jouable (placement, lancer de dés, combat automatique, effets, sons synthétisés), en **trois directions** :
+- **A « Petits soldats »** : Tiny RPG de Zerie (échantillons gratuits : Soldat contre Orcs et Démons), dés peints d'aeynit, icônes Shikashi, fond de volcan dessiné dans le code.
+- **B « Rétro 16 bits »** : héros de Pixel Champions, monstres de Willibab, dés en pixels dessinés dans le code, icônes Shikashi.
+- **C « Tiny Swords »** : guerrier, archer, lancier, moine contre gobelins et gnolls (pack déjà acheté), dés dessinés dans le code.
+
+Retour de l'utilisateur : en attente.
