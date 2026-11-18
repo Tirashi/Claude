@@ -49,13 +49,6 @@
   "pack": "fga2"
  },
  {
-  "cle": "fga_corvette1_b",
-  "nom": "CORVETTE 1",
-  "f": "PACKS/fga/x_Free_Battle_Spaceship_3D_Models/Corvette_01.fbx",
-  "tex": "PACKS/fga/x_Free_Battle_Spaceship_3D_Models/Texture/T_Spase_blue.png",
-  "pack": "fga"
- },
- {
   "cle": "fga_corvette1_r",
   "nom": "CORVETTE 1",
   "f": "PACKS/fga/x_Free_Battle_Spaceship_3D_Models/Corvette_01.fbx",
@@ -67,13 +60,6 @@
   "nom": "FREGATE 1",
   "f": "PACKS/fga/x_Free_Battle_Spaceship_3D_Models/Frigate_01.fbx",
   "tex": "PACKS/fga/x_Free_Battle_Spaceship_3D_Models/Texture/T_Spase_64.png",
-  "pack": "fga"
- },
- {
-  "cle": "fga_corvette2_b",
-  "nom": "CORVETTE 2",
-  "f": "PACKS/fga/x_Free_Battle_Spaceship_3D_Models/Corvette_02.fbx",
-  "tex": "PACKS/fga/x_Free_Battle_Spaceship_3D_Models/Texture/T_Spase_blue.png",
   "pack": "fga"
  },
  {
@@ -91,13 +77,6 @@
   "pack": "fga"
  },
  {
-  "cle": "fga_corvette3_b",
-  "nom": "CORVETTE 3",
-  "f": "PACKS/fga/x_Free_Battle_Spaceship_3D_Models/Corvette_03.fbx",
-  "tex": "PACKS/fga/x_Free_Battle_Spaceship_3D_Models/Texture/T_Spase_blue.png",
-  "pack": "fga"
- },
- {
   "cle": "fga_corvette3_r",
   "nom": "CORVETTE 3",
   "f": "PACKS/fga/x_Free_Battle_Spaceship_3D_Models/Corvette_03.fbx",
@@ -112,13 +91,6 @@
   "pack": "fga"
  },
  {
-  "cle": "fga_corvette4_b",
-  "nom": "CORVETTE 4",
-  "f": "PACKS/fga/x_Free_Battle_Spaceship_3D_Models/Corvette_04.fbx",
-  "tex": "PACKS/fga/x_Free_Battle_Spaceship_3D_Models/Texture/T_Spase_blue.png",
-  "pack": "fga"
- },
- {
   "cle": "fga_corvette4_r",
   "nom": "CORVETTE 4",
   "f": "PACKS/fga/x_Free_Battle_Spaceship_3D_Models/Corvette_04.fbx",
@@ -130,13 +102,6 @@
   "nom": "FREGATE 4",
   "f": "PACKS/fga/x_Free_Battle_Spaceship_3D_Models/Frigate_04.fbx",
   "tex": "PACKS/fga/x_Free_Battle_Spaceship_3D_Models/Texture/T_Spase_64.png",
-  "pack": "fga"
- },
- {
-  "cle": "fga_corvette5_b",
-  "nom": "CORVETTE 5",
-  "f": "PACKS/fga/x_Free_Battle_Spaceship_3D_Models/Corvette_05.fbx",
-  "tex": "PACKS/fga/x_Free_Battle_Spaceship_3D_Models/Texture/T_Spase_blue.png",
   "pack": "fga"
  },
  {

@@ -119,6 +119,19 @@ Planche : `chasseurs-proposes.png` (scratchpad, envoyée à l'utilisateur). Outi
 - Poids : textures en 128 px sans lissage, géométrie quantifiée (`conversion/quantifie.py`, extension KHR_mesh_quantization, remise en coordonnées d'origine au chargement par `dequantifie()`). 3 gros vaisseaux qui ne servaient pas sont retirés. La page pèse 14 Mo (plafond : 16 Mo). Une fois le choix fait, on ne gardera que les modèles retenus.
 - Le même jour, l'utilisateur retire **polyhangar et mehrasaur** : il ne reste que les 35 polyyai à essayer.
 
+## Les 35 chasseurs polyyai en 4 familles (validé le 18/11)
+L'utilisateur n'arrive pas à choisir (« ils sont tous cool ») : on garde les 35, chacun dans une famille. Dans le jeu, chaque modèle sera un fichier séparé (environ 8 Mo en tout, mis en cache). Nos 4 jets construits dans le code et les corvettes bleues sortent du hangar ; les corvettes et frégates rouges restent les bombardiers et les escorteurs ennemis.
+| Famille | Modèles | Vitesse | Virage | Blindage | Missiles | Vie (ennemi) |
+|---|---|---|---|---|---|---|
+| Intercepteurs | 2, 5, 13, 17, 26 | ×1,15 | ×1,3 | ×0,7 | 4 | 2 |
+| Polyvalents | 1, 3, 7, 8, 19, 23, 28 | ×1 | ×1 | ×1 | 5 | 3 |
+| Lourds | 6, 9, 10, 12, 14, 16, 18, 20, 21, 24, 25, 27, 29, 30, 32, 34 | ×0,85 | ×0,78 | ×1,7 | 7 | 6 |
+| Furtifs | 4, 11, 15, 22, 31, 33, 35 | ×1,05 | ×1,1 | ×0,85 | 4 | 4 |
+- Le blindage divise les dégâts reçus. Les furtifs sont visés de moins loin (portée des ennemis et des tourelles ×0,65).
+- **Le joueur** commence avec le polyvalent 7. Dans le jeu, il débloquera les autres un par un (environ un par mission réussie) ; dans la maquette, tous sont ouverts.
+- **Les ennemis** : polyvalents aux vagues 1 et 2 ; polyvalents, intercepteurs et lourds jusqu'à la vague 4 ; puis toutes les familles. Les as volent sur des intercepteurs, ou sur des furtifs dès la vague 5 (+2 points de vie).
+- Le rangement pourra changer si un appareil ne se pilote pas comme sa famille.
+
 ## Licences à régler avant le jeu
 - **monogon** : réglé, tous retirés.
 - **niko** : réglé, retiré.

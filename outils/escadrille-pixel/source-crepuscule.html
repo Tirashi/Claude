@@ -37,7 +37,7 @@ p{margin:0;max-width:72ch}
 .hangar{position:absolute;inset:8px;z-index:5;display:none;flex-direction:column;gap:5px;overflow:auto;padding:12px;background:rgba(28,22,44,.92);border-radius:16px;font:11px/1.4 var(--titre);color:#fff;touch-action:pan-y}
 .hangar b{font-size:15px;letter-spacing:.14em;margin-bottom:4px}.hangar i{font-style:normal;color:#f2c94c;margin-top:8px;font-size:10px}
 .hangar button{font:11px var(--titre);text-align:left;padding:8px 10px;border-radius:8px;border:1px solid rgba(220,200,240,.4);background:rgba(255,255,255,.08);color:#fff;cursor:pointer}
-.hangar button.on{background:#e2682e}.hangar .ligne{display:flex;gap:5px}.hangar .ligne button:first-child{flex:1}.hangar .enn{font-size:8px;padding:8px 7px;color:#f3b0b0}.hangar .enn.on{background:#c8242c;color:#fff}.hangar .choix{margin:0;font-size:9px;line-height:1.7;color:#ffe080;background:rgba(0,0,0,.25);padding:6px 8px;border-radius:6px}.hangar .aide{margin:0;font:13px/1.3 var(--texte);color:#cfc6dc}.hangar .fermer{text-align:center;margin-top:8px}
+.hangar button.on{background:#e2682e}.hangar .ligne{display:flex;gap:5px}.hangar .ligne button:first-child{flex:1}.hangar .enn{font-size:8px;padding:8px 7px;color:#f3b0b0}.hangar .enn.on{background:#c8242c;color:#fff}.hangar .choix{margin:0;font-size:9px;line-height:1.7;color:#ffe080;background:rgba(0,0,0,.25);padding:6px 8px;border-radius:6px}.hangar .fam{margin:0;font:13px/1.35 var(--texte);color:#cfc6dc}.hangar .fam span{font:9px var(--titre);color:#ffe080;letter-spacing:.04em}.hangar .aide{margin:0;font:13px/1.3 var(--texte);color:#cfc6dc}.hangar .fermer{text-align:center;margin-top:8px}
 .charge{position:absolute;inset:0;display:grid;place-items:center;font:12px var(--titre);color:#fff}
 ul{margin:0;padding-left:22px;display:grid;gap:6px;max-width:76ch}
 .q{background:var(--carte);border-left:6px solid var(--accent);padding:14px 16px;display:grid;gap:8px}
@@ -58,7 +58,7 @@ ul{margin:0;padding-left:22px;display:grid;gap:6px;max-width:76ch}
 <li><b>Ciel du crépuscule peint par la carte graphique</b> : dégradé lavande, rose, pêche et jaune, soleil bas avec son halo, traînées de nuages roses.</li>
 <li><b>Décor peint pixel par pixel</b> : forêts d'automne (vert, jaune, orange, rouge, olive) mouchetées, roche mauve sur les pentes, plages, mer qui passe du turquoise au bleu profond selon la profondeur, écume des côtes et moutons qui bougent. Le monde est infini.</li>
 <li><b>Traînées blanches</b> au bout des ailes, flamme du réacteur, ombre sous l'avion : ce sont elles qui donnent la vitesse.</li>
-<li><b>Avions 3D low poly</b> construits dans le code, avec un contour fin : parfaitement fluides. Le bouton AVION ouvre le hangar : nos 4 chasseurs et les vaisseaux des packs que tu as choisis (niko, Texnist, Free Game Assets, Majadroid) ; les avions à hélices ont été retirés le 17/11; la touche C passe au suivant. <b>Nuages en volume</b> éclairés en trois tons.</li>
+<li><b>Avions 3D low poly</b> construits dans le code, avec un contour fin : parfaitement fluides. Le bouton AVION ouvre le hangar : 35 chasseurs polyyai (CC0) repeints en bleu, rangés en 4 familles (intercepteurs, polyvalents, lourds, furtifs) qui ont chacune leurs réglages ; les ennemis, repeints en rouge, sont tirés des mêmes familles.</li>
 </ul></section>
 <section class="q"><h2>A CHOISIR</h2>
 <p>1. Le rendu est-il proche de tes captures ? Qu'est-ce qui manque le plus : le décor, la lumière, l'avion ?</p>
@@ -272,10 +272,17 @@ function construire(c,flammes,camp='b'){if(c.m==='import'){const r=importe(c.cle
 function chasseur(c){return construire(Object.assign({m:'faucon'},c),false).g;}
 const PACKS={"fga": "CORVETTES BLEUES \u00b7 FREE GAME ASSETS (craftpix)","polyyai":"POLYYAI (CC0) \u00b7 A ESSAYER"};
 const ROT_PACK={polyyai:Math.PI},ROT_MOD={};
-Object.assign(COULEURS,{'fga_corvette1_b':{m:'import',cle:'fga_corvette1_b',rot:-Math.PI/2},'fga_corvette2_b':{coupe:.3,m:'import',cle:'fga_corvette2_b',rot:-Math.PI/2},'fga_corvette3_b':{coupe:.34,m:'import',cle:'fga_corvette3_b',rot:-Math.PI/2},'fga_corvette4_b':{coupe:.3,m:'import',cle:'fga_corvette4_b',rot:-Math.PI/2},'fga_corvette5_b':{m:'import',cle:'fga_corvette5_b',rot:-Math.PI/2}});
-for(const k in GLBS)if(REPEINTS[GLBS[k].pack])COULEURS[k]={m:'import',cle:k,repeint:1,rot:ROT_MOD[k]!==undefined?ROT_MOD[k]:ROT_PACK[GLBS[k].pack]};/* candidats à essayer, repeints en bleu (joueur) ou en rouge (ennemis) */
-for(const k in COULEURS){const c=COULEURS[k];c.pack=c.m==='import'?(PACKS[GLBS[c.cle].pack]||''):'CHASSEURS BLEUS (construits dans le code)';c.nom=c.m==='import'?GLBS[c.cle].nom:k;}
-const NOMS=Object.keys(COULEURS);let choix=0;try{choix=Math.max(0,NOMS.indexOf(localStorage.getItem('escadrille.avion3d')));}catch(e){}
+// les familles : chaque appareil a les réglages de sa famille (vitesse, virage, blindage, missiles) ; les ennemis sont tirés par famille
+const FAMILLES={inter:{nom:'INTERCEPTEURS',txt:'Rapides, virent bien, fragiles',v:1.15,vir:1.3,bli:.7,mis:4,vie:2,b:[5,5,2],l:[2,5,13,17,26]},
+  poly:{nom:'POLYVALENTS',txt:'Moyens partout',v:1,vir:1,bli:1,mis:5,vie:3,b:[3,3,3],l:[1,3,7,8,19,23,28]},
+  lourd:{nom:'LOURDS',txt:'Lents, tres blindes, plus de missiles',v:.85,vir:.78,bli:1.7,mis:7,vie:6,b:[2,2,5],l:[6,9,10,12,14,16,18,20,21,24,25,27,29,30,32,34]},
+  furtif:{nom:'FURTIFS',txt:'Moins reperes (les ennemis tirent de moins loin), armes plus faibles',v:1.05,vir:1.1,bli:.85,mis:4,vie:4,discret:.65,b:[4,4,2],l:[4,11,15,22,31,33,35]}};
+const CORV_COUPE={2:.3,3:.34,4:.3};
+for(const k in COULEURS)delete COULEURS[k];
+for(const f in FAMILLES)for(const i of FAMILLES[f].l)COULEURS['py'+i]={m:'import',cle:'py'+i,repeint:1,rot:Math.PI,fam:f};
+for(const k in COULEURS){const c=COULEURS[k];c.pack=FAMILLES[c.fam].nom;c.nom=GLBS[c.cle].nom;}
+const FAM=()=>FAMILLES[COULEURS[NOMS[choix]].fam];
+const NOMS=Object.keys(COULEURS);let choix=NOMS.indexOf('py7');try{const i=NOMS.indexOf(localStorage.getItem('escadrille.avion3d'));if(i>=0)choix=i;}catch(e){}
 let ENNEMIS=[];try{ENNEMIS=(JSON.parse(localStorage.getItem('escadrille.ennemis'))||[]).filter(k=>COULEURS[k]);}catch(e){}
 // version rouge d'un appareil du hangar, pour les ennemis
 function versionRouge(k){const c=COULEURS[k];if(c.m!=='import')return Object.assign({},c,{accent:'#c8242c',verriere:'#2a2224'});if(/_b$/.test(c.cle)&&GLBS[c.cle.replace(/_b$/,'_r')])return Object.assign({},c,{cle:c.cle.replace(/_b$/,'_r')});return c;}
@@ -309,7 +316,7 @@ function flotte(dt){for(const n of FLOTTE){n.ph+=dt;if(!n.neuf)animeFlammes(n.fl
         if(t.mort){if(Math.random()<dt*4)fumee(t.cible.g.position,1);continue;}/* une tourelle détruite fume */
         TOURS.push(t.cible);}
       if(!t.c||t.cad<-3||(t.c.n&&t.c.n.neuf)||(t.c.e&&t.c.e.vie<=0)){t.c=null;const op=t.o.getWorldPosition(loc).clone();const choix=[];
-        if(n.camp===1&&op.distanceTo(S.p)<260)choix.push({joueur:1},{joueur:1});
+        if(n.camp===1&&op.distanceTo(S.p)<260*(FAM().discret||1))choix.push({joueur:1},{joueur:1});
         if(n.camp===0)for(const e of ennemis)if(e.vie>0&&e.g.position.distanceTo(op)<260)choix.push({e});
         for(const m of FLOTTE)if(m.camp!==n.camp&&!m.neuf&&m.g.position.distanceTo(op)<650)choix.push({n:m,dx:(Math.random()-.5)*.5,dz:(Math.random()-.5)*.5});
         if(choix.length)t.c=choix[Math.random()*choix.length|0];}
@@ -321,16 +328,16 @@ function flotte(dt){for(const n of FLOTTE){n.ph+=dt;if(!n.neuf)animeFlammes(n.fl
         for(let q=0;q<2;q++){const m=new THREE.Mesh(new THREE.BoxGeometry(.8,.8,12),new THREE.MeshBasicMaterial({color:coul}));m.position.copy(bout).addScaledVector(dir,-q*10);m.lookAt(p);sc.add(m);LASERS.push({m,v:dir.clone().multiplyScalar(240),t:L/240+q*10/240,c:t.c});}
         boom(bout,3,['#ffffff',coul]);}}}
   for(const l of LASERS){l.t-=dt;l.m.position.addScaledVector(l.v,dt);
-    if(l.c.joueur&&l.m.position.distanceTo(S.p)<3&&S.rollT<0){l.t=0;S.blindage-=6;V.flash=.15;if(S.blindage<=0){boom(S.p,30);S.blindage=100;annonce('ABATTU !<b>-1000</b>Un nouvel avion décolle.');S.score=Math.max(0,S.score-1000);}continue;}
+    if(l.c.joueur&&l.m.position.distanceTo(S.p)<3&&S.rollT<0){l.t=0;S.blindage-=6/FAM().bli;V.flash=.15;if(S.blindage<=0){boom(S.p,30);S.blindage=100;annonce('ABATTU !<b>-1000</b>Un nouvel avion décolle.');S.score=Math.max(0,S.score-1000);}continue;}
     if(l.c.e&&l.c.e.vie>0&&l.m.position.distanceTo(l.c.e.g.position)<l.c.e.rayon+1){l.t=0;l.c.e.vie-=2;if(l.c.e.vie<=0){boom(l.c.e.g.position);sc.remove(l.c.e.g);}continue;}
     if(l.t<=0&&l.c.n)boom(l.m.position,6,['#ffffff','#ffe066','#ff8a2a']);}
   for(let k=LASERS.length-1;k>=0;k--)if(LASERS[k].t<=0){sc.remove(LASERS[k].m);LASERS.splice(k,1);}}
 // ennemis
 const ennemis=[];
 function ennemi(pos,dir){const g=new THREE.Group();const as=V.n>=4&&Math.random()<.3,bomb=!as&&V.n>=3&&Math.random()<.22;
-  const escorte=bomb&&V.n>=4&&Math.random()<.4;const mr=construire(!bomb&&ENNEMIS.length?versionRouge(ENNEMIS[Math.random()*ENNEMIS.length|0]):escorte?{m:'import',cle:'fga_fregate'+(1+Math.random()*5|0)+'_r',rot:-Math.PI/2,taille:6.4}:bomb?(n=>({m:'import',cle:'fga_corvette'+n+'_r',rot:-Math.PI/2,taille:6.4,coupe:COULEURS['fga_corvette'+n+'_b'].coupe}))(1+Math.random()*5|0):as?ROUGE.vipere:ROUGE.faucon,true,'r'),m=mr.g;/* bombardiers : corvettes rouges ; escorteurs : frégates rouges */
+  const escorte=bomb&&V.n>=4&&Math.random()<.4;const famE=bomb?null:as?(V.n>=5&&Math.random()<.6?'furtif':'inter'):V.n<=2?'poly':(V.n<=4?['poly','poly','inter','lourd']:['poly','inter','lourd','lourd','furtif'])[Math.random()*(V.n<=4?4:5)|0];/* les escadrilles ennemies : polyvalents au début, puis intercepteurs et lourds ; les as sur des intercepteurs ou des furtifs */const mr=construire(!bomb?COULEURS['py'+FAMILLES[famE].l[Math.random()*FAMILLES[famE].l.length|0]]:escorte?{m:'import',cle:'fga_fregate'+(1+Math.random()*5|0)+'_r',rot:-Math.PI/2,taille:6.4}:bomb?(n=>({m:'import',cle:'fga_corvette'+n+'_r',rot:-Math.PI/2,taille:6.4,coupe:CORV_COUPE[n]}))(1+Math.random()*5|0):as?ROUGE.vipere:ROUGE.faucon,true,'r'),m=mr.g;/* bombardiers : corvettes rouges ; escorteurs : frégates rouges */
   if(bomb)m.scale.setScalar(escorte?2.8:2.2);m.rotation.y=Math.PI;g.add(m);versCalque(g);sc.add(g);g.position.copy(pos);
-  const roles=['tournoi','tournoi','chasse','passe'];const role=roles[Math.random()*roles.length|0];const e={g,as,bomb,fl:mr.flammes,rayon:bomb?(escorte?12:9):4.6,roleDepart:bomb?'bombardier':role,ph:Math.random()*6,r:18+Math.random()*28,vie:escorte?18:bomb?10:as?5:3,etat:'arrivee',role:bomb?'bombardier':role,v:dir.clone().multiplyScalar(58),t:0,tirT:2+Math.random()*2,vise:0,jink:null};ennemis.push(e);return e;}
+  const roles=['tournoi','tournoi','chasse','passe'];const role=roles[Math.random()*roles.length|0];const e={g,as,bomb,fam:famE,fl:mr.flammes,rayon:bomb?(escorte?12:9):4.6,roleDepart:bomb?'bombardier':role,ph:Math.random()*6,r:18+Math.random()*28,vie:escorte?18:bomb?10:(as?2:0)+FAMILLES[famE].vie,etat:'arrivee',role:bomb?'bombardier':role,v:dir.clone().multiplyScalar(58),t:0,tirT:2+Math.random()*2,vise:0,jink:null};ennemis.push(e);return e;}
 const tirsEnnemis=[];
 // projectiles : géométries et matériaux partagés (traçantes fines)
 const GEO_BALLE=new THREE.BoxGeometry(.16,.16,4.2),MAT_BALLE=new THREE.MeshBasicMaterial({color:'#fff3b0',fog:false}),GEO_TIR=new THREE.BoxGeometry(.28,.28,2.8),MAT_TIR=new THREE.MeshBasicMaterial({color:'#ff6040',fog:false}),GEO_FUM=new THREE.IcosahedronGeometry(1,0);
@@ -345,9 +352,12 @@ const post=new THREE.ShaderMaterial({uniforms:{t:{value:cible.texture},ta:{value
     if(a.a>.92)c=a.rgb;else{if(texture2D(ta,v+vec2(pa.x,0.)).a>.92||texture2D(ta,v-vec2(pa.x,0.)).a>.92||texture2D(ta,v+vec2(0.,pa.y)).a>.92||texture2D(ta,v-vec2(0.,pa.y)).a>.92)c=vec3(.2,.15,.26);else if(a.a>.01)c=min(vec3(1.),c*(1.-a.a*.3)+a.rgb*1.5);}
     float n=22.;c=floor(c*n+bayer(gl_FragCoord.xy))/n;gl_FragColor=vec4(c,1.);}`});
 const quad=new THREE.Mesh(new THREE.PlaneGeometry(2,2),post),scPost=new THREE.Scene(),camPost=new THREE.Camera();scPost.add(quad);
-function choisir(k){choix=k;nav.remove(moi);modele=construire(COULEURS[NOMS[choix]],true);moi=modele.g;moi.scale.setScalar(.66);nav.add(moi);versCalque(moi);try{localStorage.setItem('escadrille.avion3d',NOMS[choix]);}catch(e){}annonce(`HANGAR<b>${COULEURS[NOMS[choix]].nom}</b>${COULEURS[NOMS[choix]].pack}`);}
+function choisir(k){choix=k;S.munM=Math.min(S.munM,FAM().mis);nav.remove(moi);modele=construire(COULEURS[NOMS[choix]],true);moi=modele.g;moi.scale.setScalar(.66);nav.add(moi);versCalque(moi);try{localStorage.setItem('escadrille.avion3d',NOMS[choix]);}catch(e){}annonce(`HANGAR<b>${COULEURS[NOMS[choix]].nom}</b>${COULEURS[NOMS[choix]].pack}`);}
 const hangar=document.getElementById('hangar');
-function ouvrirHangar(){try{document.exitPointerLock();}catch(x){}let h='<b>HANGAR</b><p class="choix">TOI : '+COULEURS[NOMS[choix]].nom+'<br>ENNEMIS : '+(ENNEMIS.length?ENNEMIS.map(k=>COULEURS[k].nom).join(', '):'(par defaut)')+'</p><p class="aide">Nom : le piloter (bleu). ENNEMI : il rejoint les chasseurs ennemis (rouge), au prochain ennemi qui arrive.</p>';let pk='';NOMS.forEach((n,k)=>{const c=COULEURS[n];if(c.pack!==pk){pk=c.pack;h+=`<i>${pk}</i>`;}h+=`<div class="ligne"><button data-k="${k}" class="${k===choix?'on':''}">${c.nom}</button><button data-e="${n}" class="enn ${ENNEMIS.includes(n)?'on':''}">ENNEMI</button></div>`;});h+='<button data-k="x" class="fermer">FERMER</button>';hangar.innerHTML=h;hangar.style.display='flex';}
+function ouvrirHangar(){try{document.exitPointerLock();}catch(x){}const barres=n=>'▮'.repeat(n)+'▯'.repeat(5-n);let h='<b>HANGAR</b><p class="aide">35 appareils en 4 familles. Dans le jeu, on les debloquera un par un ; ici, tous sont ouverts pour les essayer.</p>';
+  for(const f in FAMILLES){const F=FAMILLES[f];h+=`<i>${F.nom}</i><p class="fam">${F.txt}<br><span>VIT ${barres(F.b[0])} · VIR ${barres(F.b[1])} · BLI ${barres(F.b[2])} · MIS ${F.mis}</span></p>`;
+    NOMS.forEach((n,k)=>{if(COULEURS[n].fam===f)h+=`<button data-k="${k}" class="${k===choix?'on':''}">${COULEURS[n].nom}</button>`;});}
+  h+='<button data-k="x" class="fermer">FERMER</button>';hangar.innerHTML=h;hangar.style.display='flex';}
 /* on choisit au « click » (un vrai toucher, pas le début d'un glissement) : sur téléphone, glisser pour faire défiler la liste ne doit rien choisir */
 for(const t of ['pointerdown','pointermove','pointerup','touchstart','touchmove'])hangar.addEventListener(t,e=>e.stopPropagation(),{passive:true});
 hangar.addEventListener('click',e=>{e.stopPropagation();const b=e.target.closest('button');if(!b)return;if(b.dataset.e){const n=b.dataset.e,i=ENNEMIS.indexOf(n);if(i<0)ENNEMIS.push(n);else ENNEMIS.splice(i,1);try{localStorage.setItem('escadrille.ennemis',JSON.stringify(ENNEMIS));}catch(x){}const t=hangar.scrollTop;ouvrirHangar();hangar.scrollTop=t;return;}if(b.dataset.k!=='x')choisir(+b.dataset.k);hangar.style.display='none';});
@@ -355,7 +365,7 @@ function changerAvion(){choix=(choix+1)%NOMS.length;nav.remove(moi);modele=const
 el.querySelector('.charge').remove();
 // pilotage
 const S={dx:0,dy:0,blindage:100,p:new THREE.Vector3(0,40,0),yaw:0,pitch:0,bank:0,roll:0,rollT:-1,loopT:-1,v:46,boost:0,auto:true,doigt:null,dernier:0,vue:0,tir:false,munB:300,munM:5,t:0,score:0};
-const Q=new THREE.Quaternion(),E=new THREE.Euler(0,0,0,'YXZ');window.Escadrille={S,get ennemis(){return ennemis;}};/* pour les tests */
+S.munM=FAM().mis;const Q=new THREE.Quaternion(),E=new THREE.Euler(0,0,0,'YXZ');window.Escadrille={S,get ennemis(){return ennemis;}};/* pour les tests */
 const tonneau=(cote)=>{if(S.rollT<0){S.rollT=0;S.rollD=cote||(S.bank>0?-1:1);}};
 const joy=document.getElementById('joy'),bille=joy.firstElementChild,RJ=46;const manuel=(ms=4000)=>{S.auto=false;clearTimeout(S.to);S.to=setTimeout(()=>{S.auto=true;S.tir=false;},ms);};
 // souris (PC) : elle pilote. Le repère rond est une direction fixe dans le monde, l'avion tourne vers lui ; clic gauche : feu, clic droit : missile
@@ -419,13 +429,13 @@ function image(m){const dt=Math.min(.05,(m-av)/1000);av=m;requestAnimationFrame(
   else{tyaw=-S.dx*Math.abs(S.dx)*1;tp=-S.dy*.9;/* joystick vers le haut : l'avion monte ; vers le bas : il descend */}
   if(!S.souris||S.auto||S.doigt||S.dx||S.dy){S.my=S.yaw;S.mp=S.pitch;}
   if(S.loopT>=0)tyaw=0;/* pendant le looping, le joystick ne fait pas virer */
-  S.vyaw=(S.vyaw||0)+(tyaw-(S.vyaw||0))*Math.min(1,dt*3);S.yaw+=S.vyaw*dt;S.bank+=((S.vyaw*1.1-(S.ecart||0)*.45)-S.bank)*Math.min(1,dt*3);
+  tyaw*=FAM().vir;S.vyaw=(S.vyaw||0)+(tyaw-(S.vyaw||0))*Math.min(1,dt*3);S.yaw+=S.vyaw*dt;S.bank+=((S.vyaw*1.1-(S.ecart||0)*.45)-S.bank)*Math.min(1,dt*3);
   if(S.loopT>=0){S.loopT+=dt/2.6;S.pitch+=Math.PI*2*dt/2.6;if(S.loopT>=1){S.loopT=-1;S.mp=0;S.my=S.yaw;S.pitch-=Math.round(S.pitch/(Math.PI*2))*Math.PI*2;/* un tour complet = 0 : sinon l'avion « déroule » la boucle à l'envers */}}
   else{S.pitch+=(Math.max(-.85,Math.min(.85,tp))-S.pitch)*Math.min(1,dt*1.7);}
   if(S.rollT>=0){S.rollT+=dt/.8;S.roll=(S.rollT<1?(1-Math.cos(S.rollT*Math.PI))/2:1)*Math.PI*2*S.rollD;if(S.rollT>=1){S.rollT=-1;S.roll=0;}}
   E.set(S.pitch,S.yaw,S.bank+S.roll);Q.setFromEuler(E);nav.quaternion.copy(Q);
   const fwd=new THREE.Vector3(0,0,-1).applyQuaternion(Q);S.fwd=fwd;const up=new THREE.Vector3(0,1,0).applyQuaternion(new THREE.Quaternion().setFromEuler(new THREE.Euler(S.pitch,S.yaw,0,'YXZ')));
-  if(TOUCHES.acc)S.boost=Math.max(S.boost,.05);const v=S.v*(S.boost>0?1.7:1)*(TOUCHES.frein?.62:1);S.boost-=dt;S.p.addScaledVector(fwd,v*dt);
+  if(TOUCHES.acc)S.boost=Math.max(S.boost,.05);const v=S.v*FAM().v*(S.boost>0?1.7:1)*(TOUCHES.frein?.62:1);S.boost-=dt;S.p.addScaledVector(fwd,v*dt);
   {const gl=(TOUCHES.ecd||0)-(TOUCHES.ecg||0)+(S.souris&&S.rollT>=0?S.rollD*-1.4:0);if(gl){S.p.x+=Math.cos(S.yaw)*gl*22*dt;S.p.z-=Math.sin(S.yaw)*gl*22*dt;}S.ecart=gl;}/* écart de côté (Q, D) et pendant le tonneau à la souris */const sol=Math.max(0,H(S.p.x,S.p.z));if(S.p.y<sol+4){S.p.y=sol+4;if(S.loopT<0)S.pitch=Math.max(S.pitch,.2);}
   nav.position.copy(S.p);animeFlammes(modele.flammes,S.boost>0);if(modele.helice)modele.helice.rotation.z+=dt*40;if(modele.helices)for(const h of modele.helices)h.rotation.x+=dt*38;/* hélices des avions importés : elles tournent autour de l'axe du nez */
   ombre.position.set(S.p.x,sol+.3,S.p.z);ombre.material.opacity=Math.max(0,.35-(S.p.y-sol)*.004);
@@ -466,16 +476,16 @@ function image(m){const dt=Math.min(.05,(m-av)/1000);av=m;requestAnimationFrame(
     e.repit=Math.max(0,(e.repit||0)-dt);
     if(e.vise>(e.as?.6:.9)&&!e.jink&&!e.repit&&!e.las&&!e.bomb){e.repit=2.5;e.jink={v:new THREE.Vector3(Math.random()-.5,(Math.random()-.5)*.6,Math.random()-.5).normalize().multiplyScalar(e.as?60:42),t:.8};e.vise=0;}
     if(e.jink){cible.addScaledVector(e.jink.v,1.4);e.jink.t-=dt;if(e.jink.t<=0)e.jink=null;}
-    const voulu=cible.clone().sub(e.g.position);const devant=e.g.position.clone().sub(S.p).dot(fwd);const vmax=e.bomb?34:(e.role==='tournoi'&&devant<25)?S.v*1.35:e.las?S.v*.85:(e.role==='passe'?80:e.role==='chasse'?S.v*(1.05+.1*Math.sin(e.ph)):70)*(e.as?1.12:1);let vit=e.etat==='arrivee'?58:Math.min(vmax,Math.max(30,voulu.length()*1.2));
+    const voulu=cible.clone().sub(e.g.position);const devant=e.g.position.clone().sub(S.p).dot(fwd);const vmax=e.bomb?34:(e.role==='tournoi'&&devant<25)?S.v*1.35:e.las?S.v*.85:(e.role==='passe'?80:e.role==='chasse'?S.v*(1.05+.1*Math.sin(e.ph)):70)*(e.as?1.12:1);let vit=e.etat==='arrivee'?58:Math.min(vmax*(e.fam?FAMILLES[e.fam].v:1),Math.max(30,voulu.length()*1.2));
     if(e.role==='chasse')vit=S.v*(dpl>60?1.06:dpl>30?.97:.88)*(e.as?1.05:1);/* il rattrape quand il est loin, ralentit quand il est proche */
     const ang=e.v.angleTo(voulu),om=(e.as?1.5:1.1)*dt;if(ang>1e-4){const ax=new THREE.Vector3().crossVectors(e.v,voulu);if(ax.lengthSq()<1e-8)ax.set(0,1,0);e.v.applyAxisAngle(ax.normalize(),Math.min(ang,om));}
     e.v.setLength(e.v.length()+(vit-e.v.length())*Math.min(1,dt*1.5));
     {const l=e.v.length(),m=l*.55;if(Math.abs(e.v.y)>m){e.v.y=Math.sign(e.v.y)*m;const h=Math.sqrt(l*l-m*m),hx=Math.hypot(e.v.x,e.v.z)||1;e.v.x*=h/hx;e.v.z*=h/hx;}}/* pente limitée à 33° : ils ne peuvent pas suivre un looping */
     e.g.position.addScaledVector(e.v,dt);{const sol=Math.max(0,H(e.g.position.x,e.g.position.z))+6;if(e.g.position.y<sol){e.g.position.y=sol;if(e.v.y<0)e.v.y*=-.3;}}/* jamais sous l'eau ni dans le relief */
     animeFlammes(e.fl,false);if(e.v.lengthSq()>1){e.g.lookAt(e.g.position.clone().add(e.v));e.g.rotateZ(Math.sin(e.ph*1.3)*.7);}
-    e.tirT-=dt;const d=S.p.clone().sub(e.g.position);if(e.tirT<=0&&d.length()<(e.bomb?150:140)&&(e.bomb||e.v.angleTo(d)<.45)){e.tirT=1.6+Math.random()*2.2;const vise=S.p.clone().addScaledVector(fwd,S.v*d.length()/120).sub(e.g.position).normalize();
+    e.tirT-=dt;const d=S.p.clone().sub(e.g.position);if(e.tirT<=0&&d.length()<(e.bomb?150:140)*(FAM().discret||1)&&(e.bomb||e.v.angleTo(d)<.45)){e.tirT=1.6+Math.random()*2.2;const vise=S.p.clone().addScaledVector(fwd,S.v*d.length()/120).sub(e.g.position).normalize();
       for(let q=0;q<2;q++){const b=new THREE.Mesh(GEO_TIR,MAT_TIR);b.position.copy(e.g.position).addScaledVector(vise,3+q*3);b.lookAt(b.position.clone().add(vise));sc.add(b);tirsEnnemis.push({b,v:vise.clone().multiplyScalar(120),t:1.6});}}}
-  for(const b of tirsEnnemis){b.t-=dt;b.b.position.addScaledVector(b.v,dt);if(b.b.position.distanceTo(S.p)<2.6&&S.rollT<0){b.t=0;S.blindage-=7;V.flash=.15;
+  for(const b of tirsEnnemis){b.t-=dt;b.b.position.addScaledVector(b.v,dt);if(b.b.position.distanceTo(S.p)<2.6&&S.rollT<0){b.t=0;S.blindage-=7/FAM().bli;V.flash=.15;
       if(S.blindage<=0){boom(S.p,30);S.blindage=100;annonce('ABATTU !<b>-1000</b>Un nouvel avion décolle.');S.score=Math.max(0,S.score-1000);}}}
   for(let k=tirsEnnemis.length-1;k>=0;k--)if(tirsEnnemis[k].t<=0){sc.remove(tirsEnnemis[k].b);tirsEnnemis.splice(k,1);}
   V.flash-=dt;el.style.boxShadow=V.flash>0?'inset 0 0 0 6px rgba(226,104,46,.85)':'none';
@@ -491,7 +501,7 @@ function image(m){const dt=Math.min(.05,(m-av)/1000);av=m;requestAnimationFrame(
   const cp=S.p.clone().add(new THREE.Vector3(0,haut,loin).applyQuaternion(S.qc));const solC=Math.max(0,H(cp.x,cp.z))+2;if(cp.y<solC)cp.y=solC;
   cam.position.copy(cp);cam.quaternion.copy(S.qc);ciel.position.copy(cam.position);
   hud.innerHTML=`SCORE ${String(S.score).padStart(6,'0')}<br>VAGUE ${V.n} · ENNEMIS ${ennemis.length}<br>BLINDAGE ${'▮'.repeat(Math.ceil(S.blindage/10))}${'▯'.repeat(10-Math.ceil(S.blindage/10))}`;document.getElementById('nTir').textContent=S.munB;document.getElementById('nMis').textContent='▮'.repeat(S.munM)||'—';
-  if(S.munB<=0)S.munB=300;if(S.munM<=0&&!S.rech){S.rech=1;setTimeout(()=>{S.munM=5;S.rech=0;},6000);}
+  if(S.munB<=0)S.munB=300;if(S.munM<=0&&!S.rech){S.rech=1;setTimeout(()=>{S.munM=FAM().mis;S.rech=0;},6000);}
   cam.layers.set(0);R.setRenderTarget(cible);R.setClearColor(0x000000,1);R.clear();R.render(sc,cam);
   cam.layers.set(AVIONS);R.setRenderTarget(cibleAvions);R.setClearColor(0x000000,0);R.clear();R.render(sc,cam);
   R.setRenderTarget(null);R.render(scPost,camPost);viseur(fwd,dt);}
