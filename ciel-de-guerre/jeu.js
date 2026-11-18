@@ -334,13 +334,17 @@ const joy=document.getElementById('joy'),bille=joy.firstElementChild,RJ=46;const
 document.getElementById('clavier').innerHTML='FLECHES : PILOTER · ESPACE : FEU<br>E : MISSILE · R : LOOP · F : TONNEAU<br>V : VUE · C : AVION · P : PAUSE<br>BOUGE LA SOURIS : PILOTER ET VISER';
 const AIDE_SOURIS='SOURIS : LE VISEUR · LOIN DU CENTRE : TOURNER<br>CLIC G : FEU · CLIC D : MISSILE<br>Z : ACCELERER · S : FREINER · Q D : ECART<br>2× Z : LOOP · 2× Q/D : TONNEAU<br>V : VUE · C : AVION · ECHAP : PAUSE';
 const souris=()=>{el.classList.add('souris');if(!S.souris){S.souris=1;S.my=S.yaw;S.mp=S.pitch;const a=document.getElementById('clavier');a.innerHTML=AIDE_SOURIS;a.style.opacity=1;setTimeout(()=>a.style.opacity=.35,6000);}manuel(1e9);};
-el.addEventListener('pointermove',e=>{if(S.mode!=='jeu'||e.pointerType!=='mouse'||S.doigt)return;const r=el.getBoundingClientRect();
+// boutons de la souris : un second bouton appuyé pendant que le premier est tenu n'envoie pas de pointerdown, mais un pointermove
+// dont e.buttons change ; on suit donc l'état des boutons (1 = gauche : feu, 2 = droit : missile) à chaque événement
+function boutonsSouris(e){if(S.mode!=='jeu'||e.pointerType!=='mouse')return;const b=e.buttons|0,av=S.bSouris|0;S.bSouris=b;
+  if((b&2)&&!(av&2))appui('bMis',true);const feu=!!(b&1);if(feu!==!!(av&1)){S.tir=feu;document.getElementById('bTir').classList.toggle('on',feu);}}
+addEventListener('pointerup',boutonsSouris);
+el.addEventListener('pointermove',e=>{if(S.mode!=='jeu'||e.pointerType!=='mouse'||S.doigt)return;boutonsSouris(e);const r=el.getBoundingClientRect();
   S.cx=Math.max(-1,Math.min(1,(e.clientX-r.left)/r.width*2-1));S.cy=Math.max(-1,Math.min(1,(e.clientY-r.top)/r.height*2-1));souris();});
 document.documentElement.addEventListener('mouseleave',()=>{S.cx=S.cy=0;});/* la souris sort de la fenêtre : on vole droit */
 el.addEventListener('contextmenu',e=>e.preventDefault());
 el.addEventListener('pointerdown',e=>{if(S.mode!=='jeu'||e.pointerType!=='mouse'||e.target.closest('button,#hangar,.ecran'))return;e.stopImmediatePropagation();e.preventDefault();souris();
-  if(e.button===2)appui('bMis',true);else if(e.button===0){S.tir=true;document.getElementById('bTir').classList.add('on');}},true);
-addEventListener('pointerup',e=>{if(e.pointerType==='mouse'&&e.button===0&&S.souris){S.tir=false;document.getElementById('bTir').classList.remove('on');}});
+  boutonsSouris(e);},true);
 el.addEventListener('pointerdown',e=>{if(S.mode!=='jeu'||e.target.closest('button,.ecran,#hangar')||S.doigt)return;const r=el.getBoundingClientRect();S.doigt={id:e.pointerId,x:e.clientX,y:e.clientY};S.dx=S.dy=0;manuel(1e9);
   joy.style.left=(e.clientX-r.left)+'px';joy.style.top=(e.clientY-r.top)+'px';joy.classList.add('on');bille.style.transform='';document.getElementById('aidejoy').style.display='none';el.setPointerCapture(e.pointerId);});
 el.addEventListener('pointermove',e=>{if(!S.doigt||e.pointerId!==S.doigt.id)return;let dx=e.clientX-S.doigt.x,dy=e.clientY-S.doigt.y;const l=Math.hypot(dx,dy);if(l>RJ){dx*=RJ/l;dy*=RJ/l;}
@@ -605,7 +609,7 @@ function montrer(id){for(const e of ECRANS)$(e).hidden=e!==id;el.classList.toggl
 function lireRecord(){try{return JSON.parse(localStorage.getItem('cieldeguerre.record'))||{};}catch(e){return{};}}
 function majTitre(){const r=lireRecord(),m=lireMissions(),et=Object.values(m).reduce((a,v)=>a+(v.e||0),0);$('tEtoiles').textContent=et?`${et} / ${MISSIONS.length*3} ETOILES`:'';$('tRecord').innerHTML=r.parties?`RECORD ${String(r.score).padStart(6,'0')}<br>VAGUE ${r.vague||0} · ${r.parties||0} PARTIE${(r.parties||0)>1?'S':''}`:'';}
 function viderCombat(){for(const e of ennemis)sc.remove(e.g);ennemis.length=0;for(const b of tirsEnnemis)sc.remove(b.b);tirsEnnemis.length=0;V.file.length=0;}
-function nouvellePartie(def){finMissionNettoie();viderCombat();S.dernier=def||null;V.n=0;V.pause=2.5;V.fin=0;Object.assign(S,{cx:0,cy:0,mode:'jeu',vies:3,blindage:100,score:0,munB:300,munM:FAM().mis,auto:false,tir:false,boost:0,loopT:-1,rollT:-1,dx:0,dy:0});
+function nouvellePartie(def){finMissionNettoie();viderCombat();S.dernier=def||null;V.n=0;V.pause=2.5;V.fin=0;Object.assign(S,{bSouris:0,cx:0,cy:0,mode:'jeu',vies:3,blindage:100,score:0,munB:300,munM:FAM().mis,auto:false,tir:false,boost:0,loopT:-1,rollT:-1,dx:0,dy:0});
   S.p.set(S.p.x,Math.max(S.p.y,40),S.p.z);montrer(null);
   if(def){MIS={def,t:0};def.debut(MIS);S.qc=null;annonce(`MISSION ${MISSIONS.indexOf(def)+1} · ${def.nom}<b>${def.etat(MIS).txt}</b>Bonne chance !`,3500);}
   else annonce('VAGUES SANS FIN<b>ARCHIPEL</b>Abats les chasseurs rouges. Leurs grands vaisseaux tirent aussi !');}

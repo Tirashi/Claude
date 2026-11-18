@@ -102,6 +102,7 @@ Historique des directions : *Escadrille pixel* (gros pixels, sprite dessiné), p
 - **Lisibilité** (18/11, retours de l'utilisateur : « le carré de verrouillage et son texte sont flous », « HUD sur PC à revoir », « missions et objectifs pas assez clairs ») :
   - le calque du viseur est dessiné à la résolution de l'écran (`K` pixels par unité, `txt()` dans la police Silkscreen) : cadres, LOCK, MISSILE PRET et noms d'objectifs nets ;
   - la tête d'écran passe en panneaux HTML : score, appareils et barre de blindage (verte, jaune, rouge) ; objectif (mission, consigne, jauge, info) ; canon et missiles (sur PC). Sur PC, l'objectif est en haut au centre et tout grandit avec l'écran ;
+  - **bug corrigé** : un clic droit pendant que le gauche est tenu ne lançait pas de missile (le navigateur n'envoie pas de nouveau `pointerdown` pour un second bouton, seulement un `pointermove` dont `e.buttons` change) ; le jeu suit maintenant l'état des boutons (`boutonsSouris`).
   - un **briefing** avant chaque mission (but, objectifs en liste, règle des étoiles, DECOLLER) ; les annonces sont plus grandes, au centre ; les objectifs dans le viseur affichent leur distance.
 
 
