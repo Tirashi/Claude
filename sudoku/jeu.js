@@ -383,7 +383,12 @@ function button(x, y, w, h, label, act, opts = {}) {
   const dark = opts.gold || opts.on;
   text(label, x + w / 2, y + Math.round((h - (opts.size || 8)) / 2) + 1, dark ? '#2a0818' : opts.off ? '#8a80a0' : '#f6f0ff', 'center', opts.size || 8, dark ? null : '#05030c');
 }
+// Android peut vider un canvas caché quand l'appli passe en arrière-plan (« context lost ») :
+// on efface toujours l'écran d'une couleur pleine, et on refait le fond s'il a été perdu.
+function bgPerdu() { const c = BG && BG.getContext('2d'); return !c || (c.isContextLost && c.isContextLost()); }
 function drawBg(t) {
+  if (bgPerdu()) BG = buildBg();
+  g.fillStyle = '#120a2a'; g.fillRect(0, 0, LW, LH);
   g.drawImage(BG, 0, 0);
   // pétales qui tombent
   if (S.petals.length < 14 && Math.random() < .03) S.petals.push({ x: Math.random() * LW * 1.2 - 20, y: -4, vx: 6 + Math.random() * 8, vy: 10 + Math.random() * 10, p: Math.random() * TAU });
@@ -592,6 +597,7 @@ document.addEventListener('keydown', e => {
   if (mv) { e.preventDefault(); const i = S.sel < 0 ? 0 : S.sel, c = (i % N + mv[0] + N) % N, r = (Math.floor(i / N) + mv[1] + N) % N; S.sel = r * N + c; }
 });
 document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) BG = buildBg();   // au retour, fond refait par sécurité (il a pu être vidé)
   if (S.phase !== 'play') return;
   // sauvegarder avant de geler le chrono
   if (document.hidden) { S.elapsed = elapsed(); S.t0 = now(); saveGame(); S.t0 = Infinity; } else S.t0 = now();
@@ -611,5 +617,6 @@ window.addEventListener('resize', resize);
 window.Sudoku = { generate, logicSolve, countSolutions, topo, S, startPuzzle, startDaily, setCell, hint, undo, clearGrid };   // pour les tests
 
 BG = buildBg();
+cv.addEventListener('contextrestored', () => { BG = buildBg(); });
 setTimeout(resize, 0); resize();
 (document.fonts ? document.fonts.load('8px "Press Start 2P"').catch(() => {}) : Promise.resolve()).then(() => requestAnimationFrame(frame));
