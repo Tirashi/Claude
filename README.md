@@ -179,6 +179,7 @@ Une petite arène de tanks en 3D (pack Low Poly Tank Assets de dani567) : un dam
 
 - **La règle** : toi contre trois tanks de l'ordinateur, chacun pour soi. Détruis-en le plus possible en 90 secondes ; un tank détruit revient 3 secondes plus tard.
 - **Commandes** : glisser le doigt pour rouler (ou les flèches, ZQSD) ; le tank tire tout seul sur l'ennemi le plus proche.
+- **Survie** : seul contre des vagues d'ennemis de plus en plus forts, avec 3 vies : soldats, chasseurs (petits et rapides), blindés (gros et solides), tireurs (qui visent de loin). Le score est la vague atteinte.
 - **La caisse du centre** : réparation, tir triple, bouclier ou vitesse.
 
 ## Le Magasinier
@@ -504,7 +505,7 @@ Les classements sont dans le **volet de chaque jeu**, sur l'accueil : des classe
 - **Bannières** : le plus de drapeaux à la fin d'une partie sur la petite carte.
 - **Duché** : le meilleur règne (en normal), et le Duché du jour.
 - **Capitaine du port** : le total d'étoiles des 60 bassins, et le bassin du jour (le moins de coups).
-- **Tank Arena** : le plus de tanks détruits en une manche.
+- **Tank Arena** : le plus de tanks détruits en une manche, et la vague atteinte en survie.
 - **Le Magasinier** : le total d'étoiles des 60 niveaux, et la grille du jour (le moins de coups).
 
 Les ex æquo partagent le même rang (1, 2, 2, 4). En rejoignant le classement, un pseudo déjà utilisé par un autre joueur de la famille est refusé (la vérification se fait sur les principaux classements : un joueur qui n'a encore aucun score n'y apparaît pas).

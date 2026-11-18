@@ -66,6 +66,7 @@ const META = {};   // rempli par les fiches (meta)
 // genre "neuf" (nouveau jeu ou démo), "maj" (mise à jour d'un jeu) ou "acc" (accueil, classements : dossier vide).
 // Un numéro du journal par mois ; la plus récente nouveauté du mois fait la couverture.
 const NEWS = [
+  ["2026-11-18", "maj", "tank-arena", "Tank Arena a son mode survie : des vagues d'ennemis de plus en plus forts (soldats, chasseurs petits et rapides, blindés solides, tireurs qui visent de loin) et 3 vies pour tenir le plus longtemps possible. Nouveau classement : la vague atteinte."],
   ["2026-11-17", "neuf", "tank-arena", "Une petite arène de tanks en 3D. Toi contre trois tanks de l'ordinateur, chacun pour soi, en manches de 90 secondes : glisse le doigt pour rouler, ton tank tire tout seul sur le plus proche. La caisse du centre répare, triple tes tirs, te protège d'un bouclier ou te donne de la vitesse."],
   ["2026-11-11", "maj", "bastion", "Bastion change de visage : plus de bandeau en bas, tout se fait sur la carte. Touche le château ou un bâtiment pour recruter, un cercle pour bâtir, les étiquettes du bois, de l'or et des moutons pour les ouvriers. Six niveaux, de la clairière à la forteresse, et un tuto avec le roi pour commencer."],
   ["2026-11-09", "maj", "terres-franches", "Terres franches se joue aussi sur ordinateur : la vallée à gauche, les volets dans une colonne à droite, la molette pour zoomer, les flèches pour se promener, 1 2 3 pour les volets, et le nom de ce qu'on survole. Sur l'étagère, le jeu devient une disquette."],
