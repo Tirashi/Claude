@@ -14,7 +14,7 @@
 <body>
 <div class="tel" id="t"><div class="charge" id="charge">CHARGEMENT…</div>
 <div class="hud" id="hud">
-  <div class="pan" id="hG"><div class="l"><span>SCORE</span><b id="hScore">000000</b></div><div class="l"><span>APPAREILS</span><b id="hVies"></b></div><div class="barre vie"><i id="hBlind"></i></div></div>
+  <div class="pan" id="hG"><div class="l"><span>SCORE</span><b id="hScore">000000</b></div><div class="l"><span>APPAREILS</span><b id="hVies"></b></div><div class="barre vie"><i id="hBlind"></i></div><div class="l vit"><span>VITESSE</span><b id="hVit"></b></div><div class="barre boost"><i id="hBoost"></i></div></div>
   <div class="pan obj" id="hObj"><span id="hObjNom"></span><b id="hObjTxt"></b><div class="barre" id="hObjB"><i id="hObjBar"></i></div><small id="hObjInfo"></small></div>
   <div class="pan armes" id="hArmes"><div class="l"><span>CANON</span><b id="hCanon"></b></div><div class="l"><span>MISSILES</span><b id="hMis"></b></div></div>
 </div>
@@ -33,6 +33,7 @@
     <button id="tJouer">VAGUES SANS FIN</button>
     <button id="tHangar">HANGAR</button>
     <button id="tAide">COMMANDES</button>
+    <div class="duo"><button id="tSon" class="petit">BRUITAGES</button><button id="tMus" class="petit">MUSIQUE</button></div>
     <p class="record" id="tRecord"></p>
     <a class="lien ludo-retour" href="../index.html">◀ LUDOTHEQUE</a>
   </div>
@@ -43,6 +44,7 @@
     <button id="pReprendre" class="grand">REPRENDRE</button>
     <button id="pHangar">HANGAR</button>
     <button id="pAide">COMMANDES</button>
+    <div class="duo"><button id="pSon" class="petit">BRUITAGES</button><button id="pMus" class="petit">MUSIQUE</button></div>
     <button id="pQuitter">ABANDONNER</button>
     <a class="lien ludo-retour" href="../index.html">◀ LUDOTHEQUE</a>
   </div>
@@ -82,7 +84,7 @@
 <div class="ecran" id="eAide" hidden>
   <div class="carte aide">
     <h2>COMMANDES</h2>
-    <p><b>TELEPHONE</b><br>Pose le pouce gauche n'importe où : un joystick apparaît (vers le haut : on monte). Boutons ronds à droite : FEU, MISSILE, LOOP, TONNEAU, et BOOST ou FREIN à garder appuyés.</p>
+    <p><b>TELEPHONE</b><br>Pose le pouce gauche n'importe où : un joystick apparaît (vers le haut : on monte). Boutons ronds à droite : FEU, MISSILE, LOOP, TONNEAU, et BOOST ou FREIN à garder appuyés. Le boost vide sa jauge bleue (sous le blindage) ; elle se recharge toute seule.</p>
     <p><b>PC, A LA SOURIS</b><br>Le curseur est ton viseur : les balles partent vers lui. Éloigne-le du centre de l'écran pour tourner, monter ou descendre ; au centre, l'appareil vole droit. Clic gauche : feu ; clic droit : missile. Z accélère, S freine, Q et D font un écart ; deux appuis rapides sur Z : looping, sur Q ou D : tonneau. Échap : pause.</p>
     <p><b>PC, AU CLAVIER</b><br>Flèches : piloter. Espace : feu ; E : missile ; R : looping ; F : tonneau ; V : vue ; C : appareil suivant ; P : pause.</p>
     <p class="sous">Le missile se verrouille sur la cible dans l'axe (cadre jaune puis LOCK). Les tourelles rouges des grands vaisseaux se détruisent aussi.</p>
@@ -93,6 +95,7 @@
 <script src="../lib/three.min.js"></script>
 <script src="../lib/GLTFLoader.js"></script>
 <script src="catalogue.js"></script>
+<script src="sons.js"></script>
 <script src="jeu.js"></script>
 <script>
 /* Ludothèque : mode hors connexion. Pas de bouton « ◀ MENU » ajouté par-dessus le jeu :

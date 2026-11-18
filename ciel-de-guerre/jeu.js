@@ -284,8 +284,8 @@ function flotte(dt){for(const n of FLOTTE){n.ph+=dt;if(!n.neuf)animeFlammes(n.fl
         for(let q=0;q<2;q++){const m=new THREE.Mesh(new THREE.BoxGeometry(.8,.8,12),new THREE.MeshBasicMaterial({color:coul}));m.position.copy(bout).addScaledVector(dir,-q*10);m.lookAt(p);sc.add(m);LASERS.push({m,v:dir.clone().multiplyScalar(240),t:L/240+q*10/240,c:t.c});}
         boom(bout,3,['#ffffff',coul]);}}}
   for(const l of LASERS){l.t-=dt;l.m.position.addScaledVector(l.v,dt);
-    if(l.c.joueur&&S.mode==='jeu'&&l.m.position.distanceTo(S.p)<3&&S.rollT<0){l.t=0;S.blindage-=6/FAM().bli;V.flash=.15;if(S.blindage<=0)abattu();continue;}
-    if(l.c.e&&l.c.e.vie>0&&l.m.position.distanceTo(l.c.e.g.position)<l.c.e.rayon+1){l.t=0;l.c.e.vie-=2;if(l.c.e.vie<=0){boom(l.c.e.g.position);sc.remove(l.c.e.g);}continue;}
+    if(l.c.joueur&&S.mode==='jeu'&&l.m.position.distanceTo(S.p)<3&&S.rollT<0){l.t=0;S.blindage-=6/FAM().bli;V.flash=.15;window.CDGSons&&CDGSons.jouer('touche');secouer(.7);if(S.blindage<=0)abattu();continue;}
+    if(l.c.e&&l.c.e.vie>0&&l.m.position.distanceTo(l.c.e.g.position)<l.c.e.rayon+1){l.t=0;l.c.e.vie-=2;if(l.c.e.vie<=0)abattre(l.c.e);continue;}
     if(l.t<=0&&l.c.n)boom(l.m.position,6,['#ffffff','#ffe066','#ff8a2a']);}
   for(let k=LASERS.length-1;k>=0;k--)if(LASERS[k].t<=0){sc.remove(LASERS[k].m);LASERS.splice(k,1);}}
 // ennemis
@@ -298,7 +298,17 @@ const tirsEnnemis=[];
 // projectiles : géométries et matériaux partagés (traçantes fines)
 const GEO_BALLE=new THREE.BoxGeometry(.16,.16,4.2),MAT_BALLE=new THREE.MeshBasicMaterial({color:'#fff3b0',fog:false}),GEO_TIR=new THREE.BoxGeometry(.28,.28,2.8),MAT_TIR=new THREE.MeshBasicMaterial({color:'#ff6040',fog:false}),GEO_FUM=new THREE.IcosahedronGeometry(1,0);
 const eclats=[],balles=[],missiles=[];
-const boom=(p,n=18,c=['#ffe066','#ff8a2a','#ff4a2a','#555555'])=>{for(let i=0;i<n;i++){const s=new THREE.Mesh(new THREE.BoxGeometry(.9,.9,.9),new THREE.MeshBasicMaterial({color:c[i%c.length],fog:false}));s.position.copy(p);const v=new THREE.Vector3(Math.random()-.5,Math.random()-.5,Math.random()-.5).normalize().multiplyScalar(6+Math.random()*14);sc.add(s);eclats.push({s,v,t:.6+Math.random()*.7});}};
+// un ennemi abattu : explosion, puis l'épave tombe en tournoyant dans une traînée de fumée et explose au sol
+const EPAVES=[],MAT_FUM_N=new THREE.MeshBasicMaterial({color:'#3a3040',transparent:true,opacity:.55,depthWrite:false});
+function abattre(e,n){boom(e.g.position,n||(e.bomb?24:18));const v=(e.v?e.v.clone():new THREE.Vector3()).multiplyScalar(.55);v.y+=4;
+  EPAVES.push({g:e.g,v,t:0,rx:(Math.random()-.5)*5,rz:(Math.random()<.5?-1:1)*(3+Math.random()*4),fu:0});}
+function majEpaves(dt){for(let i=EPAVES.length-1;i>=0;i--){const E=EPAVES[i];E.t+=dt;E.v.y-=16*dt;E.g.position.addScaledVector(E.v,dt);E.g.rotateZ(E.rz*dt);E.g.rotateX(E.rx*dt);
+    E.fu-=dt;if(E.fu<=0){E.fu=.045;const f=new THREE.Mesh(GEO_FUM,E.t<.6&&Math.random()<.5?MAT_FL_FEU:MAT_FUM_N.clone());f.position.copy(E.g.position);f.scale.setScalar(.9+Math.random()*.6);sc.add(f);eclats.push({s:f,v:new THREE.Vector3(0,1.2,0),t:1.4,fum:1,gr:1.3,op:.55});}
+    if(E.g.position.y<Math.max(0,H(E.g.position.x,E.g.position.z))+1||E.t>6){boom(E.g.position,14,['#ffe066','#ff8a2a','#555555','#3a3040']);sc.remove(E.g);EPAVES.splice(i,1);}}}
+const MAT_FL_FEU=new THREE.MeshBasicMaterial({color:'#ff8a2a',transparent:true,opacity:.8,depthWrite:false});
+// secousses de la caméra (coup reçu, explosion toute proche)
+function secouer(a){S.secousse=Math.min(3,Math.max(S.secousse||0,a));}
+const boom=(p,n=18,c=['#ffe066','#ff8a2a','#ff4a2a','#555555'])=>{if(n>=10){const d=p.distanceTo(S.p);window.CDGSons&&CDGSons.jouer(n>=26?'boomGros':'boom',(1-d/650)*Math.min(1.2,n/22));if(d<80)secouer((1-d/80)*n/16);}for(let i=0;i<n;i++){const s=new THREE.Mesh(new THREE.BoxGeometry(.9,.9,.9),new THREE.MeshBasicMaterial({color:c[i%c.length],fog:false}));s.position.copy(p);const v=new THREE.Vector3(Math.random()-.5,Math.random()-.5,Math.random()-.5).normalize().multiplyScalar(6+Math.random()*14);sc.add(s);eclats.push({s,v,t:.6+Math.random()*.7});}};
 // rendu final : contour des avions, puis un tramage fin (Bayer 4 × 4) qui donne le grain des dégradés
 const post=new THREE.ShaderMaterial({uniforms:{t:{value:cible.texture},ta:{value:cibleAvions.texture},pa:{value:new THREE.Vector2(1/AW,1/AH)}},vertexShader:'varying vec2 v;void main(){v=uv;gl_Position=vec4(position.xy,0.,1.);}',
   fragmentShader:`uniform sampler2D t;uniform sampler2D ta;uniform vec2 pa;varying vec2 v;
@@ -322,7 +332,7 @@ function changerAvion(){choisir((choix+1)%NOMS.length);}
 document.getElementById('charge').remove();
 // pilotage
 const S={cx:0,cy:0,mode:'titre',vies:3,dx:0,dy:0,blindage:100,p:new THREE.Vector3(0,40,0),yaw:0,pitch:0,bank:0,roll:0,rollT:-1,loopT:-1,v:46,boost:0,auto:true,doigt:null,dernier:0,vue:0,tir:false,munB:300,munM:5,t:0,score:0};
-S.munM=FAM().mis;const Q=new THREE.Quaternion(),E=new THREE.Euler(0,0,0,'YXZ');window.CielDeGuerre={S,get ennemis(){return ennemis;},FLOTTE,nouvellePartie:d=>nouvellePartie(typeof d==='number'?MISSIONS[d]:d||null),get mission(){return MIS;},get missions(){return MISSIONS;},finMission:g=>finMission(g),abattu:()=>abattu(),pause:()=>pause(),reprendre:()=>reprendre(),get mode(){return S.mode;},get vague(){return V.n;}};/* pour les tests */
+S.munM=FAM().mis;const Q=new THREE.Quaternion(),E=new THREE.Euler(0,0,0,'YXZ');window.CielDeGuerre={S,get ennemis(){return ennemis;},FLOTTE,nouvellePartie:d=>nouvellePartie(typeof d==='number'?MISSIONS[d]:d||null),get mission(){return MIS;},get missions(){return MISSIONS;},finMission:g=>finMission(g),abattre:e=>abattre(e),get epaves(){return EPAVES.length;},abattu:()=>abattu(),pause:()=>pause(),reprendre:()=>reprendre(),get mode(){return S.mode;},get vague(){return V.n;}};/* pour les tests */
 // visée : au doigt et au clavier, droit devant ; à la souris, là où est le curseur (le rayon de la caméra à travers lui),
 // ramené dans un cône de 35° autour du nez : le réticule est sous le curseur, les balles partent vers lui
 const CONE=.6;function visee(fwd){if(!S.souris||S.auto||S.mode!=='jeu'||S.loopT>=0){S.horsCone=false;return fwd;}
@@ -368,12 +378,12 @@ addEventListener('keyup',e=>{if(MANOEUVRE[e.code])TOUCHES[MANOEUVRE[e.code]]=0;i
 addEventListener('blur',()=>{for(const k in TOUCHES)TOUCHES[k]=0;if(S.tir)appui('bTir',false);});
 function clavierPilote(dt){if(S.doigt)return;const cx=(TOUCHES.d||0)-(TOUCHES.g||0),cy=(TOUCHES.b||0)-(TOUCHES.h||0);if(!cx&&!cy&&!S.kx&&!S.ky)return;
   S.kx=(S.kx||0)+(cx-(S.kx||0))*Math.min(1,dt*4);S.ky=(S.ky||0)+(cy-(S.ky||0))*Math.min(1,dt*4);if(Math.abs(S.kx)<.01&&!cx)S.kx=0;if(Math.abs(S.ky)<.01&&!cy)S.ky=0;S.dx=S.kx;S.dy=S.ky;}
-bouton('bMis',d=>{if(!d||S.munM<=0)return;S.munM--;const c=LOCK.e&&LOCK.t>=LOCK.T&&LOCK.e.vie>0?LOCK.e:null;
+bouton('bMis',d=>{if(!d||S.munM<=0)return;S.munM--;window.CDGSons&&CDGSons.jouer('missile');const c=LOCK.e&&LOCK.t>=LOCK.T&&LOCK.e.vie>0?LOCK.e:null;
   const m=new THREE.Mesh(new THREE.BoxGeometry(.4,.4,1.6),new THREE.MeshBasicMaterial({color:'#eef2f6'}));const fm=flamme(.16,'b',true);fm.rotation.y=Math.PI;fm.position.z=-.8;m.add(fm);m.position.copy(S.p);sc.add(m);/* le missile a sa petite flamme */missiles.push({m,c,v:S.fwd.clone().multiplyScalar(S.v+20),t:4});});
 
 let av=performance.now(),vu=false;new IntersectionObserver(es=>vu=es[0].isIntersecting).observe(el);band.style.opacity=0;
 // les vagues : une formation en V arrive de face, fonce sur le joueur, puis se disperse pour le combat
-const V={n:0,pause:4,flash:0};const annonce=(h,ms=2600)=>{band.innerHTML=h;band.style.opacity=1;clearTimeout(V.to);V.to=setTimeout(()=>band.style.opacity=0,ms);};
+const V={n:0,pause:4,flash:0};const annonce=(h,ms=2600)=>{if(S.mode==='jeu')window.CDGSons&&CDGSons.jouer('annonce',.8);band.innerHTML=h;band.style.opacity=1;clearTimeout(V.to);V.to=setTimeout(()=>band.style.opacity=0,ms);};
 const MOTIFS=[{nom:'DE FACE',ang:[0]},{nom:'PAR DERRIERE !',ang:[Math.PI]},{nom:'SUR LES FLANCS',ang:[Math.PI/2,-Math.PI/2]},
   {nom:'PAR LE DESSUS',ang:[.35,-.35],dy:70},{nom:'ENCERCLES !',ang:[0,Math.PI*2/3,-Math.PI*2/3]},{nom:'EN DEUX TEMPS',ang:[0,Math.PI],decale:6}];
 V.file=[];
@@ -403,7 +413,8 @@ function image(m){const dt=Math.min(.05,(m-av)/1000);av=m;requestAnimationFrame(
   if(S.rollT>=0){S.rollT+=dt/.8;S.roll=(S.rollT<1?(1-Math.cos(S.rollT*Math.PI))/2:1)*Math.PI*2*S.rollD;if(S.rollT>=1){S.rollT=-1;S.roll=0;}}
   E.set(S.pitch,S.yaw,S.bank+S.roll);Q.setFromEuler(E);nav.quaternion.copy(Q);
   const fwd=new THREE.Vector3(0,0,-1).applyQuaternion(Q);S.fwd=fwd;const up=new THREE.Vector3(0,1,0).applyQuaternion(new THREE.Quaternion().setFromEuler(new THREE.Euler(S.pitch,S.yaw,0,'YXZ')));
-  if(TOUCHES.acc)S.boost=Math.max(S.boost,.05);S.accel=S.boost>0;const v=S.v*FAM().v*(S.accel?1.7:1)*(TOUCHES.frein?.62:1);S.boost-=dt;S.p.addScaledVector(fwd,v*dt);
+  if(TOUCHES.acc&&!S.vide)S.boost=Math.max(S.boost,.05);S.accel=S.boost>0;
+  if(S.mode==='jeu'){if(S.accel){S.energie=Math.max(0,(S.energie??100)-28*dt);if(S.energie<=0){S.vide=true;S.boost=0;S.accel=false;}}else S.energie=Math.min(100,(S.energie??100)+14*dt);if(S.vide&&S.energie>=30)S.vide=false;}/* énergie du boost */const v=S.v*FAM().v*(S.accel?1.7:1)*(TOUCHES.frein?.62:1);S.boost-=dt;S.vit=v;S.p.addScaledVector(fwd,v*dt);
   {const gl=(TOUCHES.ecd||0)-(TOUCHES.ecg||0)+(S.souris&&S.rollT>=0?S.rollD*-1.4:0);if(gl){S.p.x+=Math.cos(S.yaw)*gl*22*dt;S.p.z-=Math.sin(S.yaw)*gl*22*dt;}S.ecart=gl;}/* écart de côté (Q, D) et pendant le tonneau à la souris */const sol=Math.max(0,H(S.p.x,S.p.z));if(S.p.y<sol+4){S.p.y=sol+4;if(S.loopT<0)S.pitch=Math.max(S.pitch,.2);}
   nav.position.copy(S.p);animeFlammes(modele.flammes,S.accel);if(modele.helice)modele.helice.rotation.z+=dt*40;if(modele.helices)for(const h of modele.helices)h.rotation.x+=dt*38;/* hélices des avions importés : elles tournent autour de l'axe du nez */
   ombre.position.set(S.p.x,sol+.3,S.p.z);ombre.material.opacity=Math.max(0,.35-(S.p.y-sol)*.004);
@@ -411,15 +422,16 @@ function image(m){const dt=Math.min(.05,(m-av)/1000);av=m;requestAnimationFrame(
   const trActif=S.loopT>=0||S.rollT>=0||S.accel;/* traînées : seulement pendant un looping, un tonneau ou une accélération */
   for(const[k,t]of tr.entries()){const neuve=trActif&&t.op<.02;t.op+=((trActif?.9:0)-t.op)*Math.min(1,dt*(trActif?6:2.5));t.l.material.opacity=t.op;t.l.visible=t.op>.01;t.pos.copyWithin(3,0,(t.n-1)*3);const bt=modele.bouts?modele.bouts[k]:[(k?1:-1)*modele.env,0,1];const w=new THREE.Vector3(bt[0]*.66,bt[1]*.66,bt[2]*.66).applyQuaternion(Q).add(S.p);/* traînée au bout de l'aile du modèle */t.pos[0]=w.x;t.pos[1]=w.y;t.pos[2]=w.z;if(S.t<.1||neuve)for(let i=0;i<t.n;i++)t.pos.set([w.x,w.y,w.z],i*3);/* elle repart de l'aile, pas d'un vieux tracé */t.g.attributes.position.needsUpdate=true;}
   // canon
-  if(S.tir&&S.munB>0&&(S.cad=(S.cad||0)-dt)<=0){S.cad=.07;S.munB--;S.canon=-(S.canon||1);/* deux canons, un coup chacun */const vis=visee(fwd);const b=new THREE.Mesh(GEO_BALLE,MAT_BALLE);b.position.copy(S.p).addScaledVector(fwd,3).add(new THREE.Vector3(S.canon*modele.env*.3,0,0).applyQuaternion(Q));b.lookAt(b.position.clone().add(vis));sc.add(b);balles.push({b,v:vis.clone().multiplyScalar(v+160),t:1.1});}
-  for(const b of balles){b.t-=dt;b.b.position.addScaledVector(b.v,dt);for(const e of ennemis)if(e.vie>0&&b.b.position.distanceTo(e.g.position)<e.rayon){b.t=0;e.vie--;if(e.vie<=0){boom(e.g.position);sc.remove(e.g);S.score+=100;}}
+  if(S.tir&&S.munB>0&&(S.cad=(S.cad||0)-dt)<=0){S.cad=.07;S.munB--;S.canon=-(S.canon||1);/* deux canons, un coup chacun */const vis=visee(fwd);const b=new THREE.Mesh(GEO_BALLE,MAT_BALLE);b.position.copy(S.p).addScaledVector(fwd,3).add(new THREE.Vector3(S.canon*modele.env*.3,0,0).applyQuaternion(Q));b.lookAt(b.position.clone().add(vis));sc.add(b);balles.push({b,v:vis.clone().multiplyScalar(v+160),t:1.1});window.CDGSons&&CDGSons.jouer('tir',.8);}
+  for(const b of balles){b.t-=dt;b.b.position.addScaledVector(b.v,dt);for(const e of ennemis)if(e.vie>0&&b.b.position.distanceTo(e.g.position)<e.rayon){b.t=0;e.vie--;if(e.vie<=0){abattre(e);S.score+=100;}}
     if(b.t>0)for(const t of TOURS)if(t.vie>0&&b.b.position.distanceTo(t.g.position)<t.rayon){b.t=0;t.vie--;boom(b.b.position,5,['#ffffff','#ffe066','#ff8a2a']);break;}/* tourelles rouges : 8 balles */
     if(b.t>0)for(const n of FLOTTE)if(b.b.position.distanceTo(n.g.position)<n.lg*.3){b.t=0;boom(b.b.position,4,['#ffffff','#ffe066']);break;}/* les balles ricochent sur les grands vaisseaux */}
   for(let i=balles.length-1;i>=0;i--)if(balles[i].t<=0){sc.remove(balles[i].b);balles.splice(i,1);}
   for(const mi of missiles){mi.t-=dt;if(mi.c&&mi.c.vie>0){const d=mi.c.g.position.clone().sub(mi.m.position).normalize().multiplyScalar(110);mi.v.lerp(d,Math.min(1,dt*5));}mi.m.position.addScaledVector(mi.v,dt);mi.m.lookAt(mi.m.position.clone().add(mi.v));
     mi.fu=(mi.fu||0)-dt;if(mi.fu<=0){mi.fu=.05;const f=new THREE.Mesh(GEO_FUM,new THREE.MeshBasicMaterial({color:'#e4e8ef',transparent:true,opacity:.35,depthWrite:false}));f.position.copy(mi.m.position);f.scale.setScalar(.3);sc.add(f);eclats.push({s:f,v:new THREE.Vector3(0,.5,0),t:.55,fum:1,gr:1.8,op:.35});}/* fumée légère : une bouffée toutes les 0,05 s, qui grossit et s'efface vite */
-    if(mi.c&&mi.c.vie>0&&mi.m.position.distanceTo(mi.c.g.position)<mi.c.rayon){mi.t=0;mi.c.vie=0;boom(mi.c.g.position,26);sc.remove(mi.c.g);S.score+=250;}}
+    if(mi.c&&mi.c.vie>0&&mi.m.position.distanceTo(mi.c.g.position)<mi.c.rayon){mi.t=0;mi.c.vie=0;if(mi.c.fl)abattre(mi.c,26);else{boom(mi.c.g.position,26);sc.remove(mi.c.g);}S.score+=250;}}
   for(let i=missiles.length-1;i>=0;i--)if(missiles[i].t<=0){sc.remove(missiles[i].m);missiles.splice(i,1);}
+  majEpaves(dt);
   for(const e of eclats){e.t-=dt;e.s.position.addScaledVector(e.v,dt);if(!e.fum)e.v.y-=12*dt;else{e.s.material.opacity=Math.max(0,Math.min(e.op||.8,e.t*.6));if(e.gr)e.s.scale.multiplyScalar(1+e.gr*dt);}}
   for(let i=eclats.length-1;i>=0;i--)if(eclats[i].t<=0){sc.remove(eclats[i].s);eclats.splice(i,1);}
   // ennemis : arrivée en formation, puis combat tournoyant devant le joueur ; ils tirent
@@ -455,7 +467,7 @@ function image(m){const dt=Math.min(.05,(m-av)/1000);av=m;requestAnimationFrame(
     animeFlammes(e.fl,false);if(e.v.lengthSq()>1){e.g.lookAt(e.g.position.clone().add(e.v));e.g.rotateZ(Math.sin(e.ph*1.3)*.7);}
     e.tirT-=dt;const surObj=!!(e.obj&&e.obj.vie>0&&(e.bomb||dpl>70)),T=surObj?e.obj.pos:S.p,d=T.clone().sub(e.g.position);if(e.tirT<=0&&d.length()<(surObj?180:(e.bomb?150:140)*(FAM().discret||1))&&(e.bomb||surObj||e.v.angleTo(d)<.45)){e.tirT=surObj?3+Math.random()*2:1.6+Math.random()*2.2;/* sur un objectif : une salve toutes les 3 à 5 s */const vise=surObj?d.clone().normalize():S.p.clone().addScaledVector(fwd,S.v*d.length()/120).sub(e.g.position).normalize();
       for(let q=0;q<2;q++){const b=new THREE.Mesh(GEO_TIR,MAT_TIR);b.position.copy(e.g.position).addScaledVector(vise,3+q*3);b.lookAt(b.position.clone().add(vise));sc.add(b);tirsEnnemis.push({b,v:vise.clone().multiplyScalar(120),t:surObj?1.8:1.6,obj:surObj?e.obj:null});}}}
-  for(const b of tirsEnnemis){b.t-=dt;b.b.position.addScaledVector(b.v,dt);if(b.obj){if(b.obj.vie>0&&b.b.position.distanceTo(b.obj.pos)<b.obj.r){b.t=0;b.obj.touche(b.obj.deg||3,b.b.position);}continue;}if(b.b.position.distanceTo(S.p)<2.6&&S.rollT<0&&S.mode==='jeu'){b.t=0;S.blindage-=7/FAM().bli;V.flash=.15;
+  for(const b of tirsEnnemis){b.t-=dt;b.b.position.addScaledVector(b.v,dt);if(b.obj){if(b.obj.vie>0&&b.b.position.distanceTo(b.obj.pos)<b.obj.r){b.t=0;b.obj.touche(b.obj.deg||3,b.b.position);}continue;}if(b.b.position.distanceTo(S.p)<2.6&&S.rollT<0&&S.mode==='jeu'){b.t=0;S.blindage-=7/FAM().bli;V.flash=.15;window.CDGSons&&CDGSons.jouer('touche');secouer(.5);
       if(S.blindage<=0)abattu();}}
   for(let k=tirsEnnemis.length-1;k>=0;k--)if(tirsEnnemis[k].t<=0){sc.remove(tirsEnnemis[k].b);tirsEnnemis.splice(k,1);}
   V.flash-=dt;el.style.boxShadow=V.flash>0?'inset 0 0 0 6px rgba(226,104,46,.85)':'none';
@@ -468,10 +480,11 @@ function image(m){const dt=Math.min(.05,(m-av)/1000);av=m;requestAnimationFrame(
   // caméra derrière l'avion : elle suit son orientation par une vraie rotation (slerp), même sur le dos pendant un looping
   S.recul=(S.recul||0)+(((S.accel&&S.mode==='jeu')?6:0)-(S.recul||0))*Math.min(1,dt*2.2);const loin=(S.vue?30:17)+S.recul,haut=(S.vue?8:3.8)+S.recul*.15;/* au boost, la caméra recule un peu */const qc=new THREE.Quaternion().setFromEuler(new THREE.Euler(S.pitch-.1,S.yaw,0,'YXZ'));
   if(!S.qc)S.qc=qc.clone();S.qc.slerp(qc,Math.min(1,dt*(S.loopT>=0?8:5)));
-  const cp=S.p.clone().add(new THREE.Vector3(0,haut,loin).applyQuaternion(S.qc));const solC=Math.max(0,H(cp.x,cp.z))+2;if(cp.y<solC)cp.y=solC;
+  const cp=S.p.clone().add(new THREE.Vector3(0,haut,loin).applyQuaternion(S.qc));if(S.secousse>.01){cp.add(new THREE.Vector3((Math.random()-.5),(Math.random()-.5),(Math.random()-.5)).multiplyScalar(S.secousse*.9));S.secousse*=Math.exp(-dt*5);}const solC=Math.max(0,H(cp.x,cp.z))+2;if(cp.y<solC)cp.y=solC;
   cam.position.copy(cp);cam.quaternion.copy(S.qc);ciel.position.copy(cam.position);
   majHud();document.getElementById('nTir').textContent=S.munB;document.getElementById('nMis').textContent='▮'.repeat(S.munM)||'—';
   if(S.munB<=0)S.munB=300;if(S.munM<=0&&!S.rech){S.rech=1;setTimeout(()=>{S.munM=FAM().mis;S.rech=0;},6000);}
+  if(window.CDGSons)CDGSons.moteur((S.vit||46)/60,S.accel,S.mode==='jeu');
   rendre();if(S.mode==='jeu')viseur(visee(fwd),dt);else{ox.setTransform(K,0,0,K,0,0);ox.clearRect(0,0,OW,OH);}}
 function rendre(){cam.layers.set(0);R.setRenderTarget(cible);R.setClearColor(0x000000,1);R.clear();R.render(sc,cam);
   cam.layers.set(AVIONS);R.setRenderTarget(cibleAvions);R.setClearColor(0x000000,0);R.clear();R.render(sc,cam);
@@ -486,7 +499,7 @@ function versEcran(v){const q=v.clone().project(cam);if(q.z>1||q.z<-1)return nul
 function viseur(fwd,dt){ox.setTransform(K,0,0,K,0,0);ox.clearRect(0,0,OW,OH);
   // le verrouillage : l'ennemi le plus près de l'axe, dans un cône de 0,3 rad et à moins de 240 m
   let best=null,ba=.3;for(const e of ennemis.concat(TOURS)){if(e.vie<=0)continue;const d=e.g.position.clone().sub(S.p);const l=d.length();if(l>240)continue;const a=d.angleTo(fwd);if(a<ba){ba=a;best=e;}}
-  if(best!==LOCK.e){LOCK.e=best;LOCK.t=0;}else if(best)LOCK.t+=dt;
+  if(best!==LOCK.e){LOCK.e=best;LOCK.t=0;}else if(best){const avant=LOCK.t;LOCK.t+=dt;if(avant<LOCK.T&&LOCK.t>=LOCK.T)window.CDGSons&&CDGSons.jouer('verrou');}
   // cadres : gris au loin, rouges dans l'axe de tir, jaune qui se resserre pendant le verrouillage, rouge + LOCK une fois verrouillé
   for(const e of ennemis.concat(TOURS)){if(e.vie<=0)continue;const p=versEcran(e.g.position);if(!p)continue;const l=e.g.position.distanceTo(S.p);if(e.tour&&l>320)continue;const r=Math.max(4,Math.min(12,700/l));
     if(e===LOCK.e){const f=Math.min(1,LOCK.t/LOCK.T);if(f<1){coins(p[0],p[1],r+8*(1-f),'#ffe080',1);}
@@ -517,6 +530,7 @@ function majHud(){hset('hScore','t',String(S.score).padStart(6,'0'));hset('hVies
   const e=MIS?MIS.def.etat(MIS):{txt:'VAGUES SANS FIN',info:`VAGUE ${V.n} · ${ennemis.length} ENNEMI${ennemis.length>1?'S':''}`};
   hset('hObjNom','t',MIS?`MISSION ${MISSIONS.indexOf(MIS.def)+1} · ${MIS.def.nom}`:'ENTRAINEMENT');hset('hObjTxt','t',e.txt);hset('hObjInfo','t',e.info||'');
   hset('hObjB','h',e.v===undefined);if(e.v!==undefined){hset('hObjBar','w',Math.round(Math.max(0,Math.min(1,e.v))*100)+'%');hset('hObjB','c','barre '+(e.genre||'proteger'));}
+  hset('hVit','t',Math.round((S.vit||0)*3.6)+' KM/H');const en=Math.round(S.energie??100);hset('hBoost','w',en+'%');hset('hBoost','c',S.vide?'vide':S.accel?'actif':'');hset('bBoost','c','rond'+(S.vide?' vide':TOUCHES.acc?' on':''));
   hset('hCanon','t',String(S.munB));hset('hMis','t','▮'.repeat(Math.max(0,S.munM))+'▯'.repeat(Math.max(0,FAM().mis-S.munM)));}
 // ---- missions ----
 // chaque mission : debut(M), maj(M, dt) qui renvoie 'gagne', 'perdu' ou rien, etat(M) = {txt, v (jauge de 0 à 1), genre, info} pour la tête d'écran, buts et et (briefing, règle des étoiles), etoiles(M) (1 à 3, à la victoire), fin(M) (nettoyage)
@@ -590,7 +604,7 @@ const MISSIONS=[
   etat:M=>{const n=M.n0,r=n.tourelles.filter(t=>!t.mort).length;return n.bouclier>0?{txt:'DETRUIS LES GENERATEURS BLEUS',v:n.bouclier/4,genre:'detruire',info:`${n.bouclier} GENERATEUR${n.bouclier>1?'S':''} · TOURELLES PROTEGEES`}:{txt:'DETRUIS LES TOURELLES',v:r/n.tourelles.length,genre:'detruire',info:`${r} TOURELLE${r>1?'S':''} RESTANTE${r>1?'S':''} · BOUCLIER TOMBE`};},buts:['Étape 1 : détruis les quatre générateurs bleus qui brillent sur la coque. Tant qu’ils tiennent, les tourelles ne prennent aucun dégât.','Étape 2 : détruis les six tourelles. La forteresse tombe.','Des chasseurs décollent de ses flancs pendant tout le combat.'],et:['au plus un appareil perdu','aucun appareil perdu, en moins de 5 min'],etoiles:M=>ETOILES(M,S.vies>=2,S.vies===3&&M.t<300),fin(M){retirerNavire(M.n0);}}];
 function majMission(dt){const r=MIS.def.maj(MIS,dt);if(r)finMission(r==='gagne');}
 function finMissionNettoie(){if(MIS){try{MIS.def.fin(MIS);}catch(e){}MIS=null;}OBJ.length=0;}
-function finMission(gagne){const def=MIS.def,M=MIS;S.mode='fin';S.auto=true;S.tir=false;try{document.exitPointerLock();}catch(x){}
+function finMission(gagne){const def=MIS.def,M=MIS;window.CDGSons&&CDGSons.jouer(gagne?'victoire':'defaite');S.mode='fin';S.auto=true;S.tir=false;try{document.exitPointerLock();}catch(x){}
   const et=gagne?def.etoiles(M):0;if(gagne)S.score+=1000*et;const m=lireMissions(),av=m[def.id]||{};const neuf=gagne&&et>(av.e||0);
   if(gagne)m[def.id]={e:Math.max(et,av.e||0),s:Math.max(S.score,av.s||0)};try{localStorage.setItem('cieldeguerre.missions',JSON.stringify(m));}catch(e){}
   $('fTitre').textContent=gagne?'MISSION REUSSIE':'MISSION ECHOUEE';$('fEtoiles').textContent=gagne?'★'.repeat(et)+'☆'.repeat(3-et):'';$('fScore').textContent=String(S.score).padStart(6,'0');
@@ -608,15 +622,15 @@ const $=id=>document.getElementById(id),ECRANS=['eTitre','ePause','eFin','eAide'
 function montrer(id){for(const e of ECRANS)$(e).hidden=e!==id;el.classList.toggle('menu',!!id);if(id&&id!=='eAide')ecranAvant=id;}
 function lireRecord(){try{return JSON.parse(localStorage.getItem('cieldeguerre.record'))||{};}catch(e){return{};}}
 function majTitre(){const r=lireRecord(),m=lireMissions(),et=Object.values(m).reduce((a,v)=>a+(v.e||0),0);$('tEtoiles').textContent=et?`${et} / ${MISSIONS.length*3} ETOILES`:'';$('tRecord').innerHTML=r.parties?`RECORD ${String(r.score).padStart(6,'0')}<br>VAGUE ${r.vague||0} · ${r.parties||0} PARTIE${(r.parties||0)>1?'S':''}`:'';}
-function viderCombat(){for(const e of ennemis)sc.remove(e.g);ennemis.length=0;for(const b of tirsEnnemis)sc.remove(b.b);tirsEnnemis.length=0;V.file.length=0;}
-function nouvellePartie(def){finMissionNettoie();viderCombat();S.dernier=def||null;V.n=0;V.pause=2.5;V.fin=0;Object.assign(S,{bSouris:0,cx:0,cy:0,mode:'jeu',vies:3,blindage:100,score:0,munB:300,munM:FAM().mis,auto:false,tir:false,boost:0,loopT:-1,rollT:-1,dx:0,dy:0});
+function viderCombat(){for(const E of EPAVES)sc.remove(E.g);EPAVES.length=0;for(const e of ennemis)sc.remove(e.g);ennemis.length=0;for(const b of tirsEnnemis)sc.remove(b.b);tirsEnnemis.length=0;V.file.length=0;}
+function nouvellePartie(def){finMissionNettoie();viderCombat();S.dernier=def||null;V.n=0;V.pause=2.5;V.fin=0;Object.assign(S,{energie:100,vide:false,secousse:0,bSouris:0,cx:0,cy:0,mode:'jeu',vies:3,blindage:100,score:0,munB:300,munM:FAM().mis,auto:false,tir:false,boost:0,loopT:-1,rollT:-1,dx:0,dy:0});
   S.p.set(S.p.x,Math.max(S.p.y,40),S.p.z);montrer(null);
   if(def){MIS={def,t:0};def.debut(MIS);S.qc=null;annonce(`MISSION ${MISSIONS.indexOf(def)+1} · ${def.nom}<b>${def.etat(MIS).txt}</b>Bonne chance !`,3500);}
   else annonce('VAGUES SANS FIN<b>ARCHIPEL</b>Abats les chasseurs rouges. Leurs grands vaisseaux tirent aussi !');}
 function pause(){if(S.mode!=='jeu')return;S.mode='pause';S.tir=false;try{document.exitPointerLock();}catch(x){}montrer('ePause');}
 function reprendre(){if(S.mode!=='pause')return;S.mode='jeu';montrer(null);}
 function versTitre(){finMissionNettoie();viderCombat();S.mode='titre';S.auto=true;S.souris=0;el.classList.remove('souris');S.doigt=null;joy.classList.remove('on');majTitre();montrer('eTitre');}
-function abattu(){boom(S.p,30);S.vies--;V.flash=.4;if(S.vies<=0){finPartie();return;}S.blindage=100;annonce(`ABATTU !<b>${S.vies} APPAREIL${S.vies>1?'S':''} RESTANT${S.vies>1?'S':''}</b>Un nouvel appareil decolle.`);}
+function abattu(){boom(S.p,30);secouer(2.6);S.vies--;V.flash=.4;if(S.vies<=0){finPartie();return;}S.blindage=100;annonce(`ABATTU !<b>${S.vies} APPAREIL${S.vies>1?'S':''} RESTANT${S.vies>1?'S':''}</b>Un nouvel appareil decolle.`);}
 function finPartie(){if(MIS){finMission(false);return;}S.mode='fin';S.auto=true;S.tir=false;S.blindage=100;try{document.exitPointerLock();}catch(x){}const r=lireRecord(),neuf=S.score>(r.score||0);
   const n={score:Math.max(S.score,r.score||0),vague:Math.max(V.n,r.vague||0),parties:(r.parties||0)+1};try{localStorage.setItem('cieldeguerre.record',JSON.stringify(n));}catch(e){}
   $('fScore').textContent=String(S.score).padStart(6,'0');$('fDetail').textContent=`Vague ${V.n} atteinte.`;$('fRecord').innerHTML=neuf&&S.score>0?'NOUVEAU RECORD !':`RECORD ${String(n.score).padStart(6,'0')}`;
@@ -626,6 +640,9 @@ const clic=(id,f)=>$(id).addEventListener('click',e=>{e.stopPropagation();f();})
 clic('tJouer',()=>nouvellePartie(null));clic('fRejouer',()=>nouvellePartie(S.dernier));clic('tMissions',()=>{listeMissions();montrer('eMissions');});clic('mRetour',()=>montrer('eTitre'));clic('fSuivante',()=>{const i=MISSIONS.indexOf(S.dernier);if(MISSIONS[i+1]){finMissionNettoie();viderCombat();S.mode='titre';briefing(MISSIONS[i+1]);}});clic('bGo',()=>nouvellePartie(S.brief));clic('bRetour',()=>{listeMissions();montrer('eMissions');});clic('pReprendre',reprendre);clic('pQuitter',versTitre);clic('fMenu',versTitre);
 clic('tHangar',ouvrirHangar);clic('pHangar',ouvrirHangar);clic('tAide',()=>montrer('eAide'));clic('pAide',()=>montrer('eAide'));clic('aRetour',()=>montrer(ecranAvant));
 bouton('bPause',d=>{if(d)pause();});
+function majReglagesSon(){const r=window.CDGSons?CDGSons.reglages():{bruitages:false,musique:false};for(const[id,k,l]of[['tSon','bruitages','BRUITAGES'],['pSon','bruitages','BRUITAGES'],['tMus','musique','MUSIQUE'],['pMus','musique','MUSIQUE']]){const b=$(id);if(b)b.textContent=`${l} : ${r[k]?'OUI':'NON'}`;}}
+for(const[id,k]of[['tSon','bruitages'],['pSon','bruitages'],['tMus','musique'],['pMus','musique']])clic(id,()=>{if(!window.CDGSons)return;const r=CDGSons.reglages();CDGSons.reglages({[k]:!r[k]});majReglagesSon();});
+majReglagesSon();
 for(const e of ECRANS)$(e).addEventListener('pointerdown',e=>e.stopPropagation());
 // la fenêtre change de taille (rotation du téléphone, fenêtre du PC) : on refait les toiles
 addEventListener('resize',()=>{clearTimeout(S.rz);S.rz=setTimeout(()=>{mesures();R.setSize(LW,LH,false);cible.setSize(LW,LH);cibleAvions.setSize(AW,AH);ov.width=OW*K;ov.height=OH*K;

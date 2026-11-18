@@ -467,7 +467,7 @@ Combat aérien en 3D low poly au-dessus d'un archipel, au crépuscule, au milieu
 - **Les vagues sans fin** : des escadrilles de chasseurs rouges arrivent de face, par derrière, sur les flancs, par le dessus ; des corvettes et des frégates bombardent. Trois appareils par partie.
 - **La bataille** : les grands vaisseaux bleus et rouges se canonnent ; les tourelles rouges tirent aussi sur toi, et se détruisent (un vaisseau sans tourelles tombe en flammes).
 - **Le hangar** : 35 chasseurs en 4 familles (intercepteurs, polyvalents, lourds, furtifs), chacune avec sa vitesse, son virage, son blindage et ses missiles.
-- Au téléphone : un joystick sous le pouce et des boutons ronds ; au PC : la souris dirige l'appareil, clic gauche pour le feu, clic droit pour les missiles. À venir : des sons, des ailiers, d'autres décors.
+- Au téléphone : un joystick sous le pouce et des boutons ronds ; au PC : la souris dirige l'appareil, clic gauche pour le feu, clic droit pour les missiles. Sons et musique synthétisés, secousses, épaves qui tombent en fumée, jauge d'énergie du boost. À venir : des ailiers, des cibles au sol, d'autres décors.
 
 ## Les classiques passés en 16 bits
 

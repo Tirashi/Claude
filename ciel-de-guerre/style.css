@@ -84,3 +84,8 @@ html,body{margin:0;height:100%;background:#1a1424;overflow:hidden;overscroll-beh
 .carte.brief h2{text-align:center;font-size:24px}.carte.brief .titre-mission{margin:0;text-align:center;font:13px var(--titre);color:#9fd8ff;letter-spacing:.08em}
 .carte.brief ul{margin:4px 0;padding-left:20px;display:grid;gap:6px;font:15px/1.4 var(--texte);color:#ece4f4}
 .carte.brief .regle{margin:0;font:11px/1.9 var(--titre);color:#ffe080;background:rgba(0,0,0,.25);border-radius:8px;padding:8px 10px}
+/* session 3 : vitesse, énergie du boost, réglages du son */
+.pan .l.vit{margin-top:4px}#hVit{color:#bfe8ff}
+.barre.boost i{background:linear-gradient(90deg,#3f9cff,#a8e2ff)}.barre.boost i.actif{background:linear-gradient(90deg,#7fd0ff,#ffffff)}.barre.boost i.vide{background:linear-gradient(90deg,#5a5070,#7a7090)}
+#bBoost.vide{opacity:.45;filter:grayscale(1)}
+.carte .duo{display:grid;grid-template-columns:1fr 1fr;gap:8px}.carte button.petit{font-size:10px;padding:9px 6px}

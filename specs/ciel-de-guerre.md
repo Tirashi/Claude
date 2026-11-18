@@ -106,12 +106,22 @@ Historique des directions : *Escadrille pixel* (gros pixels, sprite dessiné), p
   - un **briefing** avant chaque mission (but, objectifs en liste, règle des étoiles, DECOLLER) ; les annonces sont plus grandes, au centre ; les objectifs dans le viseur affichent leur distance.
 
 
+## Session 3 (18/11) : son et sensations, fait
+- **Sons** (`sons.js`, `window.CDGSons`), tout synthétisé en Web Audio : rien à télécharger, rien à citer.
+  - Bruitages : tir, missile, explosions (selon la taille et la distance), coups reçus, bip de verrouillage, annonce, victoire et défaite.
+  - Le **réacteur** est un souffle continu qui monte avec la vitesse et le boost (seulement en partie).
+  - **Musique** : boucle de combat en la mineur (basse, arpège, nappe, batterie), mixée sous les bruitages.
+  - Réglages BRUITAGES et MUSIQUE sur le titre et en pause (`cieldeguerre.son`). L'AudioContext ne démarre qu'après un geste, et jamais si tout est coupé.
+- **Secousses** de la caméra : coup reçu, appareil abattu, explosion à moins de 80 m.
+- **Épaves** : un ennemi abattu tombe en tournoyant dans une traînée de fumée (feu au début), puis explose au sol (`abattre`, `EPAVES`).
+- **Vitesse** en km/h dans le panneau de gauche ; **énergie du boost** (jauge bleue) : 100, le boost en consomme 28 par seconde, elle revient à 14 par seconde ; vide, il faut attendre 30. Le bouton BOOST du téléphone se grise quand elle est vide.
+
 ## Plan des sessions (proposition)
 | Session | Contenu | Modèle |
 |---|---|---|
 | 1 · socle | Dossier `ciel-de-guerre/` en scripts classiques. Three.js r128 et GLTFLoader de `lib/`. Modèles en fichiers `.glb` dans `ciel-de-guerre/modeles/` (plus de base64 ; mis en cache par `sw.js`), pour les seuls avions retenus. Moteur, avions, flottes et commandes repris de la maquette. Écran titre avec retour au menu, fiche, accueil, service worker, crédits. | Opus |
 | 2 · missions | Les 4 missions, l'écran de fin, les étoiles, le boss | Opus — **fait le 18/11** |
-| 3 · sensations | Son, secousses, fumée, jauge de boost, vitesse | opusplan |
+| 3 · sensations | Son, secousses, fumée, jauge de boost, vitesse | opusplan — **fait le 18/11** |
 | 4 · monde | Ailiers, cibles au sol, décors (nuit, orage, désert, neige) | opusplan |
 | 5 · progression | Réglages par avion, déblocages, classements, défi du jour éventuel | opusplan |
 
