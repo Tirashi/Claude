@@ -284,7 +284,7 @@ function flotte(dt){for(const n of FLOTTE){n.ph+=dt;if(!n.neuf)animeFlammes(n.fl
         for(let q=0;q<2;q++){const m=new THREE.Mesh(new THREE.BoxGeometry(.8,.8,12),new THREE.MeshBasicMaterial({color:coul}));m.position.copy(bout).addScaledVector(dir,-q*10);m.lookAt(p);sc.add(m);LASERS.push({m,v:dir.clone().multiplyScalar(240),t:L/240+q*10/240,c:t.c});}
         boom(bout,3,['#ffffff',coul]);}}}
   for(const l of LASERS){l.t-=dt;l.m.position.addScaledVector(l.v,dt);
-    if(l.c.joueur&&S.mode==='jeu'&&l.m.position.distanceTo(S.p)<3&&S.rollT<0){l.t=0;S.blindage-=6/FAM().bli;V.flash=.15;window.CDGSons&&CDGSons.jouer('touche');secouer(.7);if(S.blindage<=0)abattu();continue;}
+    if(l.c.joueur&&S.mode==='jeu'&&l.m.position.distanceTo(S.p)<3&&S.rollT<0){l.t=0;S.blindage-=6*(S.degJ||1)/FAM().bli;V.flash=.15;window.CDGSons&&CDGSons.jouer('touche');secouer(.7);if(S.blindage<=0)abattu();continue;}
     if(l.c.e&&l.c.e.vie>0&&l.m.position.distanceTo(l.c.e.g.position)<l.c.e.rayon+1){l.t=0;l.c.e.vie-=2;if(l.c.e.vie<=0)abattre(l.c.e);continue;}
     if(l.t<=0&&l.c.n)boom(l.m.position,6,['#ffffff','#ffe066','#ff8a2a']);}
   for(let k=LASERS.length-1;k>=0;k--)if(LASERS[k].t<=0){sc.remove(LASERS[k].m);LASERS.splice(k,1);}}
@@ -467,7 +467,7 @@ function image(m){const dt=Math.min(.05,(m-av)/1000);av=m;requestAnimationFrame(
     animeFlammes(e.fl,false);if(e.v.lengthSq()>1){e.g.lookAt(e.g.position.clone().add(e.v));e.g.rotateZ(Math.sin(e.ph*1.3)*.7);}
     e.tirT-=dt;const surObj=!!(e.obj&&e.obj.vie>0&&(e.bomb||dpl>70)),T=surObj?e.obj.pos:S.p,d=T.clone().sub(e.g.position);if(e.tirT<=0&&d.length()<(surObj?180:(e.bomb?150:140)*(FAM().discret||1))&&(e.bomb||surObj||e.v.angleTo(d)<.45)){e.tirT=surObj?3+Math.random()*2:1.6+Math.random()*2.2;/* sur un objectif : une salve toutes les 3 à 5 s */const vise=surObj?d.clone().normalize():S.p.clone().addScaledVector(fwd,S.v*d.length()/120).sub(e.g.position).normalize();
       for(let q=0;q<2;q++){const b=new THREE.Mesh(GEO_TIR,MAT_TIR);b.position.copy(e.g.position).addScaledVector(vise,3+q*3);b.lookAt(b.position.clone().add(vise));sc.add(b);tirsEnnemis.push({b,v:vise.clone().multiplyScalar(120),t:surObj?1.8:1.6,obj:surObj?e.obj:null});}}}
-  for(const b of tirsEnnemis){b.t-=dt;b.b.position.addScaledVector(b.v,dt);if(b.obj){if(b.obj.vie>0&&b.b.position.distanceTo(b.obj.pos)<b.obj.r){b.t=0;b.obj.touche(b.obj.deg||3,b.b.position);}continue;}if(b.b.position.distanceTo(S.p)<2.6&&S.rollT<0&&S.mode==='jeu'){b.t=0;S.blindage-=7/FAM().bli;V.flash=.15;window.CDGSons&&CDGSons.jouer('touche');secouer(.5);
+  for(const b of tirsEnnemis){b.t-=dt;b.b.position.addScaledVector(b.v,dt);if(b.obj){if(b.obj.vie>0&&b.b.position.distanceTo(b.obj.pos)<b.obj.r){b.t=0;b.obj.touche(b.obj.deg||3,b.b.position);}continue;}if(b.b.position.distanceTo(S.p)<2.6&&S.rollT<0&&S.mode==='jeu'){b.t=0;S.blindage-=7*(S.degJ||1)/FAM().bli;V.flash=.15;window.CDGSons&&CDGSons.jouer('touche');secouer(.5);
       if(S.blindage<=0)abattu();}}
   for(let k=tirsEnnemis.length-1;k>=0;k--)if(tirsEnnemis[k].t<=0){sc.remove(tirsEnnemis[k].b);tirsEnnemis.splice(k,1);}
   V.flash-=dt;el.style.boxShadow=V.flash>0?'inset 0 0 0 6px rgba(226,104,46,.85)':'none';
@@ -556,9 +556,9 @@ function balise(p){const m=new THREE.Mesh(new THREE.CylinderGeometry(3,3,400,8,1
 const ETOILES=(M,ok2,ok3)=>ok3?3:ok2?2:1;
 const MISSIONS=[
  {id:'cote',nom:'LA COTE',titre:'DEFENDRE LE PORT',brief:'Trois vagues de bombardiers rouges arrivent de la mer vers le port. Abats-les avant qu’ils ne rasent la ville.',
-  debut(M){const c=trouverCote();M.c=c;M.g=batirVille(c);M.ville=objectif('PORT',new THREE.Vector3(c.x,c.h+6,c.z),55,100);M.ville.deg=1.5;
+  debut(M){const c=trouverCote();M.c=c;M.g=batirVille(c);M.ville=objectif('PORT',new THREE.Vector3(c.x,c.h+6,c.z),55,100);M.ville.deg=.9;S.degJ=.6;/* première mission : plus douce (18/11) */
     const a=c.mer;S.p.set(c.x+Math.cos(a)*160,55,c.z+Math.sin(a)*160);S.yaw=Math.atan2(Math.cos(a),Math.sin(a))+Math.PI;/* au-dessus de la mer, face au large */
-    M.vagues=[[6,3,2,0,0],[40,4,3,0,1],[78,3,4,2,2]];M.n=0;},
+    M.vagues=[[6,3,1,0,0],[50,3,2,0,0],[100,3,3,1,1]];M.n=0;},
   maj(M,dt){M.t+=dt;const c=M.c,large=Math.atan2(-Math.cos(c.mer),-Math.sin(c.mer));/* angle (convention de escadre) du côté de la mer */
     while(M.n<M.vagues.length&&M.t>=M.vagues[M.n][0]){const[,b,ch,fr,var_]=M.vagues[M.n];const a=large+(M.n-1)*.5;
       escadre(b,{centre:M.ville.pos,a,dist:420,y:70,opt:{bomb:1,escorte:0,obj:M.ville}});if(fr)escadre(fr,{centre:M.ville.pos,a:a+.3,dist:460,y:75,t:1.5,opt:{bomb:1,escorte:1,obj:M.ville}});
@@ -623,7 +623,7 @@ function montrer(id){for(const e of ECRANS)$(e).hidden=e!==id;el.classList.toggl
 function lireRecord(){try{return JSON.parse(localStorage.getItem('cieldeguerre.record'))||{};}catch(e){return{};}}
 function majTitre(){const r=lireRecord(),m=lireMissions(),et=Object.values(m).reduce((a,v)=>a+(v.e||0),0);$('tEtoiles').textContent=et?`${et} / ${MISSIONS.length*3} ETOILES`:'';$('tRecord').innerHTML=r.parties?`RECORD ${String(r.score).padStart(6,'0')}<br>VAGUE ${r.vague||0} · ${r.parties||0} PARTIE${(r.parties||0)>1?'S':''}`:'';}
 function viderCombat(){for(const E of EPAVES)sc.remove(E.g);EPAVES.length=0;for(const e of ennemis)sc.remove(e.g);ennemis.length=0;for(const b of tirsEnnemis)sc.remove(b.b);tirsEnnemis.length=0;V.file.length=0;}
-function nouvellePartie(def){finMissionNettoie();viderCombat();S.dernier=def||null;V.n=0;V.pause=2.5;V.fin=0;Object.assign(S,{energie:100,vide:false,secousse:0,bSouris:0,cx:0,cy:0,mode:'jeu',vies:3,blindage:100,score:0,munB:300,munM:FAM().mis,auto:false,tir:false,boost:0,loopT:-1,rollT:-1,dx:0,dy:0});
+function nouvellePartie(def){finMissionNettoie();viderCombat();S.dernier=def||null;V.n=0;V.pause=2.5;V.fin=0;Object.assign(S,{degJ:1,energie:100,vide:false,secousse:0,bSouris:0,cx:0,cy:0,mode:'jeu',vies:3,blindage:100,score:0,munB:300,munM:FAM().mis,auto:false,tir:false,boost:0,loopT:-1,rollT:-1,dx:0,dy:0});
   S.p.set(S.p.x,Math.max(S.p.y,40),S.p.z);montrer(null);
   if(def){MIS={def,t:0};def.debut(MIS);S.qc=null;annonce(`MISSION ${MISSIONS.indexOf(def)+1} · ${def.nom}<b>${def.etat(MIS).txt}</b>Bonne chance !`,3500);}
   else annonce('VAGUES SANS FIN<b>ARCHIPEL</b>Abats les chasseurs rouges. Leurs grands vaisseaux tirent aussi !');}
