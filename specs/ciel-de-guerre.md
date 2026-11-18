@@ -68,6 +68,16 @@ Historique des directions : *Escadrille pixel* (gros pixels, sprite dessiné), p
 8. **Progression** : avions du hangar débloqués avec le score, chacun avec ses réglages (vitesse, virage, blindage, armes).
 9. **Classements** par mission (`ludo-scores.js`).
 
+## Session 1 (18/11) : le socle, fait
+- Le jeu est dans `ciel-de-guerre/` (notes techniques : [`ciel-de-guerre/CLAUDE.md`](../ciel-de-guerre/CLAUDE.md)). C'est une démo sur l'accueil (vagues sans fin), avec la disquette (jouable au PC).
+- **Plein écran**, à la demande de l'utilisateur (« sur PC l'écran doit prendre plus de place ») : le jeu remplit toute la fenêtre, en portrait sur téléphone et en paysage sur PC (champ de vision de 50° en paysage).
+  - L'image interne fait au plus 900 pixels dans le grand côté. Le viseur garde 320 pixels de haut.
+  - Sur PC, les boutons tactiles sont masqués.
+- **Écrans** : titre (le combat continue derrière, en pilote automatique), pause (bouton ❚❚, touche P ou Échap ; Échap rend la souris), fin de partie (score, vague, record). Commandes, hangar, et retour à la Ludothèque depuis le titre et la pause.
+- **Partie** : 3 appareils ; on démarre avec le polyvalent 7 ; tout le hangar est ouvert (les déblocages viendront plus tard). Record dans `cieldeguerre.record` (score, vague, parties) ; appareil choisi dans `cieldeguerre.avion`.
+- **Modèles** : 52 fichiers `.glb` dans `modeles/` (9,6 Mo), chargés à la demande et gardés par le service worker au fil du jeu (pas préchargés pour toute la Ludothèque).
+- **Artefact** : le jeu remplace la maquette au même lien (copie de 12,9 Mo avec les modèles en base64).
+
 ## Plan des sessions (proposition)
 | Session | Contenu | Modèle |
 |---|---|---|

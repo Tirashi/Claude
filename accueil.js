@@ -44,6 +44,7 @@ const ORDRE = [
   "romet/index.html",
   "magasinier/index.html",
   "nebula/index.html",
+  "ciel-de-guerre/index.html",
   "tetris/index.html",
   "snake/index.html",
   "asteroids/index.html",
@@ -64,6 +65,7 @@ const META = {};   // rempli par les fiches (meta)
 // genre "neuf" (nouveau jeu ou démo), "maj" (mise à jour d'un jeu) ou "acc" (accueil, classements : dossier vide).
 // Un numéro du journal par mois ; la plus récente nouveauté du mois fait la couverture.
 const NEWS = [
+  ["2026-11-18", "neuf", "ciel-de-guerre", "Nouveau : Ciel de guerre, du combat aérien en 3D au-dessus d'un archipel, au milieu d'une bataille de grands vaisseaux bleus et rouges. Loopings, tonneaux, missiles à verrouiller, tourelles à abattre, et 35 chasseurs en 4 familles au hangar. Au doigt sur téléphone, à la souris sur ordinateur. Première version : des vagues sans fin, les missions viendront."],
   ["2026-11-11", "maj", "bastion", "Bastion change de visage : plus de bandeau en bas, tout se fait sur la carte. Touche le château ou un bâtiment pour recruter, un cercle pour bâtir, les étiquettes du bois, de l'or et des moutons pour les ouvriers. Six niveaux, de la clairière à la forteresse, et un tuto avec le roi pour commencer."],
   ["2026-11-09", "maj", "terres-franches", "Terres franches se joue aussi sur ordinateur : la vallée à gauche, les volets dans une colonne à droite, la molette pour zoomer, les flèches pour se promener, 1 2 3 pour les volets, et le nom de ce qu'on survole. Sur l'étagère, le jeu devient une disquette."],
   ["2026-11-09", "acc", "", "Les jeux qui se jouent aussi sur ordinateur ont une disquette sur l'étagère : Terres franches, Mineur de l'espace et Bastion."],
