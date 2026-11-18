@@ -102,20 +102,20 @@ function chemin(P){const pts=[];const n=P.length;for(let i=0;i<n;i++){const[p0,p
 
 /* ---------- le circuit ---------- */
 const TRACE=[[90,300],[90,140],[150,80],[260,90],[300,160],[250,220],[330,280],[420,250],[470,330],[420,430],[260,450],[150,420]];
-function circuit(ech,herbe1,herbe2,graine,marge=36){let P=TRACE.map(([x,y])=>[x*ech,y*ech]);let C=chemin(P);
+function circuit(ech,herbe1,herbe2,graine,marge=36,lg=1){let P=TRACE.map(([x,y])=>[x*ech,y*ech]);let C=chemin(P);
   const mx=Math.min(...C.pts.map(p=>p[0])),my=Math.min(...C.pts.map(p=>p[1]));P=P.map(([x,y])=>[x-mx+marge,y-my+marge]);C=chemin(P);
   const W=Math.ceil(Math.max(...C.pts.map(p=>p[0]))+marge),H=Math.ceil(Math.max(...C.pts.map(p=>p[1]))+marge);
   const c=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d');
   const bande=Math.max(10,20*ech);for(let i=0;i*bande<W;i++){x.fillStyle=i%2?herbe1:herbe2;x.fillRect(i*bande,0,bande,H);}
   const trace=(w,st,dash)=>{x.lineWidth=w;x.strokeStyle=st;x.lineJoin='round';x.setLineDash(dash||[]);x.beginPath();C.pts.forEach((p,i)=>i?x.lineTo(p[0],p[1]):x.moveTo(p[0],p[1]));x.closePath();x.stroke();};
-  trace(44,'#d8c89a');trace(32,'#ffffff');trace(32,'#d33b30',[5,5]);trace(28,'#55545e');trace(1,'rgba(255,255,255,.18)',[6,10]);
+  trace(44*lg,'#d8c89a');trace(32*lg,'#ffffff');trace(32*lg,'#d33b30',[5*lg,5*lg]);trace(28*lg,'#55545e');trace(1,'rgba(255,255,255,.18)',[6,10]);
   const r=rnd(graine);const d=x.getImageData(0,0,W,H).data;for(let i=0;i<W*H/5;i++){const a=r()*W|0,b=r()*H|0;if(d[(b*W+a)*4]===85){x.fillStyle=r()<.5?'#5d5c66':'#4d4c56';x.fillRect(a,b,1,1);}}
   const[sx,sy,h]=C.at(6);x.save();x.translate(sx,sy);x.rotate(h);for(let i=0;i<14;i++)for(let j=0;j<2;j++){x.fillStyle=(i+j)%2?'#111':'#fff';x.fillRect(j*2,-14+i*2,2,2);}x.restore();
   // cases de la grille
-  for(let k=0;k<8;k++){const[gx,gy,gh]=C.at(-12-k*16,(k%2?6:-6));x.save();x.translate(gx,gy);x.rotate(gh);x.strokeStyle='#e8e8e8';x.lineWidth=1;x.beginPath();x.moveTo(6,-4);x.lineTo(6,4);x.stroke();x.restore();}
-  const OBJ=[];for(let i=0;i<60;i++){const ox=r()*W,oy=r()*H;let près=false;for(const p of C.pts)if(Math.hypot(p[0]-ox,p[1]-oy)<36){près=true;break;}if(!près&&ox>8&&oy>8&&ox<W-8&&oy<H-8)OBJ.push({p:ARBRES[i%3],x:ox,y:oy,a:0});}
-  for(let s=40;s<C.tot;s+=26){const[px,py]=C.at(s,26);if(OBJ.every(o=>Math.hypot(o.x-px,o.y-py)>12))OBJ.push({p:PNEUS,x:px,y:py,a:0});}
-  {const[tx,ty,th]=C.at(40,-38);OBJ.push({p:TRIBUNE,x:tx,y:ty,a:th});const[qx,qy,qh]=C.at(30,34);OBJ.push({p:STAND,x:qx,y:qy,a:qh});}
+  for(let k=0;k<8;k++){const[gx,gy,gh]=C.at(-14-k*17,(k%2?11:-11));x.save();x.translate(gx,gy);x.rotate(gh);x.strokeStyle='#e8e8e8';x.lineWidth=1;x.beginPath();x.moveTo(6,-4);x.lineTo(6,4);x.stroke();x.restore();}
+  const OBJ=[];for(let i=0;i<60*lg*lg;i++){const ox=r()*W,oy=r()*H;let près=false;for(const p of C.pts)if(Math.hypot(p[0]-ox,p[1]-oy)<36*lg){près=true;break;}if(!près&&ox>8&&oy>8&&ox<W-8&&oy<H-8)OBJ.push({p:ARBRES[i%3],x:ox,y:oy,a:0});}
+  for(let s=40;s<C.tot;s+=26){const[px,py]=C.at(s,26*lg);if(OBJ.every(o=>Math.hypot(o.x-px,o.y-py)>12))OBJ.push({p:PNEUS,x:px,y:py,a:0});}
+  {const[tx,ty,th]=C.at(40,-38*lg);OBJ.push({p:TRIBUNE,x:tx,y:ty,a:th});const[qx,qy,qh]=C.at(30,34*lg);OBJ.push({p:STAND,x:qx,y:qy,a:qh});}
   return{C,img:c,W,H,OBJ};}
 
 function boucle(el,f){let vu=false,avant=performance.now();new IntersectionObserver(es=>{vu=es[0].isIntersecting;}).observe(el);
@@ -239,20 +239,20 @@ const GRILLE=[['coupe',2],['muscle',1],['super',3],['rallye',4],['roadster',0],[
 const COUL_G=GRILLE.map(([m,l])=>LIVREES[l].c1);
 const PILOTES=['TOI','OKA','BEL','LIN','SOU','HAY','RUI','NOV'];
 function course2(C,graine){const r=rnd(graine);
-  const V=GRILLE.map(([m,l],k)=>({k,v3:voiture(m,LIVREES[l]),s:-14-k*17,dec:k%2?7:-7,cible:k%2?7:-7,base:[1,1.012,1.018,.996,1.004,.99,.985,.98][k]*(.99+r()*.02),ph:r()*6,v:0,moi:k===0}));
+  const V=GRILLE.map(([m,l],k)=>({k,v3:voiture(m,LIVREES[l]),s:-14-k*17,dec:k%2?11:-11,cible:k%2?11:-11,base:[1,1.012,1.018,.996,1.004,.99,.985,.98][k]*(.99+r()*.02),ph:r()*6,v:0,moi:k===0}));
   const R={C,V,t:0,ordre:V.slice(),
     maj(dt,vit){this.t+=dt;
       for(const v of V){const h0=C.at(v.s)[2],h1=C.at(v.s+34)[2];let dh=Math.abs(h1-h0);if(dh>Math.PI)dh=2*Math.PI-dh;v.v=vit*v.base*(1-.38*Math.min(1,dh/1.3))*(1+.035*Math.sin(this.t*.6+v.ph));}
       const O=V.slice().sort((a,b)=>b.s-a.s);
       for(let i=1;i<O.length;i++){const v=O[i],av=O[i-1],e=av.s-v.s;
-        if(e<30&&Math.abs(av.dec-v.dec)<9){if(v.v>av.v*1.005)v.cible=-av.dec;else v.v=Math.min(v.v,av.v*.995);}
-        if(e<25&&Math.abs(av.dec-v.dec)<9)v.v=Math.min(v.v,av.v*.97);}
+        if(e<30&&Math.abs(av.dec-v.dec)<14){if(v.v>av.v*1.005)v.cible=-av.dec;else v.v=Math.min(v.v,av.v*.995);}
+        if(e<25&&Math.abs(av.dec-v.dec)<14)v.v=Math.min(v.v,av.v*.97);}
       for(const v of V){v.s+=v.v*dt;v.dec+=(v.cible-v.dec)*Math.min(1,dt*2);}
       this.ordre=V.slice().sort((a,b)=>b.s-a.s);},
     tour(){return Math.min(6,Math.max(1,Math.floor(this.ordre[0].s/C.tot)+1));},place(k){return this.ordre.findIndex(v=>v.k===k)+1;}};
   return R;}
 function vue(id,Z,graine){const el=document.getElementById(id),cv=el.querySelector('canvas'),ctx=cv.getContext('2d');ctx.imageSmoothingEnabled=false;
-  const T=circuit(1,'#4f9a3e','#59a646',4),R=course2(T.C,graine);let acc=0,cam=null;
+  const T=circuit(1.6,'#4f9a3e','#59a646',4,58,1.6),R=course2(T.C,graine);let acc=0,cam=null;
   boucle(el,dt=>{R.maj(dt,40);const W=cv.width,H=cv.height,J=R.V[0];const[jx,jy,jh]=T.C.at(J.s,J.dec);
     const vise=-Math.PI/2-jh;if(cam===null)cam=vise;let d=vise-cam;while(d>Math.PI)d-=2*Math.PI;while(d<-Math.PI)d+=2*Math.PI;cam+=d*Math.min(1,dt*2.5);
     const k=.7,cx=W/2,cy=H*.62,co=Math.cos(cam),si=Math.sin(cam);
