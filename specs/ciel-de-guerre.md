@@ -195,3 +195,6 @@ L'utilisateur n'arrive pas à choisir (« ils sont tous cool ») : on garde les 
 - Modèles des ennemis : nos chasseurs construits dans le code, ou des modèles des packs ?
 - Ordre des missions.
 - Faut-il un défi du jour ?
+
+## Sons enregistrés (18/11)
+Les sons synthétisés (bancs A, B, C) ne plaisaient pas ; banc de vrais sons (`maquettes/ciel-de-guerre-sons.html`, [artefact](https://claude.ai/artifact/5SpJFreiEez5ndnmn47ZSo)). Choix de l'utilisateur : explosions NIIIEMAND 1, 4 et 7 de près (`sons/expl-1`, `-4`, `-7`), la 3 « gros canon » étouffée pour les explosions lointaines (`expl-3`), Matthew Flat explosion-large_1 étouffée quand une épave ou un grand vaisseau s'écrase (`crash`, fichier entier : licence ND). La rafale synthétisée du canon est gardée. Réacteurs : aucun des trois premiers ; banc de 7 réacteurs d'OpenGameArt (D à J) à choisir, en attendant le réacteur synthétisé A reste.

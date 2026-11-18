@@ -14,7 +14,7 @@ const CDGSons = (function () {
     ctx = new AC(); sortie = ctx.createDynamicsCompressor(); sortie.connect(ctx.destination);
     busB = ctx.createGain(); busB.gain.value = R.bruitages ? .5 : 0; busB.connect(sortie);
     busM = ctx.createGain(); busM.gain.value = R.musique ? .16 : 0; busM.connect(sortie);
-    lancerMusique(); return true;
+    chargerEchantillons(); lancerMusique(); return true;
   }
   ["pointerdown", "keydown"].forEach(e => addEventListener(e, demarrer, { passive: true }));
 
@@ -41,8 +41,9 @@ const CDGSons = (function () {
   const SONS = {
     tir(t, v) { if (t - dernierTir < .05) return; dernierTir = t; bruit(t, "bandpass", 2400, 1.2, .002, .05, .22 * v, 900); note(t, 180, "square", .002, .04, .05 * v, null, 90); },
     missile(t, v) { bruit(t, "bandpass", 500, 2, .02, .7, .3 * v, 2600); note(t, 220, "sawtooth", .01, .35, .04 * v, null, 660); },
-    boom(t, v, d) { explosion(t, v, d, false); },
-    boomGros(t, v, d) { explosion(t, v, d, true); },
+    boom(t, v, d) { if (!boomEnr(t, v, d, false)) explosion(t, v, d, false); },
+    boomGros(t, v, d) { if (!boomEnr(t, v, d, true)) explosion(t, v, d, true); },
+    crash(t, v, d) { if (!echantillon(t, "crash", 1.1 * v, 900 * (1 - .4 * (d || 0)))) explosion(t, v, d, true); },
     touche(t, v) { bruit(t, "highpass", 1800, .8, .002, .09, .3 * v); note(t, 140, "square", .002, .08, .1 * v, null, 70); },
     verrou(t, v) { note(t, 1320, "square", .002, .06, .07 * v); note(t + .08, 1760, "square", .002, .1, .07 * v); },
     annonce(t, v) { note(t, 660, "triangle", .01, .25, .08 * v); note(t + .12, 990, "triangle", .01, .35, .07 * v); },
@@ -51,7 +52,33 @@ const CDGSons = (function () {
   };
   function jouer(nom, v = 1, d = 0) { if (!R.bruitages || !ctx || ctx.state !== "running" || !SONS[nom] || v <= .01) return; SONS[nom](ctx.currentTime, Math.min(1, v), d); }
 
-  // ---------- explosions : trois variantes (VAR.boom) ; d = distance relative (0 tout près, 1 très loin : étouffé) ----------
+  // ---------- explosions enregistrées (choisies au banc d'essai du 18/11) : sons/*.mp3, ou window.CDG_SONS (base64) dans l'artefact ----------
+  // expl-1, expl-4, expl-7 : NIIIEMAND (CC0), explosions proches ; expl-3 : NIIIEMAND, grave comme un gros canon, pour les explosions lointaines ;
+  // crash : Matthew Flat, explosion-large_1 (CC BY-ND 3.0, fichier entier), étouffée, quand une épave ou un grand vaisseau s'écrase.
+  const ECH = {}, NOMS_ECH = ["expl-1", "expl-3", "expl-4", "expl-7", "crash"];
+  function chargerEchantillons() {
+    for (const k of NOMS_ECH) {
+      const b64 = window.CDG_SONS && window.CDG_SONS[k];
+      const donnees = b64 ? Promise.resolve(Uint8Array.from(atob(b64), c => c.charCodeAt(0)).buffer) : fetch("sons/" + k + ".mp3").then(r => r.ok ? r.arrayBuffer() : Promise.reject(r.status));
+      donnees.then(a => new Promise((ok, ko) => ctx.decodeAudioData(a, ok, ko))).then(buf => { ECH[k] = buf; }).catch(() => {});
+    }
+  }
+  // joue un échantillon : coupe-haut fc (étouffé au loin), vitesse un peu variée ; renvoie false s'il n'est pas (encore) chargé
+  function echantillon(t, k, v, fc) {
+    const buf = ECH[k]; if (!buf) return false;
+    const s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+    s.buffer = buf; s.playbackRate.value = .93 + Math.random() * .14; f.type = "lowpass"; f.frequency.value = fc; g.gain.value = v;
+    s.connect(f); f.connect(g); g.connect(busB); s.start(t); return true;
+  }
+  const PROCHES = ["expl-1", "expl-4", "expl-7"];
+  function boomEnr(t, v, d, gros) {
+    const loin = Math.max(0, Math.min(1, d || 0));
+    if (loin > .45) return echantillon(t, "expl-3", (gros ? 1.1 : .8) * v, 1100 - 500 * loin);                       // au loin : le gros canon, étouffé
+    const k = gros ? (Math.random() < .5 ? "expl-4" : "expl-7") : PROCHES[Math.random() * 3 | 0];
+    return echantillon(t, k, (gros ? 1.5 : 1.2) * v, 18000 - 24000 * loin);
+  }
+
+  // ---------- explosions synthétisées (en attendant le chargement des enregistrements) : trois variantes (VAR.boom) ; d = distance relative (0 tout près, 1 très loin : étouffé) ----------
   // A « tonnerre » : claquement sec, corps grondant un peu saturé, boum grave. B « sourde » : grave et roulante, sans claquement. C « crépitante » : corps et éclats qui crépitent.
   let sature = null;
   function saturation() { if (!sature) { sature = ctx.createWaveShaper(); const n = 1024, k = new Float32Array(n); for (let i = 0; i < n; i++) { const x = i / (n - 1) * 2 - 1; k[i] = Math.tanh(x * 2.4); } sature.curve = k; sature.connect(busB); } return sature; }
