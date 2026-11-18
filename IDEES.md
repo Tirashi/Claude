@@ -176,7 +176,7 @@ Ordre conseillé : coloriage, puis musique, puis le dungeon crawler et son besti
 - ✅ **Tank Arena** (`tank-arena/`, 17/11) : maquette à 3 directions (arène, artillerie, damier), direction A choisie — tout dans [`specs/tank-arena.md`](specs/tank-arena.md).
 
 ## Les Bannis (autobattler rogue-lite, idée de l'utilisateur du 18/11, nom provisoire)
-🟡 Chantier : [`specs/bannis.md`](specs/bannis.md) (histoire du Mage instable banni sur l'île, inventaire de tout l'aléatoire et de sa maîtrise, recherche de graphismes) ; [maquette 1](https://claude.ai/artifact/NxUw5hLPN5uD9e3ZatdGn3) en trois directions (A Tiny RPG de Zerie, B rétro 16 bits Pixel Champions + Willibab, C Tiny Swords), source `maquettes/bannis.html` (fabriquée par `outils/bannis-maquette/fabriquer.py`).
+🟡 Chantier : [`specs/bannis.md`](specs/bannis.md) (histoire du Mage instable banni sur l'île, inventaire de tout l'aléatoire et de sa maîtrise, recherche de graphismes) ; [maquette 1](https://claude.ai/artifact/NxUw5hLPN5uD9e3ZatdGn3) en trois directions (A Tiny RPG de Zerie, B rétro 16 bits Pixel Champions + Willibab, C Tiny Swords), source `maquettes/bannis.html` (fabriquée par `outils/bannis-maquette/fabriquer.py`). [Maquette 2](https://claude.ai/artifact/Cuu4nXfm51S3kfWEQhuYUm) (packs gratuits, interfaces Dragon Regalia et Dark Ages, héros de The Mighty Palm, évolutions en classes légendaires).
 
 ## Achats (bundles et packs repérés, relevé du 30/10)
 Bundles mis de côté par l'utilisateur (onglets ouverts le 30/10). Heures en heure de Paris. Licences : utilisation dans nos jeux, pas de revente ni de redistribution des fichiers (accepté depuis le 30/10, voir « Préférences notées »).

@@ -113,4 +113,16 @@ Fouille des flux itch.io (`https://itch.io/game-assets/free/tag-….xml`) par mo
 - **B « Rétro 16 bits »** : héros de Pixel Champions, monstres de Willibab, dés en pixels dessinés dans le code, icônes Shikashi.
 - **C « Tiny Swords »** : guerrier, archer, lancier, moine contre gobelins et gnolls (pack déjà acheté), dés dessinés dans le code.
 
+Retour de l'utilisateur (18/11) : « à la limite le B est pas mal, mais c'est pas encore ce que je voudrais » ; l'interface faisait générique (elle était dessinée dans le code, pas prise d'un pack) ; montrer aussi les sprites des classes améliorées ; **plus de Tiny Swords** (« ça rend pas terribles ici ») ; **seulement des packs gratuits**, les payants mis de côté avec leurs liens.
+
+## 11. Maquette 2 (18/11)
+[Artefact](https://claude.ai/artifact/Cuu4nXfm51S3kfWEQhuYUm), source `maquettes/bannis-2.html` (fabriquée par `python3 -I outils/bannis-maquette/fabriquer2.py <dossier des packs>` depuis `source2.html`, moteur de la maquette 1). Packs gratuits seulement, interfaces prises dans des packs (découpe en 9 morceaux), évolution d'un héros en classe légendaire à la fin de la vague (lumière, flash blanc, aura dorée), registre des classes sous les téléphones.
+- **1 Regalia** : Pixel Champions + monstres de Willibab + interface **Dragon Regalia** (tiopalada, CC0), dés en pixels.
+- **2 Âges sombres** : mêmes sprites + interface **Dark Ages** (Hypnobius, gratuite), volcan, dés en os, butin sur parchemin.
+- **3 La Garde en 8 bits** : héros et monstres du **Mighty Battle Pack Addon** (The Mighty Palm, CC0, façon NES) + Dark Ages. Les classes du pack vont par vraies paires : soldat → paladin, apprentie → archimage, prêtresse → inquisiteur, voleur → ninja.
+- Paires Pixel Champions (pas de paires dans le pack) : guerrier (Oratio) → paladin (Glenys), magicien (Hex) → sorcier (Prime), prêtre (Linail) → grande prêtresse (Wyvera), dompteur (Ley) → maître des bêtes (Ley, autre palette), barde (Ouzo) → barde légendaire (autre palette).
+- Autres gratuits repérés : Mighty Pack (CC0, icônes et fenêtres RPG Maker), Tiny RPG Mana Soul GUI (tiopalada), Crimson Fantasy GUI, Fantasy 1.0 RPG GUI (byandrox), Complete UI Book Styles (crusenho) ; fonds de combat de Willibab trop ternes.
+
+**Packs payants mis de côté** (liens aussi dans la maquette 2) : Time Fantasy (finalbossblues : héros vus de côté 7,99 $, monstres 10 $, icônes 6 $, effets 6 $, portraits 8 $ ; le plus soigné, 80 héros dont chevaliers et armées) ; Pixel Champions II (alexpixels : 25 héros 8,99 $, 22 monstres 12,50 $, portraits 1,99 $) ; Tiny RPG de Zerie (2 × 2,50 $) ; Willibab (Mythic Monsters I 7,49 $, créateur de héros en calques 3,74 $) ; The Mighty Palm (Mighty Daemons héros 5 $ et monstres 5 $, portraits 15 $) ; Tiny Tales Heroes (megatiles, 24,99 $) ; 8bit Retro SV Actors (koji-marumugi, 6,60 $).
+
 Retour de l'utilisateur : en attente.
