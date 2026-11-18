@@ -321,13 +321,35 @@ const quad=new THREE.Mesh(new THREE.PlaneGeometry(2,2),post),scPost=new THREE.Sc
 function choisir(k){chargerModele(COULEURS[NOMS[k]].cle).then(()=>choisir2(k));}
 function choisir2(k){choix=k;S.munM=Math.min(S.munM,FAM().mis);nav.remove(moi);modele=construire(COULEURS[NOMS[choix]],true);moi=modele.g;moi.scale.setScalar(.66);nav.add(moi);versCalque(moi);try{localStorage.setItem('cieldeguerre.avion',NOMS[choix]);}catch(e){}annonce(`HANGAR<b>${COULEURS[NOMS[choix]].nom}</b>${COULEURS[NOMS[choix]].pack}`);}
 const hangar=document.getElementById('hangar');
-function ouvrirHangar(){try{document.exitPointerLock();}catch(x){}const barres=n=>'▮'.repeat(n)+'▯'.repeat(5-n);let h='<b>HANGAR</b><p class="aide">35 appareils en 4 familles. Dans le jeu, on les debloquera un par un ; ici, tous sont ouverts pour les essayer.</p>';
-  for(const f in FAMILLES){const F=FAMILLES[f];h+=`<i>${F.nom}</i><p class="fam">${F.txt}<br><span>VIT ${barres(F.b[0])} · VIR ${barres(F.b[1])} · BLI ${barres(F.b[2])} · MIS ${F.mis}</span></p>`;
-    NOMS.forEach((n,k)=>{if(COULEURS[n].fam===f)h+=`<button data-k="${k}" class="${k===choix?'on':''}">${COULEURS[n].nom}</button>`;});}
-  h+='<button data-k="x" class="fermer">FERMER</button>';hangar.innerHTML=h;hangar.style.display='flex';}
+// hangar (18/11) : un onglet par famille, la liste de ses appareils, et l'aperçu en 3D de celui qu'on regarde (qui tourne) ; CHOISIR le prend
+let HG=null;
+function hangarApercu(){if(HG)return HG;const can=document.createElement('canvas');const r=new THREE.WebGLRenderer({canvas:can,antialias:false,alpha:true});r.setPixelRatio(1);
+  const s=new THREE.Scene();s.add(new THREE.HemisphereLight('#ffe6d6','#5a4a70',.95));const l=new THREE.DirectionalLight('#ffd6b0',.9);l.position.set(4,6,5);s.add(l);
+  const cam=new THREE.PerspectiveCamera(32,1.6,.1,200);HG={can,r,s,cam,g:null,k:-1,fam:null,ang:.8,boucle:0};return HG;}
+function hangarVoir(k){const H=hangarApercu();H.k=k;const c=COULEURS[NOMS[k]];
+  hangar.querySelectorAll('.hListe button').forEach(b=>b.classList.toggle('vu',+b.dataset.k===k));
+  hangar.querySelector('.hNom').innerHTML=`${c.nom}${k===choix?' <em>EN SERVICE</em>':''}`;hangar.querySelector('.go').textContent=k===choix?'GARDER CET APPAREIL':'CHOISIR CET APPAREIL';
+  chargerModele(c.cle).then(()=>{if(H.k!==k)return;if(H.g)H.s.remove(H.g);const m=construire(c,false).g;const bo=new THREE.Box3().setFromObject(m),t=bo.getSize(new THREE.Vector3()),ce=bo.getCenter(new THREE.Vector3());
+    m.position.sub(ce);const g=new THREE.Group();g.add(m);H.g=g;H.s.add(g);const d=Math.max(t.x,t.y*1.6,t.z)*1.3;H.cam.position.set(0,d*.42,d);H.cam.lookAt(0,0,0);});}
+function hangarOnglet(f){const H=hangarApercu();H.fam=f;const F=FAMILLES[f],barres=n=>'<i class="pl"></i>'.repeat(n)+'<i></i>'.repeat(5-n);
+  hangar.querySelectorAll('.onglets button').forEach(b=>b.classList.toggle('on',b.dataset.f===f));
+  hangar.querySelector('.hFam').innerHTML=`<p>${F.txt}</p><div class="st"><span>VITESSE</span><b>${barres(F.b[0])}</b><span>VIRAGE</span><b>${barres(F.b[1])}</b><span>BLINDAGE</span><b>${barres(F.b[2])}</b><span>MISSILES</span><b class="n">${F.mis}</b></div>`;
+  let h='';NOMS.forEach((n,k)=>{if(COULEURS[n].fam===f)h+=`<button data-k="${k}" class="${k===choix?'on':''}">${COULEURS[n].nom}</button>`;});hangar.querySelector('.hListe').innerHTML=h;
+  const k=COULEURS[NOMS[choix]].fam===f?choix:NOMS.findIndex(n=>COULEURS[n].fam===f);hangarVoir(k);}
+function hangarTourne(){const H=HG;if(!H||hangar.style.display==='none'){if(H)H.boucle=0;return;}H.boucle=requestAnimationFrame(hangarTourne);
+  const w=H.can.clientWidth,h=H.can.clientHeight;if(!w||!h)return;const lw=Math.max(80,Math.round(w/3)),lh=Math.max(50,Math.round(h/3));/* rendu en gros pixels, comme le jeu */
+  if(H.can.width!==lw||H.can.height!==lh){H.r.setSize(lw,lh,false);H.cam.aspect=lw/lh;H.cam.updateProjectionMatrix();}
+  H.ang+=.012;if(H.g)H.g.rotation.y=H.ang;H.r.render(H.s,H.cam);}
+function ouvrirHangar(){try{document.exitPointerLock();}catch(x){}const H=hangarApercu();
+  hangar.innerHTML=`<div class="hTete"><b>HANGAR</b><button class="fermer" data-a="x">FERMER</button></div>
+  <div class="onglets">${Object.keys(FAMILLES).map(f=>`<button data-f="${f}"><span class="long">${FAMILLES[f].nom}</span><span class="court">${{inter:'INTER',poly:'POLY',lourd:'LOURDS',furtif:'FURTIFS'}[f]}</span></button>`).join('')}</div>
+  <div class="hCorps"><div class="apercu"><div class="cadre"></div><div class="hNom"></div><div class="hFam"></div><button class="go" data-a="ok">CHOISIR</button></div><div class="hListe"></div></div>`;
+  hangar.querySelector('.cadre').appendChild(H.can);hangar.style.display='flex';hangarOnglet(COULEURS[NOMS[choix]].fam);if(!H.boucle)hangarTourne();}
 /* on choisit au « click » (un vrai toucher, pas le début d'un glissement) : sur téléphone, glisser pour faire défiler la liste ne doit rien choisir */
 for(const t of ['pointerdown','pointermove','pointerup','touchstart','touchmove'])hangar.addEventListener(t,e=>e.stopPropagation(),{passive:true});
-hangar.addEventListener('click',e=>{e.stopPropagation();const b=e.target.closest('button');if(!b)return;if(b.dataset.k!=='x')choisir(+b.dataset.k);hangar.style.display='none';});
+hangar.addEventListener('click',e=>{e.stopPropagation();const b=e.target.closest('button');if(!b)return;
+  if(b.dataset.f)hangarOnglet(b.dataset.f);else if(b.dataset.k)hangarVoir(+b.dataset.k);
+  else if(b.dataset.a==='ok'){if(HG.k!==choix)choisir(HG.k);hangar.style.display='none';}else if(b.dataset.a==='x')hangar.style.display='none';});
 function changerAvion(){choisir((choix+1)%NOMS.length);}
 document.getElementById('charge').remove();
 // pilotage
