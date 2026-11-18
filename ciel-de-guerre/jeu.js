@@ -185,7 +185,13 @@ function decoupe(sc0,tours){let me=null;sc0.traverse(o=>{if(o.isMesh&&!me)me=o;}
   const reste=[];for(let q=0;q<pris.length;q++)if(!pris[q])reste.push(ix[q*3],ix[q*3+1],ix[q*3+2]);g.setIndex(reste);}
 function importe(cle,rot,taille){const g=new THREE.Group(),m=(IMPORTS[cle]||IMPORTS['py7_b']||IMPORTS[Object.keys(IMPORTS)[0]]).clone();/* pas encore chargé : un modèle de secours */const piv=new THREE.Group();piv.add(m);piv.rotation.y=rot;g.add(piv);
   const b=new THREE.Box3().setFromObject(piv),s=new THREE.Vector3();b.getSize(s);const k=taille/Math.max(s.x,s.z);piv.scale.setScalar(k);const b2=new THREE.Box3().setFromObject(piv),c=b2.getCenter(new THREE.Vector3());piv.position.sub(c);
-  const s2=new THREE.Vector3();b2.getSize(s2);const helices=[],tourelles=[];m.traverse(o=>{if(/^helice/.test(o.name))helices.push(o);if(/^tourelle/.test(o.name))tourelles.push(o);});return{g,env:s2.x/2,arriere:s2.z/2,larg:s2.x,helices,tourelles,tuyeres:(f,coupe)=>tuyeres(g,f,coupe)};}
+  const s2=new THREE.Vector3();b2.getSize(s2);const helices=[],tourelles=[];m.traverse(o=>{if(/^helice/.test(o.name))helices.push(o);if(/^tourelle/.test(o.name))tourelles.push(o);});return{g,env:s2.x/2,arriere:s2.z/2,larg:s2.x,helices,tourelles,tuyeres:(f,coupe)=>tuyeres(g,f,coupe),bouts:bouts(g)};}
+// les bouts des ailes (d'où partent les traînées) : les points les plus à gauche et à droite du modèle (2 % de la largeur), moyennés
+function bouts(g){g.updateMatrixWorld(true);const P=[],v=new THREE.Vector3();g.traverse(o=>{if(!o.isMesh||/^tourelle/.test(o.parent&&o.parent.name||''))return;const a=o.geometry.attributes.position,pas=Math.max(1,Math.floor(a.count/8000));
+    for(let i=0;i<a.count;i+=pas){v.fromBufferAttribute(a,i).applyMatrix4(o.matrixWorld);P.push([v.x,v.y,v.z]);}});
+  let x0=1e9,x1=-1e9;for(const p of P){x0=Math.min(x0,p[0]);x1=Math.max(x1,p[0]);}const e=(x1-x0)*.02;
+  const moy=s=>{const l=P.filter(p=>s<0?p[0]<x0+e:p[0]>x1-e);const m=[0,0,0];for(const p of l){m[0]+=p[0];m[1]+=p[1];m[2]+=p[2];}return m.map(x=>x/Math.max(1,l.length));};
+  return[moy(-1),moy(1)];}
 // repère les tuyères : les points les plus en arrière du modèle, regroupés en taches (grille en x-y) ; une tache = une flamme
 function tuyeres(g,force,coupe){g.updateMatrixWorld(true);const P=[],v=new THREE.Vector3();g.traverse(o=>{if(!o.isMesh)return;const a=o.geometry.attributes.position,pas=Math.max(1,Math.floor(a.count/6000));for(let i=0;i<a.count;i+=pas){v.fromBufferAttribute(a,i).applyMatrix4(o.matrixWorld);P.push([v.x,v.y,v.z]);}});
   let z0=1e9,z1=-1e9,x0=1e9,x1=-1e9;for(const p of P){z0=Math.min(z0,p[2]);z1=Math.max(z1,p[2]);x0=Math.min(x0,p[0]);x1=Math.max(x1,p[0]);}
@@ -392,7 +398,7 @@ function image(m){const dt=Math.min(.05,(m-av)/1000);av=m;requestAnimationFrame(
   nav.position.copy(S.p);animeFlammes(modele.flammes,S.boost>0);if(modele.helice)modele.helice.rotation.z+=dt*40;if(modele.helices)for(const h of modele.helices)h.rotation.x+=dt*38;/* hélices des avions importés : elles tournent autour de l'axe du nez */
   ombre.position.set(S.p.x,sol+.3,S.p.z);ombre.material.opacity=Math.max(0,.35-(S.p.y-sol)*.004);
   // traînées
-  for(const[k,t]of tr.entries()){t.pos.copyWithin(3,0,(t.n-1)*3);const w=new THREE.Vector3((k?1:-1)*modele.env*.66,0,1).applyQuaternion(Q).add(S.p);t.pos[0]=w.x;t.pos[1]=w.y;t.pos[2]=w.z;if(S.t<.1)for(let i=0;i<t.n;i++)t.pos.set([w.x,w.y,w.z],i*3);t.g.attributes.position.needsUpdate=true;}
+  for(const[k,t]of tr.entries()){t.pos.copyWithin(3,0,(t.n-1)*3);const bt=modele.bouts?modele.bouts[k]:[(k?1:-1)*modele.env,0,1];const w=new THREE.Vector3(bt[0]*.66,bt[1]*.66,bt[2]*.66).applyQuaternion(Q).add(S.p);/* traînée au bout de l'aile du modèle */t.pos[0]=w.x;t.pos[1]=w.y;t.pos[2]=w.z;if(S.t<.1)for(let i=0;i<t.n;i++)t.pos.set([w.x,w.y,w.z],i*3);t.g.attributes.position.needsUpdate=true;}
   // canon
   if(S.tir&&S.munB>0&&(S.cad=(S.cad||0)-dt)<=0){S.cad=.07;S.munB--;S.canon=-(S.canon||1);/* deux canons, un coup chacun */const vis=visee(fwd);const b=new THREE.Mesh(GEO_BALLE,MAT_BALLE);b.position.copy(S.p).addScaledVector(fwd,3).add(new THREE.Vector3(S.canon*modele.env*.3,0,0).applyQuaternion(Q));b.lookAt(b.position.clone().add(vis));sc.add(b);balles.push({b,v:vis.clone().multiplyScalar(v+160),t:1.1});}
   for(const b of balles){b.t-=dt;b.b.position.addScaledVector(b.v,dt);for(const e of ennemis)if(e.vie>0&&b.b.position.distanceTo(e.g.position)<e.rayon){b.t=0;e.vie--;if(e.vie<=0){boom(e.g.position);sc.remove(e.g);S.score+=100;}}

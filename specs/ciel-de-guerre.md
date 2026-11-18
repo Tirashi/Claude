@@ -83,6 +83,7 @@ Historique des directions : *Escadrille pixel* (gros pixels, sprite dessiné), p
   - au bord de la fenêtre, on ne pouvait plus tourner.
 
   Désormais, plus de capture : le curseur (caché) est le viseur, et le réticule est dessous. Les balles, le verrouillage et le rayon de la caméra passent par lui, dans un cône de 35° autour du nez. Éloigner le curseur du centre de l'écran fait tourner, monter ou descendre (zone morte au centre, comme le joystick). Un point marque le curseur quand le réticule est bloqué au bord du cône. Si la souris sort de la fenêtre, l'appareil vole droit.
+- **Traînées des ailes** (18/11, retour de l'utilisateur : « pas au bon endroit suivant le vaisseau ») : elles partaient d'un point fixe (largeur du modèle, mi-hauteur) ; elles partent maintenant des vrais bouts d'ailes de chaque modèle (`bouts()` : moyenne des points les plus à gauche et à droite).
 - **Artefact** : le jeu remplace la maquette au même lien (copie de 12,9 Mo avec les modèles en base64).
 
 ## Plan des sessions (proposition)
