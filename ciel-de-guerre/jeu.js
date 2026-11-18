@@ -26,11 +26,11 @@ function couleurSol(x,z,a,b){const h=H(x,z),r=hash(a,b),v=fbm(N2,x*.02,z*.02,2);
 const el=document.getElementById('t'),hud=document.getElementById('hud'),band=document.getElementById('bandeau');
 // l'image est calculée environ 2,5 fois moins finement que l'écran (900 pixels au plus dans le grand côté), puis agrandie sans lissage ;
 // la toile du viseur garde 320 pixels de haut, sa largeur suit le format de l'écran
-let LW,LH,OW,OH,AW,AH;function mesures(){const w=el.clientWidth||360,h=el.clientHeight||640,dp=devicePixelRatio||1,ech=Math.max(2.5,Math.max(w,h)*dp/900);
-  LW=Math.max(160,Math.round(w*dp/ech));LH=Math.max(160,Math.round(h*dp/ech));OH=320;OW=Math.round(OH*w/h);AW=LW;AH=LH;}
+let LW,LH,OW,OH,AW,AH,K=1;function mesures(){const w=el.clientWidth||360,h=el.clientHeight||640,dp=devicePixelRatio||1,ech=Math.max(2.5,Math.max(w,h)*dp/900);
+  LW=Math.max(160,Math.round(w*dp/ech));LH=Math.max(160,Math.round(h*dp/ech));OH=320;OW=Math.round(OH*w/h);AW=LW;AH=LH;K=Math.max(1,Math.round(h*dp/OH));}
 mesures();
 const R=new THREE.WebGLRenderer({antialias:false});R.setPixelRatio(1);R.setSize(LW,LH,false);el.prepend(R.domElement);
-const ov=document.createElement('canvas');ov.width=OW;ov.height=OH;ov.style.cssText='position:absolute;inset:0;pointer-events:none';R.domElement.after(ov);const ox=ov.getContext('2d');
+const ov=document.createElement('canvas');ov.width=OW*K;ov.height=OH*K;ov.style.cssText='position:absolute;inset:0;pointer-events:none;image-rendering:auto';R.domElement.after(ov);const ox=ov.getContext('2d');
 const cible=new THREE.WebGLRenderTarget(LW,LH,{minFilter:THREE.NearestFilter,magFilter:THREE.NearestFilter});
 // les avions sont dessinés à part (même finesse), pour leur tracer un contour
 const cibleAvions=new THREE.WebGLRenderTarget(AW,AH,{minFilter:THREE.NearestFilter,magFilter:THREE.NearestFilter});
@@ -466,25 +466,27 @@ function image(m){const dt=Math.min(.05,(m-av)/1000);av=m;requestAnimationFrame(
   if(!S.qc)S.qc=qc.clone();S.qc.slerp(qc,Math.min(1,dt*(S.loopT>=0?8:5)));
   const cp=S.p.clone().add(new THREE.Vector3(0,haut,loin).applyQuaternion(S.qc));const solC=Math.max(0,H(cp.x,cp.z))+2;if(cp.y<solC)cp.y=solC;
   cam.position.copy(cp);cam.quaternion.copy(S.qc);ciel.position.copy(cam.position);
-  hud.innerHTML=`SCORE ${String(S.score).padStart(6,'0')} · ${'✈'.repeat(Math.max(0,S.vies))}<br>${MIS?MIS.def.nom+' · '+MIS.def.hud(MIS):'VAGUE '+V.n+' · ENNEMIS '+ennemis.length}<br>BLINDAGE ${'▮'.repeat(Math.ceil(S.blindage/10))}${'▯'.repeat(10-Math.ceil(S.blindage/10))}`;document.getElementById('nTir').textContent=S.munB;document.getElementById('nMis').textContent='▮'.repeat(S.munM)||'—';
+  majHud();document.getElementById('nTir').textContent=S.munB;document.getElementById('nMis').textContent='▮'.repeat(S.munM)||'—';
   if(S.munB<=0)S.munB=300;if(S.munM<=0&&!S.rech){S.rech=1;setTimeout(()=>{S.munM=FAM().mis;S.rech=0;},6000);}
-  rendre();if(S.mode==='jeu')viseur(visee(fwd),dt);else ox.clearRect(0,0,OW,OH);}
+  rendre();if(S.mode==='jeu')viseur(visee(fwd),dt);else{ox.setTransform(K,0,0,K,0,0);ox.clearRect(0,0,OW,OH);}}
 function rendre(){cam.layers.set(0);R.setRenderTarget(cible);R.setClearColor(0x000000,1);R.clear();R.render(sc,cam);
   cam.layers.set(AVIONS);R.setRenderTarget(cibleAvions);R.setClearColor(0x000000,0);R.clear();R.render(sc,cam);
   R.setRenderTarget(null);R.render(scPost,camPost);}
 const LOCK={e:null,t:0,T:.5};
 // pixel art à la main : croix du viseur, coins des cadres
-function px(x,y,w,h,c){ox.fillStyle=c;ox.fillRect(Math.round(x),Math.round(y),w,h);}
+function px(x,y,w,h,c){ox.fillStyle=c;ox.fillRect(Math.round(x*2)/2,Math.round(y*2)/2,w,h);}
+// un texte net du viseur (police du jeu, ombre sombre), centré par défaut
+function txt(s,x,y,col,t=7,al='center'){ox.font=`${t}px Silkscreen, monospace`;ox.textAlign=al;ox.textBaseline='alphabetic';ox.fillStyle='rgba(16,12,28,.9)';ox.fillText(s,x+.5,y+.5);ox.fillStyle=col;ox.fillText(s,x,y);ox.textAlign='left';}
 function coins(x,y,r,c,ep=1){const L=Math.max(2,Math.round(r*.45));for(const[sx,sy]of[[-1,-1],[1,-1],[-1,1],[1,1]]){const cx=x+sx*r,cy=y+sy*r;px(sx<0?cx:cx-L+1,cy,L,ep,c);px(cx,sy<0?cy:cy-L+1,ep,L,c);}}
 function versEcran(v){const q=v.clone().project(cam);if(q.z>1||q.z<-1)return null;return[(q.x+1)/2*OW,(1-q.y)/2*OH];}
-function viseur(fwd,dt){ox.clearRect(0,0,OW,OH);
+function viseur(fwd,dt){ox.setTransform(K,0,0,K,0,0);ox.clearRect(0,0,OW,OH);
   // le verrouillage : l'ennemi le plus près de l'axe, dans un cône de 0,3 rad et à moins de 240 m
   let best=null,ba=.3;for(const e of ennemis.concat(TOURS)){if(e.vie<=0)continue;const d=e.g.position.clone().sub(S.p);const l=d.length();if(l>240)continue;const a=d.angleTo(fwd);if(a<ba){ba=a;best=e;}}
   if(best!==LOCK.e){LOCK.e=best;LOCK.t=0;}else if(best)LOCK.t+=dt;
   // cadres : gris au loin, rouges dans l'axe de tir, jaune qui se resserre pendant le verrouillage, rouge + LOCK une fois verrouillé
   for(const e of ennemis.concat(TOURS)){if(e.vie<=0)continue;const p=versEcran(e.g.position);if(!p)continue;const l=e.g.position.distanceTo(S.p);if(e.tour&&l>320)continue;const r=Math.max(4,Math.min(12,700/l));
-    if(e===LOCK.e){const f=Math.min(1,LOCK.t/LOCK.T);if(f<1){coins(p[0],p[1],r+8*(1-f),Math.floor(S.t*10)%2?'#ffe080':'#ffb040');}
-      else{coins(p[0],p[1],r,'#e2682e',2);if(Math.floor(S.t*6)%2){ox.font='bold 7px monospace';ox.fillStyle='#1a1c22';ox.fillText('LOCK',Math.round(p[0]-9),Math.round(p[1]-r-3));ox.fillStyle='#ffe080';ox.fillText('LOCK',Math.round(p[0]-10),Math.round(p[1]-r-4));}}}
+    if(e===LOCK.e){const f=Math.min(1,LOCK.t/LOCK.T);if(f<1){coins(p[0],p[1],r+8*(1-f),'#ffe080',1);}
+      else{coins(p[0],p[1],r+1,'#1a1c22',1.6);coins(p[0],p[1],r,'#ff6a3a',1.4);txt('LOCK',p[0],p[1]-r-4,Math.floor(S.t*4)%2?'#ffe080':'#ffb040',7);}}
     else coins(p[0],p[1],r,e.g.position.clone().sub(S.p).angleTo(fwd)<.06?'#e2682e':'rgba(230,238,246,.75)');}
   // flèches au bord de l'écran : les ennemis hors de vue (rouges qui clignotent s'ils sont derrière et proches)
   for(const e of ennemis){if(e.vie<=0)continue;const q=e.g.position.clone().applyMatrix4(cam.matrixWorldInverse);const n=e.g.position.clone().project(cam);
@@ -496,20 +498,27 @@ function viseur(fwd,dt){ox.clearRect(0,0,OW,OH);
   if(S.souris&&S.horsCone){const x=Math.round((S.cx+1)/2*OW),y=Math.round((S.cy+1)/2*OH);px(x-1,y,3,1,'#1a1c22');px(x,y-1,1,3,'#1a1c22');px(x,y,1,1,'#ffffff');}
   // objectifs de la mission (ville, destroyer, cible) : cadre bleu et nom, ou flèche bleue au bord de l'écran
   for(const o of OBJ){const q=o.pos.clone().applyMatrix4(cam.matrixWorldInverse),n=o.pos.clone().project(cam);
-    if(q.z<0&&Math.abs(n.x)<.95&&Math.abs(n.y)<.95){const p=versEcran(o.pos);if(p){const r=Math.max(6,Math.min(16,1600/o.pos.distanceTo(S.p)));coins(p[0],p[1],r,'#7fd0ff');ox.font='bold 7px monospace';ox.fillStyle='#1a1c22';ox.fillText(o.nom,Math.round(p[0]-o.nom.length*2.1)+1,Math.round(p[1]+r+9)+1);ox.fillStyle='#bfe8ff';ox.fillText(o.nom,Math.round(p[0]-o.nom.length*2.1),Math.round(p[1]+r+9));}continue;}
+    if(q.z<0&&Math.abs(n.x)<.95&&Math.abs(n.y)<.95){const p=versEcran(o.pos);if(p){const r=Math.max(6,Math.min(16,1600/o.pos.distanceTo(S.p)));coins(p[0],p[1],r,'#7fd0ff',1.2);txt(o.nom,p[0],p[1]+r+9,'#bfe8ff',6.5);txt(Math.round(o.pos.distanceTo(S.p))+' M',p[0],p[1]+r+16,'#8fc8e8',5.5);}continue;}
     let dx=q.x,dy=-q.y;if(q.z>0&&Math.hypot(dx,dy)<.01)dy=1;const l=Math.hypot(dx,dy);dx/=l;dy/=l;const k=Math.min((OW/2-9)/Math.abs(dx||1e-6),(OH/2-9)/Math.abs(dy||1e-6));
     ox.save();ox.translate(Math.round(OW/2+dx*k),Math.round(OH/2+dy*k));ox.rotate(Math.atan2(dy,dx));ox.fillStyle='#1a1c22';ox.beginPath();ox.moveTo(7,0);ox.lineTo(-4,-6);ox.lineTo(-4,6);ox.fill();ox.fillStyle='#7fd0ff';ox.beginPath();ox.moveTo(5,0);ox.lineTo(-3,-4);ox.lineTo(-3,4);ox.fill();ox.restore();}
   // le viseur : là où vont les balles, 120 m devant
   const v=versEcran(S.p.clone().addScaledVector(fwd,120));if(v){const[x,y]=[Math.round(v[0]),Math.round(v[1])];
     for(const[c,o]of[['#1a1c22',1],['#ffffff',0]]){px(x-6+o,y+o,4,1,c);px(x+3+o,y+o,4,1,c);px(x+o,y-6+o,1,4,c);px(x+o,y+3+o,1,4,c);px(x+o,y+o,1,1,c);}}
   // munitions de missiles et état du verrouillage, sous le viseur
-  if(LOCK.e&&LOCK.t>=LOCK.T&&v){ox.font='bold 7px monospace';ox.fillStyle='#ffe080';ox.fillText('MISSILE PRET',Math.round(v[0]-24),Math.round(v[1]+16));}}
+  if(LOCK.e&&LOCK.t>=LOCK.T&&v)txt(S.munM>0?'MISSILE PRET':'PLUS DE MISSILES',v[0],v[1]+17,S.munM>0?'#ffe080':'#ff9a7a',6.5);}
 
+// ---- tête d'écran (HTML) : score, appareils, blindage ; objectif ; munitions (PC) ----
+const HC={};const hset=(id,k,v)=>{if(HC[id+k]===v)return;HC[id+k]=v;const n=document.getElementById(id);if(k==='t')n.textContent=v;else if(k==='w')n.style.width=v;else if(k==='c')n.className=v;else if(k==='h')n.hidden=v;};
+function majHud(){hset('hScore','t',String(S.score).padStart(6,'0'));hset('hVies','t','✈ '.repeat(Math.max(0,S.vies)).trim());const b=Math.max(0,Math.round(S.blindage));hset('hBlind','w',b+'%');hset('hBlind','c',b>55?'':b>25?'moyen':'bas');
+  const e=MIS?MIS.def.etat(MIS):{txt:'VAGUES SANS FIN',info:`VAGUE ${V.n} · ${ennemis.length} ENNEMI${ennemis.length>1?'S':''}`};
+  hset('hObjNom','t',MIS?`MISSION ${MISSIONS.indexOf(MIS.def)+1} · ${MIS.def.nom}`:'ENTRAINEMENT');hset('hObjTxt','t',e.txt);hset('hObjInfo','t',e.info||'');
+  hset('hObjB','h',e.v===undefined);if(e.v!==undefined){hset('hObjBar','w',Math.round(Math.max(0,Math.min(1,e.v))*100)+'%');hset('hObjB','c','barre '+(e.genre||'proteger'));}
+  hset('hCanon','t',String(S.munB));hset('hMis','t','▮'.repeat(Math.max(0,S.munM))+'▯'.repeat(Math.max(0,FAM().mis-S.munM)));}
 // ---- missions ----
-// chaque mission : debut(M), maj(M, dt) qui renvoie 'gagne', 'perdu' ou rien, hud(M) (ligne de la tête d'écran), etoiles(M) (1 à 3, à la victoire), fin(M) (nettoyage)
+// chaque mission : debut(M), maj(M, dt) qui renvoie 'gagne', 'perdu' ou rien, etat(M) = {txt, v (jauge de 0 à 1), genre, info} pour la tête d'écran, buts et et (briefing, règle des étoiles), etoiles(M) (1 à 3, à la victoire), fin(M) (nettoyage)
 let MIS=null;const OBJ=[];/* OBJ : objectifs montrés en bleu dans le viseur */
 function lireMissions(){try{return JSON.parse(localStorage.getItem('cieldeguerre.missions'))||{};}catch(e){return{};}}
-const temps=t=>`${Math.floor(t/60)}:${String(Math.floor(t%60)).padStart(2,'0')}`,jauge=v=>'▮'.repeat(Math.ceil(Math.max(0,v)/20))+'▯'.repeat(5-Math.ceil(Math.max(0,v)/20));
+const temps=t=>`${Math.floor(t/60)}:${String(Math.floor(t%60)).padStart(2,'0')}`;
 // une escadre de n appareils qui arrive de la direction a (angle absolu), à dist du centre, vers lui ; opt : options de ennemi()
 function escadre(n,o){const c=o.centre||S.p,a=o.a!==undefined?o.a:Math.random()*6.28,dist=o.dist||300,dir=new THREE.Vector3(-Math.sin(a),0,-Math.cos(a)),tete=c.clone().addScaledVector(dir,dist);
   tete.y=Math.max(o.y||c.y+15,H(tete.x,tete.z)+30);const vers=c.clone().sub(tete).normalize(),cote=new THREE.Vector3(-dir.z,0,dir.x);
@@ -538,7 +547,7 @@ const MISSIONS=[
       escadre(ch,{centre:M.ville.pos,a:a-.25,dist:380,y:65,t:.8,opt:k=>({fam:var_>1&&k%2?'inter':'poly'})});M.n++;annonce(`VAGUE ${M.n} / 3<b>BOMBARDIERS</b>Ils arrivent par la mer.`);}
     if(M.ville.vie<60&&Math.random()<dt*3)fumee(M.ville.pos.clone().add(new THREE.Vector3((Math.random()-.5)*50,-4,(Math.random()-.5)*50)),1);
     if(M.ville.vie<=0)return'perdu';if(M.n>=M.vagues.length&&!ennemis.length&&!V.file.length)return'gagne';},
-  hud:M=>`PORT ${jauge(M.ville.vie)} · VAGUE ${M.n}/3`,etoiles:M=>ETOILES(M,M.ville.vie>=50,M.ville.vie>=80&&S.vies===3),fin(M){sc.remove(M.g);}},
+  etat:M=>({txt:'PROTEGE LE PORT',v:M.ville.vie/100,info:`PORT ${Math.max(0,Math.round(M.ville.vie))} % · VAGUE ${M.n} / 3`}),buts:['Abats les bombardiers rouges (les grosses corvettes) avant qu’ils n’atteignent le port.','Trois vagues arrivent de la mer. Leurs chasseurs d’escorte s’en prennent à toi.','Le port est encadré en bleu ; sa jauge est en haut de l’écran.'],et:['port intact à 50 % ou plus','port intact à 80 %, sans perdre d’appareil'],etoiles:M=>ETOILES(M,M.ville.vie>=50,M.ville.vie>=80&&S.vies===3),fin(M){sc.remove(M.g);}},
  {id:'escorte',nom:"L'ESCORTE",titre:'PROTEGER LE DESTROYER',brief:'Le destroyer bleu Albatros traverse l’archipel. Reste près de lui : les chasseurs rouges vont tout tenter pour le couler.',
   debut(M){const d=new THREE.Vector3(-Math.sin(S.yaw),0,-Math.cos(S.yaw));M.dir=d;M.n0=navire('fga_destroyer2',0,110,{fixe:1,yaw:S.yaw,v:0,base:S.p.clone().addScaledVector(d,90).add(new THREE.Vector3(-d.z*50,0,d.x*50))});
     M.n0.base.y=80;M.trajet=1500;M.parcouru=0;M.dest=M.n0.base.clone().addScaledVector(d,M.trajet);M.bal=balise(M.dest);M.ob=objectif('ALBATROS',new THREE.Vector3(),45,100);M.ob.deg=.8;OBJ.push({nom:'ARRIVEE',pos:M.dest.clone().setY(120)});M.prochaine=6;M.k=0;},
@@ -547,19 +556,19 @@ const MISSIONS=[
       if(M.k>=3&&M.k%2)escadre(2,{centre:n.g.position,a:a+1.5,dist:420,y:n.g.position.y+20,t:2,opt:{bomb:1,escorte:0,obj:M.ob}});annonce(`ATTAQUE ${M.k}<b>${M.k>=3&&M.k%2?'CHASSEURS ET BOMBARDIERS':'CHASSEURS'}</b>Protège l’Albatros !`);}
     if(M.ob.vie<=0){if(!n.chute){n.chute=.01;for(const t of n.tourelles)t.mort=1;}return M.t>(M.coule=M.coule||M.t+2.5)?'perdu':null;}
     if(M.parcouru>=M.trajet)return'gagne';},
-  hud:M=>`ALBATROS ${jauge(M.ob.vie)} · ${Math.max(0,Math.round((M.trajet-M.parcouru)/14))} S`,etoiles:M=>ETOILES(M,M.ob.vie>=50,M.ob.vie>=80&&S.vies===3),fin(M){retirerNavire(M.n0);sc.remove(M.bal);}},
+  etat:M=>({txt:'ESCORTE L’ALBATROS JUSQU’A LA BALISE',v:M.ob.vie/100,info:`ALBATROS ${Math.max(0,Math.round(M.ob.vie))} % · ARRIVEE DANS ${Math.max(0,Math.round((M.trajet-M.parcouru)/14))} S`}),buts:['Reste près du destroyer bleu Albatros : il avance seul vers la balise de lumière.','Abats les chasseurs et les bombardiers qui l’attaquent.','S’il est coulé, la mission échoue.'],et:['Albatros intact à 50 % ou plus','Albatros intact à 80 %, sans perdre d’appareil'],etoiles:M=>ETOILES(M,M.ob.vie>=50,M.ob.vie>=80&&S.vies===3),fin(M){retirerNavire(M.n0);sc.remove(M.bal);}},
  {id:'survie',nom:'LA SURVIE',titre:'TENIR 3 MINUTES',brief:'Tu es seul au milieu de l’escadre rouge. Tiens bon trois minutes, jusqu’aux renforts.',
   debut(M){M.prochaine=4;M.k=0;},
   maj(M,dt){M.t+=dt;if(M.t>=M.prochaine&&M.t<170){M.k++;M.prochaine+=Math.max(11,19-M.k);const f=['poly','inter','lourd','furtif'];
       escadre(Math.min(6,2+(M.k>>1)),{a:S.yaw+(Math.random()-.5)*4,dist:300,opt:k=>({fam:f[(M.k+k)%Math.min(4,1+(M.k>>1))],as:M.k>5&&k===0})});if(M.k>=4&&M.k%3===1)escadre(2,{a:Math.random()*6.28,dist:340,t:1,opt:{bomb:1,escorte:M.k>6}});}
     if(M.t>=180)return'gagne';},
-  hud:M=>`TEMPS ${temps(Math.max(0,180-M.t))} · ENNEMIS ${ennemis.length}`,etoiles:M=>ETOILES(M,S.vies>=2,S.vies===3),fin(){}},
+  etat:M=>({txt:'TIENS JUSQU’AUX RENFORTS',v:Math.max(0,180-M.t)/180,genre:'temps',info:`ENCORE ${temps(Math.max(0,180-M.t))} · ${ennemis.length} ENNEMI${ennemis.length>1?'S':''}`}),buts:['Survis trois minutes : les escadres arrivent de plus en plus vite.','Pas besoin de tout abattre : il suffit de tenir.','Le tonneau esquive les tirs ; le looping sème les poursuivants.'],et:['au plus un appareil perdu','aucun appareil perdu'],etoiles:M=>ETOILES(M,S.vies>=2,S.vies===3),fin(){}},
  {id:'amiral',nom:"L'AMIRAL",titre:'ABATTRE LE CROISEUR AMIRAL',brief:'Le croiseur amiral rouge Tempête escorte la flotte ennemie. Détruis ses six tourelles : il tombera.',
   debut(M){const d=new THREE.Vector3(-Math.sin(S.yaw),0,-Math.cos(S.yaw));M.n0=navire('fga_destroyer3',1,170,{fixe:1,vieT:10,yaw:S.yaw+Math.PI*.8,v:4,base:S.p.clone().addScaledVector(d,430)});M.n0.base.y=95;
     M.ob={nom:'TEMPETE',pos:new THREE.Vector3()};OBJ.push(M.ob);M.prochaine=10;M.k=0;},
   maj(M,dt){M.t+=dt;M.ob.pos.copy(M.n0.g.position);if(M.t>=M.prochaine&&!M.n0.chute){M.k++;M.prochaine+=26;escadre(Math.min(5,2+M.k),{centre:M.n0.g.position,a:Math.random()*6.28,dist:200,opt:k=>({fam:k%2?'lourd':'poly'})});annonce(`RENFORTS<b>CHASSEURS</b>Le croiseur appelle son escorte.`);}
     if(M.n0.chute>3||M.n0.coule)return'gagne';},
-  hud:M=>`TOURELLES ${M.n0.tourelles.filter(t=>!t.mort).length}/${M.n0.tourelles.length} · ${temps(M.t)}`,etoiles:M=>ETOILES(M,S.vies>=2,S.vies===3&&M.t<200),fin(M){retirerNavire(M.n0);}},
+  etat:M=>{const r=M.n0.tourelles.filter(t=>!t.mort).length,n=M.n0.tourelles.length;return{txt:`DETRUIS LES ${n} TOURELLES DU CROISEUR`,v:r/n,genre:'detruire',info:`${r} TOURELLE${r>1?'S':''} RESTANTE${r>1?'S':''} · ${temps(M.t)}`};},buts:['Le croiseur Tempête est encadré en bleu. Ses tourelles (les canons sur la coque) tirent sur toi.','Vise chaque tourelle au canon, ou verrouille-la et tire un missile.','Quand les six sont détruites, il tombe.'],et:['au plus un appareil perdu','aucun appareil perdu, en moins de 3 min 20'],etoiles:M=>ETOILES(M,S.vies>=2,S.vies===3&&M.t<200),fin(M){retirerNavire(M.n0);}},
  {id:'forteresse',nom:'LA FORTERESSE',titre:'LE VAISSEAU-MERE',brief:'La forteresse volante Léviathan. Ses quatre générateurs bleus protègent ses tourelles : détruis-les d’abord. Des chasseurs décollent de ses flancs.',
   debut(M){const d=new THREE.Vector3(-Math.sin(S.yaw),0,-Math.cos(S.yaw));const n=M.n0=navire('fga_destroyer4',1,300,{fixe:1,vieT:12,yaw:S.yaw+Math.PI*.7,v:3,base:S.p.clone().addScaledVector(d,650)});n.base.y=140;n.bouclier=4;
     n.g.updateMatrixWorld(true);const b=new THREE.Box3().setFromObject(n.g),inv=n.g.matrixWorld.clone().invert();const s=new THREE.Vector3();b.getSize(s);M.gens=[];
@@ -574,29 +583,31 @@ const MISSIONS=[
     if(!n.chute&&M.t>=M.lance){M.lance+=Math.max(7,11-M.t/40);const p=n.g.position.clone().add(new THREE.Vector3((Math.random()-.5)*n.lg*.3,-n.lg*.03,(Math.random()-.5)*n.lg*.3));
       const vers=S.p.clone().sub(p).normalize();for(let k=0;k<2;k++)ennemi(p.clone().add(new THREE.Vector3(k*8,0,0)),vers,{fam:M.t>90&&k?'furtif':'inter'});}
     if(n.chute>3||n.coule)return'gagne';},
-  hud:M=>`BOUCLIERS ${M.n0.bouclier} · TOURELLES ${M.n0.tourelles.filter(t=>!t.mort).length}/${M.n0.tourelles.length}`,etoiles:M=>ETOILES(M,S.vies>=2,S.vies===3&&M.t<300),fin(M){retirerNavire(M.n0);}}];
+  etat:M=>{const n=M.n0,r=n.tourelles.filter(t=>!t.mort).length;return n.bouclier>0?{txt:'DETRUIS LES GENERATEURS BLEUS',v:n.bouclier/4,genre:'detruire',info:`${n.bouclier} GENERATEUR${n.bouclier>1?'S':''} · TOURELLES PROTEGEES`}:{txt:'DETRUIS LES TOURELLES',v:r/n.tourelles.length,genre:'detruire',info:`${r} TOURELLE${r>1?'S':''} RESTANTE${r>1?'S':''} · BOUCLIER TOMBE`};},buts:['Étape 1 : détruis les quatre générateurs bleus qui brillent sur la coque. Tant qu’ils tiennent, les tourelles ne prennent aucun dégât.','Étape 2 : détruis les six tourelles. La forteresse tombe.','Des chasseurs décollent de ses flancs pendant tout le combat.'],et:['au plus un appareil perdu','aucun appareil perdu, en moins de 5 min'],etoiles:M=>ETOILES(M,S.vies>=2,S.vies===3&&M.t<300),fin(M){retirerNavire(M.n0);}}];
 function majMission(dt){const r=MIS.def.maj(MIS,dt);if(r)finMission(r==='gagne');}
 function finMissionNettoie(){if(MIS){try{MIS.def.fin(MIS);}catch(e){}MIS=null;}OBJ.length=0;}
 function finMission(gagne){const def=MIS.def,M=MIS;S.mode='fin';S.auto=true;S.tir=false;try{document.exitPointerLock();}catch(x){}
   const et=gagne?def.etoiles(M):0;if(gagne)S.score+=1000*et;const m=lireMissions(),av=m[def.id]||{};const neuf=gagne&&et>(av.e||0);
   if(gagne)m[def.id]={e:Math.max(et,av.e||0),s:Math.max(S.score,av.s||0)};try{localStorage.setItem('cieldeguerre.missions',JSON.stringify(m));}catch(e){}
   $('fTitre').textContent=gagne?'MISSION REUSSIE':'MISSION ECHOUEE';$('fEtoiles').textContent=gagne?'★'.repeat(et)+'☆'.repeat(3-et):'';$('fScore').textContent=String(S.score).padStart(6,'0');
-  $('fDetail').textContent=gagne?(et<3?'3 étoiles : '+(def.id==='survie'?'sans perdre d’appareil.':def.id==='amiral'?'sans perdre d’appareil, en moins de 3 min 20.':def.id==='forteresse'?'sans perdre d’appareil, en moins de 5 min.':'sans perdre d’appareil, et l’objectif intact à 80 %.'):'Parfait !'):def.titre+' : raté.';
+  $('fDetail').textContent=gagne?(et<3?`${et+1} étoiles : ${def.et[et-1]}.`:'Parfait !'):def.titre+' : raté.';
   $('fRecord').innerHTML=neuf?'NOUVEAU RECORD D’ETOILES':'';const i=MISSIONS.indexOf(def);$('fSuivante').hidden=!(gagne&&MISSIONS[i+1]);
   setTimeout(()=>{if(MIS!==M||S.mode!=='fin')return;/* une autre partie a déjà commencé */finMissionNettoie();viderCombat();montrer('eFin');},gagne?2600:1600);}
+function briefing(def){const i=MISSIONS.indexOf(def);$('bNum').textContent=`MISSION ${i+1} SUR ${MISSIONS.length}`;$('bNom').textContent=def.nom;$('bTitre').textContent=def.titre;$('bTxt').textContent=def.brief;
+  $('bButs').innerHTML=def.buts.map(t=>`<li>${t}</li>`).join('');$('bEt').innerHTML=`★ réussir la mission<br>★★ ${def.et[0]}<br>★★★ ${def.et[1]}`;S.brief=def;montrer('eBrief');}
 function listeMissions(){const m=lireMissions();let h='';MISSIONS.forEach((d,i)=>{const ok=i===0||(m[MISSIONS[i-1].id]||{}).e>0,e=(m[d.id]||{}).e||0;
     h+=`<button data-m="${i}" ${ok?'':'disabled'}><span>${i+1} · ${d.nom}</span><small>${ok?d.titre:'A DEBLOQUER'}</small><em>${ok?'★'.repeat(e)+'☆'.repeat(3-e):'🔒'}</em></button>`;});
   $('mListe').innerHTML=h;}
-document.getElementById('mListe').addEventListener('click',e=>{const b=e.target.closest('button[data-m]');if(!b||b.disabled)return;e.stopPropagation();nouvellePartie(MISSIONS[+b.dataset.m]);});
+document.getElementById('mListe').addEventListener('click',e=>{const b=e.target.closest('button[data-m]');if(!b||b.disabled)return;e.stopPropagation();briefing(MISSIONS[+b.dataset.m]);});
 // ---- écrans : titre, pause, fin ; parties à 3 appareils ----
-const $=id=>document.getElementById(id),ECRANS=['eTitre','ePause','eFin','eAide','eMissions'];let ecranAvant='eTitre';
+const $=id=>document.getElementById(id),ECRANS=['eTitre','ePause','eFin','eAide','eMissions','eBrief'];let ecranAvant='eTitre';
 function montrer(id){for(const e of ECRANS)$(e).hidden=e!==id;el.classList.toggle('menu',!!id);if(id&&id!=='eAide')ecranAvant=id;}
 function lireRecord(){try{return JSON.parse(localStorage.getItem('cieldeguerre.record'))||{};}catch(e){return{};}}
 function majTitre(){const r=lireRecord(),m=lireMissions(),et=Object.values(m).reduce((a,v)=>a+(v.e||0),0);$('tEtoiles').textContent=et?`${et} / ${MISSIONS.length*3} ETOILES`:'';$('tRecord').innerHTML=r.parties?`RECORD ${String(r.score).padStart(6,'0')}<br>VAGUE ${r.vague||0} · ${r.parties||0} PARTIE${(r.parties||0)>1?'S':''}`:'';}
 function viderCombat(){for(const e of ennemis)sc.remove(e.g);ennemis.length=0;for(const b of tirsEnnemis)sc.remove(b.b);tirsEnnemis.length=0;V.file.length=0;}
 function nouvellePartie(def){finMissionNettoie();viderCombat();S.dernier=def||null;V.n=0;V.pause=2.5;V.fin=0;Object.assign(S,{cx:0,cy:0,mode:'jeu',vies:3,blindage:100,score:0,munB:300,munM:FAM().mis,auto:false,tir:false,boost:0,loopT:-1,rollT:-1,dx:0,dy:0});
   S.p.set(S.p.x,Math.max(S.p.y,40),S.p.z);montrer(null);
-  if(def){MIS={def,t:0};def.debut(MIS);S.qc=null;annonce(`MISSION ${MISSIONS.indexOf(def)+1} · ${def.nom}<b>${def.titre}</b>${def.brief}`,6500);}
+  if(def){MIS={def,t:0};def.debut(MIS);S.qc=null;annonce(`MISSION ${MISSIONS.indexOf(def)+1} · ${def.nom}<b>${def.etat(MIS).txt}</b>Bonne chance !`,3500);}
   else annonce('VAGUES SANS FIN<b>ARCHIPEL</b>Abats les chasseurs rouges. Leurs grands vaisseaux tirent aussi !');}
 function pause(){if(S.mode!=='jeu')return;S.mode='pause';S.tir=false;try{document.exitPointerLock();}catch(x){}montrer('ePause');}
 function reprendre(){if(S.mode!=='pause')return;S.mode='jeu';montrer(null);}
@@ -608,12 +619,12 @@ function finPartie(){if(MIS){finMission(false);return;}S.mode='fin';S.auto=true;
   $('fTitre').textContent='FIN DE PARTIE';$('fEtoiles').textContent='';$('fSuivante').hidden=true;setTimeout(()=>{viderCombat();montrer('eFin');},1600);}
 document.addEventListener('visibilitychange',()=>{if(document.hidden)pause();});
 const clic=(id,f)=>$(id).addEventListener('click',e=>{e.stopPropagation();f();});
-clic('tJouer',()=>nouvellePartie(null));clic('fRejouer',()=>nouvellePartie(S.dernier));clic('tMissions',()=>{listeMissions();montrer('eMissions');});clic('mRetour',()=>montrer('eTitre'));clic('fSuivante',()=>{const i=MISSIONS.indexOf(S.dernier);if(MISSIONS[i+1])nouvellePartie(MISSIONS[i+1]);});clic('pReprendre',reprendre);clic('pQuitter',versTitre);clic('fMenu',versTitre);
+clic('tJouer',()=>nouvellePartie(null));clic('fRejouer',()=>nouvellePartie(S.dernier));clic('tMissions',()=>{listeMissions();montrer('eMissions');});clic('mRetour',()=>montrer('eTitre'));clic('fSuivante',()=>{const i=MISSIONS.indexOf(S.dernier);if(MISSIONS[i+1]){finMissionNettoie();viderCombat();S.mode='titre';briefing(MISSIONS[i+1]);}});clic('bGo',()=>nouvellePartie(S.brief));clic('bRetour',()=>{listeMissions();montrer('eMissions');});clic('pReprendre',reprendre);clic('pQuitter',versTitre);clic('fMenu',versTitre);
 clic('tHangar',ouvrirHangar);clic('pHangar',ouvrirHangar);clic('tAide',()=>montrer('eAide'));clic('pAide',()=>montrer('eAide'));clic('aRetour',()=>montrer(ecranAvant));
 bouton('bPause',d=>{if(d)pause();});
 for(const e of ECRANS)$(e).addEventListener('pointerdown',e=>e.stopPropagation());
 // la fenêtre change de taille (rotation du téléphone, fenêtre du PC) : on refait les toiles
-addEventListener('resize',()=>{clearTimeout(S.rz);S.rz=setTimeout(()=>{mesures();R.setSize(LW,LH,false);cible.setSize(LW,LH);cibleAvions.setSize(AW,AH);ov.width=OW;ov.height=OH;
+addEventListener('resize',()=>{clearTimeout(S.rz);S.rz=setTimeout(()=>{mesures();R.setSize(LW,LH,false);cible.setSize(LW,LH);cibleAvions.setSize(AW,AH);ov.width=OW*K;ov.height=OH*K;
   cam.aspect=LW/LH;cam.fov=LW>LH?50:62;cam.updateProjectionMatrix();post.uniforms.pa.value.set(1/AW,1/AH);},120);});
 S.auto=true;majTitre();montrer('eTitre');
 requestAnimationFrame(image);

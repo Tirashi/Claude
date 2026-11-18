@@ -5,9 +5,6 @@
 html,body{margin:0;height:100%;background:#1a1424;overflow:hidden;overscroll-behavior:none}
 .tel{position:fixed;inset:0;overflow:hidden;background:#2a1f38;touch-action:none;user-select:none;-webkit-user-select:none}
 .tel canvas{width:100%!important;height:100%!important;display:block;image-rendering:pixelated}
-.hud{position:absolute;left:10px;top:10px;font:11px/1.5 var(--titre);color:#fff;text-shadow:1px 1px 0 #1c3350;pointer-events:none;letter-spacing:.08em}
-.bandeau{position:absolute;left:10px;right:10px;top:46px;background:rgba(28,48,72,.86);color:#e8f0f8;font:11px/1.6 var(--titre);padding:10px 12px;letter-spacing:.1em;pointer-events:none;transition:opacity .4s}
-.bandeau b{display:block;font-size:15px;letter-spacing:.14em;margin:2px 0}
 .rond{position:absolute;border-radius:50%;display:grid;place-items:center;text-align:center;font:10px/1.2 var(--titre);letter-spacing:.06em;color:#fff;background:rgba(28,48,72,.55);border:2px solid rgba(200,225,250,.75);box-shadow:0 2px 0 rgba(0,0,0,.35);cursor:pointer;touch-action:none;user-select:none;-webkit-user-select:none;padding:0}
 .rond small{display:block;font-size:8px;opacity:.85;margin-top:2px}
 .rond.on,.rond:active{background:rgba(208,80,46,.85);border-color:#ffd9a0}
@@ -49,7 +46,7 @@ html,body{margin:0;height:100%;background:#1a1424;overflow:hidden;overscroll-beh
 .carte.aide p{margin:0;font:15px/1.45 var(--texte);color:#e6def0}
 .carte.aide b{font:400 12px var(--titre);color:#ffe080;letter-spacing:.06em}
 .hangar{z-index:6}
-@media (min-width:900px) and (pointer:fine){.carte{width:420px}.hud{font-size:13px}}
+@media (min-width:900px) and (pointer:fine){.carte{width:420px}}
 @media (min-width:700px){.hangar{left:50%;right:auto;width:540px;transform:translateX(-50%)}}
 @media (hover:hover) and (pointer:fine){#bTir,#bMis,#bLoop,#bRoll,#bBoost,#bFrein{display:none}}
 .tel.souris:not(.menu){cursor:none}
@@ -63,3 +60,27 @@ html,body{margin:0;height:100%;background:#1a1424;overflow:hidden;overscroll-beh
 #mListe button small{grid-column:1;font:9px var(--titre);color:#d8cfe6;letter-spacing:.05em}
 #mListe button em{grid-row:1/3;grid-column:2;font:16px var(--titre);font-style:normal;color:#ffd23f;letter-spacing:.1em}
 #mListe button:disabled{opacity:.45;cursor:default}
+/* tête d'écran : panneaux nets (HTML), plus grands sur PC */
+.hud{position:absolute;inset:0;pointer-events:none;font-family:var(--titre);color:#fff;--hs:10px}
+.pan{position:absolute;background:rgba(22,16,36,.62);border:1px solid rgba(255,230,210,.22);border-radius:9px;padding:6px 9px;box-shadow:0 2px 0 rgba(0,0,0,.25);font-size:var(--hs);letter-spacing:.06em}
+.pan .l{display:flex;justify-content:space-between;gap:12px;align-items:baseline;line-height:1.5}
+.pan span{color:#d8c8e8;font-size:.82em}.pan b{font-weight:400;color:#fff}
+#hG{left:max(10px,env(safe-area-inset-left));top:10px;min-width:150px}
+#hG #hVies{color:#9fd8ff;letter-spacing:.1em}
+.barre{height:7px;margin-top:4px;background:rgba(0,0,0,.45);border-radius:4px;overflow:hidden}
+.barre i{display:block;height:100%;width:100%;background:linear-gradient(90deg,#7fd0ff,#bff0ff);border-radius:4px;transition:width .2s}
+.barre.vie i{background:linear-gradient(90deg,#5fd06a,#b8f080)}.barre.vie i.moyen{background:linear-gradient(90deg,#e8b030,#ffe080)}.barre.vie i.bas{background:linear-gradient(90deg,#e04a2e,#ff8a5a)}
+.barre.detruire i{background:linear-gradient(90deg,#e04a2e,#ff9a6a)}.barre.temps i{background:linear-gradient(90deg,#e8b030,#ffe080)}
+#hObj{left:max(10px,env(safe-area-inset-left));top:86px;width:min(250px,62vw);display:grid;gap:1px}
+#hObj span{font-size:.78em;color:#ffd2a0}#hObj b{font-size:1.02em;line-height:1.3}#hObj small{font-size:.78em;color:#d8c8e8;margin-top:2px}
+#hArmes{right:16px;bottom:16px;min-width:170px;display:none}#hArmes #hMis{color:#ffe080;letter-spacing:.08em}
+.bandeau{position:absolute;left:50%;top:22%;transform:translateX(-50%);width:min(92vw,560px);background:rgba(22,16,36,.82);border:1px solid rgba(255,230,210,.3);border-radius:12px;color:#f0e8f8;font:12px/1.6 var(--titre);padding:12px 16px;letter-spacing:.08em;text-align:center;pointer-events:none;transition:opacity .4s;z-index:3}
+.bandeau b{display:block;font-weight:400;font-size:19px;letter-spacing:.1em;margin:4px 0;color:#ffd2a0}
+.tel.menu .hud{display:none}
+@media (hover:hover) and (pointer:fine){.hud{--hs:clamp(11px,1.05vw,15px)}#hObj{left:50%;top:12px;transform:translateX(-50%);width:clamp(260px,30vw,440px);text-align:center}#hArmes{display:block}#hG{min-width:clamp(160px,15vw,230px)}.barre{height:9px}.clavier{font-size:10px}.bandeau{font-size:clamp(12px,1.1vw,16px)}.bandeau b{font-size:clamp(19px,1.8vw,28px)}}
+/* briefing */
+.carte.brief{width:min(94vw,480px);text-align:left}
+.carte.brief .num{margin:0;font:11px var(--titre);color:#d8c8e8;letter-spacing:.12em;text-align:center}
+.carte.brief h2{text-align:center;font-size:24px}.carte.brief .titre-mission{margin:0;text-align:center;font:13px var(--titre);color:#9fd8ff;letter-spacing:.08em}
+.carte.brief ul{margin:4px 0;padding-left:20px;display:grid;gap:6px;font:15px/1.4 var(--texte);color:#ece4f4}
+.carte.brief .regle{margin:0;font:11px/1.9 var(--titre);color:#ffe080;background:rgba(0,0,0,.25);border-radius:8px;padding:8px 10px}

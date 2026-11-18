@@ -99,6 +99,11 @@ Historique des directions : *Escadrille pixel* (gros pixels, sprite dessiné), p
   5. **La forteresse** (le boss, le vaisseau-mère Léviathan) : un destroyer rouge de 300 m. 4 générateurs bleus (15 points de vie, verrouillables) protègent ses 6 tourelles (12 points de vie, étincelles bleues tant que le bouclier tient). Des chasseurs décollent de ses flancs (intercepteurs, puis furtifs). ★★★ sans perte en moins de 5 min.
 - **Moteur** : `navire()` crée les grands vaisseaux (flotte de fond et vaisseaux de mission `fixe`, sans retour devant le joueur). `ennemi(pos, dir, o)` prend des options (`bomb`, `escorte`, `fam`, `as`, `obj`) ; un ennemi qui a un objectif (`obj`) tourne autour et le vise, une salve toutes les 3 à 5 s (les chasseurs reviennent sur le joueur quand il passe à moins de 70 m). `escadre(n, o)` lance une formation. `objectif()` = une cible qui encaisse. `OBJ` = les objectifs montrés en bleu dans le viseur (cadre et nom, ou flèche au bord).
 - Équilibrage vérifié : le port laissé sans défense tient environ 45 s.
+- **Lisibilité** (18/11, retours de l'utilisateur : « le carré de verrouillage et son texte sont flous », « HUD sur PC à revoir », « missions et objectifs pas assez clairs ») :
+  - le calque du viseur est dessiné à la résolution de l'écran (`K` pixels par unité, `txt()` dans la police Silkscreen) : cadres, LOCK, MISSILE PRET et noms d'objectifs nets ;
+  - la tête d'écran passe en panneaux HTML : score, appareils et barre de blindage (verte, jaune, rouge) ; objectif (mission, consigne, jauge, info) ; canon et missiles (sur PC). Sur PC, l'objectif est en haut au centre et tout grandit avec l'écran ;
+  - un **briefing** avant chaque mission (but, objectifs en liste, règle des étoiles, DECOLLER) ; les annonces sont plus grandes, au centre ; les objectifs dans le viseur affichent leur distance.
+
 
 ## Plan des sessions (proposition)
 | Session | Contenu | Modèle |

@@ -8,4 +8,4 @@ Combat aérien 3D low poly. Cahier des charges : [`specs/ciel-de-guerre.md`](../
 - **Écrans** : `S.mode` = titre | jeu | pause | fin ; hors partie, pilote automatique et pas de dégâts.
 - **Missions** (`MISSIONS`, `MIS`, `majMission`, `finMission`) : `debut/maj/hud/etoiles/fin` ; `navire()`, `escadre()`, `objectif()`, `OBJ` (objectifs en bleu).
 - **Tests** : `window.CielDeGuerre` (`S`, `ennemis`, `nouvellePartie(i)` (mission i, ou rien = vagues), `mission`, `finMission(g)`, `abattu()`, `pause()`, `mode`, `vague`). Les `.glb` se chargent en `http://` (serveur local), pas en `file://`.
-- **Pièges** : la largeur du viseur suit le format (`OW = 320 × w / h`) ; tout ce qui dessine dans le viseur doit lire `OW`/`OH` ; double appui clavier : 0,3 s.
+- **Pièges** : viseur en unités `OW`×`OH` (320 de haut), dessiné ×`K` (résolution de l'écran) ; textes par `txt()` ; tête d'écran en HTML (`majHud`, `etat(M)` des missions) ; double appui clavier : 0,3 s.

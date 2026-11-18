@@ -13,7 +13,11 @@
 </head>
 <body>
 <div class="tel" id="t"><div class="charge" id="charge">CHARGEMENT…</div>
-<div class="hud" id="hud"></div>
+<div class="hud" id="hud">
+  <div class="pan" id="hG"><div class="l"><span>SCORE</span><b id="hScore">000000</b></div><div class="l"><span>APPAREILS</span><b id="hVies"></b></div><div class="barre vie"><i id="hBlind"></i></div></div>
+  <div class="pan obj" id="hObj"><span id="hObjNom"></span><b id="hObjTxt"></b><div class="barre" id="hObjB"><i id="hObjBar"></i></div><small id="hObjInfo"></small></div>
+  <div class="pan armes" id="hArmes"><div class="l"><span>CANON</span><b id="hCanon"></b></div><div class="l"><span>MISSILES</span><b id="hMis"></b></div></div>
+</div>
 <div class="bandeau" id="bandeau"></div>
 <div class="joy" id="joy"><i></i></div><div class="aidejoy" id="aidejoy">POUCE GAUCHE :<br>PILOTER</div>
 <div class="clavier" id="clavier"></div>
@@ -61,6 +65,18 @@
     <p class="sous">Chaque mission réussie ouvre la suivante. Trois étoiles : sans perdre d'appareil, et l'objectif bien tenu.</p>
     <div id="mListe"></div>
     <button id="mRetour">RETOUR</button>
+  </div>
+</div>
+<div class="ecran" id="eBrief" hidden>
+  <div class="carte brief">
+    <p class="num" id="bNum"></p>
+    <h2 id="bNom"></h2>
+    <p class="titre-mission" id="bTitre"></p>
+    <p class="sous" id="bTxt"></p>
+    <ul id="bButs"></ul>
+    <p class="regle" id="bEt"></p>
+    <button id="bGo" class="grand">DECOLLER</button>
+    <button id="bRetour">RETOUR</button>
   </div>
 </div>
 <div class="ecran" id="eAide" hidden>
