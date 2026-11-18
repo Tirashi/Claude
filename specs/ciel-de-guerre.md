@@ -84,6 +84,10 @@ Historique des directions : *Escadrille pixel* (gros pixels, sprite dessiné), p
 
   Désormais, plus de capture : le curseur (caché) est le viseur, et le réticule est dessous. Les balles, le verrouillage et le rayon de la caméra passent par lui, dans un cône de 35° autour du nez. Éloigner le curseur du centre de l'écran fait tourner, monter ou descendre (zone morte au centre, comme le joystick). Un point marque le curseur quand le réticule est bloqué au bord du cône. Si la souris sort de la fenêtre, l'appareil vole droit.
 - **Traînées des ailes** (18/11, retour de l'utilisateur : « pas au bon endroit suivant le vaisseau ») : elles partaient d'un point fixe (largeur du modèle, mi-hauteur) ; elles partent maintenant des vrais bouts d'ailes de chaque modèle (`bouts()` : moyenne des points les plus à gauche et à droite).
+- **Effets et commandes** (18/11, demande de l'utilisateur) :
+  - les traînées blanches n'apparaissent que pendant un looping, un tonneau ou une accélération (fondu à l'apparition et à la disparition, elles repartent de l'aile) ;
+  - au boost, la caméra recule de 6 m, puis revient en douceur ;
+  - sur téléphone, deux boutons ronds au-dessus de LOOP, **BOOST** et **FREIN**, à garder appuyés (comme Z et S sur PC), masqués sur PC.
 - **Artefact** : le jeu remplace la maquette au même lien (copie de 12,9 Mo avec les modèles en base64).
 
 ## Plan des sessions (proposition)

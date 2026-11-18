@@ -240,7 +240,7 @@ function modeleFam(f){const l=FAMILLES[f].l.map(i=>'py'+i);l.forEach(chargerMode
 const nav=new THREE.Group();let modele=construire(COULEURS[NOMS[choix]],true),moi=modele.g;moi.scale.setScalar(.66);nav.add(moi);sc.add(nav);versCalque(nav);
 const ombre=new THREE.Mesh(new THREE.CircleGeometry(2.6,8).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({color:'#3a2a50',transparent:true,opacity:.35,depthWrite:false}));sc.add(ombre);
 // traînées des ailes
-function trainee(){const n=60,pos=new Float32Array(n*3),g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(pos,3));const l=new THREE.Line(g,new THREE.LineBasicMaterial({color:'#ffffff',transparent:true,opacity:.9}));l.frustumCulled=false;sc.add(l);return{pos,g,n};}
+function trainee(){const n=60,pos=new Float32Array(n*3),g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(pos,3));const l=new THREE.Line(g,new THREE.LineBasicMaterial({color:'#ffffff',transparent:true,opacity:.9}));l.frustumCulled=false;l.visible=false;sc.add(l);return{pos,g,n,l,op:0};}
 const tr=[trainee(),trainee()];
 // grands vaisseaux au loin : deux flottes qui se croisent au-dessus du paysage en échangeant des tirs laser (décor : on ne peut pas les abattre)
 const FLOTTE=[],LASERS=[],CAP=.55;let TOURS=[];/* TOURS : tourelles rouges encore debout, cibles du joueur (balles, verrouillage des missiles) */{const camps=[['fga_destroyer2','fga_croiseur1','fga_destroyer4'],['fga_destroyer1','fga_croiseur2','fga_destroyer3','fga_croiseur4']];
@@ -342,6 +342,7 @@ el.addEventListener('pointermove',e=>{if(!S.doigt||e.pointerId!==S.doigt.id)retu
   bille.style.transform=`translate(${dx}px,${dy}px)`;const zm=v=>Math.sign(v)*Math.max(0,Math.abs(v)-.12)/.88;S.dx=zm(dx/RJ);S.dy=zm(dy/RJ);/* zone morte au centre, puis réponse douce */});
 const lacher=e=>{if(!S.doigt||e.pointerId!==S.doigt.id)return;S.doigt=null;S.dx=S.dy=0;joy.classList.remove('on');manuel();};el.addEventListener('pointerup',lacher);el.addEventListener('pointercancel',lacher);
 const bouton=(id,f)=>{const b=document.getElementById(id);b.addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault();manuel(5000);f(true,b);});b.addEventListener('pointerup',e=>{e.stopPropagation();f(false,b);});b.addEventListener('pointerleave',()=>f(false,b));b.addEventListener('contextmenu',e=>e.preventDefault());};
+bouton('bBoost',(d,b)=>{TOUCHES.acc=d?1:0;b.classList.toggle('on',d);});bouton('bFrein',(d,b)=>{TOUCHES.frein=d?1:0;b.classList.toggle('on',d);});/* téléphone : accélérer et freiner en gardant le doigt */
 bouton('bLoop',d=>{if(d&&S.loopT<0)S.loopT=0;});bouton('bAvion',d=>{if(d)ouvrirHangar();});bouton('bRoll',d=>{if(d)tonneau();});bouton('bVue',d=>{if(d)S.vue=(S.vue+1)%2;});
 bouton('bTir',(d,b)=>{S.tir=d;b.classList.toggle('on',d);if(d)manuel(1e9);else manuel();});
 // clavier (PC) : AZERTY et QWERTY ; les directions agissent comme un joystick qu'on pousse progressivement
@@ -393,12 +394,13 @@ function image(m){const dt=Math.min(.05,(m-av)/1000);av=m;requestAnimationFrame(
   if(S.rollT>=0){S.rollT+=dt/.8;S.roll=(S.rollT<1?(1-Math.cos(S.rollT*Math.PI))/2:1)*Math.PI*2*S.rollD;if(S.rollT>=1){S.rollT=-1;S.roll=0;}}
   E.set(S.pitch,S.yaw,S.bank+S.roll);Q.setFromEuler(E);nav.quaternion.copy(Q);
   const fwd=new THREE.Vector3(0,0,-1).applyQuaternion(Q);S.fwd=fwd;const up=new THREE.Vector3(0,1,0).applyQuaternion(new THREE.Quaternion().setFromEuler(new THREE.Euler(S.pitch,S.yaw,0,'YXZ')));
-  if(TOUCHES.acc)S.boost=Math.max(S.boost,.05);const v=S.v*FAM().v*(S.boost>0?1.7:1)*(TOUCHES.frein?.62:1);S.boost-=dt;S.p.addScaledVector(fwd,v*dt);
+  if(TOUCHES.acc)S.boost=Math.max(S.boost,.05);S.accel=S.boost>0;const v=S.v*FAM().v*(S.accel?1.7:1)*(TOUCHES.frein?.62:1);S.boost-=dt;S.p.addScaledVector(fwd,v*dt);
   {const gl=(TOUCHES.ecd||0)-(TOUCHES.ecg||0)+(S.souris&&S.rollT>=0?S.rollD*-1.4:0);if(gl){S.p.x+=Math.cos(S.yaw)*gl*22*dt;S.p.z-=Math.sin(S.yaw)*gl*22*dt;}S.ecart=gl;}/* écart de côté (Q, D) et pendant le tonneau à la souris */const sol=Math.max(0,H(S.p.x,S.p.z));if(S.p.y<sol+4){S.p.y=sol+4;if(S.loopT<0)S.pitch=Math.max(S.pitch,.2);}
-  nav.position.copy(S.p);animeFlammes(modele.flammes,S.boost>0);if(modele.helice)modele.helice.rotation.z+=dt*40;if(modele.helices)for(const h of modele.helices)h.rotation.x+=dt*38;/* hélices des avions importés : elles tournent autour de l'axe du nez */
+  nav.position.copy(S.p);animeFlammes(modele.flammes,S.accel);if(modele.helice)modele.helice.rotation.z+=dt*40;if(modele.helices)for(const h of modele.helices)h.rotation.x+=dt*38;/* hélices des avions importés : elles tournent autour de l'axe du nez */
   ombre.position.set(S.p.x,sol+.3,S.p.z);ombre.material.opacity=Math.max(0,.35-(S.p.y-sol)*.004);
   // traînées
-  for(const[k,t]of tr.entries()){t.pos.copyWithin(3,0,(t.n-1)*3);const bt=modele.bouts?modele.bouts[k]:[(k?1:-1)*modele.env,0,1];const w=new THREE.Vector3(bt[0]*.66,bt[1]*.66,bt[2]*.66).applyQuaternion(Q).add(S.p);/* traînée au bout de l'aile du modèle */t.pos[0]=w.x;t.pos[1]=w.y;t.pos[2]=w.z;if(S.t<.1)for(let i=0;i<t.n;i++)t.pos.set([w.x,w.y,w.z],i*3);t.g.attributes.position.needsUpdate=true;}
+  const trActif=S.loopT>=0||S.rollT>=0||S.accel;/* traînées : seulement pendant un looping, un tonneau ou une accélération */
+  for(const[k,t]of tr.entries()){const neuve=trActif&&t.op<.02;t.op+=((trActif?.9:0)-t.op)*Math.min(1,dt*(trActif?6:2.5));t.l.material.opacity=t.op;t.l.visible=t.op>.01;t.pos.copyWithin(3,0,(t.n-1)*3);const bt=modele.bouts?modele.bouts[k]:[(k?1:-1)*modele.env,0,1];const w=new THREE.Vector3(bt[0]*.66,bt[1]*.66,bt[2]*.66).applyQuaternion(Q).add(S.p);/* traînée au bout de l'aile du modèle */t.pos[0]=w.x;t.pos[1]=w.y;t.pos[2]=w.z;if(S.t<.1||neuve)for(let i=0;i<t.n;i++)t.pos.set([w.x,w.y,w.z],i*3);/* elle repart de l'aile, pas d'un vieux tracé */t.g.attributes.position.needsUpdate=true;}
   // canon
   if(S.tir&&S.munB>0&&(S.cad=(S.cad||0)-dt)<=0){S.cad=.07;S.munB--;S.canon=-(S.canon||1);/* deux canons, un coup chacun */const vis=visee(fwd);const b=new THREE.Mesh(GEO_BALLE,MAT_BALLE);b.position.copy(S.p).addScaledVector(fwd,3).add(new THREE.Vector3(S.canon*modele.env*.3,0,0).applyQuaternion(Q));b.lookAt(b.position.clone().add(vis));sc.add(b);balles.push({b,v:vis.clone().multiplyScalar(v+160),t:1.1});}
   for(const b of balles){b.t-=dt;b.b.position.addScaledVector(b.v,dt);for(const e of ennemis)if(e.vie>0&&b.b.position.distanceTo(e.g.position)<e.rayon){b.t=0;e.vie--;if(e.vie<=0){boom(e.g.position);sc.remove(e.g);S.score+=100;}}
@@ -454,7 +456,7 @@ function image(m){const dt=Math.min(.05,(m-av)/1000);av=m;requestAnimationFrame(
   majCarreaux(S.p.x,S.p.z);mer.position.x=S.p.x;mer.position.z=S.p.z;
   // caméra derrière l'avion
   // caméra derrière l'avion : elle suit son orientation par une vraie rotation (slerp), même sur le dos pendant un looping
-  const loin=S.vue?30:17,haut=S.vue?8:3.8;const qc=new THREE.Quaternion().setFromEuler(new THREE.Euler(S.pitch-.1,S.yaw,0,'YXZ'));
+  S.recul=(S.recul||0)+(((S.accel&&S.mode==='jeu')?6:0)-(S.recul||0))*Math.min(1,dt*2.2);const loin=(S.vue?30:17)+S.recul,haut=(S.vue?8:3.8)+S.recul*.15;/* au boost, la caméra recule un peu */const qc=new THREE.Quaternion().setFromEuler(new THREE.Euler(S.pitch-.1,S.yaw,0,'YXZ'));
   if(!S.qc)S.qc=qc.clone();S.qc.slerp(qc,Math.min(1,dt*(S.loopT>=0?8:5)));
   const cp=S.p.clone().add(new THREE.Vector3(0,haut,loin).applyQuaternion(S.qc));const solC=Math.max(0,H(cp.x,cp.z))+2;if(cp.y<solC)cp.y=solC;
   cam.position.copy(cp);cam.quaternion.copy(S.qc);ciel.position.copy(cam.position);

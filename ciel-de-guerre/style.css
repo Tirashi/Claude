@@ -51,5 +51,7 @@ html,body{margin:0;height:100%;background:#1a1424;overflow:hidden;overscroll-beh
 .hangar{z-index:6}
 @media (min-width:900px) and (pointer:fine){.carte{width:420px}.hud{font-size:13px}}
 @media (min-width:700px){.hangar{left:50%;right:auto;width:540px;transform:translateX(-50%)}}
-@media (hover:hover) and (pointer:fine){#bTir,#bMis,#bLoop,#bRoll{display:none}}
+@media (hover:hover) and (pointer:fine){#bTir,#bMis,#bLoop,#bRoll,#bBoost,#bFrein{display:none}}
 .tel.souris:not(.menu){cursor:none}
+#bBoost{width:48px;height:48px;right:28px;bottom:184px;font-size:8px;background:rgba(46,110,200,.55);border-color:#a8e2ff}
+#bFrein{width:48px;height:48px;right:94px;bottom:162px;font-size:8px}
