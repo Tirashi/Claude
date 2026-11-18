@@ -243,27 +243,32 @@ const ombre=new THREE.Mesh(new THREE.CircleGeometry(2.6,8).rotateX(-Math.PI/2),n
 function trainee(){const n=60,pos=new Float32Array(n*3),g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(pos,3));const l=new THREE.Line(g,new THREE.LineBasicMaterial({color:'#ffffff',transparent:true,opacity:.9}));l.frustumCulled=false;l.visible=false;sc.add(l);return{pos,g,n,l,op:0};}
 const tr=[trainee(),trainee()];
 // grands vaisseaux au loin : deux flottes qui se croisent au-dessus du paysage en échangeant des tirs laser (décor : on ne peut pas les abattre)
-const FLOTTE=[],LASERS=[],CAP=.55;let TOURS=[];/* TOURS : tourelles rouges encore debout, cibles du joueur (balles, verrouillage des missiles) */{const camps=[['fga_destroyer2','fga_croiseur1','fga_destroyer4'],['fga_destroyer1','fga_croiseur2','fga_destroyer3','fga_croiseur4']];
-  camps.forEach((l,camp)=>l.forEach((cle,i)=>{const lg=cle.includes('destroyer')?120:85;const r=importe(cle,-Math.PI/2,lg);const s=camp?-1:1;
-    const fl=[];for(const t of r.tuyeres()){const f=flamme(lg*.022,camp?'r':'b',true);f.position.set(t[0],t[1],t[2]-lg*.01);r.g.add(f);fl.push(f);}
-    const yaw=CAP+(camp?Math.PI:0);r.g.rotation.order='YXZ';r.g.rotation.y=yaw;sc.add(r.g);
-    FLOTTE.push({g:r.g,camp,lg,yaw,fl,tourelles:r.tourelles.map(o=>({o,cad:Math.random()*2,c:null,cible:camp?{g:new THREE.Object3D(),vie:8,rayon:4,tour:1}:null})),base:new THREE.Vector3(),v:9+Math.random()*3,ph:Math.random()*6,neuf:1});}));}
+const FLOTTE=[],LASERS=[],CAP=.55;let TOURS=[];/* TOURS : tourelles rouges (et générateurs de bouclier) encore debout, cibles du joueur (balles, verrouillage des missiles) */
+// un grand vaisseau : o.fixe = placé par une mission (il ne revient pas devant le joueur), o.vieT = vie de ses tourelles, o.bouclier = générateurs qui protègent ses tourelles
+function navire(cle,camp,lg,o={}){const r=importe(cle,-Math.PI/2,lg);
+  const fl=[];for(const t of r.tuyeres()){const f=flamme(lg*.022,camp?'r':'b',true);f.position.set(t[0],t[1],t[2]-lg*.01);r.g.add(f);fl.push(f);}
+  const yaw=o.yaw!==undefined?o.yaw:CAP+(camp?Math.PI:0);r.g.rotation.order='YXZ';r.g.rotation.y=yaw;sc.add(r.g);const vieT=o.vieT||8;
+  const n={g:r.g,camp,lg,yaw,fl,vieT,fixe:!!o.fixe,tourelles:r.tourelles.map(t=>({o:t,cad:Math.random()*2,c:null,cible:camp?{g:new THREE.Object3D(),vie:vieT,rayon:4,tour:1}:null})),base:o.base?o.base.clone():new THREE.Vector3(),v:o.v!==undefined?o.v:9+Math.random()*3,ph:Math.random()*6,neuf:o.fixe?0:1};
+  FLOTTE.push(n);return n;}
+function retirerNavire(n){sc.remove(n.g);const i=FLOTTE.indexOf(n);if(i>=0)FLOTTE.splice(i,1);}
+[['fga_destroyer2','fga_croiseur1','fga_destroyer4'],['fga_destroyer1','fga_croiseur2','fga_destroyer3','fga_croiseur4']].forEach((l,camp)=>l.forEach(cle=>navire(cle,camp,cle.includes('destroyer')?120:85)));
 function fumee(p,n){for(let i=0;i<n;i++){const f=new THREE.Mesh(new THREE.BoxGeometry(2.2,2.2,2.2),new THREE.MeshBasicMaterial({color:i%2?'#3a3240':'#5a4e5e',transparent:true,opacity:.8}));f.position.copy(p).add(new THREE.Vector3((Math.random()-.5)*3,Math.random()*2,(Math.random()-.5)*3));sc.add(f);eclats.push({s:f,v:new THREE.Vector3((Math.random()-.5)*2,4+Math.random()*3,(Math.random()-.5)*2),t:1.6,fum:1});}}
 function flotte(dt){for(const n of FLOTTE){n.ph+=dt;if(!n.neuf)animeFlammes(n.fl,false);const d=new THREE.Vector3(-Math.sin(n.yaw),0,-Math.cos(n.yaw));n.base.addScaledVector(d,n.v*dt);
     if(n.chute){/* toutes ses tourelles détruites : il prend feu, pique du nez et tombe */n.chute+=dt;n.base.y-=dt*(4+n.chute*5);n.g.rotation.z+=dt*.12*(n.camp?1:-1);n.g.rotation.x=Math.min(.35,n.chute*.06);n.boomT=(n.boomT||0)-dt;
       if(n.boomT<=0){n.boomT=.12+Math.random()*.2;const p=n.g.position.clone().add(new THREE.Vector3((Math.random()-.5)*n.lg*.3,(Math.random()-.3)*n.lg*.08,(Math.random()-.5)*n.lg*.6).applyQuaternion(n.g.quaternion));boom(p,10+Math.random()*10|0);fumee(p,3);}
-      n.g.position.set(n.base.x,n.base.y,n.base.z);if(n.base.y<H(n.base.x,n.base.z)-10||n.chute>9){boom(n.g.position,40);n.neuf=1;n.g.rotation.x=0;}continue;}
-    const rel=n.base.clone().sub(S.p);rel.y=0;if(n.neuf||rel.length()>560){/* trop loin : il revient devant le joueur, dans la brume */
-      const a=S.yaw+(Math.random()-.5)*(n.neuf?2.4:1.6),dist=n.neuf?180+Math.random()*320:460+Math.random()*60;n.base.set(S.p.x-Math.sin(a)*dist,62+Math.random()*55,S.p.z-Math.cos(a)*dist);n.neuf=0;n.chute=0;for(const t of n.tourelles){t.o.visible=true;t.mort=0;if(t.cible)t.cible.vie=8;}
+      n.g.position.set(n.base.x,n.base.y,n.base.z);if(n.base.y<H(n.base.x,n.base.z)-10||n.chute>9){boom(n.g.position,40);n.g.rotation.x=0;if(n.fixe){n.g.visible=false;n.coule=1;}else n.neuf=1;}continue;}
+    if(n.coule)continue;const rel=n.base.clone().sub(S.p);rel.y=0;if(!n.fixe&&(n.neuf||rel.length()>560)){/* trop loin : il revient devant le joueur, dans la brume */
+      const a=S.yaw+(Math.random()-.5)*(n.neuf?2.4:1.6),dist=n.neuf?180+Math.random()*320:460+Math.random()*60;n.base.set(S.p.x-Math.sin(a)*dist,62+Math.random()*55,S.p.z-Math.cos(a)*dist);n.neuf=0;n.chute=0;for(const t of n.tourelles){t.o.visible=true;t.mort=0;if(t.cible)t.cible.vie=n.vieT;}
       for(const m of FLOTTE)if(m!==n&&m.base.distanceTo(n.base)<m.lg*.9+n.lg*.9){n.neuf=1;break;}}/* pas l'un dans l'autre : on retire au prochain coup */
     const x=n.base.x,z=n.base.z;n.g.position.set(x,Math.max(n.base.y,H(x,z)+45)+Math.sin(n.ph*.4)*3,z);n.g.rotation.z=Math.sin(n.ph*.3)*.03;n.g.rotation.x=0;n.g.visible=!n.neuf;}
   // tourelles : chacune choisit une cible (vaisseau ennemi ; les rouges visent aussi le joueur s'il passe près, les bleus les chasseurs ennemis), pivote vers elle et tire du bout de ses canons
   const loc=new THREE.Vector3(),bout=new THREE.Vector3();
   TOURS=[];
-  for(const n of FLOTTE){if(n.neuf||n.chute)continue;for(const t of n.tourelles){t.cad-=dt;
+  for(const n of FLOTTE){if(n.neuf||n.chute||n.coule)continue;for(const t of n.tourelles){t.cad-=dt;
       if(t.cible){t.o.getWorldPosition(t.cible.g.position);if(!t.r){t.r=1;t.cible.rayon=Math.max(3.5,Math.hypot(...t.o.userData.bout)*t.o.getWorldScale(loc).x*.75);}
+        if(n.bouclier>0&&!t.mort&&t.cible.vie<n.vieT){t.cible.vie=n.vieT;boom(t.cible.g.position,4,['#9fe8ff','#ffffff']);}/* bouclier : la tourelle ne prend pas de dégâts */
         if(t.cible.vie<=0&&!t.mort){t.mort=1;t.o.visible=false;boom(t.cible.g.position,28);fumee(t.cible.g.position,6);S.score+=300;
-          if(n.tourelles.every(u=>u.mort)){n.chute=.01;S.score+=2000;annonce(`VAISSEAU ABATTU<b>+2000</b>Toutes ses tourelles sont détruites`);}}
+          if(n.tourelles.every(u=>u.mort)){n.chute=.01;S.score+=2000;if(!n.fixe)annonce(`VAISSEAU ABATTU<b>+2000</b>Toutes ses tourelles sont détruites`);}}
         if(t.mort){if(Math.random()<dt*4)fumee(t.cible.g.position,1);continue;}/* une tourelle détruite fume */
         TOURS.push(t.cible);}
       if(!t.c||t.cad<-3||(t.c.n&&t.c.n.neuf)||(t.c.e&&t.c.e.vie<=0)){t.c=null;const op=t.o.getWorldPosition(loc).clone();const choix=[];
@@ -285,10 +290,10 @@ function flotte(dt){for(const n of FLOTTE){n.ph+=dt;if(!n.neuf)animeFlammes(n.fl
   for(let k=LASERS.length-1;k>=0;k--)if(LASERS[k].t<=0){sc.remove(LASERS[k].m);LASERS.splice(k,1);}}
 // ennemis
 const ennemis=[];
-function ennemi(pos,dir){const g=new THREE.Group();const as=V.n>=4&&Math.random()<.3,bomb=!as&&V.n>=3&&Math.random()<.22;
-  const escorte=bomb&&V.n>=4&&Math.random()<.4;const famE=bomb?null:as?(V.n>=5&&Math.random()<.6?'furtif':'inter'):V.n<=2?'poly':(V.n<=4?['poly','poly','inter','lourd']:['poly','inter','lourd','lourd','furtif'])[Math.random()*(V.n<=4?4:5)|0];/* les escadrilles ennemies : polyvalents au début, puis intercepteurs et lourds ; les as sur des intercepteurs ou des furtifs */const mr=construire(!bomb?COULEURS[modeleFam(famE)]:escorte?{m:'import',cle:'fga_fregate'+(1+Math.random()*5|0)+'_r',rot:-Math.PI/2,taille:6.4}:bomb?(n=>({m:'import',cle:'fga_corvette'+n+'_r',rot:-Math.PI/2,taille:6.4,coupe:CORV_COUPE[n]}))(1+Math.random()*5|0):as?ROUGE.vipere:ROUGE.faucon,true,'r'),m=mr.g;/* bombardiers : corvettes rouges ; escorteurs : frégates rouges */
+function ennemi(pos,dir,o={}){const g=new THREE.Group();const as=o.as!==undefined?!!o.as:V.n>=4&&Math.random()<.3,bomb=o.bomb!==undefined?!!o.bomb:!as&&V.n>=3&&Math.random()<.22;
+  const escorte=o.escorte!==undefined?bomb&&!!o.escorte:bomb&&V.n>=4&&Math.random()<.4;const famE=bomb?null:o.fam?o.fam:as?(V.n>=5&&Math.random()<.6?'furtif':'inter'):V.n<=2?'poly':(V.n<=4?['poly','poly','inter','lourd']:['poly','inter','lourd','lourd','furtif'])[Math.random()*(V.n<=4?4:5)|0];/* les escadrilles ennemies : polyvalents au début, puis intercepteurs et lourds ; les as sur des intercepteurs ou des furtifs */const mr=construire(!bomb?COULEURS[modeleFam(famE)]:escorte?{m:'import',cle:'fga_fregate'+(1+Math.random()*5|0)+'_r',rot:-Math.PI/2,taille:6.4}:bomb?(n=>({m:'import',cle:'fga_corvette'+n+'_r',rot:-Math.PI/2,taille:6.4,coupe:CORV_COUPE[n]}))(1+Math.random()*5|0):as?ROUGE.vipere:ROUGE.faucon,true,'r'),m=mr.g;/* bombardiers : corvettes rouges ; escorteurs : frégates rouges */
   if(bomb)m.scale.setScalar(escorte?2.8:2.2);m.rotation.y=Math.PI;g.add(m);versCalque(g);sc.add(g);g.position.copy(pos);
-  const roles=['tournoi','tournoi','chasse','passe'];const role=roles[Math.random()*roles.length|0];const e={g,as,bomb,fam:famE,fl:mr.flammes,rayon:bomb?(escorte?12:9):4.6,roleDepart:bomb?'bombardier':role,ph:Math.random()*6,r:18+Math.random()*28,vie:escorte?18:bomb?10:(as?2:0)+FAMILLES[famE].vie,etat:'arrivee',role:bomb?'bombardier':role,v:dir.clone().multiplyScalar(58),t:0,tirT:2+Math.random()*2,vise:0,jink:null};ennemis.push(e);return e;}
+  const roles=['tournoi','tournoi','chasse','passe'];const role=o.obj&&!bomb?'assaut':o.role||roles[Math.random()*roles.length|0];const e={g,as,bomb,fam:famE,fl:mr.flammes,rayon:bomb?(escorte?12:9):4.6,roleDepart:bomb?'bombardier':role,ph:Math.random()*6,r:18+Math.random()*28,vie:escorte?18:bomb?10:(as?2:0)+FAMILLES[famE].vie,etat:'arrivee',role:bomb?'bombardier':role,v:dir.clone().multiplyScalar(58),t:0,tirT:2+Math.random()*2,vise:0,jink:null,obj:o.obj||null};ennemis.push(e);return e;}
 const tirsEnnemis=[];
 // projectiles : géométries et matériaux partagés (traçantes fines)
 const GEO_BALLE=new THREE.BoxGeometry(.16,.16,4.2),MAT_BALLE=new THREE.MeshBasicMaterial({color:'#fff3b0',fog:false}),GEO_TIR=new THREE.BoxGeometry(.28,.28,2.8),MAT_TIR=new THREE.MeshBasicMaterial({color:'#ff6040',fog:false}),GEO_FUM=new THREE.IcosahedronGeometry(1,0);
@@ -317,7 +322,7 @@ function changerAvion(){choisir((choix+1)%NOMS.length);}
 document.getElementById('charge').remove();
 // pilotage
 const S={cx:0,cy:0,mode:'titre',vies:3,dx:0,dy:0,blindage:100,p:new THREE.Vector3(0,40,0),yaw:0,pitch:0,bank:0,roll:0,rollT:-1,loopT:-1,v:46,boost:0,auto:true,doigt:null,dernier:0,vue:0,tir:false,munB:300,munM:5,t:0,score:0};
-S.munM=FAM().mis;const Q=new THREE.Quaternion(),E=new THREE.Euler(0,0,0,'YXZ');window.CielDeGuerre={S,get ennemis(){return ennemis;},FLOTTE,nouvellePartie:()=>nouvellePartie(),abattu:()=>abattu(),pause:()=>pause(),reprendre:()=>reprendre(),get mode(){return S.mode;},get vague(){return V.n;}};/* pour les tests */
+S.munM=FAM().mis;const Q=new THREE.Quaternion(),E=new THREE.Euler(0,0,0,'YXZ');window.CielDeGuerre={S,get ennemis(){return ennemis;},FLOTTE,nouvellePartie:d=>nouvellePartie(typeof d==='number'?MISSIONS[d]:d||null),get mission(){return MIS;},get missions(){return MISSIONS;},finMission:g=>finMission(g),abattu:()=>abattu(),pause:()=>pause(),reprendre:()=>reprendre(),get mode(){return S.mode;},get vague(){return V.n;}};/* pour les tests */
 // visée : au doigt et au clavier, droit devant ; à la souris, là où est le curseur (le rayon de la caméra à travers lui),
 // ramené dans un cône de 35° autour du nez : le réticule est sous le curseur, les balles partent vers lui
 const CONE=.6;function visee(fwd){if(!S.souris||S.auto||S.mode!=='jeu'||S.loopT>=0){S.horsCone=false;return fwd;}
@@ -364,7 +369,7 @@ bouton('bMis',d=>{if(!d||S.munM<=0)return;S.munM--;const c=LOCK.e&&LOCK.t>=LOCK.
 
 let av=performance.now(),vu=false;new IntersectionObserver(es=>vu=es[0].isIntersecting).observe(el);band.style.opacity=0;
 // les vagues : une formation en V arrive de face, fonce sur le joueur, puis se disperse pour le combat
-const V={n:0,pause:4,flash:0};const annonce=(h)=>{band.innerHTML=h;band.style.opacity=1;clearTimeout(V.to);V.to=setTimeout(()=>band.style.opacity=0,2600);};
+const V={n:0,pause:4,flash:0};const annonce=(h,ms=2600)=>{band.innerHTML=h;band.style.opacity=1;clearTimeout(V.to);V.to=setTimeout(()=>band.style.opacity=0,ms);};
 const MOTIFS=[{nom:'DE FACE',ang:[0]},{nom:'PAR DERRIERE !',ang:[Math.PI]},{nom:'SUR LES FLANCS',ang:[Math.PI/2,-Math.PI/2]},
   {nom:'PAR LE DESSUS',ang:[.35,-.35],dy:70},{nom:'ENCERCLES !',ang:[0,Math.PI*2/3,-Math.PI*2/3]},{nom:'EN DEUX TEMPS',ang:[0,Math.PI],decale:6}];
 V.file=[];
@@ -415,12 +420,13 @@ function image(m){const dt=Math.min(.05,(m-av)/1000);av=m;requestAnimationFrame(
   for(let i=eclats.length-1;i>=0;i--)if(eclats[i].t<=0){sc.remove(eclats[i].s);eclats.splice(i,1);}
   // ennemis : arrivée en formation, puis combat tournoyant devant le joueur ; ils tirent
   for(let k=ennemis.length-1;k>=0;k--)if(ennemis[k].vie<=0)ennemis.splice(k,1);
-  for(const f of V.file)f.t-=dt;for(let k=V.file.length-1;k>=0;k--)if(V.file[k].t<=0){const f=V.file[k];ennemi(f.p,f.v);V.file.splice(k,1);}
-  if(S.mode==='jeu'&&!ennemis.length&&!V.file.length){V.pause-=dt;if(V.pause<=0){V.pause=4;vague();}else if(V.n&&!V.fin){V.fin=1;annonce(`VAGUE ${V.n} TERMINEE<b>+${V.n*500}</b>Prochaine vague…`);S.score+=V.n*500;S.blindage=Math.min(100,S.blindage+30);}}else V.fin=0;
+  for(const f of V.file)f.t-=dt;for(let k=V.file.length-1;k>=0;k--)if(V.file[k].t<=0){const f=V.file[k];ennemi(f.p,f.v,f.o);V.file.splice(k,1);}
+  if(S.mode==='jeu'&&!MIS&&!ennemis.length&&!V.file.length){V.pause-=dt;if(V.pause<=0){V.pause=4;vague();}else if(V.n&&!V.fin){V.fin=1;annonce(`VAGUE ${V.n} TERMINEE<b>+${V.n*500}</b>Prochaine vague…`);S.score+=V.n*500;S.blindage=Math.min(100,S.blindage+30);}}else V.fin=0;
   const fh=new THREE.Vector3(fwd.x,0,fwd.z).normalize(),lat=new THREE.Vector3(-fh.z,0,fh.x);
   for(const e of ennemis){e.t+=dt;e.ph+=dt*(e.as?.8:.5);let cible;const dpl=e.g.position.distanceTo(S.p);
     if(e.etat==='combat'){e.tcomb=(e.tcomb||0)+dt;if(e.tcomb>25&&!e.las){e.las=1;e.role='tournoi';e.roleDepart='tournoi';e.r=Math.min(e.r,25);}}
     if(e.etat==='arrivee'){cible=e.g.position.clone().addScaledVector(e.v,1);if(e.t>3.4||dpl<50)e.etat='combat';}
+    else if(e.obj&&e.obj.vie>0&&(e.bomb||dpl>70)){const ob=e.obj.pos,a=e.ph*(e.bomb?.35:.6),r=e.bomb?60:75;cible=new THREE.Vector3(ob.x+Math.cos(a)*r,Math.max(ob.y+(e.bomb?35:18),H(ob.x,ob.z)+30),ob.z+Math.sin(a)*r);}
     else if(e.role==='bombardier'){if(!e.cap||e.g.position.distanceTo(e.cap)<40){const a=Math.random()*6.28;e.cap=S.p.clone().add(new THREE.Vector3(Math.cos(a)*220,0,Math.sin(a)*220));e.cap.y=Math.max(45,S.p.y+20);}cible=e.cap.clone();}
     else if(e.role==='chasse'){e.tc=(e.tc||0)+dt;cible=S.p.clone().addScaledVector(fwd,Math.min(25,dpl*.3));
       const devant=e.g.position.clone().sub(S.p).dot(fwd)>8;   // il a dépassé le joueur : il est devant lui, donc visible
@@ -443,15 +449,15 @@ function image(m){const dt=Math.min(.05,(m-av)/1000);av=m;requestAnimationFrame(
     {const l=e.v.length(),m=l*.55;if(Math.abs(e.v.y)>m){e.v.y=Math.sign(e.v.y)*m;const h=Math.sqrt(l*l-m*m),hx=Math.hypot(e.v.x,e.v.z)||1;e.v.x*=h/hx;e.v.z*=h/hx;}}/* pente limitée à 33° : ils ne peuvent pas suivre un looping */
     e.g.position.addScaledVector(e.v,dt);{const sol=Math.max(0,H(e.g.position.x,e.g.position.z))+6;if(e.g.position.y<sol){e.g.position.y=sol;if(e.v.y<0)e.v.y*=-.3;}}/* jamais sous l'eau ni dans le relief */
     animeFlammes(e.fl,false);if(e.v.lengthSq()>1){e.g.lookAt(e.g.position.clone().add(e.v));e.g.rotateZ(Math.sin(e.ph*1.3)*.7);}
-    e.tirT-=dt;const d=S.p.clone().sub(e.g.position);if(e.tirT<=0&&d.length()<(e.bomb?150:140)*(FAM().discret||1)&&(e.bomb||e.v.angleTo(d)<.45)){e.tirT=1.6+Math.random()*2.2;const vise=S.p.clone().addScaledVector(fwd,S.v*d.length()/120).sub(e.g.position).normalize();
-      for(let q=0;q<2;q++){const b=new THREE.Mesh(GEO_TIR,MAT_TIR);b.position.copy(e.g.position).addScaledVector(vise,3+q*3);b.lookAt(b.position.clone().add(vise));sc.add(b);tirsEnnemis.push({b,v:vise.clone().multiplyScalar(120),t:1.6});}}}
-  for(const b of tirsEnnemis){b.t-=dt;b.b.position.addScaledVector(b.v,dt);if(b.b.position.distanceTo(S.p)<2.6&&S.rollT<0&&S.mode==='jeu'){b.t=0;S.blindage-=7/FAM().bli;V.flash=.15;
+    e.tirT-=dt;const surObj=!!(e.obj&&e.obj.vie>0&&(e.bomb||dpl>70)),T=surObj?e.obj.pos:S.p,d=T.clone().sub(e.g.position);if(e.tirT<=0&&d.length()<(surObj?180:(e.bomb?150:140)*(FAM().discret||1))&&(e.bomb||surObj||e.v.angleTo(d)<.45)){e.tirT=surObj?3+Math.random()*2:1.6+Math.random()*2.2;/* sur un objectif : une salve toutes les 3 à 5 s */const vise=surObj?d.clone().normalize():S.p.clone().addScaledVector(fwd,S.v*d.length()/120).sub(e.g.position).normalize();
+      for(let q=0;q<2;q++){const b=new THREE.Mesh(GEO_TIR,MAT_TIR);b.position.copy(e.g.position).addScaledVector(vise,3+q*3);b.lookAt(b.position.clone().add(vise));sc.add(b);tirsEnnemis.push({b,v:vise.clone().multiplyScalar(120),t:surObj?1.8:1.6,obj:surObj?e.obj:null});}}}
+  for(const b of tirsEnnemis){b.t-=dt;b.b.position.addScaledVector(b.v,dt);if(b.obj){if(b.obj.vie>0&&b.b.position.distanceTo(b.obj.pos)<b.obj.r){b.t=0;b.obj.touche(b.obj.deg||3,b.b.position);}continue;}if(b.b.position.distanceTo(S.p)<2.6&&S.rollT<0&&S.mode==='jeu'){b.t=0;S.blindage-=7/FAM().bli;V.flash=.15;
       if(S.blindage<=0)abattu();}}
   for(let k=tirsEnnemis.length-1;k>=0;k--)if(tirsEnnemis[k].t<=0){sc.remove(tirsEnnemis[k].b);tirsEnnemis.splice(k,1);}
   V.flash-=dt;el.style.boxShadow=V.flash>0?'inset 0 0 0 6px rgba(226,104,46,.85)':'none';
   // nuages
   for(const n of nuages){const u=n.userData;let x=u.dx,z=u.dz;x=((x-S.p.x)%1100+1650)%1100-550+S.p.x;z=((z-S.p.z)%1100+1650)%1100-550+S.p.z;n.position.set(x,u.y,z);}
-  flotte(dt);
+  flotte(dt);if(MIS&&S.mode==='jeu')majMission(dt);
   matSol.uniforms.temps.value=S.t;matCiel.uniforms.temps.value=S.t;
   majCarreaux(S.p.x,S.p.z);mer.position.x=S.p.x;mer.position.z=S.p.z;
   // caméra derrière l'avion
@@ -460,7 +466,7 @@ function image(m){const dt=Math.min(.05,(m-av)/1000);av=m;requestAnimationFrame(
   if(!S.qc)S.qc=qc.clone();S.qc.slerp(qc,Math.min(1,dt*(S.loopT>=0?8:5)));
   const cp=S.p.clone().add(new THREE.Vector3(0,haut,loin).applyQuaternion(S.qc));const solC=Math.max(0,H(cp.x,cp.z))+2;if(cp.y<solC)cp.y=solC;
   cam.position.copy(cp);cam.quaternion.copy(S.qc);ciel.position.copy(cam.position);
-  hud.innerHTML=`SCORE ${String(S.score).padStart(6,'0')} · ${'✈'.repeat(Math.max(0,S.vies))}<br>VAGUE ${V.n} · ENNEMIS ${ennemis.length}<br>BLINDAGE ${'▮'.repeat(Math.ceil(S.blindage/10))}${'▯'.repeat(10-Math.ceil(S.blindage/10))}`;document.getElementById('nTir').textContent=S.munB;document.getElementById('nMis').textContent='▮'.repeat(S.munM)||'—';
+  hud.innerHTML=`SCORE ${String(S.score).padStart(6,'0')} · ${'✈'.repeat(Math.max(0,S.vies))}<br>${MIS?MIS.def.nom+' · '+MIS.def.hud(MIS):'VAGUE '+V.n+' · ENNEMIS '+ennemis.length}<br>BLINDAGE ${'▮'.repeat(Math.ceil(S.blindage/10))}${'▯'.repeat(10-Math.ceil(S.blindage/10))}`;document.getElementById('nTir').textContent=S.munB;document.getElementById('nMis').textContent='▮'.repeat(S.munM)||'—';
   if(S.munB<=0)S.munB=300;if(S.munM<=0&&!S.rech){S.rech=1;setTimeout(()=>{S.munM=FAM().mis;S.rech=0;},6000);}
   rendre();if(S.mode==='jeu')viseur(visee(fwd),dt);else ox.clearRect(0,0,OW,OH);}
 function rendre(){cam.layers.set(0);R.setRenderTarget(cible);R.setClearColor(0x000000,1);R.clear();R.render(sc,cam);
@@ -488,31 +494,121 @@ function viseur(fwd,dt){ox.clearRect(0,0,OW,OH);
     ox.fillStyle='#1a1c22';ox.beginPath();ox.moveTo(6,0);ox.lineTo(-4,-5);ox.lineTo(-4,5);ox.fill();ox.fillStyle=prs?'#ff4a2a':'#e2682e';ox.beginPath();ox.moveTo(4,0);ox.lineTo(-3,-3);ox.lineTo(-3,3);ox.fill();ox.restore();}
   // le curseur, quand le réticule est bloqué au bord du cône : un petit point
   if(S.souris&&S.horsCone){const x=Math.round((S.cx+1)/2*OW),y=Math.round((S.cy+1)/2*OH);px(x-1,y,3,1,'#1a1c22');px(x,y-1,1,3,'#1a1c22');px(x,y,1,1,'#ffffff');}
+  // objectifs de la mission (ville, destroyer, cible) : cadre bleu et nom, ou flèche bleue au bord de l'écran
+  for(const o of OBJ){const q=o.pos.clone().applyMatrix4(cam.matrixWorldInverse),n=o.pos.clone().project(cam);
+    if(q.z<0&&Math.abs(n.x)<.95&&Math.abs(n.y)<.95){const p=versEcran(o.pos);if(p){const r=Math.max(6,Math.min(16,1600/o.pos.distanceTo(S.p)));coins(p[0],p[1],r,'#7fd0ff');ox.font='bold 7px monospace';ox.fillStyle='#1a1c22';ox.fillText(o.nom,Math.round(p[0]-o.nom.length*2.1)+1,Math.round(p[1]+r+9)+1);ox.fillStyle='#bfe8ff';ox.fillText(o.nom,Math.round(p[0]-o.nom.length*2.1),Math.round(p[1]+r+9));}continue;}
+    let dx=q.x,dy=-q.y;if(q.z>0&&Math.hypot(dx,dy)<.01)dy=1;const l=Math.hypot(dx,dy);dx/=l;dy/=l;const k=Math.min((OW/2-9)/Math.abs(dx||1e-6),(OH/2-9)/Math.abs(dy||1e-6));
+    ox.save();ox.translate(Math.round(OW/2+dx*k),Math.round(OH/2+dy*k));ox.rotate(Math.atan2(dy,dx));ox.fillStyle='#1a1c22';ox.beginPath();ox.moveTo(7,0);ox.lineTo(-4,-6);ox.lineTo(-4,6);ox.fill();ox.fillStyle='#7fd0ff';ox.beginPath();ox.moveTo(5,0);ox.lineTo(-3,-4);ox.lineTo(-3,4);ox.fill();ox.restore();}
   // le viseur : là où vont les balles, 120 m devant
   const v=versEcran(S.p.clone().addScaledVector(fwd,120));if(v){const[x,y]=[Math.round(v[0]),Math.round(v[1])];
     for(const[c,o]of[['#1a1c22',1],['#ffffff',0]]){px(x-6+o,y+o,4,1,c);px(x+3+o,y+o,4,1,c);px(x+o,y-6+o,1,4,c);px(x+o,y+3+o,1,4,c);px(x+o,y+o,1,1,c);}}
   // munitions de missiles et état du verrouillage, sous le viseur
   if(LOCK.e&&LOCK.t>=LOCK.T&&v){ox.font='bold 7px monospace';ox.fillStyle='#ffe080';ox.fillText('MISSILE PRET',Math.round(v[0]-24),Math.round(v[1]+16));}}
 
+// ---- missions ----
+// chaque mission : debut(M), maj(M, dt) qui renvoie 'gagne', 'perdu' ou rien, hud(M) (ligne de la tête d'écran), etoiles(M) (1 à 3, à la victoire), fin(M) (nettoyage)
+let MIS=null;const OBJ=[];/* OBJ : objectifs montrés en bleu dans le viseur */
+function lireMissions(){try{return JSON.parse(localStorage.getItem('cieldeguerre.missions'))||{};}catch(e){return{};}}
+const temps=t=>`${Math.floor(t/60)}:${String(Math.floor(t%60)).padStart(2,'0')}`,jauge=v=>'▮'.repeat(Math.ceil(Math.max(0,v)/20))+'▯'.repeat(5-Math.ceil(Math.max(0,v)/20));
+// une escadre de n appareils qui arrive de la direction a (angle absolu), à dist du centre, vers lui ; opt : options de ennemi()
+function escadre(n,o){const c=o.centre||S.p,a=o.a!==undefined?o.a:Math.random()*6.28,dist=o.dist||300,dir=new THREE.Vector3(-Math.sin(a),0,-Math.cos(a)),tete=c.clone().addScaledVector(dir,dist);
+  tete.y=Math.max(o.y||c.y+15,H(tete.x,tete.z)+30);const vers=c.clone().sub(tete).normalize(),cote=new THREE.Vector3(-dir.z,0,dir.x);
+  for(let k=0;k<n;k++){const rang=Math.ceil(k/2),s2=k%2?1:-1;V.file.push({t:(o.t||0)+k*.3,p:tete.clone().add(cote.clone().multiplyScalar(s2*rang*11)).addScaledVector(dir,rang*10),v:vers.clone(),o:typeof o.opt==='function'?o.opt(k):o.opt||{}});}}
+// un objectif qui encaisse des coups (ville, destroyer)
+function objectif(nom,pos,r,vie){const o={nom,pos,r,vie,max:vie,touche(dg,p){if(this.vie<=0)return;this.vie-=dg;boom(p,5,['#ffe066','#ff8a2a','#555555']);if(Math.random()<.3)fumee(p,1);}};OBJ.push(o);return o;}
+// la ville côtière : un port de maisons au bord de l'eau
+function trouverCote(){for(let r=200;r<3000;r+=60)for(let a=0;a<6.28;a+=.35){const x=S.p.x+Math.cos(a)*r,z=S.p.z+Math.sin(a)*r,h=H(x,z);if(h<1.5||h>5||pente(x,z)>1.2)continue;
+    for(let b=0;b<6.28;b+=.4){const mx=x+Math.cos(b)*220,mz=z+Math.sin(b)*220;if(H(mx,mz)<-8&&H(x+Math.cos(b)*90,z+Math.sin(b)*90)<-1)return{x,z,h,mer:b};}}return{x:S.p.x,z:S.p.z,h:2,mer:0};}
+function batirVille(c){const g=new THREE.Group(),cols=['#f4ead8','#efe0c8','#e8d4bc'],toits=['#c4502e','#b0442a','#d0663a'];
+  for(let i=0;i<22;i++){const a=Math.random()*6.28,r=8+Math.random()*34,x=c.x+Math.cos(a)*r,z=c.z+Math.sin(a)*r,h=H(x,z);if(h<.8)continue;const e=1.4+Math.random()*.8,rot=(Math.random()*4|0)*Math.PI/2;
+    const m=new THREE.Mesh(GEO.mur,M(cols[i%3]));m.position.set(x,h-.1,z);m.scale.setScalar(e);m.rotation.y=rot;const t=new THREE.Mesh(GEO.toit,M(toits[i%3]));t.position.copy(m.position);t.scale.setScalar(e);t.rotation.y=rot;g.add(m,t);}
+  const ph=new THREE.Mesh(new THREE.CylinderGeometry(1.4,2,14,8).translate(0,7,0),M('#f4ead8'));ph.position.set(c.x+Math.cos(c.mer)*40,Math.max(0,H(c.x+Math.cos(c.mer)*40,c.z+Math.sin(c.mer)*40)),c.z+Math.sin(c.mer)*40);g.add(ph);/* le phare */
+  const fe=new THREE.Mesh(new THREE.BoxGeometry(2.4,2.4,2.4).translate(0,15,0),new THREE.MeshBasicMaterial({color:'#ffe080'}));fe.position.copy(ph.position);g.add(fe);sc.add(g);return g;}
+// le point d'arrivée de l'escorte : une colonne de lumière
+function balise(p){const m=new THREE.Mesh(new THREE.CylinderGeometry(3,3,400,8,1,true).translate(0,200,0),new THREE.MeshBasicMaterial({color:'#6ae0ff',transparent:true,opacity:.35,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}));m.position.copy(p);m.position.y=0;sc.add(m);return m;}
+const ETOILES=(M,ok2,ok3)=>ok3?3:ok2?2:1;
+const MISSIONS=[
+ {id:'cote',nom:'LA COTE',titre:'DEFENDRE LE PORT',brief:'Trois vagues de bombardiers rouges arrivent de la mer vers le port. Abats-les avant qu’ils ne rasent la ville.',
+  debut(M){const c=trouverCote();M.c=c;M.g=batirVille(c);M.ville=objectif('PORT',new THREE.Vector3(c.x,c.h+6,c.z),55,100);M.ville.deg=1.5;
+    const a=c.mer;S.p.set(c.x+Math.cos(a)*160,55,c.z+Math.sin(a)*160);S.yaw=Math.atan2(Math.cos(a),Math.sin(a))+Math.PI;/* au-dessus de la mer, face au large */
+    M.vagues=[[6,3,2,0,0],[40,4,3,0,1],[78,3,4,2,2]];M.n=0;},
+  maj(M,dt){M.t+=dt;const c=M.c,large=Math.atan2(-Math.cos(c.mer),-Math.sin(c.mer));/* angle (convention de escadre) du côté de la mer */
+    while(M.n<M.vagues.length&&M.t>=M.vagues[M.n][0]){const[,b,ch,fr,var_]=M.vagues[M.n];const a=large+(M.n-1)*.5;
+      escadre(b,{centre:M.ville.pos,a,dist:420,y:70,opt:{bomb:1,escorte:0,obj:M.ville}});if(fr)escadre(fr,{centre:M.ville.pos,a:a+.3,dist:460,y:75,t:1.5,opt:{bomb:1,escorte:1,obj:M.ville}});
+      escadre(ch,{centre:M.ville.pos,a:a-.25,dist:380,y:65,t:.8,opt:k=>({fam:var_>1&&k%2?'inter':'poly'})});M.n++;annonce(`VAGUE ${M.n} / 3<b>BOMBARDIERS</b>Ils arrivent par la mer.`);}
+    if(M.ville.vie<60&&Math.random()<dt*3)fumee(M.ville.pos.clone().add(new THREE.Vector3((Math.random()-.5)*50,-4,(Math.random()-.5)*50)),1);
+    if(M.ville.vie<=0)return'perdu';if(M.n>=M.vagues.length&&!ennemis.length&&!V.file.length)return'gagne';},
+  hud:M=>`PORT ${jauge(M.ville.vie)} · VAGUE ${M.n}/3`,etoiles:M=>ETOILES(M,M.ville.vie>=50,M.ville.vie>=80&&S.vies===3),fin(M){sc.remove(M.g);}},
+ {id:'escorte',nom:"L'ESCORTE",titre:'PROTEGER LE DESTROYER',brief:'Le destroyer bleu Albatros traverse l’archipel. Reste près de lui : les chasseurs rouges vont tout tenter pour le couler.',
+  debut(M){const d=new THREE.Vector3(-Math.sin(S.yaw),0,-Math.cos(S.yaw));M.dir=d;M.n0=navire('fga_destroyer2',0,110,{fixe:1,yaw:S.yaw,v:0,base:S.p.clone().addScaledVector(d,90).add(new THREE.Vector3(-d.z*50,0,d.x*50))});
+    M.n0.base.y=80;M.trajet=1500;M.parcouru=0;M.dest=M.n0.base.clone().addScaledVector(d,M.trajet);M.bal=balise(M.dest);M.ob=objectif('ALBATROS',new THREE.Vector3(),45,100);M.ob.deg=.8;OBJ.push({nom:'ARRIVEE',pos:M.dest.clone().setY(120)});M.prochaine=6;M.k=0;},
+  maj(M,dt){M.t+=dt;const n=M.n0;const v=14;M.parcouru+=v*dt;n.base.addScaledVector(M.dir,v*dt);M.ob.pos.copy(n.g.position);
+    if(M.t>=M.prochaine){M.k++;M.prochaine+=M.k<3?20:16;const a=Math.random()*6.28;escadre(Math.min(5,2+M.k),{centre:n.g.position,a,dist:380,y:n.g.position.y,opt:k=>({fam:M.k>3&&k%2?'inter':M.k>5&&k%3===0?'lourd':'poly',obj:M.ob})});
+      if(M.k>=3&&M.k%2)escadre(2,{centre:n.g.position,a:a+1.5,dist:420,y:n.g.position.y+20,t:2,opt:{bomb:1,escorte:0,obj:M.ob}});annonce(`ATTAQUE ${M.k}<b>${M.k>=3&&M.k%2?'CHASSEURS ET BOMBARDIERS':'CHASSEURS'}</b>Protège l’Albatros !`);}
+    if(M.ob.vie<=0){if(!n.chute){n.chute=.01;for(const t of n.tourelles)t.mort=1;}return M.t>(M.coule=M.coule||M.t+2.5)?'perdu':null;}
+    if(M.parcouru>=M.trajet)return'gagne';},
+  hud:M=>`ALBATROS ${jauge(M.ob.vie)} · ${Math.max(0,Math.round((M.trajet-M.parcouru)/14))} S`,etoiles:M=>ETOILES(M,M.ob.vie>=50,M.ob.vie>=80&&S.vies===3),fin(M){retirerNavire(M.n0);sc.remove(M.bal);}},
+ {id:'survie',nom:'LA SURVIE',titre:'TENIR 3 MINUTES',brief:'Tu es seul au milieu de l’escadre rouge. Tiens bon trois minutes, jusqu’aux renforts.',
+  debut(M){M.prochaine=4;M.k=0;},
+  maj(M,dt){M.t+=dt;if(M.t>=M.prochaine&&M.t<170){M.k++;M.prochaine+=Math.max(11,19-M.k);const f=['poly','inter','lourd','furtif'];
+      escadre(Math.min(6,2+(M.k>>1)),{a:S.yaw+(Math.random()-.5)*4,dist:300,opt:k=>({fam:f[(M.k+k)%Math.min(4,1+(M.k>>1))],as:M.k>5&&k===0})});if(M.k>=4&&M.k%3===1)escadre(2,{a:Math.random()*6.28,dist:340,t:1,opt:{bomb:1,escorte:M.k>6}});}
+    if(M.t>=180)return'gagne';},
+  hud:M=>`TEMPS ${temps(Math.max(0,180-M.t))} · ENNEMIS ${ennemis.length}`,etoiles:M=>ETOILES(M,S.vies>=2,S.vies===3),fin(){}},
+ {id:'amiral',nom:"L'AMIRAL",titre:'ABATTRE LE CROISEUR AMIRAL',brief:'Le croiseur amiral rouge Tempête escorte la flotte ennemie. Détruis ses six tourelles : il tombera.',
+  debut(M){const d=new THREE.Vector3(-Math.sin(S.yaw),0,-Math.cos(S.yaw));M.n0=navire('fga_destroyer3',1,170,{fixe:1,vieT:10,yaw:S.yaw+Math.PI*.8,v:4,base:S.p.clone().addScaledVector(d,430)});M.n0.base.y=95;
+    M.ob={nom:'TEMPETE',pos:new THREE.Vector3()};OBJ.push(M.ob);M.prochaine=10;M.k=0;},
+  maj(M,dt){M.t+=dt;M.ob.pos.copy(M.n0.g.position);if(M.t>=M.prochaine&&!M.n0.chute){M.k++;M.prochaine+=26;escadre(Math.min(5,2+M.k),{centre:M.n0.g.position,a:Math.random()*6.28,dist:200,opt:k=>({fam:k%2?'lourd':'poly'})});annonce(`RENFORTS<b>CHASSEURS</b>Le croiseur appelle son escorte.`);}
+    if(M.n0.chute>3||M.n0.coule)return'gagne';},
+  hud:M=>`TOURELLES ${M.n0.tourelles.filter(t=>!t.mort).length}/${M.n0.tourelles.length} · ${temps(M.t)}`,etoiles:M=>ETOILES(M,S.vies>=2,S.vies===3&&M.t<200),fin(M){retirerNavire(M.n0);}},
+ {id:'forteresse',nom:'LA FORTERESSE',titre:'LE VAISSEAU-MERE',brief:'La forteresse volante Léviathan. Ses quatre générateurs bleus protègent ses tourelles : détruis-les d’abord. Des chasseurs décollent de ses flancs.',
+  debut(M){const d=new THREE.Vector3(-Math.sin(S.yaw),0,-Math.cos(S.yaw));const n=M.n0=navire('fga_destroyer4',1,300,{fixe:1,vieT:12,yaw:S.yaw+Math.PI*.7,v:3,base:S.p.clone().addScaledVector(d,650)});n.base.y=140;n.bouclier=4;
+    n.g.updateMatrixWorld(true);const b=new THREE.Box3().setFromObject(n.g),inv=n.g.matrixWorld.clone().invert();const s=new THREE.Vector3();b.getSize(s);M.gens=[];
+    for(const[fx,fz]of[[-.11,-.22],[.11,-.22],[-.11,.18],[.11,.18]]){const lp=new THREE.Vector3(fx*n.lg,0,fz*n.lg),m=new THREE.Mesh(new THREE.IcosahedronGeometry(n.lg*.03,1),new THREE.MeshBasicMaterial({color:'#7fe8ff'}));
+      const h=new THREE.Mesh(new THREE.IcosahedronGeometry(n.lg*.05,1),new THREE.MeshBasicMaterial({color:'#3fb0ff',transparent:true,opacity:.35,blending:THREE.AdditiveBlending,depthWrite:false}));
+      lp.y=s.y*.5+n.lg*.02;m.position.copy(lp);h.position.copy(lp);n.g.add(m,h);M.gens.push({m,h,cible:{g:new THREE.Object3D(),vie:15,rayon:n.lg*.05,tour:1}});}
+    M.ob={nom:'LEVIATHAN',pos:new THREE.Vector3()};OBJ.push(M.ob);M.lance=8;},
+  maj(M,dt){M.t+=dt;const n=M.n0;M.ob.pos.copy(n.g.position);
+    for(const G of M.gens){if(G.mort)continue;G.m.getWorldPosition(G.cible.g.position);G.h.scale.setScalar(1+Math.sin(M.t*5)*.15);TOURS.push(G.cible);
+      if(G.cible.vie<=0){G.mort=1;n.g.remove(G.m,G.h);boom(G.cible.g.position,30,['#ffffff','#9fe8ff','#3fb0ff']);S.score+=500;n.bouclier--;
+        annonce(n.bouclier?`GENERATEUR DETRUIT<b>+500</b>Encore ${n.bouclier}.`:'BOUCLIERS TOMBES<b>LES TOURELLES SONT A NU</b>Détruis-les toutes !');}}
+    if(!n.chute&&M.t>=M.lance){M.lance+=Math.max(7,11-M.t/40);const p=n.g.position.clone().add(new THREE.Vector3((Math.random()-.5)*n.lg*.3,-n.lg*.03,(Math.random()-.5)*n.lg*.3));
+      const vers=S.p.clone().sub(p).normalize();for(let k=0;k<2;k++)ennemi(p.clone().add(new THREE.Vector3(k*8,0,0)),vers,{fam:M.t>90&&k?'furtif':'inter'});}
+    if(n.chute>3||n.coule)return'gagne';},
+  hud:M=>`BOUCLIERS ${M.n0.bouclier} · TOURELLES ${M.n0.tourelles.filter(t=>!t.mort).length}/${M.n0.tourelles.length}`,etoiles:M=>ETOILES(M,S.vies>=2,S.vies===3&&M.t<300),fin(M){retirerNavire(M.n0);}}];
+function majMission(dt){const r=MIS.def.maj(MIS,dt);if(r)finMission(r==='gagne');}
+function finMissionNettoie(){if(MIS){try{MIS.def.fin(MIS);}catch(e){}MIS=null;}OBJ.length=0;}
+function finMission(gagne){const def=MIS.def,M=MIS;S.mode='fin';S.auto=true;S.tir=false;try{document.exitPointerLock();}catch(x){}
+  const et=gagne?def.etoiles(M):0;if(gagne)S.score+=1000*et;const m=lireMissions(),av=m[def.id]||{};const neuf=gagne&&et>(av.e||0);
+  if(gagne)m[def.id]={e:Math.max(et,av.e||0),s:Math.max(S.score,av.s||0)};try{localStorage.setItem('cieldeguerre.missions',JSON.stringify(m));}catch(e){}
+  $('fTitre').textContent=gagne?'MISSION REUSSIE':'MISSION ECHOUEE';$('fEtoiles').textContent=gagne?'★'.repeat(et)+'☆'.repeat(3-et):'';$('fScore').textContent=String(S.score).padStart(6,'0');
+  $('fDetail').textContent=gagne?(et<3?'3 étoiles : '+(def.id==='survie'?'sans perdre d’appareil.':def.id==='amiral'?'sans perdre d’appareil, en moins de 3 min 20.':def.id==='forteresse'?'sans perdre d’appareil, en moins de 5 min.':'sans perdre d’appareil, et l’objectif intact à 80 %.'):'Parfait !'):def.titre+' : raté.';
+  $('fRecord').innerHTML=neuf?'NOUVEAU RECORD D’ETOILES':'';const i=MISSIONS.indexOf(def);$('fSuivante').hidden=!(gagne&&MISSIONS[i+1]);
+  setTimeout(()=>{if(MIS!==M||S.mode!=='fin')return;/* une autre partie a déjà commencé */finMissionNettoie();viderCombat();montrer('eFin');},gagne?2600:1600);}
+function listeMissions(){const m=lireMissions();let h='';MISSIONS.forEach((d,i)=>{const ok=i===0||(m[MISSIONS[i-1].id]||{}).e>0,e=(m[d.id]||{}).e||0;
+    h+=`<button data-m="${i}" ${ok?'':'disabled'}><span>${i+1} · ${d.nom}</span><small>${ok?d.titre:'A DEBLOQUER'}</small><em>${ok?'★'.repeat(e)+'☆'.repeat(3-e):'🔒'}</em></button>`;});
+  $('mListe').innerHTML=h;}
+document.getElementById('mListe').addEventListener('click',e=>{const b=e.target.closest('button[data-m]');if(!b||b.disabled)return;e.stopPropagation();nouvellePartie(MISSIONS[+b.dataset.m]);});
 // ---- écrans : titre, pause, fin ; parties à 3 appareils ----
-const $=id=>document.getElementById(id),ECRANS=['eTitre','ePause','eFin','eAide'];let ecranAvant='eTitre';
+const $=id=>document.getElementById(id),ECRANS=['eTitre','ePause','eFin','eAide','eMissions'];let ecranAvant='eTitre';
 function montrer(id){for(const e of ECRANS)$(e).hidden=e!==id;el.classList.toggle('menu',!!id);if(id&&id!=='eAide')ecranAvant=id;}
 function lireRecord(){try{return JSON.parse(localStorage.getItem('cieldeguerre.record'))||{};}catch(e){return{};}}
-function majTitre(){const r=lireRecord();$('tRecord').innerHTML=r.parties?`RECORD ${String(r.score).padStart(6,'0')}<br>VAGUE ${r.vague||0} · ${r.parties||0} PARTIE${(r.parties||0)>1?'S':''}`:'';}
+function majTitre(){const r=lireRecord(),m=lireMissions(),et=Object.values(m).reduce((a,v)=>a+(v.e||0),0);$('tEtoiles').textContent=et?`${et} / ${MISSIONS.length*3} ETOILES`:'';$('tRecord').innerHTML=r.parties?`RECORD ${String(r.score).padStart(6,'0')}<br>VAGUE ${r.vague||0} · ${r.parties||0} PARTIE${(r.parties||0)>1?'S':''}`:'';}
 function viderCombat(){for(const e of ennemis)sc.remove(e.g);ennemis.length=0;for(const b of tirsEnnemis)sc.remove(b.b);tirsEnnemis.length=0;V.file.length=0;}
-function nouvellePartie(){viderCombat();V.n=0;V.pause=2.5;V.fin=0;Object.assign(S,{cx:0,cy:0,mode:'jeu',vies:3,blindage:100,score:0,munB:300,munM:FAM().mis,auto:false,tir:false,boost:0,loopT:-1,rollT:-1,dx:0,dy:0});
-  S.p.set(S.p.x,Math.max(S.p.y,40),S.p.z);montrer(null);annonce('MISSION · ARCHIPEL<b>VAGUES</b>Abats les chasseurs rouges. Leurs grands vaisseaux tirent aussi !');}
+function nouvellePartie(def){finMissionNettoie();viderCombat();S.dernier=def||null;V.n=0;V.pause=2.5;V.fin=0;Object.assign(S,{cx:0,cy:0,mode:'jeu',vies:3,blindage:100,score:0,munB:300,munM:FAM().mis,auto:false,tir:false,boost:0,loopT:-1,rollT:-1,dx:0,dy:0});
+  S.p.set(S.p.x,Math.max(S.p.y,40),S.p.z);montrer(null);
+  if(def){MIS={def,t:0};def.debut(MIS);S.qc=null;annonce(`MISSION ${MISSIONS.indexOf(def)+1} · ${def.nom}<b>${def.titre}</b>${def.brief}`,6500);}
+  else annonce('VAGUES SANS FIN<b>ARCHIPEL</b>Abats les chasseurs rouges. Leurs grands vaisseaux tirent aussi !');}
 function pause(){if(S.mode!=='jeu')return;S.mode='pause';S.tir=false;try{document.exitPointerLock();}catch(x){}montrer('ePause');}
 function reprendre(){if(S.mode!=='pause')return;S.mode='jeu';montrer(null);}
-function versTitre(){viderCombat();S.mode='titre';S.auto=true;S.souris=0;el.classList.remove('souris');S.doigt=null;joy.classList.remove('on');majTitre();montrer('eTitre');}
+function versTitre(){finMissionNettoie();viderCombat();S.mode='titre';S.auto=true;S.souris=0;el.classList.remove('souris');S.doigt=null;joy.classList.remove('on');majTitre();montrer('eTitre');}
 function abattu(){boom(S.p,30);S.vies--;V.flash=.4;if(S.vies<=0){finPartie();return;}S.blindage=100;annonce(`ABATTU !<b>${S.vies} APPAREIL${S.vies>1?'S':''} RESTANT${S.vies>1?'S':''}</b>Un nouvel appareil decolle.`);}
-function finPartie(){S.mode='fin';S.auto=true;S.tir=false;S.blindage=100;try{document.exitPointerLock();}catch(x){}const r=lireRecord(),neuf=S.score>(r.score||0);
+function finPartie(){if(MIS){finMission(false);return;}S.mode='fin';S.auto=true;S.tir=false;S.blindage=100;try{document.exitPointerLock();}catch(x){}const r=lireRecord(),neuf=S.score>(r.score||0);
   const n={score:Math.max(S.score,r.score||0),vague:Math.max(V.n,r.vague||0),parties:(r.parties||0)+1};try{localStorage.setItem('cieldeguerre.record',JSON.stringify(n));}catch(e){}
   $('fScore').textContent=String(S.score).padStart(6,'0');$('fDetail').textContent=`Vague ${V.n} atteinte.`;$('fRecord').innerHTML=neuf&&S.score>0?'NOUVEAU RECORD !':`RECORD ${String(n.score).padStart(6,'0')}`;
-  setTimeout(()=>{viderCombat();montrer('eFin');},1600);}
+  $('fTitre').textContent='FIN DE PARTIE';$('fEtoiles').textContent='';$('fSuivante').hidden=true;setTimeout(()=>{viderCombat();montrer('eFin');},1600);}
 document.addEventListener('visibilitychange',()=>{if(document.hidden)pause();});
 const clic=(id,f)=>$(id).addEventListener('click',e=>{e.stopPropagation();f();});
-clic('tJouer',nouvellePartie);clic('fRejouer',nouvellePartie);clic('pReprendre',reprendre);clic('pQuitter',versTitre);clic('fMenu',versTitre);
+clic('tJouer',()=>nouvellePartie(null));clic('fRejouer',()=>nouvellePartie(S.dernier));clic('tMissions',()=>{listeMissions();montrer('eMissions');});clic('mRetour',()=>montrer('eTitre'));clic('fSuivante',()=>{const i=MISSIONS.indexOf(S.dernier);if(MISSIONS[i+1])nouvellePartie(MISSIONS[i+1]);});clic('pReprendre',reprendre);clic('pQuitter',versTitre);clic('fMenu',versTitre);
 clic('tHangar',ouvrirHangar);clic('pHangar',ouvrirHangar);clic('tAide',()=>montrer('eAide'));clic('pAide',()=>montrer('eAide'));clic('aRetour',()=>montrer(ecranAvant));
 bouton('bPause',d=>{if(d)pause();});
 for(const e of ECRANS)$(e).addEventListener('pointerdown',e=>e.stopPropagation());

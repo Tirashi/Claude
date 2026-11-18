@@ -90,11 +90,21 @@ Historique des directions : *Escadrille pixel* (gros pixels, sprite dessiné), p
   - sur téléphone, deux boutons ronds au-dessus de LOOP, **BOOST** et **FREIN**, à garder appuyés (comme Z et S sur PC), masqués sur PC.
 - **Artefact** : le jeu remplace la maquette au même lien (copie de 12,9 Mo avec les modèles en base64).
 
+## Session 2 (18/11) : les missions et le boss, fait
+- **Écran MISSIONS** sur le titre ; les **vagues sans fin** restent comme second mode. Chaque mission réussie ouvre la suivante. De 1 à 3 étoiles : 1 pour la victoire, 2 et 3 selon les appareils perdus et l'objectif (ou le temps). +1000 points par étoile. Sauvegarde `cieldeguerre.missions` = {id: {e: étoiles, s: score}}.
+  1. **La côte** (défendre le port) : un port bâti sur la côte la plus proche (maisons, phare), 100 points de vie. 3 vagues de corvettes rouges arrivent de la mer, avec leurs chasseurs d'escorte (qui s'en prennent au joueur) et des frégates à la 3e vague. Le joueur part au-dessus de la mer, face au large. ★★ port ≥ 50 %, ★★★ port ≥ 80 % sans perdre d'appareil.
+  2. **L'escorte** (protéger le destroyer Albatros) : 1 500 m à 14 m/s, vers une balise de lumière. Des attaques de chasseurs toutes les 16 à 20 s, puis aussi des bombardiers. Le destroyer tire aussi. ★★ ≥ 50 %, ★★★ ≥ 80 % sans perte.
+  3. **La survie** (tenir 3 minutes) : des escadres de plus en plus fréquentes, toutes familles, des as, des bombardiers. ★★ au plus 1 appareil perdu, ★★★ aucun.
+  4. **L'amiral** (le croiseur amiral Tempête) : un destroyer rouge de 170 m, 6 tourelles à 10 points de vie ; il appelle des renforts toutes les 26 s. Victoire quand il tombe. ★★★ sans perte en moins de 3 min 20.
+  5. **La forteresse** (le boss, le vaisseau-mère Léviathan) : un destroyer rouge de 300 m. 4 générateurs bleus (15 points de vie, verrouillables) protègent ses 6 tourelles (12 points de vie, étincelles bleues tant que le bouclier tient). Des chasseurs décollent de ses flancs (intercepteurs, puis furtifs). ★★★ sans perte en moins de 5 min.
+- **Moteur** : `navire()` crée les grands vaisseaux (flotte de fond et vaisseaux de mission `fixe`, sans retour devant le joueur). `ennemi(pos, dir, o)` prend des options (`bomb`, `escorte`, `fam`, `as`, `obj`) ; un ennemi qui a un objectif (`obj`) tourne autour et le vise, une salve toutes les 3 à 5 s (les chasseurs reviennent sur le joueur quand il passe à moins de 70 m). `escadre(n, o)` lance une formation. `objectif()` = une cible qui encaisse. `OBJ` = les objectifs montrés en bleu dans le viseur (cadre et nom, ou flèche au bord).
+- Équilibrage vérifié : le port laissé sans défense tient environ 45 s.
+
 ## Plan des sessions (proposition)
 | Session | Contenu | Modèle |
 |---|---|---|
 | 1 · socle | Dossier `ciel-de-guerre/` en scripts classiques. Three.js r128 et GLTFLoader de `lib/`. Modèles en fichiers `.glb` dans `ciel-de-guerre/modeles/` (plus de base64 ; mis en cache par `sw.js`), pour les seuls avions retenus. Moteur, avions, flottes et commandes repris de la maquette. Écran titre avec retour au menu, fiche, accueil, service worker, crédits. | Opus |
-| 2 · missions | Les 4 missions, l'écran de fin, les étoiles, le boss | Opus |
+| 2 · missions | Les 4 missions, l'écran de fin, les étoiles, le boss | Opus — **fait le 18/11** |
 | 3 · sensations | Son, secousses, fumée, jauge de boost, vitesse | opusplan |
 | 4 · monde | Ailiers, cibles au sol, décors (nuit, orage, désert, neige) | opusplan |
 | 5 · progression | Réglages par avion, déblocages, classements, défi du jour éventuel | opusplan |

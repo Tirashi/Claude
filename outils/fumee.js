@@ -121,6 +121,10 @@ const shots = process.argv[2];
         C.pause(); if (C.mode !== 'pause' || document.getElementById('ePause').hidden) return "pas d'écran de pause";
         C.reprendre(); C.abattu(); C.abattu(); C.abattu(); if (C.mode !== 'fin') return 'pas de fin de partie après 3 appareils abattus';
         await wait(1800); if (document.getElementById('eFin').hidden) return "pas d'écran de fin";
+        // missions : la première démarre avec son port et ses objectifs ; une victoire forcée donne des étoiles, ouvre la suivante et se sauvegarde
+        await wait(300); C.nouvellePartie(0); if (!C.mission || C.mission.def.id !== 'cote' || !C.mission.ville) return 'la mission 1 ne démarre pas';
+        C.finMission(true); await wait(3000); if (document.getElementById('eFin').hidden || document.getElementById('fSuivante').hidden) return "pas d'écran de victoire avec MISSION SUIVANTE";
+        const m = JSON.parse(localStorage.getItem('cieldeguerre.missions') || '{}'); if (!(m.cote && m.cote.e >= 1)) return "la mission réussie n'est pas sauvegardée";
         return 'ok';
       });
       if (r !== 'ok') errs.push('Ciel de guerre : ' + r);

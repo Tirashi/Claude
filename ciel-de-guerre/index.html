@@ -24,7 +24,9 @@
   <div class="carte">
     <h1>CIEL<br>DE GUERRE</h1>
     <p class="sous">Combat aérien au-dessus de l'archipel, au milieu de la bataille des grands vaisseaux.</p>
-    <button id="tJouer" class="grand">JOUER</button>
+    <button id="tMissions" class="grand">MISSIONS</button>
+    <p class="record" id="tEtoiles"></p>
+    <button id="tJouer">VAGUES SANS FIN</button>
     <button id="tHangar">HANGAR</button>
     <button id="tAide">COMMANDES</button>
     <p class="record" id="tRecord"></p>
@@ -43,12 +45,22 @@
 </div>
 <div class="ecran" id="eFin" hidden>
   <div class="carte">
-    <h2>FIN DE MISSION</h2>
+    <h2 id="fTitre">FIN DE MISSION</h2>
+    <p class="etoiles" id="fEtoiles"></p>
     <p class="score" id="fScore"></p>
     <p class="sous" id="fDetail"></p>
     <p class="record" id="fRecord"></p>
-    <button id="fRejouer" class="grand">REJOUER</button>
+    <button id="fSuivante" class="grand" hidden>MISSION SUIVANTE</button>
+    <button id="fRejouer">REJOUER</button>
     <button id="fMenu">MENU</button>
+  </div>
+</div>
+<div class="ecran" id="eMissions" hidden>
+  <div class="carte missions">
+    <h2>MISSIONS</h2>
+    <p class="sous">Chaque mission réussie ouvre la suivante. Trois étoiles : sans perdre d'appareil, et l'objectif bien tenu.</p>
+    <div id="mListe"></div>
+    <button id="mRetour">RETOUR</button>
   </div>
 </div>
 <div class="ecran" id="eAide" hidden>

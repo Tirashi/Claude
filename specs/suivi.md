@@ -119,3 +119,4 @@ Maquettes de la carte 2 à 4 (isométrique, puis papier à l'encre validée), é
 
 - **18/11 — Sudoku, écran fantôme** (capture de la femme de l'utilisateur : menu sous la grille, traînées roses) : fond préparé vidé par Android en arrière-plan ; écran effacé d'une couleur pleine et fond refait au retour ; sur main. Relevé des autres jeux exposés noté dans le mémo (leçon « Toiles préparées vidées »), à corriger à leur prochaine retouche.
 - **18/11 — Tank Arena, mode survie** : vagues (1 + n ennemis, 3 à 6 à la fois), 4 types (soldat, chasseur, blindé, tireur) qui se renforcent, 3 vies, caisse à chaque vague ; camps (les ennemis ne se tirent plus dessus) ; classement `tankarena`/`survie` (vague), transfert, `SYNC` 29, fumée.
+- **18/11 — Ciel de guerre, session 2** : 5 missions à étoiles (côte, escorte, survie, amiral, forteresse à boucliers), écran MISSIONS, écran de fin à étoiles et MISSION SUIVANTE ; ennemis à objectif ; test de fumée ([cdc](ciel-de-guerre.md)).
