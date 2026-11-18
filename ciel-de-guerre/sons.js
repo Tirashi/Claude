@@ -37,7 +37,7 @@ const CDGSons = (function () {
 
   // ---------- bruitages ----------
   let dernierTir = 0;
-  const VAR = { boom: "A", moteur: "A" };   /* variantes choisies (banc d'essai : maquettes/ciel-de-guerre-sons.html) */
+  const VAR = { boom: "A" };   /* variantes choisies (banc d'essai : maquettes/ciel-de-guerre-sons.html) */
   const SONS = {
     tir(t, v) { if (t - dernierTir < .05) return; dernierTir = t; bruit(t, "bandpass", 2400, 1.2, .002, .05, .22 * v, 900); note(t, 180, "square", .002, .04, .05 * v, null, 90); },
     missile(t, v) { bruit(t, "bandpass", 500, 2, .02, .7, .3 * v, 2600); note(t, 220, "sawtooth", .01, .35, .04 * v, null, 660); },
@@ -55,7 +55,7 @@ const CDGSons = (function () {
   // ---------- explosions enregistrées (choisies au banc d'essai du 18/11) : sons/*.mp3, ou window.CDG_SONS (base64) dans l'artefact ----------
   // expl-1, expl-4, expl-7 : NIIIEMAND (CC0), explosions proches ; expl-3 : NIIIEMAND, grave comme un gros canon, pour les explosions lointaines ;
   // crash : Matthew Flat, explosion-large_1 (CC BY-ND 3.0, fichier entier), étouffée, quand une épave ou un grand vaisseau s'écrase.
-  const ECH = {}, NOMS_ECH = ["expl-1", "expl-3", "expl-4", "expl-7", "crash"];
+  const ECH = {}, NOMS_ECH = ["expl-1", "expl-3", "expl-4", "expl-7", "crash", "reacteur-d", "reacteur-i"];
   function chargerEchantillons() {
     for (const k of NOMS_ECH) {
       const b64 = window.CDG_SONS && window.CDG_SONS[k];
@@ -102,28 +102,26 @@ const CDGSons = (function () {
     }
   }
 
-  // ---------- réacteur (VAR.moteur), appelé à chaque image ; le boost ajoute une poussée qui rugit ----------
-  // A « turbine » : grondement grave et doux, léger sifflement de turbine. B « grondement » : seulement le grave, qui pulse un peu. C « réacteur » : souffle chaud et ronflement plus présent.
+  // ---------- réacteur, appelé à chaque image : deux boucles enregistrées choisies au banc du 18/11 (D et I, CC0, OpenGameArt) ----------
+  // reacteur-d : « Rocket Engine » (theminesareshakin), grondement de fusée ; reacteur-i : « Underwater or space engine rumble » (gmason), ronflement sourd.
+  // Bouclées sans couture (fondu de la fin sur le début). La vitesse fait monter la hauteur et ouvre le filtre ; le boost met I en avant.
   let mot = null;
   function arreterMoteur() { if (!mot) return; for (const n of mot.sources) { try { n.stop(); } catch (e) {} } mot.g.disconnect(); mot = null; }
+  function boucle(k, g) { const buf = ECH[k], s = ctx.createBufferSource(), gg = ctx.createGain(); s.buffer = buf; s.loop = true; s.loopStart = .05; s.loopEnd = buf.duration - .05; gg.gain.value = 0; s.connect(gg); gg.connect(g); s.start(0, .05 + Math.random() * (buf.duration - .2)); return { s, gg }; }
   function creerMoteur() {
-    const g = ctx.createGain(); g.gain.value = 0; g.connect(busB); const sources = [], va = VAR.moteur;
-    const s = souffle(); s.loop = true; const lp = ctx.createBiquadFilter(); lp.type = "lowpass"; lp.Q.value = .7; const gs = ctx.createGain(); gs.gain.value = va === "C" ? .7 : 1; s.connect(lp); lp.connect(gs); gs.connect(g); s.start(); sources.push(s);
-    const s2 = souffle(); s2.loop = true; const bp = ctx.createBiquadFilter(); bp.type = "bandpass"; bp.frequency.value = 900; bp.Q.value = .6; const gb = ctx.createGain(); gb.gain.value = 0; s2.connect(bp); bp.connect(gb); gb.connect(g); s2.start(.3); sources.push(s2);   // poussée du boost
-    let w1 = null, w2 = null, gw = null, lfo = null;
-    if (va === "A") { gw = ctx.createGain(); gw.gain.value = .05; w1 = ctx.createOscillator(); w1.type = "sine"; w2 = ctx.createOscillator(); w2.type = "sine"; w1.connect(gw); w2.connect(gw); gw.connect(g); w1.start(); w2.start(); sources.push(w1, w2); }
-    if (va === "C") { gw = ctx.createGain(); gw.gain.value = .22; w1 = ctx.createOscillator(); w1.type = "triangle"; const f = ctx.createBiquadFilter(); f.type = "lowpass"; f.frequency.value = 300; w1.connect(f); f.connect(gw); gw.connect(g); w1.start(); sources.push(w1); }
-    if (va === "B") { lfo = ctx.createOscillator(); lfo.frequency.value = 7; const lg = ctx.createGain(); lg.gain.value = .25; lfo.connect(lg); lg.connect(gs.gain); lfo.start(); sources.push(lfo); }
-    mot = { va, g, lp, gb, bp, w1, w2, sources };
+    if (!ECH["reacteur-d"] || !ECH["reacteur-i"]) return;
+    const g = ctx.createGain(); g.gain.value = 0; const lp = ctx.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 2500; lp.connect(g); g.connect(busB);
+    const d = boucle("reacteur-d", lp), i = boucle("reacteur-i", lp);
+    mot = { g, lp, d, i, sources: [d.s, i.s] };
   }
   function moteur(vit, boost, actif) {
     if (!ctx || ctx.state !== "running") return;
-    if (mot && mot.va !== VAR.moteur) arreterMoteur(); if (!mot) creerMoteur();
-    const t = ctx.currentTime, va = mot.va, on = actif && R.bruitages;
-    mot.g.gain.setTargetAtTime(on ? (va === "B" ? .22 : va === "C" ? .12 : .17) : 0, t, .2);   /* réglé à la mesure : le réacteur reste sous les rafales du canon */
-    mot.lp.frequency.setTargetAtTime((va === "B" ? 140 : va === "C" ? 380 : 220) + vit * (va === "C" ? 260 : 160) + (boost ? 260 : 0), t, .25);
-    mot.gb.gain.setTargetAtTime(boost ? (va === "C" ? .22 : .16) : 0, t, boost ? .12 : .4); mot.bp.frequency.setTargetAtTime(boost ? 1200 + vit * 300 : 700, t, .3);
-    if (mot.w1) { const f = va === "A" ? 320 + vit * 210 + (boost ? 120 : 0) : 70 + vit * 40 + (boost ? 25 : 0); mot.w1.frequency.setTargetAtTime(f, t, .3); if (mot.w2) mot.w2.frequency.setTargetAtTime(f * 1.503, t, .3); }
+    if (!mot) creerMoteur(); if (!mot) return;
+    const t = ctx.currentTime, on = actif && R.bruitages, r = .75 + vit * .35 + (boost ? .2 : 0);
+    mot.g.gain.setTargetAtTime(on ? (boost ? .35 : .21) : 0, t, .2);   /* discret : sous les rafales du canon */
+    mot.lp.frequency.setTargetAtTime(1500 + vit * 1500 + (boost ? 2000 : 0), t, .2);
+    mot.d.s.playbackRate.setTargetAtTime(r, t, .15); mot.i.s.playbackRate.setTargetAtTime(r * .95, t, .15);
+    mot.d.gg.gain.setTargetAtTime(boost ? .45 : .6, t, .2); mot.i.gg.gain.setTargetAtTime(boost ? .75 : .45, t, .2);
   }
 
   // ---------- musique : boucle de combat en la mineur (basse, arpège, nappe, batterie), mixée sous les bruitages ----------
