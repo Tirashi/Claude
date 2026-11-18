@@ -304,7 +304,7 @@ function abattre(e,n){boom(e.g.position,n||(e.bomb?24:18));const v=(e.v?e.v.clon
   EPAVES.push({g:e.g,v,t:0,rx:(Math.random()-.5)*5,rz:(Math.random()<.5?-1:1)*(3+Math.random()*4),fu:0});}
 function majEpaves(dt){for(let i=EPAVES.length-1;i>=0;i--){const E=EPAVES[i];E.t+=dt;E.v.y-=16*dt;E.g.position.addScaledVector(E.v,dt);E.g.rotateZ(E.rz*dt);E.g.rotateX(E.rx*dt);
     E.fu-=dt;if(E.fu<=0){E.fu=.045;const f=new THREE.Mesh(GEO_FUM,E.t<.6&&Math.random()<.5?MAT_FL_FEU:MAT_FUM_N.clone());f.position.copy(E.g.position);f.scale.setScalar(.9+Math.random()*.6);sc.add(f);eclats.push({s:f,v:new THREE.Vector3(0,1.2,0),t:1.4,fum:1,gr:1.3,op:.55});}
-    if(E.g.position.y<Math.max(0,H(E.g.position.x,E.g.position.z))+1||E.t>6){boom(E.g.position,14,['#ffe066','#ff8a2a','#555555','#3a3040'],'crash');sc.remove(E.g);EPAVES.splice(i,1);}}}
+    if(E.g.position.y<Math.max(0,H(E.g.position.x,E.g.position.z))+1||E.t>6){boom(E.g.position,14,['#ffe066','#ff8a2a','#555555','#3a3040']);sc.remove(E.g);EPAVES.splice(i,1);}}}
 const MAT_FL_FEU=new THREE.MeshBasicMaterial({color:'#ff8a2a',transparent:true,opacity:.8,depthWrite:false});
 // secousses de la caméra (coup reçu, explosion toute proche)
 function secouer(a){S.secousse=Math.min(3,Math.max(S.secousse||0,a));}

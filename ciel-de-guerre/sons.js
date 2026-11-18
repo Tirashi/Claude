@@ -54,7 +54,7 @@ const CDGSons = (function () {
 
   // ---------- explosions enregistrées (choisies au banc d'essai du 18/11) : sons/*.mp3, ou window.CDG_SONS (base64) dans l'artefact ----------
   // expl-1, expl-4, expl-7 : NIIIEMAND (CC0), explosions proches ; expl-3 : NIIIEMAND, grave comme un gros canon, pour les explosions lointaines ;
-  // crash : Matthew Flat, explosion-large_1 (CC BY-ND 3.0, fichier entier), étouffée, quand une épave ou un grand vaisseau s'écrase.
+  // crash : Matthew Flat, explosion-large_1 (CC BY-ND 3.0, fichier entier), étouffée, quand un grand vaisseau s'écrase.
   const ECH = {}, NOMS_ECH = ["expl-1", "expl-3", "expl-4", "expl-7", "crash", "reacteur-d", "reacteur-i"];
   function chargerEchantillons() {
     for (const k of NOMS_ECH) {
