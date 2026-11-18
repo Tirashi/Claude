@@ -52,3 +52,4 @@ html,body{margin:0;height:100%;background:#1a1424;overflow:hidden;overscroll-beh
 @media (min-width:900px) and (pointer:fine){.carte{width:420px}.hud{font-size:13px}}
 @media (min-width:700px){.hangar{left:50%;right:auto;width:540px;transform:translateX(-50%)}}
 @media (hover:hover) and (pointer:fine){#bTir,#bMis,#bLoop,#bRoll{display:none}}
+.tel.souris:not(.menu){cursor:none}

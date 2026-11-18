@@ -310,23 +310,24 @@ hangar.addEventListener('click',e=>{e.stopPropagation();const b=e.target.closest
 function changerAvion(){choisir((choix+1)%NOMS.length);}
 document.getElementById('charge').remove();
 // pilotage
-const S={mode:'titre',vies:3,dx:0,dy:0,blindage:100,p:new THREE.Vector3(0,40,0),yaw:0,pitch:0,bank:0,roll:0,rollT:-1,loopT:-1,v:46,boost:0,auto:true,doigt:null,dernier:0,vue:0,tir:false,munB:300,munM:5,t:0,score:0};
+const S={cx:0,cy:0,mode:'titre',vies:3,dx:0,dy:0,blindage:100,p:new THREE.Vector3(0,40,0),yaw:0,pitch:0,bank:0,roll:0,rollT:-1,loopT:-1,v:46,boost:0,auto:true,doigt:null,dernier:0,vue:0,tir:false,munB:300,munM:5,t:0,score:0};
 S.munM=FAM().mis;const Q=new THREE.Quaternion(),E=new THREE.Euler(0,0,0,'YXZ');window.CielDeGuerre={S,get ennemis(){return ennemis;},FLOTTE,nouvellePartie:()=>nouvellePartie(),abattu:()=>abattu(),pause:()=>pause(),reprendre:()=>reprendre(),get mode(){return S.mode;},get vague(){return V.n;}};/* pour les tests */
-// visée : au doigt et au clavier, droit devant ; à la souris, la direction de la souris, ramenée dans un cône de 25° autour du nez
-// (le réticule et les balles la suivent tout de suite, sans attendre que l'appareil ait fini de tourner)
-const CONE=.44;function visee(fwd){if(!S.souris||S.auto||S.mode!=='jeu'||S.loopT>=0)return fwd;const cm=Math.cos(S.mp),D=new THREE.Vector3(-Math.sin(S.my)*cm,Math.sin(S.mp),-Math.cos(S.my)*cm);
+// visée : au doigt et au clavier, droit devant ; à la souris, là où est le curseur (le rayon de la caméra à travers lui),
+// ramené dans un cône de 35° autour du nez : le réticule est sous le curseur, les balles partent vers lui
+const CONE=.6;function visee(fwd){if(!S.souris||S.auto||S.mode!=='jeu'||S.loopT>=0){S.horsCone=false;return fwd;}
+  const r=new THREE.Vector3(S.cx,-S.cy,.5).unproject(cam).sub(cam.position).normalize();const D=cam.position.clone().addScaledVector(r,cam.position.distanceTo(S.p)+150).sub(S.p).normalize();
   const a=D.angleTo(fwd);S.horsCone=a>CONE;return a<=CONE?D:fwd.clone().lerp(D,CONE/a).normalize();}
 const tonneau=(cote)=>{if(S.rollT<0){S.rollT=0;S.rollD=cote||(S.bank>0?-1:1);}};
 const joy=document.getElementById('joy'),bille=joy.firstElementChild,RJ=46;const manuel=(ms=4000)=>{if(S.mode!=='jeu')return;S.auto=false;clearTimeout(S.to);S.to=setTimeout(()=>{S.tir=false;},ms);};/* en partie, le pilote automatique ne reprend jamais la main */
-// souris (PC) : elle pilote. Le repère rond est une direction fixe dans le monde, l'avion tourne vers lui ; clic gauche : feu, clic droit : missile
-document.getElementById('clavier').innerHTML='FLECHES : PILOTER · ESPACE : FEU<br>E : MISSILE · R : LOOP · F : TONNEAU<br>V : VUE · C : AVION · P : PAUSE<br>CLIC DANS LE JEU : PILOTER A LA SOURIS';
-const AIDE_SOURIS='SOURIS : DIRIGER · CLIC G : FEU<br>CLIC D : MISSILE · Z : ACCELERER<br>S : FREINER · Q D : ECART<br>2× Z : LOOP · 2× Q/D : TONNEAU<br>V : VUE · C : AVION · ECHAP : PAUSE';
-const souris=()=>{if(!S.souris){S.souris=1;S.my=S.yaw;S.mp=S.pitch;const a=document.getElementById('clavier');a.innerHTML=AIDE_SOURIS;a.style.opacity=1;setTimeout(()=>a.style.opacity=.35,6000);}manuel(1e9);};
-el.addEventListener('pointermove',e=>{if(S.mode!=='jeu'||e.pointerType!=='mouse'||S.doigt)return;const verr=document.pointerLockElement===el;if(!verr&&!(e.buttons&3)&&!S.souris)return;
-  const mx=e.movementX||0,my=e.movementY||0;if(!mx&&!my||Math.abs(mx)>150||Math.abs(my)>150)return;/* saut parasite à la capture de la souris */souris();S.my-=mx*.0024;S.mp=Math.max(-1.1,Math.min(1.1,S.mp-my*.0024));});
+// souris (PC) : le curseur est le viseur ; l'éloigner du centre de l'écran fait tourner l'appareil de ce côté (au centre, il vole droit) ; clic gauche : feu, clic droit : missile
+document.getElementById('clavier').innerHTML='FLECHES : PILOTER · ESPACE : FEU<br>E : MISSILE · R : LOOP · F : TONNEAU<br>V : VUE · C : AVION · P : PAUSE<br>BOUGE LA SOURIS : PILOTER ET VISER';
+const AIDE_SOURIS='SOURIS : LE VISEUR · LOIN DU CENTRE : TOURNER<br>CLIC G : FEU · CLIC D : MISSILE<br>Z : ACCELERER · S : FREINER · Q D : ECART<br>2× Z : LOOP · 2× Q/D : TONNEAU<br>V : VUE · C : AVION · ECHAP : PAUSE';
+const souris=()=>{el.classList.add('souris');if(!S.souris){S.souris=1;S.my=S.yaw;S.mp=S.pitch;const a=document.getElementById('clavier');a.innerHTML=AIDE_SOURIS;a.style.opacity=1;setTimeout(()=>a.style.opacity=.35,6000);}manuel(1e9);};
+el.addEventListener('pointermove',e=>{if(S.mode!=='jeu'||e.pointerType!=='mouse'||S.doigt)return;const r=el.getBoundingClientRect();
+  S.cx=Math.max(-1,Math.min(1,(e.clientX-r.left)/r.width*2-1));S.cy=Math.max(-1,Math.min(1,(e.clientY-r.top)/r.height*2-1));souris();});
+document.documentElement.addEventListener('mouseleave',()=>{S.cx=S.cy=0;});/* la souris sort de la fenêtre : on vole droit */
 el.addEventListener('contextmenu',e=>e.preventDefault());
 el.addEventListener('pointerdown',e=>{if(S.mode!=='jeu'||e.pointerType!=='mouse'||e.target.closest('button,#hangar,.ecran'))return;e.stopImmediatePropagation();e.preventDefault();souris();
-  try{const p=el.requestPointerLock&&el.requestPointerLock();if(p&&p.catch)p.catch(()=>{});}catch(x){}
   if(e.button===2)appui('bMis',true);else if(e.button===0){S.tir=true;document.getElementById('bTir').classList.add('on');}},true);
 addEventListener('pointerup',e=>{if(e.pointerType==='mouse'&&e.button===0&&S.souris){S.tir=false;document.getElementById('bTir').classList.remove('on');}});
 el.addEventListener('pointerdown',e=>{if(S.mode!=='jeu'||e.target.closest('button,.ecran,#hangar')||S.doigt)return;const r=el.getBoundingClientRect();S.doigt={id:e.pointerId,x:e.clientX,y:e.clientY};S.dx=S.dy=0;manuel(1e9);
@@ -376,7 +377,7 @@ function image(m){const dt=Math.min(.05,(m-av)/1000);av=m;requestAnimationFrame(
     if(c){const d=c.g.position.clone().sub(S.p);const a=Math.atan2(-d.x,-d.z);let da=a-S.yaw;da=Math.atan2(Math.sin(da),Math.cos(da));tyaw=Math.max(-1,Math.min(1,da*2));tp=Math.max(-.6,Math.min(.6,(c.g.position.y-S.p.y)*.03));
       S.tir=!!S.fwd&&d.angleTo(S.fwd)<.1&&d.length()<170;}else{tyaw=Math.sin(S.t*.35)*.6;tp=(40-S.p.y)*.02;S.tir=false;}
     if(S.p.y<14)tp=.5;if(S.t%11<dt&&S.t>3)tonneau();}
-  else if(S.souris&&!S.doigt&&!S.dx&&!S.dy){let da=S.my-S.yaw;da=Math.atan2(Math.sin(da),Math.cos(da));tyaw=Math.max(-1,Math.min(1,da*2.2));tp=S.mp;/* l'avion rejoint la direction de la souris */}
+  else if(S.souris&&!S.doigt&&!S.dx&&!S.dy){const zm=v=>Math.sign(v)*Math.max(0,Math.abs(v)-.08)/.92;tyaw=-Math.max(-1,Math.min(1,zm(S.cx)*1.5));tp=-Math.max(-1,Math.min(1,zm(S.cy)*1.4))*.85;/* le curseur loin du centre : on tourne, on monte, on descend ; zone morte au centre */}
   else{tyaw=-S.dx*Math.abs(S.dx)*1;tp=-S.dy*.9;/* joystick vers le haut : l'avion monte ; vers le bas : il descend */}
   if(!S.souris||S.auto||S.doigt||S.dx||S.dy){S.my=S.yaw;S.mp=S.pitch;}
   if(S.loopT>=0)tyaw=0;/* pendant le looping, le joystick ne fait pas virer */
@@ -477,9 +478,8 @@ function viseur(fwd,dt){ox.clearRect(0,0,OW,OH);
     const k=Math.min((OW/2-9)/Math.abs(dx||1e-6),(OH/2-9)/Math.abs(dy||1e-6));const x=OW/2+dx*k,y=OH/2+dy*k;const prs=q.z>0&&e.g.position.distanceTo(S.p)<80;
     if(prs&&Math.floor(S.t*6)%2)continue;ox.save();ox.translate(Math.round(x),Math.round(y));ox.rotate(Math.atan2(dy,dx));
     ox.fillStyle='#1a1c22';ox.beginPath();ox.moveTo(6,0);ox.lineTo(-4,-5);ox.lineTo(-4,5);ox.fill();ox.fillStyle=prs?'#ff4a2a':'#e2682e';ox.beginPath();ox.moveTo(4,0);ox.lineTo(-3,-3);ox.lineTo(-3,3);ox.fill();ox.restore();}
-  // le repère de la souris : la direction vers laquelle l'avion tourne
-  if(S.souris&&!S.auto&&S.horsCone){const cm=Math.cos(S.mp);/* le rond pointillé : seulement quand on vise au-delà du cône (là où l'appareil tourne) */const q=versEcran(S.p.clone().add(new THREE.Vector3(-Math.sin(S.my)*cm,Math.sin(S.mp),-Math.cos(S.my)*cm).multiplyScalar(120)));
-    if(q){const[x,y]=[Math.round(q[0]),Math.round(q[1])];for(let a=0;a<16;a++){const ang=a/16*Math.PI*2;px(x+Math.round(Math.cos(ang)*5),y+Math.round(Math.sin(ang)*5),1,1,a%2?'#ffffff':'#1a1c22');}}}
+  // le curseur, quand le réticule est bloqué au bord du cône : un petit point
+  if(S.souris&&S.horsCone){const x=Math.round((S.cx+1)/2*OW),y=Math.round((S.cy+1)/2*OH);px(x-1,y,3,1,'#1a1c22');px(x,y-1,1,3,'#1a1c22');px(x,y,1,1,'#ffffff');}
   // le viseur : là où vont les balles, 120 m devant
   const v=versEcran(S.p.clone().addScaledVector(fwd,120));if(v){const[x,y]=[Math.round(v[0]),Math.round(v[1])];
     for(const[c,o]of[['#1a1c22',1],['#ffffff',0]]){px(x-6+o,y+o,4,1,c);px(x+3+o,y+o,4,1,c);px(x+o,y-6+o,1,4,c);px(x+o,y+3+o,1,4,c);px(x+o,y+o,1,1,c);}}
@@ -492,17 +492,16 @@ function montrer(id){for(const e of ECRANS)$(e).hidden=e!==id;el.classList.toggl
 function lireRecord(){try{return JSON.parse(localStorage.getItem('cieldeguerre.record'))||{};}catch(e){return{};}}
 function majTitre(){const r=lireRecord();$('tRecord').innerHTML=r.parties?`RECORD ${String(r.score).padStart(6,'0')}<br>VAGUE ${r.vague||0} · ${r.parties||0} PARTIE${(r.parties||0)>1?'S':''}`:'';}
 function viderCombat(){for(const e of ennemis)sc.remove(e.g);ennemis.length=0;for(const b of tirsEnnemis)sc.remove(b.b);tirsEnnemis.length=0;V.file.length=0;}
-function nouvellePartie(){viderCombat();V.n=0;V.pause=2.5;V.fin=0;Object.assign(S,{mode:'jeu',vies:3,blindage:100,score:0,munB:300,munM:FAM().mis,auto:false,tir:false,boost:0,loopT:-1,rollT:-1,dx:0,dy:0});
+function nouvellePartie(){viderCombat();V.n=0;V.pause=2.5;V.fin=0;Object.assign(S,{cx:0,cy:0,mode:'jeu',vies:3,blindage:100,score:0,munB:300,munM:FAM().mis,auto:false,tir:false,boost:0,loopT:-1,rollT:-1,dx:0,dy:0});
   S.p.set(S.p.x,Math.max(S.p.y,40),S.p.z);montrer(null);annonce('MISSION · ARCHIPEL<b>VAGUES</b>Abats les chasseurs rouges. Leurs grands vaisseaux tirent aussi !');}
 function pause(){if(S.mode!=='jeu')return;S.mode='pause';S.tir=false;try{document.exitPointerLock();}catch(x){}montrer('ePause');}
 function reprendre(){if(S.mode!=='pause')return;S.mode='jeu';montrer(null);}
-function versTitre(){viderCombat();S.mode='titre';S.auto=true;S.souris=0;S.doigt=null;joy.classList.remove('on');majTitre();montrer('eTitre');}
+function versTitre(){viderCombat();S.mode='titre';S.auto=true;S.souris=0;el.classList.remove('souris');S.doigt=null;joy.classList.remove('on');majTitre();montrer('eTitre');}
 function abattu(){boom(S.p,30);S.vies--;V.flash=.4;if(S.vies<=0){finPartie();return;}S.blindage=100;annonce(`ABATTU !<b>${S.vies} APPAREIL${S.vies>1?'S':''} RESTANT${S.vies>1?'S':''}</b>Un nouvel appareil decolle.`);}
 function finPartie(){S.mode='fin';S.auto=true;S.tir=false;S.blindage=100;try{document.exitPointerLock();}catch(x){}const r=lireRecord(),neuf=S.score>(r.score||0);
   const n={score:Math.max(S.score,r.score||0),vague:Math.max(V.n,r.vague||0),parties:(r.parties||0)+1};try{localStorage.setItem('cieldeguerre.record',JSON.stringify(n));}catch(e){}
   $('fScore').textContent=String(S.score).padStart(6,'0');$('fDetail').textContent=`Vague ${V.n} atteinte.`;$('fRecord').innerHTML=neuf&&S.score>0?'NOUVEAU RECORD !':`RECORD ${String(n.score).padStart(6,'0')}`;
   setTimeout(()=>{viderCombat();montrer('eFin');},1600);}
-document.addEventListener('pointerlockchange',()=>{if(!document.pointerLockElement&&S.mode==='jeu'&&S.souris)pause();});/* Échap rend la souris : pause */
 document.addEventListener('visibilitychange',()=>{if(document.hidden)pause();});
 const clic=(id,f)=>$(id).addEventListener('click',e=>{e.stopPropagation();f();});
 clic('tJouer',nouvellePartie);clic('fRejouer',nouvellePartie);clic('pReprendre',reprendre);clic('pQuitter',versTitre);clic('fMenu',versTitre);

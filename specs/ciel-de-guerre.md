@@ -77,6 +77,12 @@ Historique des directions : *Escadrille pixel* (gros pixels, sprite dessiné), p
 - **Partie** : 3 appareils ; on démarre avec le polyvalent 7 ; tout le hangar est ouvert (les déblocages viendront plus tard). Record dans `cieldeguerre.record` (score, vague, parties) ; appareil choisi dans `cieldeguerre.avion`.
 - **Modèles** : 52 fichiers `.glb` dans `modeles/` (9,6 Mo), chargés à la demande et gardés par le service worker au fil du jeu (pas préchargés pour toute la Ludothèque).
 - **Visée à la souris** (18/11, retour de l'utilisateur : « sur PC le gameplay est encore compliqué ; le réticule devrait suivre la souris sans latence ») : les canons visent la direction de la souris dans un cône de 25° autour du nez (`visee()`). Le réticule, les balles et le verrouillage des missiles la suivent tout de suite, et l'appareil continue de tourner vers elle. Au-delà du cône, le réticule reste au bord et le rond pointillé montre la direction voulue.
+- **Le curseur est le viseur** (18/11, l'utilisateur : « il y a un truc qui cloche avec la souris »). Trois défauts de la visée précédente :
+  - le curseur du système et le réticule n'étaient pas au même endroit quand le navigateur refusait de capturer la souris (c'est le cas dans l'artefact) ;
+  - la souris pilotait une direction invisible, fixe dans le monde : tout bougeait à l'écran sans que la main bouge ;
+  - au bord de la fenêtre, on ne pouvait plus tourner.
+
+  Désormais, plus de capture : le curseur (caché) est le viseur, et le réticule est dessous. Les balles, le verrouillage et le rayon de la caméra passent par lui, dans un cône de 35° autour du nez. Éloigner le curseur du centre de l'écran fait tourner, monter ou descendre (zone morte au centre, comme le joystick). Un point marque le curseur quand le réticule est bloqué au bord du cône. Si la souris sort de la fenêtre, l'appareil vole droit.
 - **Artefact** : le jeu remplace la maquette au même lien (copie de 12,9 Mo avec les modèles en base64).
 
 ## Plan des sessions (proposition)
