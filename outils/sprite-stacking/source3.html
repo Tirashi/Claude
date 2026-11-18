@@ -1,0 +1,183 @@
+<title>Bateaux en relief</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Rajdhani:wght@700&family=Alegreya+Sans:wght@400;700&display=swap">
+<style>
+/* trois téléphones : Amiral ! (bataille), le chantier naval (11 navires), Capitaine du port (bassin) — sprite stacking */
+:root{--bg:#e6ebef;--carte:#f4f7f9;--fg:#1f2a33;--doux:#5f6d78;--bord:#2f5d7a;--accent:#c0392b;
+  --titre:"Press Start 2P",monospace;--texte:"Alegreya Sans",system-ui,sans-serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#10171d;--carte:#1a242c;--fg:#e6eef3;--doux:#9fb0bc;--bord:#5f9cc2;--accent:#ff7a66;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#10171d;--carte:#1a242c;--fg:#e6eef3;--doux:#9fb0bc;--bord:#5f9cc2;--accent:#ff7a66;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:17px/1.5 var(--texte);padding-block:24px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+main{max-width:1180px;margin:0 auto;display:grid;gap:34px}
+h1,h2{font-family:var(--titre);font-weight:400;letter-spacing:.02em;text-wrap:balance}
+h1{font-size:18px;margin:0;color:var(--accent)} h2{font-size:12px;margin:0 0 14px;color:var(--bord)}
+p{margin:0;max-width:72ch} a{color:var(--bord)}
+.tels{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:30px 24px}
+figure{margin:0;display:grid;gap:10px;min-width:0;justify-items:center;align-content:start}
+.tel{width:100%;max-width:340px;aspect-ratio:9/16;border:6px solid var(--bord);border-radius:24px;overflow:hidden;background:#000;position:relative;touch-action:none;cursor:pointer;user-select:none}
+.tel canvas{width:100%;height:100%;display:block;image-rendering:pixelated}
+.tel .aide{position:absolute;left:0;right:0;bottom:8px;text-align:center;font:7px var(--titre);color:#fff;text-shadow:1px 1px 0 #000;pointer-events:none;opacity:.85}
+figcaption{display:grid;gap:4px;max-width:340px} figcaption b{font-family:var(--titre);font-size:10px;color:var(--accent);line-height:1.6}
+.idee{font-size:15px;color:var(--doux)}
+ul{margin:0;padding-left:22px;display:grid;gap:6px;max-width:76ch}
+.q{background:var(--carte);border-left:6px solid var(--accent);padding:14px 16px;display:grid;gap:8px}
+table{border-collapse:collapse;font-size:15px;width:100%;min-width:620px} td,th{border-bottom:1px solid var(--bord);padding:6px 8px;text-align:left;vertical-align:top}
+.defile{overflow-x:auto}
+</style>
+<main>
+<header style="display:grid;gap:10px">
+<h1>BATEAUX EN RELIEF · AMIRAL ET CAPITAINE</h1>
+<p>Les bateaux en sprite stacking, sur des grilles de jeu. Pour Amiral !, j'ai construit les 11 navires du catalogue en voxels, d'après les dessins validés. Pour Capitaine du port, ce sont les bateaux du Watercraft Kit de Kenney (CC0), découpés en tranches à la taille des cases.</p>
+</header>
+<section class="tels">
+<figure><div class="tel" id="b1"><canvas width="240" height="427"></canvas><div class="aide">TOUCHER : TIR ENNEMI</div></div>
+<figcaption><b>A · AMIRAL ! · VOS EAUX</b><span>Ta flotte en relief sur la grille 8 × 8 : porte-avions, cuirassé « pont bleu 1944 », destroyer et torpilleur. Les obus ennemis tombent : gerbes d'eau, incendies, fumée.</span><span class="idee">La grille reste bien lisible : la caméra ne fait que tanguer un peu.</span></figcaption></figure>
+<figure><div class="tel" id="b2"><canvas width="240" height="427"></canvas><div class="aide">TOUCHER : NAVIRE SUIVANT</div></div>
+<figcaption><b>B · LE CHANTIER NAVAL</b><span>Les 11 navires du catalogue, chacun sur un plateau qui tourne, avec son nom et son pouvoir. Ils sont tous construits en voxels par le code.</span><span class="idee">L'écran du chantier d'Amiral !, en relief.</span></figcaption></figure>
+<figure><div class="tel" id="b3"><canvas width="216" height="384"></canvas><div class="aide">TOUCHER : REJOUER</div></div>
+<figcaption><b>C · CAPITAINE DU PORT</b><span>Un bassin 6 × 6 avec les bateaux de Kenney : chalutier, voilier, vedettes, cargos, péniche, paquebot. Le remorqueur pousse, le navire doré sort par la passe. Lumière du soir, quais et phare.</span><span class="idee">Dans l'esprit du port que tu as aimé.</span></figcaption></figure>
+</section>
+<section><h2>D'où viennent les bateaux</h2><div class="defile"><table>
+<tr><th>Bateaux</th><th>Source</th><th>Licence</th><th>Remarque</th></tr>
+<tr><td>Les 11 navires d'Amiral !</td><td>construits par le code (voxels)</td><td>à nous</td><td>Exactement les navires du jeu, dans un seul style ; on peut les retoucher à volonté.</td></tr>
+<tr><td>Bateaux de Capitaine du port</td><td><a href="https://kenney-assets.itch.io/watercraft-kit">Watercraft Kit</a> (Kenney)</td><td>CC0</td><td>Rétrécis en largeur pour tenir dans une case.</td></tr>
+<tr><td>Destroyer Porter</td><td><a href="https://endo-shinji.itch.io/us-navy-destroyer-porter">US Navy Destroyer Porter</a> (endo-shinji)</td><td>prix libre</td><td>Très beau, mais seul de son genre.</td></tr>
+<tr><td>Zumwalt, frégate</td><td><a href="https://toastycatstudios.itch.io/low-poly-warships">Low Poly Warships</a></td><td>prix libre</td><td>Furtifs, tout noirs : pas retenus.</td></tr>
+<tr><td>13 navires de guerre modernes</td><td><a href="https://artiquea.itch.io/low-poly-military-rts-pack-2">Low Poly Modern Military RTS Pack Vol. 2</a> (artiquea)</td><td>10 €, usage commercial permis</td><td>Porte-avions, porte-hélicoptères, croiseur, destroyer, corvette, dragueur de mines, ravitailleur, sous-marins… À acheter si on veut des modèles « pro » au lieu des miens.</td></tr>
+</table></div></section>
+<section class="q"><h2>A choisir</h2>
+<p>1. Amiral ! : les navires construits par le code te vont-ils, ou on achète le pack d'artiquea (10 €) ?</p>
+<p>2. Capitaine du port : ce rendu en relief, avec cette lumière, à la place des sprites actuels ?</p>
+<p>3. On commence par lequel des deux jeux ?</p>
+</section>
+</main>
+<script>
+/*DONNEES*/
+const IM={};
+for(const k in PILES){const p=PILES[k];const im=new Image();im.src=p.src;IM[k]={...p,im,ok:false};im.onload=()=>{IM[k].ok=true;IM[k].c=ombrer(IM[k]);};}
+function ombrer(p,fort=.38){const c=document.createElement('canvas');c.width=p.w*p.n;c.height=p.h;const x=c.getContext('2d');x.drawImage(p.im,0,0);
+  for(let i=0;i<p.n;i++){const f=1-(i+1)/p.n;x.globalCompositeOperation='source-atop';x.fillStyle=`rgba(10,12,30,${(fort*f).toFixed(3)})`;x.fillRect(i*p.w,0,p.w,p.h);}return c;}
+const rnd=s=>()=>(s=(s*16807)%2147483647)/2147483647;
+// une pile : (x, y) au sol, ang = rotation à l'écran, k = écrasement, pas = hauteur d'une tranche
+// une pile est assemblée une seule fois par angle (arrondi à 1/64 de tour), puis dessinée d'un seul drawImage
+function assembler(p,ang,k,pas,teinte){const q=Math.round(ang/(Math.PI*2)*64);const cle=q+'|'+k+'|'+pas+'|'+(teinte||'');p.cache=p.cache||{};if(p.cache[cle])return p.cache[cle];
+  const a=q/64*Math.PI*2,co=Math.cos(a),si=Math.sin(a);const R=Math.ceil(Math.hypot(p.w,p.h)/2)+2,Hh=Math.ceil(p.n*pas)+2;
+  const c=document.createElement('canvas');c.width=2*R;c.height=Math.ceil(2*R*k)+Hh;const x=c.getContext('2d');x.imageSmoothingEnabled=false;const src=teinte?(p.t||(p.t=teinter(p,teinte))):p.c;
+  const cx=R,cy=Hh+R*k;for(let i=0;i<p.n;i++){x.setTransform(co,si*k,-si,co*k,cx,cy-i*pas);x.drawImage(src,i*p.w,0,p.w,p.h,-p.w/2,-p.h/2,p.w,p.h);}
+  return p.cache[cle]={c,cx,cy};}
+function pile(ctx,p,x,y,ang,k,pas=.7,z=0,teinte){if(!p||!p.ok)return;const r=assembler(p,ang,k,pas,teinte);ctx.drawImage(r.c,Math.round(x-r.cx),Math.round(y-r.cy-z*pas));}
+function teinter(p,t){const c=document.createElement('canvas');c.width=p.c.width;c.height=p.c.height;const x=c.getContext('2d');x.drawImage(p.c,0,0);x.globalCompositeOperation='color';x.fillStyle=t;x.fillRect(0,0,c.width,c.height);x.globalCompositeOperation='destination-in';x.drawImage(p.c,0,0);return c;}
+function ombre(ctx,p,x,y,ang,k,a=.3){if(!p||!p.ok)return;if(!p.o){const o=document.createElement('canvas');o.width=p.w;o.height=p.h;const g=o.getContext('2d');for(let i=0;i<Math.min(4,p.n);i++)g.drawImage(p.im,i*p.w,0,p.w,p.h,0,0,p.w,p.h);g.globalCompositeOperation='source-in';g.fillStyle='#001';g.fillRect(0,0,p.w,p.h);p.o=o;}
+  const co=Math.cos(ang),si=Math.sin(ang);ctx.globalAlpha=a;ctx.setTransform(co,si*k,-si,co*k,x,y);ctx.drawImage(p.o,-p.w/2,-p.h/2);ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;}
+function motifMer(base,clair,g){const c=document.createElement('canvas');c.width=c.height=64;const x=c.getContext('2d');const r=rnd(g);x.fillStyle=base;x.fillRect(0,0,64,64);
+  for(let i=0;i<30;i++){x.fillStyle=i%5?clair:'rgba(255,255,255,.35)';const a=r()*64|0,b=r()*64|0,l=2+r()*5|0;x.fillRect(a,b,l,1);if(a+l>64)x.fillRect(a-64,b,l,1);}return c;}
+const TMP={};function tampon(n,W,H){let c=TMP[n+W];if(!c){c=TMP[n+W]=document.createElement('canvas');c.width=W;c.height=H;}return c;}
+function hd2d(ctx,W,H,o={}){if(o.teinte){ctx.globalCompositeOperation='soft-light';ctx.fillStyle=o.teinte;ctx.fillRect(0,0,W,H);ctx.globalCompositeOperation='source-over';}
+  const cle='v'+W;if(!TMP[cle]){const c=TMP[cle]=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d');const v=x.createRadialGradient(W/2,H/2,H*.3,W/2,H/2,H*.75);v.addColorStop(0,'rgba(0,0,0,0)');v.addColorStop(1,'rgba(0,0,10,.4)');x.fillStyle=v;x.fillRect(0,0,W,H);}
+  ctx.drawImage(TMP[cle],0,0);}
+function scene(id,dessin,toucher){const el=document.getElementById(id),cv=el.querySelector('canvas'),ctx=cv.getContext('2d');ctx.imageSmoothingEnabled=false;const S={t:0,vu:false};
+  el.addEventListener('pointerdown',()=>toucher&&toucher(S));new IntersectionObserver(es=>S.vu=es[0].isIntersecting).observe(el);
+  let av=performance.now();(function f(m){const dt=Math.min(.05,(m-av)/1000);av=m;requestAnimationFrame(f);if(!S.vu&&!window.TOUT_VOIR)return;S.t+=dt;ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;dessin(ctx,S,dt,cv.width,cv.height);})(av);return S;}
+const NEZ={flotte:-Math.PI/2,kenney:Math.PI/2};
+function texte(ctx,t,x,y,taille=7,col='#fff',align='left'){ctx.font=`${taille}px "Press Start 2P"`;ctx.textAlign=align;ctx.fillStyle='#0008';ctx.fillText(t,x+1,y+1);ctx.fillStyle=col;ctx.fillText(t,x,y);ctx.textAlign='left';}
+function texteR(ctx,t,x,y,taille=11,col='#fff',align='left'){ctx.font=`700 ${taille}px Rajdhani,sans-serif`;ctx.textAlign=align;ctx.fillStyle='#0008';ctx.fillText(t,x+1,y+1);ctx.fillStyle=col;ctx.fillText(t,x,y);ctx.textAlign='left';}
+
+/* ---------- A : Amiral, vos eaux ---------- */
+const MER_A=motifMer('#24658f','#3478a3',4);const C=28,N=8;
+const FLOTTE=[{n:'porte_avions',i:1,j:1,l:4,h:1},{n:'croiseur',i:6,j:2,l:4,h:0},{n:'destroyer',i:2,j:5,l:3,h:1},{n:'torpilleur',i:4,j:7,l:2,h:1}];
+const TIRS=[];let prochain=1.2;const ETAT={};
+function tirer(){const i=Math.random()*N|0,j=Math.random()*N|0;TIRS.push({i,j,t:0});}
+scene('b1',(ctx,S,dt,W,H)=>{const k=.8,ox=(W-N*C)/2+C/2,oy=118;const sway=Math.sin(S.t*.6)*.6;
+  ctx.fillStyle='#163a55';ctx.fillRect(0,0,W,H);
+  const pat=ctx.createPattern(MER_A,'repeat');ctx.save();ctx.translate((S.t*3)%64,0);ctx.fillStyle=pat;ctx.fillRect(-64,0,W+128,H);ctx.restore();
+  // grille
+  ctx.strokeStyle='rgba(255,255,255,.16)';ctx.lineWidth=1;for(let a=0;a<=N;a++){ctx.beginPath();ctx.moveTo(ox-C/2+a*C+.5,oy-C/2*k);ctx.lineTo(ox-C/2+a*C+.5,oy+(N-.5)*C*k);ctx.stroke();ctx.beginPath();ctx.moveTo(ox-C/2,oy+(a-.5)*C*k+.5);ctx.lineTo(ox+(N-.5)*C,oy+(a-.5)*C*k+.5);ctx.stroke();}
+  ctx.font='700 9px Rajdhani';ctx.fillStyle='rgba(255,255,255,.55)';for(let a=0;a<N;a++){ctx.textAlign='center';ctx.fillText('ABCDEFGH'[a],ox+a*C,oy-C/2*k-3);ctx.fillText(a+1,ox-C/2-7,oy+a*C*k+3);}ctx.textAlign='left';
+  const pos=(i,j)=>[ox+i*C,oy+j*C*k];
+  // marques des tirs passés
+  for(const key in ETAT){const[i,j]=key.split(',').map(Number);const[x,y]=pos(i,j);if(ETAT[key]==='eau'){ctx.strokeStyle='rgba(255,255,255,.6)';ctx.beginPath();ctx.ellipse(x,y,6,6*k,0,0,7);ctx.stroke();ctx.fillStyle='#fff';ctx.fillRect(x-1,y-1,2,2);}}
+  // navires
+  const L=[];for(const f of FLOTTE){const p=IM[f.n];const cx=f.h?f.i+(f.l-1)/2:f.i,cy=f.h?f.j:f.j+(f.l-1)/2;const[x,y]=pos(cx,cy);
+    const ang=f.h?Math.PI/2:0;L.push({p,x,y:y+Math.sin(S.t*1.6+f.j)*.4,ang,d:y});}
+  for(const e of L)ombre(ctx,e.p,e.x+2,e.y+2,e.ang,k,.25);
+  L.sort((a,b)=>a.d-b.d);for(const e of L)pile(ctx,e.p,e.x,e.y,e.ang,k,.62);
+  // incendies sur les cases touchées
+  for(const key in ETAT){if(ETAT[key]!=='feu')continue;const[i,j]=key.split(',').map(Number);const[x,y]=pos(i,j);
+    for(let q=0;q<5;q++){const a=(S.t*2+q*.37+i)%1;ctx.fillStyle=`rgba(70,70,75,${.5*(1-a)})`;ctx.beginPath();ctx.arc(x+Math.sin(q+S.t)*2+a*6,y-8-a*26,2+a*5,0,7);ctx.fill();}
+    for(let q=0;q<4;q++){const fl=Math.random();ctx.fillStyle=['#ffd23a','#ff8a2a','#ff5a2a'][q%3];ctx.fillRect(x-3+Math.random()*6,y-6-fl*6,2,2+fl*3);}}
+  // obus qui tombent
+  prochain-=dt;if(prochain<=0){prochain=1.4+Math.random();tirer();}
+  for(const t of TIRS){t.t+=dt;const[x,y]=pos(t.i,t.j);const key=t.i+','+t.j;
+    if(t.t<.9){const h=(1-t.t/.9)*160;ctx.fillStyle='#222';ctx.fillRect(x-1,y-h-6,3,4);ctx.fillStyle='rgba(255,255,255,.3)';ctx.fillRect(x,y-h-16,1,10);
+      ctx.strokeStyle='rgba(255,60,40,.7)';ctx.beginPath();ctx.ellipse(x,y,C*.4,C*.4*k,0,0,7);ctx.stroke();}
+    else{if(!t.fait){t.fait=1;const touche=FLOTTE.some(f=>f.h?(t.j===f.j&&t.i>=f.i&&t.i<f.i+f.l):(t.i===f.i&&t.j>=f.j&&t.j<f.j+f.l));t.touche=touche;ETAT[key]=touche?'feu':'eau';}
+      const a=t.t-.9;if(t.touche){const r=a*40;ctx.fillStyle=`rgba(255,${200-a*200|0},60,${Math.max(0,1-a*1.5)})`;ctx.beginPath();ctx.arc(x,y-6,r,0,7);ctx.fill();}
+      else{const h=Math.max(0,(1-a*2))*20;ctx.fillStyle='rgba(235,248,255,.9)';ctx.fillRect(x-2,y-h,4,h);ctx.fillRect(x-5,y-h*.6,2,h*.6);ctx.fillRect(x+3,y-h*.6,2,h*.6);ctx.strokeStyle=`rgba(255,255,255,${Math.max(0,1-a)})`;ctx.beginPath();ctx.ellipse(x,y,4+a*14,(4+a*14)*k,0,0,7);ctx.stroke();}}}
+  for(let q=TIRS.length-1;q>=0;q--)if(TIRS[q].t>2.2)TIRS.splice(q,1);
+  if(Object.keys(ETAT).length>22)for(const k2 in ETAT)delete ETAT[k2];
+  // bandeau
+  ctx.fillStyle='#0d2233';ctx.fillRect(0,0,W,34);texte(ctx,'AMIRAL !',W/2,16,10,'#ffd23a','center');texteR(ctx,'VOS EAUX · TOUR 12',W/2,29,9,'#bfe3ff','center');
+  ctx.fillStyle='#0d2233';ctx.fillRect(0,H-62,W,62);const P=[['AVION','#7fd0ff'],['SALVE','#ffd23a'],['SONAR','#9dffb0'],['TORPILLE','#ff9a7a']];
+  P.forEach(([n,c],q)=>{const x=8+q*58;ctx.fillStyle='#173a52';ctx.fillRect(x,H-54,52,26);ctx.strokeStyle=c;ctx.strokeRect(x+.5,H-53.5,51,25);texteR(ctx,n,x+26,H-37,8,c,'center');});
+  hd2d(ctx,W,H,{flou:1,haut:.12,bas:.9,halo:.2,teinte:'rgba(255,200,150,.25)'});
+},()=>{tirer();});
+
+/* ---------- B : le chantier naval ---------- */
+const CAT=[['porte_avions','PORTE-AVIONS','AVION',4],['croiseur','CROISEUR','MISSILES',4],['atelier','NAVIRE-ATELIER','REPARATION',4],['cuirasse','CUIRASSE','SALVE',3],['sous_marin','SOUS-MARIN','PLONGEE',3],['destroyer','DESTROYER','SONAR',3],
+  ['mouilleur','MOUILLEUR DE MINES','MINES',3],['brouilleur','BROUILLEUR','FUMEE',3],['torpilleur','TORPILLEUR','TORPILLE',2],['vedette','VEDETTE','LEURRE',2],['garde_cote','GARDE-COTE','PROJECTEUR',2]];
+const SB={k:0,t:0};const MER_B=motifMer('#1f5c80','#2e6f96',8);
+scene('b2',(ctx,S,dt,W,H)=>{SB.t+=dt;if(SB.t>4){SB.t=0;SB.k=(SB.k+1)%CAT.length;}const[n,nom,pouv,l]=CAT[SB.k];const p=IM[n];
+  ctx.fillStyle='#163a55';ctx.fillRect(0,0,W,H);const pat=ctx.createPattern(MER_B,'repeat');ctx.fillStyle=pat;ctx.fillRect(0,0,W,H);
+  // cale sèche
+  const cx=W/2,cy=H*.5,k=.62;ctx.fillStyle='#6d7680';ctx.beginPath();ctx.ellipse(cx,cy+6,92,92*k,0,0,7);ctx.fill();ctx.fillStyle='#8a939c';ctx.beginPath();ctx.ellipse(cx,cy,92,92*k,0,0,7);ctx.fill();
+  ctx.strokeStyle='#ffd23a';ctx.setLineDash([6,5]);ctx.beginPath();ctx.ellipse(cx,cy,84,84*k,0,0,7);ctx.stroke();ctx.setLineDash([]);
+  const ang=S.t*.5;const e=Math.min(1,SB.t*3);ombre(ctx,p,cx+3,cy+3,ang,k,.3);pile(ctx,p,cx,cy-(1-e)*30,ang,k,1);
+  // grues
+  for(const s of[-1,1]){ctx.fillStyle='#d9a52a';ctx.fillRect(cx+s*100-2,cy-120,4,120);ctx.fillRect(cx+s*100-(s>0?40:0),cy-122,40,4);ctx.fillStyle='#333';ctx.fillRect(cx+s*72,cy-118,1,40+Math.sin(S.t*2)*6);}
+  ctx.fillStyle='#0d2233';ctx.fillRect(0,0,W,40);texte(ctx,'CHANTIER NAVAL',W/2,17,9,'#ffd23a','center');texteR(ctx,`${SB.k+1} / ${CAT.length}`,W/2,32,9,'#bfe3ff','center');
+  ctx.fillStyle='#0d2233';ctx.fillRect(0,H-96,W,96);texte(ctx,nom,W/2,H-74,8,'#fff','center');
+  for(let q=0;q<l;q++){ctx.fillStyle='#ffd23a';ctx.fillRect(W/2-l*9+q*18,H-62,14,8);}
+  ctx.fillStyle='#173a52';ctx.fillRect(W/2-60,H-46,120,24);ctx.strokeStyle='#7fd0ff';ctx.strokeRect(W/2-59.5,H-45.5,119,23);texteR(ctx,'POUVOIR : '+pouv,W/2,H-29,9,'#7fd0ff','center');
+  hd2d(ctx,W,H,{flou:1.2,haut:.16,bas:.7,halo:.25,teinte:'rgba(255,190,130,.3)'});
+},()=>{SB.t=0;SB.k=(SB.k+1)%CAT.length;});
+
+/* ---------- C : Capitaine du port ---------- */
+const MER_C=motifMer('#2b6f8c','#3d86a3',31);const CC=28,NC=6;
+// bassin : [nom, i, j, longueur, horizontal]
+const BAS=[['dore',0,2,2,1],['ship-cargo-a',2,1,3,0],['ship-cargo-b',4,0,3,0],['boat-fishing-small',5,2,2,0],['boat-sail-a',0,0,2,1],['boat-speed-e',3,0,2,0],['boat-house-a',0,3,3,0],['boat-fishing-small',1,4,2,0],['boat-speed-e',3,3,2,0]];
+const SC={t:0};
+// une partie rejouée en boucle : [bateau, case de départ → case d'arrivée]
+const COUPS=[[3,0,-2],[1,0,2],[2,0,3]];
+scene('b3',(ctx,S,dt,W,H)=>{SC.t+=dt;const T=SC.t;const k=.82,ox=(W-NC*CC)/2+CC/2,oy=120;
+  ctx.fillStyle='#2b6f8c';ctx.fillRect(0,0,W,H);ctx.save();ctx.translate((T*2)%64,(T)%64);ctx.fillStyle=ctx.createPattern(MER_C,'repeat');ctx.fillRect(-64,-64,W+128,H+128);ctx.restore();
+  const pos=(i,j)=>[ox+i*CC,oy+j*CC*k];
+  // quais de pierre autour du bassin (la passe à droite, rangée 2)
+  const q0=ox-CC/2-10,q1=ox+(NC-.5)*CC+10,qy0=oy-CC/2*k-10,qy1=oy+(NC-.5)*CC*k+10;
+  ctx.fillStyle='#8c8577';ctx.fillRect(0,0,W,qy0);ctx.fillRect(0,qy1,W,H-qy1);ctx.fillRect(0,0,q0+10-10,H);ctx.fillRect(q1,0,W-q1,qy0+ (2)*CC*k+10);ctx.fillRect(q1,qy0+3*CC*k+10,W-q1,H);
+  if(!SC.quai){SC.quai=document.createElement('canvas');SC.quai.width=W;SC.quai.height=H;const qx=SC.quai.getContext('2d');
+  for(let y=0;y<H;y+=5)for(let x=(y/5%2)*6;x<W;x+=12){const dans=x>q0&&x<q1&&y>qy0&&y<qy1;const passe=x>=q1&&y>qy0+2*CC*k+10&&y<qy0+3*CC*k+10;if(!dans&&!passe){qx.fillStyle='rgba(60,55,48,.22)';qx.fillRect(x,y,1,5);qx.fillRect(x,y,12,1);}}}
+  ctx.drawImage(SC.quai,0,0);
+  ctx.fillStyle='#6d675c';ctx.fillRect(q0,qy0,q1-q0,3);ctx.fillRect(q0,qy1-3,q1-q0,3);ctx.fillRect(q0,qy0,3,qy1-qy0);
+  // bornes et maisons du quai
+  for(const[n,x,y]of[['House_1',30,48],['House_2',92,40],['House_3',160,50],['House_1',190,345]])if(IM[n])pile(ctx,IM[n],x,y,0,k,1);
+  if(IM.phare)pile(ctx,IM.phare,q1+16,qy0+3*CC*k+22,0,k,1);
+  // bateaux, avec la partie qui se rejoue
+  const cyc=T%9;const decal=BAS.map(()=>0);let pousse=-1;
+  COUPS.forEach(([b,_,d],q)=>{const t0=1+q*2;const a=Math.max(0,Math.min(1,(cyc-t0)/1));const e=a*a*(3-2*a);decal[b]=d*e;if(a>0&&a<1)pousse=b;});
+  const sortie=Math.max(0,cyc-7.2)*4;decal[0]+=sortie;
+  const L=[];BAS.forEach(([n,i,j,l,h],b)=>{const p=n==='dore'?IM['boat-speed-a']:IM[n];let ci=h?i+(l-1)/2:i,cj=h?j:j+(l-1)/2;if(h)ci+=decal[b];else cj+=decal[b];const[x,y]=pos(ci,cj);
+    const ang=(h?Math.PI/2:0)-NEZ.kenney+Math.PI/2*(h?0:0)+(n==='dore'?Math.PI:0);L.push({p,x,y:y+Math.sin(T*1.5+b)*.4,ang:h?-Math.PI/2:0,d:y,dore:n==='dore',b,h});});
+  for(const e of L)ombre(ctx,e.p,e.x+2,e.y+2,e.ang,k,.25);
+  L.sort((a,b)=>a.d-b.d);for(const e of L){if(e.dore){ctx.fillStyle=`rgba(255,220,90,${.25+.15*Math.sin(T*4)})`;ctx.beginPath();ctx.ellipse(e.x,e.y,32,14,0,0,7);ctx.fill();}pile(ctx,e.p,e.x,e.y,e.ang,k,.6,0,e.dore?'#f2c230':null);
+    if(e.b===pousse&&IM['boat-tug-a']){const s=Math.sign(COUPS.find(c=>c[0]===e.b)[2]);const tx=e.h?e.x-s*50:e.x,ty=e.h?e.y:e.y-s*48*k;pile(ctx,IM['boat-tug-a'],tx,ty,e.h?(s>0?-Math.PI/2:Math.PI/2):(s>0?Math.PI:0),k,.6);
+      ctx.fillStyle='rgba(255,255,255,.6)';for(let q=0;q<5;q++)ctx.fillRect(tx-(e.h?s*(14+q*3):0)+(Math.random()-.5)*6,ty-(e.h?0:s*(14+q*3))*k+(Math.random()-.5)*4,2,1);}}
+  // écume au bord des quais
+  ctx.fillStyle='rgba(255,255,255,.35)';for(let x=q0;x<q1;x+=3){const a=Math.sin(x*.3+T*2);ctx.fillRect(x,qy0+3+(a>0?1:0),2,1);ctx.fillRect(x,qy1-5+(a>0?1:0),2,1);}
+  ctx.fillStyle='#0b2a3a';ctx.fillRect(0,0,W,30);texte(ctx,'CAPITAINE DU PORT',W/2,14,7,'#ffd23f','center');texteR(ctx,'PORT DE PECHE · BASSIN 7 · '+(cyc>7?'A QUAI !':((cyc/2|0)>3?3:(cyc/2|0))+' COUPS'),W/2,26,8,'#bfe3ff','center');
+  // phare : faisceau
+  ctx.globalCompositeOperation='lighter';const px=q1+16,py=qy0+3*CC*k+22-38;const g=ctx.createRadialGradient(px,py,1,px,py,14);g.addColorStop(0,'rgba(255,240,170,.9)');g.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=g;ctx.fillRect(px-14,py-14,28,28);ctx.globalCompositeOperation='source-over';
+  ctx.globalCompositeOperation='soft-light';const gg=ctx.createLinearGradient(0,0,W,H);gg.addColorStop(0,'rgba(255,170,90,.45)');gg.addColorStop(1,'rgba(120,80,160,.3)');ctx.fillStyle=gg;ctx.fillRect(0,0,W,H);ctx.globalCompositeOperation='source-over';
+  hd2d(ctx,W,H,{flou:1.3,haut:.14,bas:.9,halo:.18});
+},()=>{SC.t=0;});
+</script>

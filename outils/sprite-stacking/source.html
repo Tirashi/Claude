@@ -1,0 +1,174 @@
+<title>Sprite stacking</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Alegreya+Sans:wght@400;700&display=swap">
+<style>
+/* trois téléphones animés : une ville voxel, un donjon en pixel art, une route suivie par la caméra */
+:root{--bg:#e9e4d6;--carte:#f6f2e7;--fg:#2c2a33;--doux:#6c6676;--bord:#5a4e6e;--accent:#3f7a52;--or:#b07a1e;
+  --titre:"Press Start 2P",monospace;--texte:"Alegreya Sans",system-ui,sans-serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#17161d;--carte:#221f2a;--fg:#ece6f4;--doux:#a79fb4;--bord:#7d6ea0;--accent:#8fd0a0;--or:#e2b04f;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#17161d;--carte:#221f2a;--fg:#ece6f4;--doux:#a79fb4;--bord:#7d6ea0;--accent:#8fd0a0;--or:#e2b04f;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:17px/1.5 var(--texte);padding-block:24px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+main{max-width:1180px;margin:0 auto;display:grid;gap:32px}
+h1,h2{font-family:var(--titre);font-weight:400;letter-spacing:.02em;text-wrap:balance}
+h1{font-size:18px;margin:0;color:var(--accent)} h2{font-size:12px;margin:0 0 12px;color:var(--bord)}
+p{margin:0;max-width:70ch} .doux{color:var(--doux)}
+.tels{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:28px}
+figure{margin:0;display:grid;gap:10px;min-width:0;justify-items:center}
+.tel{width:100%;max-width:360px;aspect-ratio:9/16;border:6px solid var(--bord);border-radius:24px;overflow:hidden;background:#000;position:relative;touch-action:none;cursor:grab}
+.tel canvas{width:100%;height:100%;display:block;image-rendering:pixelated}
+.tel .aide{position:absolute;left:0;right:0;bottom:10px;text-align:center;font:8px var(--titre);color:#fff;text-shadow:1px 1px 0 #000;pointer-events:none;opacity:.85}
+figcaption{display:grid;gap:4px;max-width:360px} figcaption b{font-family:var(--titre);font-size:10px;color:var(--accent)}
+ul{margin:0;padding-left:22px;display:grid;gap:6px;max-width:72ch}
+.q{background:var(--carte);border-left:6px solid var(--accent);padding:14px 16px;display:grid;gap:8px}
+table{border-collapse:collapse;font-size:15px;width:100%;max-width:900px} td,th{border-bottom:1px solid var(--bord);padding:6px 8px;text-align:left;vertical-align:top}
+.defile{overflow-x:auto}
+</style>
+<main>
+<header style="display:grid;gap:10px">
+<h1>SPRITE STACKING · ESSAIS</h1>
+<p>Trois essais faits avec des ressources trouvées sur itch.io. Chaque objet est une pile de tranches dessinées l'une sur l'autre, décalées d'un pixel. Pour faire tourner la caméra, glisse le doigt sur un écran ; sinon elle tourne toute seule. Tout est dessiné en canvas 2D, sans 3D.</p>
+</header>
+<section class="tels">
+<figure><div class="tel" id="t1"><canvas width="162" height="288"></canvas><div class="aide">GLISSER POUR TOURNER</div></div>
+<figcaption><b>A · LA VILLE VOXEL</b><span>Les modèles <i>Medieval Voxel Assets</i> (CC0), que j'ai découpés moi-même en tranches avec un petit script. Les arbres sont fabriqués par le code. C'est très détaillé, presque de la 3D.</span></figcaption></figure>
+<figure><div class="tel" id="t2"><canvas width="171" height="304"></canvas><div class="aide">GLISSER POUR TOURNER</div></div>
+<figcaption><b>B · LE DONJON EN PIXEL ART</b><span><i>IsoSlice Basic Dungeon</i> : des blocs de 16 px déjà en tranches, dessinés à la main. Ambiance sombre, éclairée par des torches.</span></figcaption></figure>
+<figure><div class="tel" id="t3"><canvas width="135" height="240"></canvas><div class="aide">TOUCHER : CAMERA LIBRE / SUIVIE</div></div>
+<figcaption><b>C · LA ROUTE ET LE CIEL</b><span><i>Sprite Stack Cars</i> (16 px), et un avion voxel de monogon. La caméra tourne derrière la voiture jaune : c'est l'effet le plus impressionnant de la technique.</span></figcaption></figure>
+</section>
+<section><h2>Ce que j'en retiens</h2><ul>
+<li><b>Les packs faits exprès sont rares</b> : sur itch.io, j'en ai trouvé moins d'une dizaine (voitures, donjon, poissons, araignée), souvent petits.</li>
+<li><b>La vraie mine, ce sont les modèles voxel</b> (MagicaVoxel) : il y en a des centaines, et mon script les découpe en tranches tout seul. La ville A vient de là.</li>
+<li><b>Ça tient sur un téléphone</b> : chaque écran dessine des centaines de tranches à chaque image, sans ralentir.</li>
+<li><b>Les limites</b> : l'objet est vu un peu d'en haut, et les objets se cachent mal entre eux quand ils se touchent. Il faut les trier par profondeur, et ça reste approximatif pour les très gros objets.</li>
+</ul></section>
+<section><h2>Les packs repérés</h2><div class="defile"><table>
+<tr><th>Pack</th><th>Auteur</th><th>Licence</th><th>Remarque</th></tr>
+<tr><td><a href="https://felixstrefter.itch.io/medieval-voxel-assets">Medieval Voxel Assets</a></td><td>Felix Strefter</td><td>CC0</td><td>53 modèles (maisons, tours, remparts, kiosque, charrette). <b>Le meilleur choix</b> : libre de tout.</td></tr>
+<tr><td><a href="https://aquanoctis.itch.io/isoslicedungeonassets">IsoSlice Basic Dungeon Assets</a></td><td>Aquanoctis</td><td>libre, crédit apprécié</td><td>Déjà en tranches, 16 px. Sobre mais cohérent.</td></tr>
+<tr><td><a href="https://edusilvart.itch.io/sprite-stack-cars">Sprite Stack Cars</a></td><td>edu</td><td>non précisée</td><td>9 véhicules minuscules ; il faudrait demander à l'auteur avant de s'en servir dans un jeu.</td></tr>
+<tr><td><a href="https://maxparata.itch.io/voxel-plane">Voxel Plane</a> et les autres packs de monogon</td><td>monogon (maxparata)</td><td>CC BY-ND</td><td>Des dizaines de packs voxel (avions, vaisseaux, pirates, ville…). « ND » interdit de les modifier, et le découpage en tranches est peut-être déjà une modification : bon pour une maquette, à vérifier pour un jeu.</td></tr>
+<tr><td>STRANDED (poissons), Pseudo3d Spider</td><td>divers</td><td>prix libre</td><td>Pas essayés : trop particuliers.</td></tr>
+</table></div></section>
+<section class="q"><h2>A choisir</h2>
+<p>1. Une direction te plaît-elle : A (voxel détaillé), B (pixel art en blocs de 16 px), C (véhicules, caméra qui suit) ?</p>
+<p>2. Pour quel jeu ? Par exemple : un jeu de course ou de chars vu de dessus (C), un donjon (B), ou une ville qu'on fait tourner comme dans Bastion ou Terres franches (A).</p>
+</section>
+</main>
+<script>
+/*DONNEES*/
+const IM={};
+for(const k in PILES){const p=PILES[k];const im=new Image();im.src=p.src;IM[k]={...p,im,ok:false};im.onload=()=>{IM[k].ok=true;IM[k].c=ombrer(IM[k]);};}
+// assombrit les tranches du bas : donne du relief
+function ombrer(p){const c=document.createElement('canvas');c.width=p.w*p.n;c.height=p.h;const x=c.getContext('2d');x.drawImage(p.im,0,0);
+  for(let i=0;i<p.n;i++){const f=1-(i+1)/p.n;x.globalCompositeOperation='source-atop';x.fillStyle=`rgba(10,8,30,${(0.42*f).toFixed(3)})`;x.fillRect(i*p.w,0,p.w,p.h);}
+  return c;}
+// une pile fabriquée par le code (arbre)
+function arbre(graine,teinte){let s=graine;const r=()=>(s=(s*16807)%2147483647)/2147483647;
+  const w=15,n=17,c=document.createElement('canvas');c.width=w*n;c.height=w;const x=c.getContext('2d');
+  for(let i=0;i<n;i++){for(let a=0;a<w;a++)for(let b=0;b<w;b++){const dx=a-7,dy=b-7;let col=null;
+      if(i<6&&Math.abs(dx)<=1&&Math.abs(dy)<=1)col=i<5?'#6b4426':'#563519';
+      const rr=i<5?0:5.6*Math.sin(Math.PI*(i-4.5)/12.5);
+      if(i>=5&&dx*dx+dy*dy<=rr*rr+r()*3){const l=40+i*2.2+r()*10-(dx*dx+dy*dy>rr*rr-6?8:0);col=`hsl(${teinte+r()*14},48%,${l*0.62}%)`;}
+      if(col){x.fillStyle=col;x.fillRect(i*w+a,b,1,1);}}}
+  const p={w,h:w,n,c:null,ok:true};p.im=c;p.c=ombrer(p);return p;}
+const ARBRES=[arbre(7,95),arbre(31,108),arbre(77,82)];
+
+// dessine une pile : (x,y) au sol à l'écran, ang = angle de l'objet vu par la caméra, k = écrasement, z = hauteur
+function pile(ctx,p,x,y,ang,k,z=0,ech=1,pas=1,de=0){if(!p||!p.ok)return;const c=p.c||p.im;
+  for(let i=de;i<p.n;i++){const co=Math.cos(ang),si=Math.sin(ang);
+    ctx.setTransform(co*ech,si*ech*k,-si*ech,co*ech*k,x,y-(z+i)*pas*ech);
+    ctx.drawImage(c,i*p.w,0,p.w,p.h,-p.w/2,-p.h/2,p.w,p.h);}
+  ctx.setTransform(1,0,0,1,0,0);}
+function ombrePortee(ctx,x,y,rx,ry,a=.28){ctx.fillStyle=`rgba(0,0,0,${a})`;ctx.beginPath();ctx.ellipse(x,y,rx,ry,0,0,7);ctx.fill();}
+
+// caméra : rotation à la main ou toute seule
+function scene(id,dessin,opts={}){const el=document.getElementById(id),cv=el.querySelector('canvas'),ctx=cv.getContext('2d');ctx.imageSmoothingEnabled=false;
+  const S={cam:opts.cam||0,auto:true,glisse:null,t:0,suivre:true,el};
+  el.addEventListener('pointerdown',e=>{S.glisse={x:e.clientX,cam:S.cam,bouge:false};el.setPointerCapture(e.pointerId);});
+  el.addEventListener('pointermove',e=>{if(!S.glisse)return;const d=e.clientX-S.glisse.x;if(Math.abs(d)>4)S.glisse.bouge=true;S.cam=S.glisse.cam+d*0.012;S.auto=false;});
+  el.addEventListener('pointerup',()=>{if(S.glisse&&!S.glisse.bouge&&opts.toucher)opts.toucher(S);S.glisse=null;clearTimeout(S.to);S.to=setTimeout(()=>S.auto=true,2500);});
+  let avant=performance.now();
+  function boucle(m){const dt=Math.min(.05,(m-avant)/1000);avant=m;S.t+=dt;if(S.auto&&!S.glisse&&!opts.pasAuto)S.cam+=dt*(opts.vit||.18);
+    ctx.setTransform(1,0,0,1,0,0);dessin(ctx,S,dt,cv.width,cv.height);requestAnimationFrame(boucle);}
+  requestAnimationFrame(boucle);return S;}
+
+// passage monde → écran
+function vers(S,cx,cy,k,wx,wy,ox=0,oy=0){const c=Math.cos(S.cam),s=Math.sin(S.cam);const x=wx-ox,y=wy-oy;return[cx+x*c-y*s,cy+(x*s+y*c)*k,x*s+y*c];}
+function sol(ctx,S,img,cx,cy,k,ox=0,oy=0){const c=Math.cos(S.cam),s=Math.sin(S.cam);ctx.setTransform(c,s*k,-s,c*k,cx,cy);ctx.drawImage(img,-ox,-oy);ctx.setTransform(1,0,0,1,0,0);}
+
+/* ---------- A : la ville voxel ---------- */
+const solA=(()=>{const c=document.createElement('canvas');c.width=c.height=240;const x=c.getContext('2d');let s=3;const r=()=>(s=(s*16807)%2147483647)/2147483647;
+  x.fillStyle='#5f8a3c';x.fillRect(0,0,240,240);for(let i=0;i<2600;i++){x.fillStyle=['#6e9a45','#557c35','#7aa64e','#4d7230'][i%4];x.fillRect(r()*240|0,r()*240|0,1+(r()*2|0),1);}
+  x.fillStyle='#a88a5c';x.fillRect(108,0,24,240);x.fillRect(0,108,240,24);x.beginPath();x.arc(120,120,28,0,7);x.fill();
+  for(let i=0;i<900;i++){const a=r()*240,b=r()*240;if((a>108&&a<132)||(b>108&&b<132)||Math.hypot(a-120,b-120)<28){x.fillStyle=['#9a7c50','#b79a6a','#8d7048'][i%3];x.fillRect(a|0,b|0,1+(r()*2|0),1);}}
+  x.strokeStyle='#8d7048';x.lineWidth=1;x.strokeRect(108.5,0,23,240);x.strokeRect(0,108.5,240,23);x.strokeStyle='#3c6326';x.lineWidth=4;x.strokeRect(2,2,236,236);return c;})();
+const OBJA=[
+  ['House_1',62,66,0],['House_2',168,64,Math.PI/2],['House_3',70,170,Math.PI],['Kiosk',120,120,0],['Shop_Simple',152,152,-Math.PI/4],['Shop_Simple',88,94,Math.PI/4],
+  ['Tower_Simple',190,180,0],['Cart_Straight',96,146,.6],['Lamp_Ground_Small',100,100,0],['Lamp_Ground_Small',140,140,0],['Lamp_Ground_Small',140,100,0],['Lamp_Ground_Small',100,140,0],
+  ['Flag_Large_Green',152,96,0],['Wall_Simple',30,215,0],['Wall_Simple',60,215,0],['Wall_Simple',215,30,Math.PI/2],['Wall_Simple',215,60,Math.PI/2],
+  ['A0',28,30,0],['A1',40,110,1],['A2',30,150,2],['A0',200,110,0],['A1',196,130,1],['A2',150,205,0],['A0',178,220,2],['A1',100,30,1],['A2',140,24,0],['A0',220,100,1],['A1',30,190,2],['A2',125,210,1],['A0',212,212,0]];
+scene('t1',(ctx,S,dt,W,H)=>{const k=.72;ctx.fillStyle='#2b3550';ctx.fillRect(0,0,W,H);
+  ctx.fillStyle='#4a7530';ctx.fillRect(0,0,W,H);
+  const cx=W/2,cy=H*.55;sol(ctx,S,solA,cx,cy,k,120,120);
+  const L=OBJA.map(([n,x,y,a])=>{const [sx,sy,d]=vers(S,cx,cy,k,x,y,120,120);return{n,sx,sy,d,a};}).sort((a,b)=>a.d-b.d);
+  for(const o of L){const p=o.n[0]==='A'&&o.n.length===2?ARBRES[+o.n[1]]:IM[o.n];if(!p)continue;ombrePortee(ctx,o.sx+3,o.sy+2,p.w*.45,p.h*.3*k,.18);pile(ctx,p,o.sx,o.sy,o.a+S.cam,k,0,1,1);}
+},{cam:.6,vit:.15});
+
+/* ---------- B : le donjon ---------- */
+const PLAN=['#########','#..c...b#','#.......#','#..T....#','D.......#','#....^..#','#.......#','#b.x...b#','####D####'];
+scene('t2',(ctx,S,dt,W,H)=>{const k=.75;ctx.fillStyle='#07060c';ctx.fillRect(0,0,W,H);const cx=W/2,cy=H*.56,N=9,T=16,o=N*T/2;
+  const L=[];
+  for(let j=0;j<N;j++)for(let i=0;i<N;i++){const ch=PLAN[j][i],wx=i*T+8,wy=j*T+8;
+    const sol=(i+j)%5===0?'FloorCentrePattern':((i*7+j*3)%6===0?'FloorDirtDither':'FloorCentrePlain');
+    if(ch!=='#')L.push({n:sol,wx,wy,z:-16,de:13,a:0,sol:true});
+    if(ch==='#')L.push({n:(i+j)%3?'WallCentreA':'WallCentreB',wx,wy,z:0,a:0});
+    if(ch==='D')L.push({n:'WoodDoor',wx,wy,z:0,a:j===8?0:Math.PI/2});
+    if(ch==='c')L.push({n:'Chestf0',wx,wy,z:0,a:Math.PI/2});
+    if(ch==='b')L.push({n:'Barrel',wx,wy,z:0,a:0});
+    if(ch==='x')L.push({n:'Crate',wx,wy,z:0,a:.3});
+    if(ch==='T'){L.push({n:'Table',wx:wx+8,wy,z:0,a:0});L.push({n:'Chair',wx:wx+8,wy:wy+15,z:0,a:Math.PI});}
+    if(ch==='^')L.push({n:'Spikef2',wx,wy,z:-1,a:0});}
+  const TOR=[[2.5*T,T+4],[6.5*T,T+4],[T+4,6*T],[8*T-4,3*T]];
+  for(const [x,y] of TOR)L.push({n:'TorchOn',wx:x,wy:y,z:3,a:0,torche:true});
+  for(const e of L){const [sx,sy,d]=vers(S,cx,cy,k,e.wx,e.wy,o,o);e.sx=sx;e.sy=sy;e.d=d+(e.sol?-1000:0)+(e.z||0)*.01;}
+  L.sort((a,b)=>a.d-b.d);
+  for(const e of L)pile(ctx,IM[e.n],e.sx,e.sy,e.a+S.cam,k,e.z,1,1,e.de||0);
+  // éclairage : pénombre, puis halos des torches qui vacillent
+  ctx.globalCompositeOperation='multiply';ctx.fillStyle='#6b6398';ctx.fillRect(0,0,W,H);ctx.globalCompositeOperation='lighter';
+  for(const [i,[x,y]] of TOR.entries()){const [sx,sy]=vers(S,cx,cy,k,x,y,o,o);const f=1+.08*Math.sin(S.t*9+i*2)+.05*Math.sin(S.t*23+i);
+    const g=ctx.createRadialGradient(sx,sy-10,2,sx,sy-10,60*f);g.addColorStop(0,'rgba(255,170,70,.45)');g.addColorStop(.4,'rgba(200,90,30,.18)');g.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=g;ctx.fillRect(sx-70,sy-80,140,140);
+    ctx.fillStyle=`rgba(255,${200+40*Math.sin(S.t*15+i)|0},90,.95)`;ctx.fillRect(Math.round(sx)-1,Math.round(sy-17-Math.random()*1.5),2,3);}
+  ctx.globalCompositeOperation='source-over';
+},{cam:.3,vit:.12});
+
+/* ---------- C : la route et le ciel ---------- */
+const RX=150,RY=95,MONDE=420;
+const solC=(()=>{const c=document.createElement('canvas');c.width=c.height=MONDE;const x=c.getContext('2d');let s=9;const r=()=>(s=(s*16807)%2147483647)/2147483647;
+  x.fillStyle='#4f8a3a';x.fillRect(0,0,MONDE,MONDE);for(let i=0;i<7000;i++){x.fillStyle=['#5c9845','#467d33','#68a250'][i%3];x.fillRect(r()*MONDE|0,r()*MONDE|0,1+(r()*2|0),1);}
+  const m=MONDE/2;x.lineWidth=30;x.strokeStyle='#d8d2c0';x.beginPath();x.ellipse(m,m,RX,RY,0,0,7);x.stroke();
+  x.lineWidth=26;x.strokeStyle='#4a4952';x.beginPath();x.ellipse(m,m,RX,RY,0,0,7);x.stroke();
+  x.lineWidth=1;x.strokeStyle='#e7e1c8';x.setLineDash([6,6]);x.beginPath();x.ellipse(m,m,RX,RY,0,0,7);x.stroke();x.setLineDash([]);
+  for(let a=0;a<6.28;a+=.13){const px=m+Math.cos(a)*(RX+15),py=m+Math.sin(a)*(RY+15);x.fillStyle=(a*8|0)%2?'#c8402e':'#eeeeee';x.fillRect(px-1,py-1,3,3);}
+  x.fillStyle='#3d7aa8';x.beginPath();x.ellipse(m,m,40,22,0,0,7);x.fill();x.fillStyle='#5b9cc8';x.beginPath();x.ellipse(m-4,m-3,30,14,0,0,7);x.fill();
+  return c;})();
+const ARBC=[];{let s=5;const r=()=>(s=(s*16807)%2147483647)/2147483647;while(ARBC.length<46){const x=r()*MONDE,y=r()*MONDE,m=MONDE/2;const e=((x-m)/RX)**2+((y-m)/RY)**2;
+  if(Math.abs(Math.sqrt(e)-1)<.3)continue;if(((x-m)/48)**2+((y-m)/30)**2<1)continue;ARBC.push([x,y,ARBRES[ARBC.length%3]]);}}
+const VOIT=[['YellowCar',0,1],['RedCar',.7,.93],['BlueCar',1.6,.97],['GreenCar',2.6,.9],['PurpleCar',3.5,.95],['RedMotorcycle',4.6,1.06]].map(([n,a,v])=>({n,a,v,x:0,y:0,dir:0}));
+const SC=scene('t3',(ctx,S,dt,W,H)=>{const k=.72,m=MONDE/2;
+  for(const v of VOIT){v.a+=dt*.42*v.v;const r=v.v>1?1.06:(v.v<.94?.95:1);v.x=m+Math.cos(v.a)*RX*(r>1?1.04:r<1?.96:1);v.y=m+Math.sin(v.a)*RY*(r>1?1.06:r<1?.94:1);
+    v.dir=Math.atan2(Math.cos(v.a)*RY,-Math.sin(v.a)*RX);}
+  const J=VOIT[0];if(S.suivre)S.cam=-J.dir-Math.PI/2;
+  const ox=S.suivre?J.x:m,oy=S.suivre?J.y:m;const cx=W/2,cy=S.suivre?H*.7:H*.58;
+  ctx.fillStyle='#4f8a3a';ctx.fillRect(0,0,W,H);sol(ctx,S,solC,cx,cy,k,ox,oy);
+  const L=[];for(const v of VOIT)L.push({p:IM[v.n],x:v.x,y:v.y,a:v.dir});for(const [x,y,p] of ARBC)L.push({p,x,y,a:0});
+  for(const e of L){const [sx,sy,d]=vers(S,cx,cy,k,e.x,e.y,ox,oy);e.sx=sx;e.sy=sy;e.d=d;}
+  L.sort((a,b)=>a.d-b.d);for(const e of L)if(e.sx>-30&&e.sx<W+30&&e.sy>-40&&e.sy<H+40)pile(ctx,e.p,e.sx,e.sy,e.a+S.cam,k);
+  // l'avion : ombre au sol, puis l'avion haut dans le ciel
+  const t=S.t*.35,ax=m+Math.cos(t)*120,ay=m+Math.sin(t*1.3)*80,ad=Math.atan2(Math.cos(t*1.3)*1.3*80,-Math.sin(t)*120);
+  const [px,py]=vers(S,cx,cy,k,ax,ay,ox,oy);
+  const P=IM.Plane01;if(P&&P.ok){ctx.save();ctx.globalAlpha=.25;ctx.filter='brightness(0)';pile(ctx,P,px,py,ad+S.cam+Math.PI,k,0,1,0);ctx.restore();ctx.filter='none';pile(ctx,P,px,py,ad+S.cam+Math.PI,k,46,1,1);}
+  ctx.font='6px "Press Start 2P",monospace';ctx.fillStyle='#fff';ctx.fillText(S.suivre?'CAMERA SUIVIE':'CAMERA LIBRE',6,12);
+},{pasAuto:false,vit:.1,toucher:S=>{S.suivre=!S.suivre;}});
+</script>

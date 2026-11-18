@@ -5,7 +5,7 @@
    node outils/fumee.js [dossier-captures]   (code de sortie 1 en cas d'erreur) */
 const { BASE, phone } = require('./pw');
 const PAGES = ['index.html', 'classements/index.html#sudoku-1', 'queens/index.html', 'picross/index.html', 'lignee/index.html', 'injagility/index.html', 'injagility/parcours.html',
-  'touche-coule/index.html', 'amiral/index.html', 'club/index.html', 'orbite/index.html', 'lune-rover/index.html', 'pont-stellaire/index.html', 'sudoku/index.html', 'calculator/index.html', 'alunissage/index.html', 'nebula/index.html', 'ile/index.html', 'empilage/index.html', 'odyssee/index.html', 'yams/index.html', 'escadrille/index.html', 'capitaine-du-port/index.html', 'magasinier/index.html', 'tank-arena/index.html', 'romet/index.html', 'dragon-simulator/index.html', 'bastion/index.html', 'terres-franches/index.html', 'duche/index.html', 'bannieres/index.html', 'boutique/index.html', 'mineur-de-l-espace/index.html', 'the-des-jarls/index.html', 'doggy-saga/index.html',
+  'touche-coule/index.html', 'amiral/index.html', 'club/index.html', 'orbite/index.html', 'lune-rover/index.html', 'pont-stellaire/index.html', 'sudoku/index.html', 'calculator/index.html', 'alunissage/index.html', 'nebula/index.html', 'ile/index.html', 'empilage/index.html', 'odyssee/index.html', 'yams/index.html', 'escadrille/index.html', 'capitaine-du-port/index.html', 'magasinier/index.html', 'ciel-de-guerre/index.html', 'tank-arena/index.html', 'romet/index.html', 'dragon-simulator/index.html', 'bastion/index.html', 'terres-franches/index.html', 'duche/index.html', 'bannieres/index.html', 'boutique/index.html', 'mineur-de-l-espace/index.html', 'the-des-jarls/index.html', 'doggy-saga/index.html',
   'mot-d-or/index.html', 'lanterne/index.html', 'tetris/index.html', 'snake/index.html', 'asteroids/index.html', 'solitaire/index.html', 'jeu-de-la-vie/index.html', 'pokedex/index.html'];
 const shots = process.argv[2];
 (async () => {
@@ -107,6 +107,24 @@ const shots = process.argv[2];
       });
       if (r !== 'ok') errs.push('La Dernière Lanterne : ' + r);
       if (shots) await p.screenshot({ path: `${shots}/fumee-lanterne.png` });
+    }
+    if (url === 'ciel-de-guerre/index.html') {
+      // Ciel de guerre : les modèles se chargent, une partie démarre, la première vague arrive, pause, 3 appareils abattus = écran de fin
+      const r = await p.evaluate(async () => {
+        const wait = ms => new Promise(r => setTimeout(r, ms));
+        for (let i = 0; i < 60 && !window.CielDeGuerre; i++) await wait(250);
+        const C = window.CielDeGuerre; if (!C) return 'le jeu ne démarre pas';
+        if (C.mode !== 'titre') return "pas d'écran titre";
+        C.nouvellePartie(); if (C.mode !== 'jeu') return 'la partie ne démarre pas';
+        for (let i = 0; i < 40 && !C.ennemis.length; i++) await wait(250);
+        if (!C.ennemis.length) return "pas d'ennemis à la vague 1";
+        C.pause(); if (C.mode !== 'pause' || document.getElementById('ePause').hidden) return "pas d'écran de pause";
+        C.reprendre(); C.abattu(); C.abattu(); C.abattu(); if (C.mode !== 'fin') return 'pas de fin de partie après 3 appareils abattus';
+        await wait(1800); if (document.getElementById('eFin').hidden) return "pas d'écran de fin";
+        return 'ok';
+      });
+      if (r !== 'ok') errs.push('Ciel de guerre : ' + r);
+      if (shots) await p.screenshot({ path: `${shots}/fumee-ciel-de-guerre.png` });
     }
     if (url === 'magasinier/index.html') {
       // Le Magasinier : un niveau avec de la glace gagné par sa solution, écran de fin ; annuler revient en arrière

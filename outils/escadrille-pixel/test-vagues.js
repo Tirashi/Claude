@@ -1,0 +1,5 @@
+const {chromium}=require('playwright');(async()=>{const b=await chromium.launch({args:['--use-gl=swiftshader','--enable-unsafe-swiftshader']});const p=await b.newPage({viewport:{width:900,height:1000}});
+p.on('pageerror',e=>console.log('ERR',e.message));for(const f of ['three.min.js','GLTFLoader.js'])await p.route('**/'+f,r=>r.fulfill({path:'/home/user/Claude/lib/'+f,contentType:'application/javascript'}));await p.route('https://fonts.googleapis.com/**',r=>r.abort());
+await p.goto('file:///home/user/Claude/maquettes/escadrille-pixel.html');await (await p.$('#t')).scrollIntoViewIfNeeded();
+for(let k=0;k<18;k++){await p.waitForTimeout(5000);console.log(await p.evaluate(()=>{const S=Escadrille.S;const H=x=>x;return 't'+Math.round(S.t)+' '+document.getElementById('hud').innerText.split('\n')[1]+' | '+Escadrille.ennemis.map(e=>{const d=e.g.position.clone().sub(S.p);return `${e.role}${e.as?'*':''} d${Math.round(d.length())} a${d.angleTo(S.fwd).toFixed(1)} y${Math.round(e.g.position.y)} v${e.vie}${e.jink?' J':''} ${e.etat}`;}).join(' ; ');}));}
+await b.close();})();

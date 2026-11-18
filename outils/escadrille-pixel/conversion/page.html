@@ -1,0 +1,21 @@
+<body><script src="/js/three.min.js"></script><script src="/js/libs/fflate.min.js"></script><script src="/js/loaders/FBXLoader.js"></script><script src="/js/loaders/OBJLoader.js"></script><script src="/js/loaders/MTLLoader.js"></script><script src="/js/loaders/GLTFLoader.js"></script><script src="/js/exporters/GLTFExporter.js"></script><script src="/js/utils/BufferGeometryUtils.js"></script>
+<script>
+// ouvre un modèle, simplifie ses matériaux (Lambert, couleur + texture réduite), et le réexporte en GLB
+function reduire(img,max){if(!img||!img.width)return null;const k=Math.min(1,max/Math.max(img.width,img.height));const c=document.createElement('canvas');c.width=Math.max(1,Math.round(img.width*k));c.height=Math.max(1,Math.round(img.height*k));const x2=c.getContext('2d');if(window.NET)x2.imageSmoothingEnabled=false;x2.drawImage(img,0,0,c.width,c.height);const t=new THREE.CanvasTexture(c);t.flipY=false;return t;}
+window.convertir=async(e)=>{let obj;const url='/m/'+encodeURIComponent(e.f.split('/').pop());
+  if(e.f.endsWith('.glb'))obj=(await new THREE.GLTFLoader().loadAsync(url)).scene;else if(e.f.endsWith('.fbx'))obj=await new THREE.FBXLoader().loadAsync(url);
+  else{let m=null;if(!e.sansTex){try{m=await new THREE.MTLLoader().loadAsync(url.replace(/\.obj$/,'.mtl'));m.preload();}catch(x){}}
+    else{try{m=await new THREE.MTLLoader().loadAsync(url.replace(/\.obj$/,'.mtl'));for(const k in m.materialsInfo){delete m.materialsInfo[k].map_bump;delete m.materialsInfo[k].bump;delete m.materialsInfo[k].map_Bump;}m.preload();}catch(x){}}
+    const l=new THREE.OBJLoader();if(m)l.setMaterials(m);obj=await l.loadAsync(url);}
+  await new Promise(r=>setTimeout(r,400));
+  let texForcee=null;if(e.tex){const im=new Image();im.src='/t/'+encodeURIComponent(e.tex.split('/').pop());await im.decode();texForcee=reduire(im,384);}
+  let tris=0;obj.traverse(o=>{if(!o.isMesh)return;const mats=Array.isArray(o.material)?o.material:[o.material];
+    const n=mats.map(m=>{const c=m.color?m.color.clone():new THREE.Color(1,1,1);let map=texForcee||(m.map&&m.map.image?reduire(m.map.image,window.TEXMAX||256):null);if(map&&texForcee)c.setRGB(1,1,1);
+      if(map){map.flipY=m.map?m.map.flipY:true;if(texForcee)map.flipY=true;}
+      return new THREE.MeshStandardMaterial({color:c,map,metalness:0,roughness:1,flatShading:true});});
+    o.material=Array.isArray(o.material)?n:n[0];tris+=(o.geometry.index?o.geometry.index.count:o.geometry.attributes.position.count)/3;
+    if(o.geometry.attributes.normal)o.geometry.deleteAttribute('normal');if(o.geometry.attributes.color)o.geometry.deleteAttribute('color');if(!o.material.map&&!(Array.isArray(o.material)&&o.material.some(m=>m.map))&&o.geometry.attributes.uv)o.geometry.deleteAttribute('uv');try{const g=THREE.BufferGeometryUtils.mergeVertices(o.geometry,1e-4);o.geometry=g;}catch(x){}});
+  const b=new THREE.Box3().setFromObject(obj),s=new THREE.Vector3();b.getSize(s);
+  const glb=await new Promise(r=>new THREE.GLTFExporter().parse(obj,r,{binary:true}));let bin='';const u=new Uint8Array(glb);for(let i=0;i<u.length;i+=32768)bin+=String.fromCharCode.apply(null,u.subarray(i,i+32768));
+  return{b64:btoa(bin),taille:[s.x,s.y,s.z],tris:Math.round(tris)};};
+</script>
