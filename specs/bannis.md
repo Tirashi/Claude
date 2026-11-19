@@ -136,4 +136,12 @@ Retour de l'utilisateur (19/11) : **direction 1 (Regalia) retenue** avec ces mon
 - Règles du mouvement : chacun choisit la cible la plus proche (garde la sienne de préférence) ; corps à corps à 30 px, arc à 150, magie à 135 ; les tireurs **reculent** quand un monstre est à moins de 55 % de leur portée ; la prêtresse **suit** le plus blessé et soigne à 110 px ; **écartement** entre unités (36 px, 52 avec le boss) ; **recul** sous les coups (plus fort sur un critique, réduit pour le boss) ; animation de marche (Pixel Champions : ligne « marche » du format MV ; monstres fixes : petits sauts) ; orientation selon la cible.
 - Le placement décide seulement d'où partent les héros ; monstres plus nombreux et moins solides (16 à 40 PV, boss 150), héros plus solides (80 à 120 PV).
 
-Retour de l'utilisateur : en attente (A, B ou les deux).
+Retour de l'utilisateur (19/11) : **A (mêlée libre) avec la Muraille à gauche** ; plus tard, pouvoir **poster des archers sur la Muraille** ; **attention au sexe** : la classe légendaire doit garder le sexe de la classe de base.
+
+## 13. Maquette 4 (19/11)
+[Artefact](https://claude.ai/artifact/DWwMzhimnM4iFTYmwsT2oM), source `maquettes/bannis-4.html` (`python3 -I outils/bannis-maquette/fabriquer4.py <dossier des packs>` depuis `source4.html`, dérivé de la maquette 3).
+- **Muraille à gauche** (x 0 à 50, créneaux, chemin de ronde prévu pour de futurs archers) ; barre de vie au-dessus du rempart ; les monstres sans héros à moins de 160 px marchent vers la Muraille et la frappent ; Muraille à 0 = vague perdue. Héros placés devant (x 92 et 162).
+- **Sexe des héros** (Pixel Champions gratuit, d'après les sprites ; pas de noms dans le pack) : femmes Hex, Linail, Wyvera, Glenys ; hommes Oratio, Prime, Ley ; Ouzo est un loup. Lignées : guerrière → épéiste démoniaque (Glenys, autre palette), **illusionniste → grand sage** (Ley → Prime, vraie paire), **prêtresse → grande prêtresse** (Linail → Wyvera, vraie paire), mercenaire → champion (Oratio, autre palette), magicienne → sorcière du temps (Hex, autre palette), barde → barde légendaire (Ouzo, autre palette). Noms accordés au sexe. Le registre indique le sexe et le genre d'évolution.
+- Limite : 8 héros gratuits seulement ; pour chaque classe en homme et en femme avec une vraie évolution, il faudra un pack plus fourni (Pixel Champions II ou Time Fantasy, payants).
+
+Retour de l'utilisateur : en attente.
