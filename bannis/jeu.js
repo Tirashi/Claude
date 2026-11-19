@@ -300,15 +300,16 @@ function hud(){
 }
 function bandeau(){
   if (G.ecran === "place"){
-    panneau(8, 62, W - 16, 74);
+    panneau(8, 62, W - 16, 86);
     texte("VAGUE ANNONCEE", 22, 86, 14, "#ffe3a8");
     texte(G.run.revele ? "VAGUE REVELEE" : "", W - 22, 86, 13, "#ffe14a", "right");
     const ap = R.apercu(G.run);
     ap.slice(0, 6).forEach((m, i) => {
-      const x = 22 + i*54, y = 92; ctx.fillStyle = "rgba(0,0,0,.3)"; ctx.fillRect(x, y, 48, 38);
-      if (m.cache){ texte("?", x + 24, y + 30, 22, "#ffe14a", "center"); return; }
-      ctx.save(); ctx.beginPath(); ctx.rect(x, y, 48, 38); ctx.clip(); dessinerMonstre(D.MONSTRES[m.k].i, false, x + 24, y + 38, -1, {e: .58}); ctx.restore();
-      texte(m.boss ? "BOSS" : "x" + m.n, x + 46, y + 36, 12, m.boss ? "#ff7a5a" : "#fff", "right");
+      // case de 46 x 42 dans le cadre ; le monstre (case de 96 px, jusqu'à 89 px de haut) réduit à 0,44 pour tenir en entier
+      const x = 22 + i*53, y = 93; ctx.fillStyle = "rgba(0,0,0,.3)"; ctx.fillRect(x, y, 46, 42);
+      if (m.cache){ texte("?", x + 23, y + 31, 22, "#ffe14a", "center"); return; }
+      ctx.save(); ctx.beginPath(); ctx.rect(x, y, 46, 42); ctx.clip(); dessinerMonstre(D.MONSTRES[m.k].i, false, x + 23, y + 41, -1, {e: .44}); ctx.restore();
+      texte(m.boss ? "BOSS" : "x" + m.n, x + 44, y + 40, 12, m.boss ? "#ff7a5a" : "#fff", "right");
     });
   } else if (G.ecran === "combat"){
     panneau(8, 62, W - 16, 50);
