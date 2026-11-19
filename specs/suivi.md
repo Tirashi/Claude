@@ -126,3 +126,4 @@ Maquettes de la carte 2 à 4 (isométrique, puis papier à l'encre validée), é
 - **19/11 — Ciel de guerre, tuyères** : flammes des 35 chasseurs replacées à la main (`TUY_PY`) ([cdc](ciel-de-guerre.md)).
 - **19/11 — Ciel de guerre, mission 1** : sans grands vaisseaux rouges, avec un destroyer allié (le Héron) qui tourne autour du port ([cdc](ciel-de-guerre.md)).
 - **19/11 — Ciel de guerre, session 4 (1re partie)** : ailiers (3 intercepteurs en mission 1, 2 polyvalents ailleurs) ; mission 3 « Le raid » (base au sol : DCA, dépôts, radar) ; six missions ([cdc](ciel-de-guerre.md)).
+- **19/11 — Ciel de guerre, retours** : ailiers remis dans le bon sens, demi-tour (2 × S, 2 × FREIN), qualité qui baisse toute seule si le téléphone peine ([cdc](ciel-de-guerre.md)).

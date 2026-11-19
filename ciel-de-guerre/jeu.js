@@ -26,7 +26,7 @@ function couleurSol(x,z,a,b){const h=H(x,z),r=hash(a,b),v=fbm(N2,x*.02,z*.02,2);
 const el=document.getElementById('t'),hud=document.getElementById('hud'),band=document.getElementById('bandeau');
 // l'image est calculée environ 2,5 fois moins finement que l'écran (900 pixels au plus dans le grand côté), puis agrandie sans lissage ;
 // la toile du viseur garde 320 pixels de haut, sa largeur suit le format de l'écran
-let LW,LH,OW,OH,AW,AH,K=1;function mesures(){const w=el.clientWidth||360,h=el.clientHeight||640,dp=devicePixelRatio||1,ech=Math.max(2.5,Math.max(w,h)*dp/900);
+let LW,LH,OW,OH,AW,AH,K=1,QUAL=1;/* QUAL : baisse toute seule si l'appareil peine (19/11) */function mesures(){const w=el.clientWidth||360,h=el.clientHeight||640,dp=devicePixelRatio||1,ech=Math.max(2.5,Math.max(w,h)*dp/900)*QUAL;
   LW=Math.max(160,Math.round(w*dp/ech));LH=Math.max(160,Math.round(h*dp/ech));OH=320;OW=Math.round(OH*w/h);AW=LW;AH=LH;K=Math.max(1,Math.round(h*dp/OH));}
 mesures();
 const R=new THREE.WebGLRenderer({antialias:false});R.setPixelRatio(1);R.setSize(LW,LH,false);el.prepend(R.domElement);
@@ -161,11 +161,14 @@ function dequantifie(sc0){sc0.updateMatrixWorld(true);sc0.traverse(o=>{if(!o.isM
 const REPEINTS={polyyai:1},HUE={b:.6,r:0};
 function teinte(c,h){const o={};c.getHSL(o);if(o.s>.3&&o.l>.12&&o.l<.9)c.setHSL(h,.62,Math.min(.62,Math.max(.4,o.l)));else c.setHSL(0,0,Math.min(.82,o.l*.95+.04));}
 function texRepeinte(t,h){const im=t.image;if(!im||!im.width)return t;const cv=document.createElement('canvas');cv.width=im.width;cv.height=im.height;const x=cv.getContext('2d');x.drawImage(im,0,0);
-  const d=x.getImageData(0,0,cv.width,cv.height),A=d.data,c=new THREE.Color(),o={},hist=new Float32Array(24);
-  for(let i=0;i<A.length;i+=4){c.setRGB(A[i]/255,A[i+1]/255,A[i+2]/255);c.getHSL(o);if(o.s>.3&&o.l>.12&&o.l<.9)hist[Math.floor(o.h*24)%24]++;}
+  // (19/11) les textures sont des palettes : peu de couleurs différentes ; on calcule chaque couleur une seule fois (bien plus rapide sur téléphone)
+  const d=x.getImageData(0,0,cv.width,cv.height),A=d.data,c=new THREE.Color(),hist=new Float32Array(24),HSL=new Map();
+  for(let i=0;i<A.length;i+=4){const k=A[i]<<16|A[i+1]<<8|A[i+2];let o=HSL.get(k);if(!o){o={n:0};c.setRGB(A[i]/255,A[i+1]/255,A[i+2]/255);c.getHSL(o);HSL.set(k,o);}o.n++;}
+  for(const o of HSL.values())if(o.s>.3&&o.l>.12&&o.l<.9)hist[Math.floor(o.h*24)%24]+=o.n;
   let hm=0;for(let k=1;k<24;k++)if(hist[k]>hist[hm])hm=k;
-  for(let i=0;i<A.length;i+=4){c.setRGB(A[i]/255,A[i+1]/255,A[i+2]/255);c.getHSL(o);const bin=Math.floor(o.h*24)%24,dd=Math.min(Math.abs(bin-hm),24-Math.abs(bin-hm));
-    if(o.s>.3&&o.l>.12&&o.l<.9&&dd>2)c.setHSL(h,.68,Math.min(.6,Math.max(.42,o.l)));else if(o.s>.3&&dd<=2)c.setHSL(h,.22,Math.min(.62,.2+o.l*.7));else c.setHSL(0,0,Math.min(.8,.18+o.l*.75));A[i]=c.r*255;A[i+1]=c.g*255;A[i+2]=c.b*255;}
+  for(const o of HSL.values()){const bin=Math.floor(o.h*24)%24,dd=Math.min(Math.abs(bin-hm),24-Math.abs(bin-hm));
+    if(o.s>.3&&o.l>.12&&o.l<.9&&dd>2)c.setHSL(h,.68,Math.min(.6,Math.max(.42,o.l)));else if(o.s>.3&&dd<=2)c.setHSL(h,.22,Math.min(.62,.2+o.l*.7));else c.setHSL(0,0,Math.min(.8,.18+o.l*.75));o.r=c.r*255;o.g=c.g*255;o.b=c.b*255;}
+  for(let i=0;i<A.length;i+=4){const o=HSL.get(A[i]<<16|A[i+1]<<8|A[i+2]);A[i]=o.r;A[i+1]=o.g;A[i+2]=o.b;}
   x.putImageData(d,0,0);const n=new THREE.CanvasTexture(cv);n.flipY=t.flipY;n.wrapS=t.wrapS;n.wrapT=t.wrapT;n.magFilter=n.minFilter=THREE.NearestFilter;n.generateMipmaps=false;return n;}
 function repeint(sc0,camp){const s=sc0.clone(),h=HUE[camp];s.traverse(o=>{if(!o.isMesh)return;const mm=Array.isArray(o.material)?o.material:[o.material];
   const n=mm.map(m=>{const r=m.clone();if(m.map)r.map=texRepeinte(m.map,h);else{r.color=m.color.clone();teinte(r.color,h);}return r;});o.material=Array.isArray(o.material)?n:n[0];});return s;}
@@ -235,7 +238,7 @@ const NOMS=Object.keys(COULEURS);let choix=NOMS.indexOf('py7');try{const i=NOMS.
 // au démarrage : la flotte, les bombardiers, l'appareil du joueur et les polyvalents (premières vagues) ; le reste se charge ensuite, en fond
 const FLOTTE_CLES=['fga_destroyer2','fga_croiseur1','fga_destroyer4','fga_destroyer1','fga_croiseur2','fga_destroyer3','fga_croiseur4'];
 await Promise.all([...FLOTTE_CLES,...[1,2,3,4,5].flatMap(n=>['fga_corvette'+n+'_r','fga_fregate'+n+'_r']),COULEURS[NOMS[choix]].cle,...FAMILLES.poly.l.map(i=>'py'+i)].map(chargerModele));
-setTimeout(async()=>{for(const k in CAT)await chargerModele(k);},4000);
+setTimeout(async()=>{for(const k in CAT){if(IMPORTS[k])continue;await chargerModele(k);await new Promise(r=>setTimeout(r,250));}},4000);/* un modèle tous les quarts de seconde : pas d'à-coups pendant le vol */
 // un appareil ennemi de la famille voulue, parmi ceux déjà chargés (les autres se chargent pour la suite)
 function modeleFam(f){const l=FAMILLES[f].l.map(i=>'py'+i);l.forEach(chargerModele);const ok=l.filter(k=>IMPORTS[k+'_r']);
   if(ok.length)return ok[Math.random()*ok.length|0];const p=FAMILLES.poly.l.map(i=>'py'+i).filter(k=>IMPORTS[k+'_r']);return p[Math.random()*p.length|0]||'py7';}
@@ -294,7 +297,7 @@ function flotte(dt){for(const n of FLOTTE){n.ph+=dt;if(n.camp===1&&!n.fixe&&MIS&
 // Invulnérables ; leurs balles font moitié moins de dégâts que celles du joueur. Une mission dit combien et de quelle famille (def.ailiers).
 const AILIERS=[],BALLES_A=[],PLACES=[[-18,2,2],[18,2,2],[-34,5,9],[34,5,9]]/* à côté du joueur (devant = −z), pour qu'on les voie */;
 function creerAiliers(o){viderAiliers();if(!o||!o.n)return;const l=FAMILLES[o.fam].l.map(i=>'py'+i);
-  for(let k=0;k<o.n;k++){const cle=l[(k*2+1)%l.length];chargerModele(cle).then(()=>{if(S.mode!=='jeu')return;const r=construire(COULEURS[cle],true,'b');r.g.scale.setScalar(.8);const g=new THREE.Group();g.add(r.g);versCalque(g);
+  for(let k=0;k<o.n;k++){const cle=l[(k*2+1)%l.length];chargerModele(cle).then(()=>{if(S.mode!=='jeu')return;const r=construire(COULEURS[cle],true,'b');r.g.scale.setScalar(.8);r.g.rotation.y=Math.PI;/* lookAt tourne le groupe vers +z : on retourne le modèle (sinon ils volent en marche arrière) */const g=new THREE.Group();g.add(r.g);versCalque(g);
       const pl=PLACES[k],pos=S.p.clone().add(new THREE.Vector3(pl[0],pl[1],pl[2]).applyQuaternion(Q));g.position.copy(pos);sc.add(g);
       AILIERS.push({g,fl:r.flammes,fam:o.fam,k,v:(S.fwd||new THREE.Vector3(0,0,-1)).clone().multiplyScalar(S.v),c:null,cadT:0,ph:Math.random()*6,tc:0});});}}
 function viderAiliers(){for(const a of AILIERS)sc.remove(a.g);AILIERS.length=0;for(const b of BALLES_A)sc.remove(b.b);BALLES_A.length=0;}
@@ -382,17 +385,17 @@ function changerAvion(){choisir((choix+1)%NOMS.length);}
 document.getElementById('charge').remove();
 // pilotage
 const S={cx:0,cy:0,mode:'titre',vies:3,dx:0,dy:0,blindage:100,p:new THREE.Vector3(0,40,0),yaw:0,pitch:0,bank:0,roll:0,rollT:-1,loopT:-1,v:46,boost:0,auto:true,doigt:null,dernier:0,vue:0,tir:false,munB:300,munM:5,t:0,score:0};
-S.munM=FAM().mis;const Q=new THREE.Quaternion(),E=new THREE.Euler(0,0,0,'YXZ');window.CielDeGuerre={S,get ailiers(){return AILIERS;},outils:{construire,chargerModele,COULEURS,NOMS},get ennemis(){return ennemis;},FLOTTE,nouvellePartie:d=>nouvellePartie(typeof d==='number'?MISSIONS[d]:d||null),get mission(){return MIS;},get missions(){return MISSIONS;},finMission:g=>finMission(g),abattre:e=>abattre(e),get epaves(){return EPAVES.length;},abattu:()=>abattu(),pause:()=>pause(),reprendre:()=>reprendre(),get mode(){return S.mode;},get vague(){return V.n;}};/* pour les tests */
+S.munM=FAM().mis;const Q=new THREE.Quaternion(),E=new THREE.Euler(0,0,0,'YXZ');window.CielDeGuerre={S,get ailiers(){return AILIERS;},outils:{construire,chargerModele,COULEURS,NOMS,texRepeinte},get ennemis(){return ennemis;},FLOTTE,nouvellePartie:d=>nouvellePartie(typeof d==='number'?MISSIONS[d]:d||null),get mission(){return MIS;},get missions(){return MISSIONS;},finMission:g=>finMission(g),abattre:e=>abattre(e),get epaves(){return EPAVES.length;},abattu:()=>abattu(),pause:()=>pause(),reprendre:()=>reprendre(),get mode(){return S.mode;},get vague(){return V.n;}};/* pour les tests */
 // visée : au doigt et au clavier, droit devant ; à la souris, là où est le curseur (le rayon de la caméra à travers lui),
 // ramené dans un cône de 35° autour du nez : le réticule est sous le curseur, les balles partent vers lui
-const CONE=.6;function visee(fwd){if(!S.souris||S.auto||S.mode!=='jeu'||S.loopT>=0){S.horsCone=false;return fwd;}
+const CONE=.6;function visee(fwd){if(!S.souris||S.auto||S.mode!=='jeu'||S.loopT>=0||S.demiT>=0){S.horsCone=false;return fwd;}
   const r=new THREE.Vector3(S.cx,-S.cy,.5).unproject(cam).sub(cam.position).normalize();const D=cam.position.clone().addScaledVector(r,cam.position.distanceTo(S.p)+150).sub(S.p).normalize();
   const a=D.angleTo(fwd);S.horsCone=a>CONE;return a<=CONE?D:fwd.clone().lerp(D,CONE/a).normalize();}
 const tonneau=(cote)=>{if(S.rollT<0){S.rollT=0;S.rollD=cote||(S.bank>0?-1:1);}};
 const joy=document.getElementById('joy'),bille=joy.firstElementChild,RJ=46;const manuel=(ms=4000)=>{if(S.mode!=='jeu')return;S.auto=false;clearTimeout(S.to);S.to=setTimeout(()=>{S.tir=false;},ms);};/* en partie, le pilote automatique ne reprend jamais la main */
 // souris (PC) : le curseur est le viseur ; l'éloigner du centre de l'écran fait tourner l'appareil de ce côté (au centre, il vole droit) ; clic gauche : feu, clic droit : missile
 document.getElementById('clavier').innerHTML='FLECHES : PILOTER · ESPACE : FEU<br>E : MISSILE · R : LOOP · F : TONNEAU<br>V : VUE · C : AVION · P : PAUSE<br>BOUGE LA SOURIS : PILOTER ET VISER';
-const AIDE_SOURIS='SOURIS : LE VISEUR · LOIN DU CENTRE : TOURNER<br>CLIC G : FEU · CLIC D : MISSILE<br>Z : ACCELERER · S : FREINER · Q D : ECART<br>2× Z : LOOP · 2× Q/D : TONNEAU<br>V : VUE · C : AVION · ECHAP : PAUSE';
+const AIDE_SOURIS='SOURIS : LE VISEUR · LOIN DU CENTRE : TOURNER<br>CLIC G : FEU · CLIC D : MISSILE<br>Z : ACCELERER · S : FREINER · Q D : ECART<br>2× Z : LOOP · 2× S : DEMI-TOUR<br>2× Q/D : TONNEAU · V : VUE · C : AVION · ECHAP : PAUSE';
 const souris=()=>{el.classList.add('souris');if(!S.souris){S.souris=1;S.my=S.yaw;S.mp=S.pitch;const a=document.getElementById('clavier');a.innerHTML=AIDE_SOURIS;a.style.opacity=1;setTimeout(()=>a.style.opacity=.35,6000);}manuel(1e9);};
 // boutons de la souris : un second bouton appuyé pendant que le premier est tenu n'envoie pas de pointerdown, mais un pointermove
 // dont e.buttons change ; on suit donc l'état des boutons (1 = gauche : feu, 2 = droit : missile) à chaque événement
@@ -411,15 +414,17 @@ el.addEventListener('pointermove',e=>{if(!S.doigt||e.pointerId!==S.doigt.id)retu
   bille.style.transform=`translate(${dx}px,${dy}px)`;const zm=v=>Math.sign(v)*Math.max(0,Math.abs(v)-.12)/.88;S.dx=zm(dx/RJ);S.dy=zm(dy/RJ);/* zone morte au centre, puis réponse douce */});
 const lacher=e=>{if(!S.doigt||e.pointerId!==S.doigt.id)return;S.doigt=null;S.dx=S.dy=0;joy.classList.remove('on');manuel();};el.addEventListener('pointerup',lacher);el.addEventListener('pointercancel',lacher);
 const bouton=(id,f)=>{const b=document.getElementById(id);b.addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault();manuel(5000);f(true,b);});b.addEventListener('pointerup',e=>{e.stopPropagation();f(false,b);});b.addEventListener('pointerleave',()=>f(false,b));b.addEventListener('contextmenu',e=>e.preventDefault());};
-bouton('bBoost',(d,b)=>{TOUCHES.acc=d?1:0;b.classList.toggle('on',d);});bouton('bFrein',(d,b)=>{TOUCHES.frein=d?1:0;b.classList.toggle('on',d);});/* téléphone : accélérer et freiner en gardant le doigt */
-bouton('bLoop',d=>{if(d&&S.loopT<0)S.loopT=0;});bouton('bAvion',d=>{if(d)ouvrirHangar();});bouton('bRoll',d=>{if(d)tonneau();});bouton('bVue',d=>{if(d)S.vue=(S.vue+1)%2;});
+bouton('bBoost',(d,b)=>{TOUCHES.acc=d?1:0;b.classList.toggle('on',d);});bouton('bFrein',(d,b)=>{TOUCHES.frein=d?1:0;b.classList.toggle('on',d);if(d){const t=performance.now();if(t-(S.freinT||0)<300){S.freinT=0;demiTour();}else S.freinT=t;}});/* téléphone : accélérer et freiner en gardant le doigt */
+bouton('bLoop',d=>{if(d&&S.loopT<0&&!(S.demiT>=0))S.loopT=0;});
+// demi-tour (19/11) : un demi-looping, puis un demi-tonneau pour se remettre à l'endroit ; on repart dans l'autre sens, un peu plus haut
+function demiTour(){if(S.mode!=='jeu'||S.loopT>=0||S.demiT>=0)return;S.demiT=0;S.demiP=0;}bouton('bAvion',d=>{if(d)ouvrirHangar();});bouton('bRoll',d=>{if(d)tonneau();});bouton('bVue',d=>{if(d)S.vue=(S.vue+1)%2;});
 bouton('bTir',(d,b)=>{S.tir=d;b.classList.toggle('on',d);if(d)manuel(1e9);else manuel();});
 // clavier (PC) : AZERTY et QWERTY ; les directions agissent comme un joystick qu'on pousse progressivement
 const TOUCHES={};const DIR={ArrowUp:'h',KeyW:'h',KeyZ:'h',ArrowDown:'b',KeyS:'b',ArrowLeft:'g',KeyA:'g',KeyQ:'g',ArrowRight:'d',KeyD:'d'};
 const appui=(id,v)=>{const b=document.getElementById(id);b.dispatchEvent(new PointerEvent(v?'pointerdown':'pointerup',{bubbles:true}));};
 const MANOEUVRE={KeyW:'acc',KeyZ:'acc',KeyS:'frein',KeyA:'ecg',KeyQ:'ecg',KeyD:'ecd'};const DOUBLE={};
 addEventListener('keydown',e=>{if(!vu)return;if(e.code==='KeyP'||e.code==='Escape'){if(S.mode==='jeu')pause();else if(S.mode==='pause'&&e.code==='KeyP')reprendre();return;}if(S.mode!=='jeu')return;if(S.souris&&MANOEUVRE[e.code]){e.preventDefault();if(e.repeat)return;const m=MANOEUVRE[e.code];TOUCHES[m]=1;const t=performance.now();
-    if(DOUBLE[m]&&t-DOUBLE[m]<300){DOUBLE[m]=0;if(m==='acc'&&S.loopT<0){S.loopT=0;}else if(m==='ecg')tonneau(1);else if(m==='ecd')tonneau(-1);}else DOUBLE[m]=t;return;}
+    if(DOUBLE[m]&&t-DOUBLE[m]<300){DOUBLE[m]=0;if(m==='acc'&&S.loopT<0&&!(S.demiT>=0)){S.loopT=0;}else if(m==='frein')demiTour();else if(m==='ecg')tonneau(1);else if(m==='ecd')tonneau(-1);}else DOUBLE[m]=t;return;}
   const d=DIR[e.code];if(d||e.code==='Space')e.preventDefault();if(e.repeat)return;
   if(d){TOUCHES[d]=1;manuel(1e9);document.getElementById('clavier').style.opacity=.35;}
   else if(e.code==='Space')appui('bTir',true);else if(e.code==='KeyE')appui('bMis',true);else if(e.code==='KeyR')appui('bLoop',true);
@@ -446,7 +451,10 @@ function vague(){V.n++;const nb=Math.min(12,1+V.n*2);const m=V.n===1?MOTIFS[0]:V
       else o=new THREE.Vector3((Math.random()-.5)*60,(Math.random()-.5)*20,(Math.random()-.5)*60);
       V.file.push({t:(m.decale||0)*g+g*1.2,p:tete.clone().add(o),v:vers.clone()});}}
   annonce(`VAGUE ${V.n}<b>${nb} CHASSEURS</b>${m.nom}`);}
-function image(m){const dt=Math.min(.05,(m-av)/1000);av=m;requestAnimationFrame(image);if(!vu&&!window.TOUT_VOIR)return;if(S.mode==='pause'){rendre();return;}S.t+=dt;
+const PERF={s:0,n:0};
+function image(m){const brut=(m-av)/1000,dt=Math.min(.05,brut);av=m;
+  /* qualité qui s'adapte : en vol, si les images arrivent en moyenne à plus de 27 ms (moins de 37 par seconde) pendant 4 s, l'image est calculée 20 % moins finement (deux fois au plus) */
+  if(S.mode==='jeu'&&brut<.25&&!document.hidden){PERF.s+=brut;PERF.n++;if(PERF.s>4){if(PERF.s/PERF.n>.027&&QUAL<1.44){QUAL*=1.2;redim();}PERF.s=PERF.n=0;}}requestAnimationFrame(image);if(!vu&&!window.TOUT_VOIR)return;if(S.mode==='pause'){rendre();return;}S.t+=dt;
   clavierPilote(dt);
   // commandes : virage et tangage
   let tyaw,tp;if(S.auto){const c=ennemis.filter(e=>e.vie>0).sort((a,b)=>a.g.position.distanceTo(S.p)-b.g.position.distanceTo(S.p))[0];
@@ -456,12 +464,14 @@ function image(m){const dt=Math.min(.05,(m-av)/1000);av=m;requestAnimationFrame(
   else if(S.souris&&!S.doigt&&!S.dx&&!S.dy){const zm=v=>Math.sign(v)*Math.max(0,Math.abs(v)-.08)/.92;tyaw=-Math.max(-1,Math.min(1,zm(S.cx)*1.5));tp=-Math.max(-1,Math.min(1,zm(S.cy)*1.4))*.85;/* le curseur loin du centre : on tourne, on monte, on descend ; zone morte au centre */}
   else{tyaw=-S.dx*Math.abs(S.dx)*1;tp=-S.dy*.9;/* joystick vers le haut : l'avion monte ; vers le bas : il descend */}
   if(!S.souris||S.auto||S.doigt||S.dx||S.dy){S.my=S.yaw;S.mp=S.pitch;}
-  if(S.loopT>=0)tyaw=0;/* pendant le looping, le joystick ne fait pas virer */
+  if(S.loopT>=0||S.demiT>=0)tyaw=0;/* pendant le looping et le demi-tour, le joystick ne fait pas virer */
   tyaw*=FAM().vir;S.vyaw=(S.vyaw||0)+(tyaw-(S.vyaw||0))*Math.min(1,dt*3);S.yaw+=S.vyaw*dt;S.bank+=((S.vyaw*1.1-(S.ecart||0)*.45)-S.bank)*Math.min(1,dt*3);
-  if(S.loopT>=0){S.loopT+=dt/2.6;S.pitch+=Math.PI*2*dt/2.6;if(S.loopT>=1){S.loopT=-1;S.mp=0;S.my=S.yaw;S.pitch-=Math.round(S.pitch/(Math.PI*2))*Math.PI*2;/* un tour complet = 0 : sinon l'avion « déroule » la boucle à l'envers */}}
+  if(S.demiT>=0){if(!S.demiP){S.demiT+=dt/1.35;S.pitch+=Math.PI*dt/1.35;if(S.demiT>=1){S.demiP=1;S.demiT=0;S.yaw+=Math.PI;S.pitch=Math.PI-S.pitch;S.demiR=Math.PI;S.vyaw=0;}}/* sur le dos, cap inversé : même orientation, écrite autrement */
+    else{S.demiT+=dt/.55;S.demiR=Math.PI*(1-(S.demiT<1?(1-Math.cos(S.demiT*Math.PI))/2:1));if(S.demiT>=1){S.demiT=-1;S.demiR=0;S.demiP=0;S.mp=0;S.my=S.yaw;}}}
+  else if(S.loopT>=0){S.loopT+=dt/2.6;S.pitch+=Math.PI*2*dt/2.6;if(S.loopT>=1){S.loopT=-1;S.mp=0;S.my=S.yaw;S.pitch-=Math.round(S.pitch/(Math.PI*2))*Math.PI*2;/* un tour complet = 0 : sinon l'avion « déroule » la boucle à l'envers */}}
   else{S.pitch+=(Math.max(-.85,Math.min(.85,tp))-S.pitch)*Math.min(1,dt*1.7);}
   if(S.rollT>=0){S.rollT+=dt/.8;S.roll=(S.rollT<1?(1-Math.cos(S.rollT*Math.PI))/2:1)*Math.PI*2*S.rollD;if(S.rollT>=1){S.rollT=-1;S.roll=0;}}
-  E.set(S.pitch,S.yaw,S.bank+S.roll);Q.setFromEuler(E);nav.quaternion.copy(Q);
+  E.set(S.pitch,S.yaw,S.bank+S.roll+(S.demiR||0));Q.setFromEuler(E);nav.quaternion.copy(Q);
   const fwd=new THREE.Vector3(0,0,-1).applyQuaternion(Q);S.fwd=fwd;const up=new THREE.Vector3(0,1,0).applyQuaternion(new THREE.Quaternion().setFromEuler(new THREE.Euler(S.pitch,S.yaw,0,'YXZ')));
   if(TOUCHES.acc&&!S.vide)S.boost=Math.max(S.boost,.05);S.accel=S.boost>0;
   if(S.mode==='jeu'){if(S.accel){S.energie=Math.max(0,(S.energie??100)-28*dt);if(S.energie<=0){S.vide=true;S.boost=0;S.accel=false;}}else S.energie=Math.min(100,(S.energie??100)+14*dt);if(S.vide&&S.energie>=30)S.vide=false;}/* énergie du boost */const v=S.v*FAM().v*(S.accel?1.7:1)*(TOUCHES.frein?.62:1);S.boost-=dt;S.vit=v;S.p.addScaledVector(fwd,v*dt);
@@ -469,7 +479,7 @@ function image(m){const dt=Math.min(.05,(m-av)/1000);av=m;requestAnimationFrame(
   nav.position.copy(S.p);animeFlammes(modele.flammes,S.accel);if(modele.helice)modele.helice.rotation.z+=dt*40;if(modele.helices)for(const h of modele.helices)h.rotation.x+=dt*38;/* hélices des avions importés : elles tournent autour de l'axe du nez */
   ombre.position.set(S.p.x,sol+.3,S.p.z);ombre.material.opacity=Math.max(0,.35-(S.p.y-sol)*.004);
   // traînées
-  const trActif=S.loopT>=0||S.rollT>=0||S.accel;/* traînées : seulement pendant un looping, un tonneau ou une accélération */
+  const trActif=S.loopT>=0||S.rollT>=0||S.demiT>=0||S.accel;/* traînées : seulement pendant un looping, un tonneau ou une accélération */
   for(const[k,t]of tr.entries()){const neuve=trActif&&t.op<.02;t.op+=((trActif?.9:0)-t.op)*Math.min(1,dt*(trActif?6:2.5));t.l.material.opacity=t.op;t.l.visible=t.op>.01;t.pos.copyWithin(3,0,(t.n-1)*3);const bt=modele.bouts?modele.bouts[k]:[(k?1:-1)*modele.env,0,1];const w=new THREE.Vector3(bt[0]*.66,bt[1]*.66,bt[2]*.66).applyQuaternion(Q).add(S.p);/* traînée au bout de l'aile du modèle */t.pos[0]=w.x;t.pos[1]=w.y;t.pos[2]=w.z;if(S.t<.1||neuve)for(let i=0;i<t.n;i++)t.pos.set([w.x,w.y,w.z],i*3);/* elle repart de l'aile, pas d'un vieux tracé */t.g.attributes.position.needsUpdate=true;}
   // canon
   if(S.tir&&S.munB>0&&(S.cad=(S.cad||0)-dt)<=0){S.cad=.07;S.munB--;S.canon=-(S.canon||1);/* deux canons, un coup chacun */const vis=visee(fwd);const b=new THREE.Mesh(GEO_BALLE,MAT_BALLE);b.position.copy(S.p).addScaledVector(fwd,3).add(new THREE.Vector3(S.canon*modele.env*.3,0,0).applyQuaternion(Q));b.lookAt(b.position.clone().add(vis));sc.add(b);balles.push({b,v:vis.clone().multiplyScalar(v+160),t:1.1});window.CDGSons&&CDGSons.jouer('tir',.8);}
@@ -530,7 +540,7 @@ function image(m){const dt=Math.min(.05,(m-av)/1000);av=m;requestAnimationFrame(
   // caméra derrière l'avion
   // caméra derrière l'avion : elle suit son orientation par une vraie rotation (slerp), même sur le dos pendant un looping
   S.recul=(S.recul||0)+(((S.accel&&S.mode==='jeu')?6:0)-(S.recul||0))*Math.min(1,dt*2.2);const loin=(S.vue?30:17)+S.recul,haut=(S.vue?8:3.8)+S.recul*.15;/* au boost, la caméra recule un peu */const qc=new THREE.Quaternion().setFromEuler(new THREE.Euler(S.pitch-.1,S.yaw,0,'YXZ'));
-  if(!S.qc)S.qc=qc.clone();S.qc.slerp(qc,Math.min(1,dt*(S.loopT>=0?8:5)));
+  if(!S.qc)S.qc=qc.clone();S.qc.slerp(qc,Math.min(1,dt*(S.loopT>=0||S.demiT>=0?8:5)));
   const cp=S.p.clone().add(new THREE.Vector3(0,haut,loin).applyQuaternion(S.qc));if(S.secousse>.01){cp.add(new THREE.Vector3((Math.random()-.5),(Math.random()-.5),(Math.random()-.5)).multiplyScalar(S.secousse*.9));S.secousse*=Math.exp(-dt*5);}const solC=Math.max(0,H(cp.x,cp.z))+2;if(cp.y<solC)cp.y=solC;
   cam.position.copy(cp);cam.quaternion.copy(S.qc);ciel.position.copy(cam.position);
   majHud();document.getElementById('nTir').textContent=S.munB;document.getElementById('nMis').textContent='▮'.repeat(S.munM)||'—';
@@ -704,7 +714,7 @@ function montrer(id){for(const e of ECRANS)$(e).hidden=e!==id;el.classList.toggl
 function lireRecord(){try{return JSON.parse(localStorage.getItem('cieldeguerre.record'))||{};}catch(e){return{};}}
 function majTitre(){const r=lireRecord(),m=lireMissions(),et=Object.values(m).reduce((a,v)=>a+(v.e||0),0);$('tEtoiles').textContent=et?`${et} / ${MISSIONS.length*3} ETOILES`:'';$('tRecord').innerHTML=r.parties?`RECORD ${String(r.score).padStart(6,'0')}<br>VAGUE ${r.vague||0} · ${r.parties||0} PARTIE${(r.parties||0)>1?'S':''}`:'';}
 function viderCombat(){viderAiliers();for(const E of EPAVES)sc.remove(E.g);EPAVES.length=0;for(const e of ennemis)sc.remove(e.g);ennemis.length=0;for(const b of tirsEnnemis)sc.remove(b.b);tirsEnnemis.length=0;V.file.length=0;}
-function nouvellePartie(def){finMissionNettoie();viderCombat();S.dernier=def||null;V.n=0;V.pause=2.5;V.fin=0;Object.assign(S,{degJ:1,energie:100,vide:false,secousse:0,bSouris:0,cx:0,cy:0,mode:'jeu',vies:3,blindage:100,score:0,munB:300,munM:FAM().mis,auto:false,tir:false,boost:0,loopT:-1,rollT:-1,dx:0,dy:0});
+function nouvellePartie(def){finMissionNettoie();viderCombat();S.dernier=def||null;V.n=0;V.pause=2.5;V.fin=0;Object.assign(S,{degJ:1,energie:100,vide:false,secousse:0,bSouris:0,cx:0,cy:0,mode:'jeu',vies:3,blindage:100,score:0,munB:300,munM:FAM().mis,auto:false,tir:false,boost:0,loopT:-1,rollT:-1,demiT:-1,demiR:0,demiP:0,dx:0,dy:0});
   S.p.set(S.p.x,Math.max(S.p.y,40),S.p.z);montrer(null);
   if(def){MIS={def,t:0};def.debut(MIS);S.qc=null;annonce(`MISSION ${MISSIONS.indexOf(def)+1} · ${def.nom}<b>${def.etat(MIS).txt}</b>Bonne chance !`,3500);}
   else annonce('VAGUES SANS FIN<b>ARCHIPEL</b>Abats les chasseurs rouges. Leurs grands vaisseaux tirent aussi !');
@@ -727,8 +737,9 @@ for(const[id,k]of[['tSon','bruitages'],['pSon','bruitages'],['tMus','musique'],[
 majReglagesSon();
 for(const e of ECRANS)$(e).addEventListener('pointerdown',e=>e.stopPropagation());
 // la fenêtre change de taille (rotation du téléphone, fenêtre du PC) : on refait les toiles
-addEventListener('resize',()=>{clearTimeout(S.rz);S.rz=setTimeout(()=>{mesures();R.setSize(LW,LH,false);cible.setSize(LW,LH);cibleAvions.setSize(AW,AH);ov.width=OW*K;ov.height=OH*K;
-  cam.aspect=LW/LH;cam.fov=LW>LH?50:62;cam.updateProjectionMatrix();post.uniforms.pa.value.set(1/AW,1/AH);},120);});
+function redim(){mesures();R.setSize(LW,LH,false);cible.setSize(LW,LH);cibleAvions.setSize(AW,AH);ov.width=OW*K;ov.height=OH*K;
+  cam.aspect=LW/LH;cam.fov=LW>LH?50:62;cam.updateProjectionMatrix();post.uniforms.pa.value.set(1/AW,1/AH);}
+addEventListener('resize',()=>{clearTimeout(S.rz);S.rz=setTimeout(redim,120);});
 S.auto=true;majTitre();montrer('eTitre');
 requestAnimationFrame(image);
 })();
