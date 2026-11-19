@@ -175,4 +175,6 @@ Dossier `bannis/` (démo sur l'accueil, carte « BANNIS ») ; détails des fichi
 - **Simulateur** `outils/bannis-simulateur.js` : sans dés, vague moyenne 7 (la Muraille cause la plupart des défaites) ; avec un sort toutes les 12 s, vague 8 à 9. Équilibrage fin à la session 3.
 - Pas encore : classement, défi du jour, arbre de compétences (les éclats s'accumulent déjà), vrais sons, archers sur la Muraille.
 
-Retour de l'utilisateur : en attente (essai sur le téléphone).
+Artefact du jeu : https://claude.ai/artifact/XnEsz7CYgnAcRDCfhchcHh (`python3 outils/bannis-artefact.py <sortie>`).
+
+Retour de l'utilisateur : en attente (essai).

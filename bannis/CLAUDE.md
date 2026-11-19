@@ -12,6 +12,9 @@ Autobattler rogue-lite, démo sur l'accueil. Cahier des charges : [`specs/bannis
 ## Sauvegardes
 `bannis.run` (écrite au début de chaque vague, au placement), `bannis.stats` (nuits, record, gagnees, eclats, kills ; transfert dans `fiche.js`), `bannis.son`, `bannis.vitesse`.
 
+## Artefact
+https://claude.ai/artifact/XnEsz7CYgnAcRDCfhchcHh : `python3 outils/bannis-artefact.py <sortie>` puis republier au même lien.
+
 ## Tests
 `node outils/bannis-simulateur.js [nuits] [--des]` (équilibrage sans écran) ; fumée dans `outils/fumee.js` ; transfert dans `outils/logique.js`.
 

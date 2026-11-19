@@ -23,7 +23,7 @@ function sauverRun(){ try { localStorage.setItem("bannis.run", R.sauver(G.run));
 /* ---------- images ---------- */
 const IMG = {};
 for (const k of ["heros", "monstres", "icones", "ui-cadre", "ui-panneau", "ui-petit", "ui-boutons", "ui-boutons2", "ui-barre", "ui-ruban"]){
-  const i = new Image(); i.src = "img/" + k + ".png"; IMG[k] = i; }
+  const i = new Image(); i.src = (window.BANNIS_IMG && window.BANNIS_IMG[k]) || "img/" + k + ".png"; IMG[k] = i; }  // BANNIS_IMG : images en data: dans l'artefact
 
 /* ---------- sons synthétisés (de vrais sons viendront à la session 5) ---------- */
 let AC = null, sonOn = lire("bannis.son", true) !== false;
