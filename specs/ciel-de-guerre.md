@@ -201,3 +201,6 @@ Les sons synthétisés (bancs A, B, C) ne plaisaient pas ; banc de vrais sons (`
 
 ## Hangar refait (18/11)
 Demande de l'utilisateur : un onglet par famille (INTERCEPTEURS, POLYVALENTS, LOURDS, FURTIFS ; abrégés sur un écran étroit), la liste des appareils de l'onglet, et l'aperçu en 3D de l'appareil regardé (il tourne, rendu en gros pixels dans un second WebGLRenderer, `hangarApercu`), avec ses barres VITESSE, VIRAGE, BLINDAGE et ses missiles. Toucher un nom le montre ; CHOISIR CET APPAREIL le prend. Côte à côte en paysage, l'un sous l'autre en portrait.
+
+## Tuyères des chasseurs relevées à la main (19/11)
+Le repérage automatique (points les plus en arrière, puis un essai par les faces tournées vers l'arrière) plaçait mal les flammes de plusieurs appareils (polyyai 2, 3, 7, 28… : flammes au bout des ailes, tuyères fusionnées). Les 35 positions sont maintenant dans `TUY_PY` (`jeu.js`) : [x, y] en fractions de la largeur, lues sur une vue orthographique de l'arrière avec une grille ; `tuyeres(g, force)` trouve la profondeur. `CielDeGuerre.outils` (`construire`, `chargerModele`, `COULEURS`, `NOMS`) sert aux planches de contrôle.
