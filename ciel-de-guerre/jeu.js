@@ -290,6 +290,32 @@ function flotte(dt){for(const n of FLOTTE){n.ph+=dt;if(n.camp===1&&!n.fixe&&MIS&
     if(l.c.e&&l.c.e.vie>0&&l.m.position.distanceTo(l.c.e.g.position)<l.c.e.rayon+1){l.t=0;l.c.e.vie-=2;if(l.c.e.vie<=0)abattre(l.c.e);continue;}
     if(l.t<=0&&l.c.n)boom(l.m.position,6,['#ffffff','#ffe066','#ff8a2a']);}
   for(let k=LASERS.length-1;k>=0;k--)if(LASERS[k].t<=0){sc.remove(LASERS[k].m);LASERS.splice(k,1);}}
+// ailiers (session 4, 19/11) : des chasseurs bleus qui volent en formation derrière le joueur et foncent sur les rouges qui approchent.
+// Invulnérables ; leurs balles font moitié moins de dégâts que celles du joueur. Une mission dit combien et de quelle famille (def.ailiers).
+const AILIERS=[],BALLES_A=[],PLACES=[[-18,2,2],[18,2,2],[-34,5,9],[34,5,9]]/* à côté du joueur (devant = −z), pour qu'on les voie */;
+function creerAiliers(o){viderAiliers();if(!o||!o.n)return;const l=FAMILLES[o.fam].l.map(i=>'py'+i);
+  for(let k=0;k<o.n;k++){const cle=l[(k*2+1)%l.length];chargerModele(cle).then(()=>{if(S.mode!=='jeu')return;const r=construire(COULEURS[cle],true,'b');r.g.scale.setScalar(.8);const g=new THREE.Group();g.add(r.g);versCalque(g);
+      const pl=PLACES[k],pos=S.p.clone().add(new THREE.Vector3(pl[0],pl[1],pl[2]).applyQuaternion(Q));g.position.copy(pos);sc.add(g);
+      AILIERS.push({g,fl:r.flammes,fam:o.fam,k,v:(S.fwd||new THREE.Vector3(0,0,-1)).clone().multiplyScalar(S.v),c:null,cadT:0,ph:Math.random()*6,tc:0});});}}
+function viderAiliers(){for(const a of AILIERS)sc.remove(a.g);AILIERS.length=0;for(const b of BALLES_A)sc.remove(b.b);BALLES_A.length=0;}
+function majAiliers(dt,fwd){const lat=new THREE.Vector3(1,0,0).applyQuaternion(Q);
+  for(const a of AILIERS){a.ph+=dt;a.tc-=dt;const F=FAMILLES[a.fam];
+    if(a.c&&(a.c.vie<=0||a.c.g.position.distanceTo(S.p)>320))a.c=null;
+    if(!a.c&&a.tc<=0){a.tc=1;let best=null,bd=1e9;for(const e of ennemis){if(e.vie<=0||e.etat==='arrivee'||e.g.position.distanceTo(S.p)>300)continue;const d=e.g.position.distanceTo(a.g.position)+(AILIERS.some(b=>b!==a&&b.c===e)?80:0);/* on se répartit les cibles */if(d<bd){bd=d;best=e;}}a.c=best;}
+    let cible,vit;
+    if(a.c){cible=a.c.g.position.clone().addScaledVector(a.c.v,.6);vit=Math.min(95,Math.max(S.v*1.1,cible.distanceTo(a.g.position)*.9))*F.v;}
+    else{const pl=PLACES[a.k];cible=S.p.clone().add(new THREE.Vector3(pl[0],pl[1],pl[2]).applyQuaternion(Q));const d=cible.distanceTo(a.g.position);cible.addScaledVector(fwd,12);vit=S.v*(S.accel?1.7:1)*FAM().v+Math.min(60,d*.8)-(d<4?6:0);}
+    cible.y=Math.max(cible.y,H(cible.x,cible.z)+12);const voulu=cible.clone().sub(a.g.position);const ang=a.v.angleTo(voulu),om=1.6*F.vir*dt;
+    if(ang>1e-4){const ax=new THREE.Vector3().crossVectors(a.v,voulu);if(ax.lengthSq()<1e-8)ax.set(0,1,0);a.v.applyAxisAngle(ax.normalize(),Math.min(ang,om));}
+    a.v.setLength(a.v.length()+(vit-a.v.length())*Math.min(1,dt*2));a.g.position.addScaledVector(a.v,dt);
+    {const sol=Math.max(0,H(a.g.position.x,a.g.position.z))+6;if(a.g.position.y<sol){a.g.position.y=sol;if(a.v.y<0)a.v.y*=-.3;}}
+    animeFlammes(a.fl,!a.c&&S.accel);if(a.v.lengthSq()>1){a.g.lookAt(a.g.position.clone().add(a.v));const vire=a.v.clone().normalize().cross(voulu.clone().normalize()).y;a.g.rotateZ(Math.max(-1,Math.min(1,vire*3)));}
+    // tir : la cible droit devant, à moins de 150
+    a.cadT-=dt;if(a.c&&a.cadT<=0){const d=a.c.g.position.clone().sub(a.g.position);if(d.length()<150&&a.v.angleTo(d)<.2){a.cadT=.11;const dir=d.normalize();
+      const b=new THREE.Mesh(GEO_BALLE,MAT_BALLE);b.position.copy(a.g.position).addScaledVector(dir,3);b.lookAt(b.position.clone().add(dir));sc.add(b);BALLES_A.push({b,v:dir.multiplyScalar(a.v.length()+160),t:1});
+      if(a.g.position.distanceTo(S.p)<120&&window.CDGSons)CDGSons.jouer('tir',.35);}}}
+  for(const b of BALLES_A){b.t-=dt;b.b.position.addScaledVector(b.v,dt);for(const e of ennemis)if(e.vie>0&&b.b.position.distanceTo(e.g.position)<e.rayon){b.t=0;e.vie-=.5;if(e.vie<=0){abattre(e);S.score+=50;}break;}}
+  for(let i=BALLES_A.length-1;i>=0;i--)if(BALLES_A[i].t<=0){sc.remove(BALLES_A[i].b);BALLES_A.splice(i,1);}}
 // ennemis
 const ennemis=[];
 function ennemi(pos,dir,o={}){const g=new THREE.Group();const as=o.as!==undefined?!!o.as:V.n>=4&&Math.random()<.3,bomb=o.bomb!==undefined?!!o.bomb:!as&&V.n>=3&&Math.random()<.22;
@@ -356,7 +382,7 @@ function changerAvion(){choisir((choix+1)%NOMS.length);}
 document.getElementById('charge').remove();
 // pilotage
 const S={cx:0,cy:0,mode:'titre',vies:3,dx:0,dy:0,blindage:100,p:new THREE.Vector3(0,40,0),yaw:0,pitch:0,bank:0,roll:0,rollT:-1,loopT:-1,v:46,boost:0,auto:true,doigt:null,dernier:0,vue:0,tir:false,munB:300,munM:5,t:0,score:0};
-S.munM=FAM().mis;const Q=new THREE.Quaternion(),E=new THREE.Euler(0,0,0,'YXZ');window.CielDeGuerre={S,outils:{construire,chargerModele,COULEURS,NOMS},get ennemis(){return ennemis;},FLOTTE,nouvellePartie:d=>nouvellePartie(typeof d==='number'?MISSIONS[d]:d||null),get mission(){return MIS;},get missions(){return MISSIONS;},finMission:g=>finMission(g),abattre:e=>abattre(e),get epaves(){return EPAVES.length;},abattu:()=>abattu(),pause:()=>pause(),reprendre:()=>reprendre(),get mode(){return S.mode;},get vague(){return V.n;}};/* pour les tests */
+S.munM=FAM().mis;const Q=new THREE.Quaternion(),E=new THREE.Euler(0,0,0,'YXZ');window.CielDeGuerre={S,get ailiers(){return AILIERS;},outils:{construire,chargerModele,COULEURS,NOMS},get ennemis(){return ennemis;},FLOTTE,nouvellePartie:d=>nouvellePartie(typeof d==='number'?MISSIONS[d]:d||null),get mission(){return MIS;},get missions(){return MISSIONS;},finMission:g=>finMission(g),abattre:e=>abattre(e),get epaves(){return EPAVES.length;},abattu:()=>abattu(),pause:()=>pause(),reprendre:()=>reprendre(),get mode(){return S.mode;},get vague(){return V.n;}};/* pour les tests */
 // visée : au doigt et au clavier, droit devant ; à la souris, là où est le curseur (le rayon de la caméra à travers lui),
 // ramené dans un cône de 35° autour du nez : le réticule est sous le curseur, les balles partent vers lui
 const CONE=.6;function visee(fwd){if(!S.souris||S.auto||S.mode!=='jeu'||S.loopT>=0){S.horsCone=false;return fwd;}
@@ -491,6 +517,7 @@ function image(m){const dt=Math.min(.05,(m-av)/1000);av=m;requestAnimationFrame(
     animeFlammes(e.fl,false);if(e.v.lengthSq()>1){e.g.lookAt(e.g.position.clone().add(e.v));e.g.rotateZ(Math.sin(e.ph*1.3)*.7);}
     e.tirT-=dt;const surObj=!!(e.obj&&e.obj.vie>0&&(e.bomb||dpl>70)),T=surObj?e.obj.pos:S.p,d=T.clone().sub(e.g.position);if(e.tirT<=0&&d.length()<(surObj?180:(e.bomb?150:140)*(FAM().discret||1))&&(e.bomb||surObj||e.v.angleTo(d)<.45)){e.tirT=surObj?3+Math.random()*2:1.6+Math.random()*2.2;/* sur un objectif : une salve toutes les 3 à 5 s */const vise=surObj?d.clone().normalize():S.p.clone().addScaledVector(fwd,S.v*d.length()/120).sub(e.g.position).normalize();
       for(let q=0;q<2;q++){const b=new THREE.Mesh(GEO_TIR,MAT_TIR);b.position.copy(e.g.position).addScaledVector(vise,3+q*3);b.lookAt(b.position.clone().add(vise));sc.add(b);tirsEnnemis.push({b,v:vise.clone().multiplyScalar(120),t:surObj?1.8:1.6,obj:surObj?e.obj:null});}}}
+  majAiliers(dt,fwd);
   for(const b of tirsEnnemis){b.t-=dt;b.b.position.addScaledVector(b.v,dt);if(b.obj){if(b.obj.vie>0&&b.b.position.distanceTo(b.obj.pos)<b.obj.r){b.t=0;b.obj.touche(b.obj.deg||3,b.b.position);}continue;}if(b.b.position.distanceTo(S.p)<2.6&&S.rollT<0&&S.mode==='jeu'){b.t=0;S.blindage-=7*(S.degJ||1)/FAM().bli;V.flash=.15;window.CDGSons&&CDGSons.jouer('touche');secouer(.5);
       if(S.blindage<=0)abattu();}}
   for(let k=tirsEnnemis.length-1;k>=0;k--)if(tirsEnnemis[k].t<=0){sc.remove(tirsEnnemis[k].b);tirsEnnemis.splice(k,1);}
@@ -579,7 +606,7 @@ function batirVille(c){const g=new THREE.Group(),cols=['#f4ead8','#efe0c8','#e8d
 function balise(p){const m=new THREE.Mesh(new THREE.CylinderGeometry(3,3,400,8,1,true).translate(0,200,0),new THREE.MeshBasicMaterial({color:'#6ae0ff',transparent:true,opacity:.35,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}));m.position.copy(p);m.position.y=0;sc.add(m);return m;}
 const ETOILES=(M,ok2,ok3)=>ok3?3:ok2?2:1;
 const MISSIONS=[
- {id:'cote',nom:'LA COTE',titre:'DEFENDRE LE PORT',brief:'Trois vagues de bombardiers rouges arrivent de la mer vers le port. Abats-les avant qu’ils ne rasent la ville. Le destroyer bleu Héron tourne au-dessus du port : ses tourelles t’aident.',sansRouges:1,
+ {id:'cote',nom:'LA COTE',titre:'DEFENDRE LE PORT',brief:'Trois vagues de bombardiers rouges arrivent de la mer vers le port. Abats-les avant qu’ils ne rasent la ville. Le destroyer bleu Héron tourne au-dessus du port : ses tourelles t’aident.',sansRouges:1,ailiers:{n:3,fam:'inter'},
   debut(M){const c=trouverCote();M.c=c;M.g=batirVille(c);M.ville=objectif('PORT',new THREE.Vector3(c.x,c.h+6,c.z),55,100);M.ville.deg=.9;S.degJ=.6;/* première mission : plus douce (18/11) */
     const a=c.mer;S.p.set(c.x+Math.cos(a)*160,55,c.z+Math.sin(a)*160);S.yaw=Math.atan2(Math.cos(a),Math.sin(a))+Math.PI;/* au-dessus de la mer, face au large */
     M.vagues=[[6,3,1,0,0],[50,3,2,0,0],[100,3,3,1,1]];M.n=0;
@@ -590,7 +617,7 @@ const MISSIONS=[
       escadre(ch,{centre:M.ville.pos,a:a-.25,dist:380,y:65,t:.8,opt:k=>({fam:var_>1&&k%2?'inter':'poly'})});M.n++;annonce(`VAGUE ${M.n} / 3<b>BOMBARDIERS</b>Ils arrivent par la mer.`);}
     if(M.ville.vie<60&&Math.random()<dt*3)fumee(M.ville.pos.clone().add(new THREE.Vector3((Math.random()-.5)*50,-4,(Math.random()-.5)*50)),1);
     if(M.ville.vie<=0)return'perdu';if(M.n>=M.vagues.length&&!ennemis.length&&!V.file.length)return'gagne';},
-  etat:M=>({txt:'PROTEGE LE PORT',v:M.ville.vie/100,info:`PORT ${Math.max(0,Math.round(M.ville.vie))} % · VAGUE ${M.n} / 3`}),buts:['Abats les bombardiers rouges (les grosses corvettes) avant qu’ils n’atteignent le port.','Le destroyer bleu qui tourne au-dessus du port tire sur les rouges : reste près de lui.','Trois vagues arrivent de la mer. Leurs chasseurs d’escorte s’en prennent à toi.','Le port est encadré en bleu ; sa jauge est en haut de l’écran.'],et:['port intact à 50 % ou plus','port intact à 80 %, sans perdre d’appareil'],etoiles:M=>ETOILES(M,M.ville.vie>=50,M.ville.vie>=80&&S.vies===3),fin(M){sc.remove(M.g);retirerNavire(M.allie);}},
+  etat:M=>({txt:'PROTEGE LE PORT',v:M.ville.vie/100,info:`PORT ${Math.max(0,Math.round(M.ville.vie))} % · VAGUE ${M.n} / 3`}),buts:['Abats les bombardiers rouges (les grosses corvettes) avant qu’ils n’atteignent le port.','Le destroyer bleu qui tourne au-dessus du port tire sur les rouges : reste près de lui.','Trois intercepteurs bleus volent avec toi et attaquent les rouges.','Trois vagues arrivent de la mer. Leurs chasseurs d’escorte s’en prennent à toi.','Le port est encadré en bleu ; sa jauge est en haut de l’écran.'],et:['port intact à 50 % ou plus','port intact à 80 %, sans perdre d’appareil'],etoiles:M=>ETOILES(M,M.ville.vie>=50,M.ville.vie>=80&&S.vies===3),fin(M){sc.remove(M.g);retirerNavire(M.allie);}},
  {id:'escorte',nom:"L'ESCORTE",titre:'PROTEGER LE DESTROYER',brief:'Le destroyer bleu Albatros traverse l’archipel. Reste près de lui : les chasseurs rouges vont tout tenter pour le couler.',
   debut(M){const d=new THREE.Vector3(-Math.sin(S.yaw),0,-Math.cos(S.yaw));M.dir=d;M.n0=navire('fga_destroyer2',0,110,{fixe:1,yaw:S.yaw,v:0,base:S.p.clone().addScaledVector(d,90).add(new THREE.Vector3(-d.z*50,0,d.x*50))});
     M.n0.base.y=80;M.trajet=1500;M.parcouru=0;M.dest=M.n0.base.clone().addScaledVector(d,M.trajet);M.bal=balise(M.dest);M.ob=objectif('ALBATROS',new THREE.Vector3(),45,100);M.ob.deg=.8;OBJ.push({nom:'ARRIVEE',pos:M.dest.clone().setY(120)});M.prochaine=6;M.k=0;},
@@ -647,11 +674,12 @@ const $=id=>document.getElementById(id),ECRANS=['eTitre','ePause','eFin','eAide'
 function montrer(id){for(const e of ECRANS)$(e).hidden=e!==id;el.classList.toggle('menu',!!id);if(id&&id!=='eAide')ecranAvant=id;}
 function lireRecord(){try{return JSON.parse(localStorage.getItem('cieldeguerre.record'))||{};}catch(e){return{};}}
 function majTitre(){const r=lireRecord(),m=lireMissions(),et=Object.values(m).reduce((a,v)=>a+(v.e||0),0);$('tEtoiles').textContent=et?`${et} / ${MISSIONS.length*3} ETOILES`:'';$('tRecord').innerHTML=r.parties?`RECORD ${String(r.score).padStart(6,'0')}<br>VAGUE ${r.vague||0} · ${r.parties||0} PARTIE${(r.parties||0)>1?'S':''}`:'';}
-function viderCombat(){for(const E of EPAVES)sc.remove(E.g);EPAVES.length=0;for(const e of ennemis)sc.remove(e.g);ennemis.length=0;for(const b of tirsEnnemis)sc.remove(b.b);tirsEnnemis.length=0;V.file.length=0;}
+function viderCombat(){viderAiliers();for(const E of EPAVES)sc.remove(E.g);EPAVES.length=0;for(const e of ennemis)sc.remove(e.g);ennemis.length=0;for(const b of tirsEnnemis)sc.remove(b.b);tirsEnnemis.length=0;V.file.length=0;}
 function nouvellePartie(def){finMissionNettoie();viderCombat();S.dernier=def||null;V.n=0;V.pause=2.5;V.fin=0;Object.assign(S,{degJ:1,energie:100,vide:false,secousse:0,bSouris:0,cx:0,cy:0,mode:'jeu',vies:3,blindage:100,score:0,munB:300,munM:FAM().mis,auto:false,tir:false,boost:0,loopT:-1,rollT:-1,dx:0,dy:0});
   S.p.set(S.p.x,Math.max(S.p.y,40),S.p.z);montrer(null);
   if(def){MIS={def,t:0};def.debut(MIS);S.qc=null;annonce(`MISSION ${MISSIONS.indexOf(def)+1} · ${def.nom}<b>${def.etat(MIS).txt}</b>Bonne chance !`,3500);}
-  else annonce('VAGUES SANS FIN<b>ARCHIPEL</b>Abats les chasseurs rouges. Leurs grands vaisseaux tirent aussi !');}
+  else annonce('VAGUES SANS FIN<b>ARCHIPEL</b>Abats les chasseurs rouges. Leurs grands vaisseaux tirent aussi !');
+  setTimeout(()=>{if(S.mode==='jeu')creerAiliers(def?def.ailiers||{n:2,fam:'poly'}:{n:2,fam:'poly'});},300);/* une fois le joueur placé par la mission */}
 function pause(){if(S.mode!=='jeu')return;S.mode='pause';S.tir=false;try{document.exitPointerLock();}catch(x){}montrer('ePause');}
 function reprendre(){if(S.mode!=='pause')return;S.mode='jeu';montrer(null);}
 function versTitre(){finMissionNettoie();viderCombat();S.mode='titre';S.auto=true;S.souris=0;el.classList.remove('souris');S.doigt=null;joy.classList.remove('on');majTitre();montrer('eTitre');}
