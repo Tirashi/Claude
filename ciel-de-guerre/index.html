@@ -14,8 +14,10 @@
 <body>
 <div class="tel" id="t"><div class="charge" id="charge">CHARGEMENT…</div>
 <div class="hud" id="hud">
+  <div class="colG">
   <div class="pan" id="hG"><div class="l"><span>SCORE</span><b id="hScore">000000</b></div><div class="l"><span>APPAREILS</span><b id="hVies"></b></div><div class="barre vie"><i id="hBlind"></i></div><div class="l vit"><span>VITESSE</span><b id="hVit"></b></div><div class="barre boost"><i id="hBoost"></i></div></div>
   <div class="pan obj" id="hObj"><span id="hObjNom"></span><b id="hObjTxt"></b><div class="barre" id="hObjB"><i id="hObjBar"></i></div><small id="hObjInfo"></small></div>
+  </div>
   <div class="pan armes" id="hArmes"><div class="l"><span>CANON</span><b id="hCanon"></b></div><div class="l"><span>MISSILES</span><b id="hMis"></b></div></div>
 </div>
 <div class="bandeau" id="bandeau"></div>
@@ -84,8 +86,8 @@
 <div class="ecran" id="eAide" hidden>
   <div class="carte aide">
     <h2>COMMANDES</h2>
-    <p><b>TELEPHONE</b><br>Pose le pouce gauche n'importe où : un joystick apparaît (vers le haut : on monte). Boutons ronds à droite : FEU, MISSILE, LOOP, TONNEAU, et BOOST ou FREIN à garder appuyés. Le boost vide sa jauge bleue (sous le blindage) ; elle se recharge toute seule.</p>
-    <p><b>PC, A LA SOURIS</b><br>Le curseur est ton viseur : les balles partent vers lui. Éloigne-le du centre de l'écran pour tourner, monter ou descendre ; au centre, l'appareil vole droit. Clic gauche : feu ; clic droit : missile. Z accélère, S freine, Q et D font un écart ; deux appuis rapides sur Z : looping, sur Q ou D : tonneau. Échap : pause.</p>
+    <p><b>TELEPHONE</b><br>Pose le pouce gauche n'importe où : un joystick apparaît (vers le haut : on monte). Boutons ronds à droite : FEU, MISSILE, LOOP, TONNEAU, et BOOST ou FREIN à garder appuyés ; deux appuis rapides sur FREIN : demi-tour. Le boost vide sa jauge bleue (sous le blindage) ; elle se recharge toute seule.</p>
+    <p><b>PC, A LA SOURIS</b><br>Le curseur est ton viseur : les balles partent vers lui. Éloigne-le du centre de l'écran pour tourner, monter ou descendre ; au centre, l'appareil vole droit. Clic gauche : feu ; clic droit : missile. Z accélère, S freine, Q et D font un écart ; deux appuis rapides sur Z : looping, sur S : demi-tour (demi-looping puis demi-tonneau), sur Q ou D : tonneau. Échap : pause.</p>
     <p><b>PC, AU CLAVIER</b><br>Flèches : piloter. Espace : feu ; E : missile ; R : looping ; F : tonneau ; V : vue ; C : appareil suivant ; P : pause.</p>
     <p class="sous">Le missile se verrouille sur la cible dans l'axe (cadre jaune puis LOCK). Les tourelles rouges des grands vaisseaux se détruisent aussi.</p>
     <button id="aRetour" class="grand">RETOUR</button>

@@ -1,11 +1,11 @@
-/* Ciel de guerre : fiche de l'accueil (voir accueil-outils.js). Session 2 : 5 missions à étoiles et les vagues sans fin ; démo, sans classement. */
+/* Ciel de guerre : fiche de l'accueil (voir accueil-outils.js). Session 4 : 6 missions à étoiles et les vagues sans fin ; démo, sans classement. */
 Ludo.fiche({
   k: "ciel-de-guerre/index.html",
   carte: {n: "CIEL DE GUERRE", s: "CIEL", ic: "cieldeguerre", fam: "3d", lb: "linear-gradient(#f2a37a, #4a2f5a)", lt: "#fff0dc", sh: "#c8642e", demo: true, disquette: true,
-    d: "Combat aérien en 3D au-dessus d'un archipel, au milieu d'une bataille de grands vaisseaux. Loopings, tonneaux, canon et missiles à verrouiller, tourelles rouges à abattre, et 35 chasseurs en 4 familles au hangar. Cinq missions jusqu'à la forteresse volante, et des vagues sans fin. Au doigt sur téléphone, à la souris sur ordinateur.", tags: ["3D", "5 MISSIONS", "SOURIS"]},
+    d: "Combat aérien en 3D au-dessus d'un archipel, au milieu d'une bataille de grands vaisseaux. Loopings, tonneaux, canon et missiles à verrouiller, tourelles rouges à abattre, et 35 chasseurs en 4 familles au hangar. Six missions jusqu'à la forteresse volante (dont un raid sur une base au sol), des ailiers, et des vagues sans fin. Au doigt sur téléphone, à la souris sur ordinateur.", tags: ["3D", "6 MISSIONS", "SOURIS"]},
   meta: {added: "2026-11-18", updated: "2026-11-18", genres: ["ACTION"]},
   records: () => { const r = rk("cieldeguerre.record", {}) || {}, m = rk("cieldeguerre.missions", {}) || {}, et = Object.values(m).reduce((a, v) => a + (Number(v && v.e) || 0), 0);
-    return [["Étoiles", et ? et + " / 15" : null], ["Missions réussies", m && Object.keys(m).length ? Object.keys(m).length + " / 5" : null], ["Vagues : record", num(r.score, "")], ["Meilleure vague", num(r.vague, "")]]; },
+    return [["Étoiles", et ? et + " / 18" : null], ["Missions réussies", m && Object.keys(m).length ? Object.keys(m).length + " / 6" : null], ["Vagues : record", num(r.score, "")], ["Meilleure vague", num(r.vague, "")]]; },
   nom: "Ciel de guerre",
   transfert: {cles: ["cieldeguerre"],
     collecter(g){ const r = readKey("cieldeguerre.record", null), m = readKey("cieldeguerre.missions", null); if ((r && (r.score || r.parties)) || (m && Object.keys(m).length)) g.cieldeguerre = {r: r || {}, m: m || {}, a: readKey("cieldeguerre.avion", null)}; },
