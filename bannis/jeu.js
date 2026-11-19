@@ -79,17 +79,18 @@ function nine(cle, sx, sy, sw, sh, c, x, y, w, h){
 const panneau = (x, y, w, h) => nine("ui-panneau", 0, 0, 72, 72, 24, x, y, w, h);
 const grand = (x, y, w, h) => nine("ui-cadre", 0, 0, 144, 144, 48, x, y, w, h);
 const petit = (x, y, w, h) => nine("ui-petit", 0, 0, 48, 48, 16, x, y, w, h);
-function police(px, titre, gras = true){ ctx.font = titre ? `${Math.round(px)}px "Press Start 2P", monospace` : `${gras ? "700 " : ""}${Math.round(px)}px "Pixelify Sans", sans-serif`; }
+// Jersey 10 est plus petite à corps égal : agrandie de 30 % ; une seule graisse (pas de gras simulé, qui brouille les pixels)
+function police(px, titre){ ctx.font = titre ? `${Math.round(px)}px "Press Start 2P", monospace` : `${Math.round(px*1.3)}px "Jersey 10", sans-serif`; }
 function texte(t, x, y, px, c = "#fff", al = "left", opt = {}){
-  police(px, opt.titre, opt.gras !== false); let p = px;
-  if (opt.max) while (p > 8 && ctx.measureText(t).width > opt.max){ p--; police(p, opt.titre, opt.gras !== false); }
+  police(px, opt.titre); let p = px;
+  if (opt.max) while (p > 8 && ctx.measureText(t).width > opt.max){ p--; police(p, opt.titre); }
   ctx.textAlign = al; ctx.textBaseline = "alphabetic";
   if (opt.ombre !== false){ ctx.fillStyle = opt.ombreC || "#1a0e2e"; ctx.fillText(t, x + 2, y + 2); }
   ctx.fillStyle = c; ctx.fillText(t, x, y);
 }
 // texte sur plusieurs lignes ; renvoie la hauteur occupée
 function paragraphe(t, x, y, larg, px, c = "#fff", interligne = 1.3, al = "left"){
-  police(px, false, false); const mots = t.split(" "); let ligne = "", yy = y;
+  police(px, false); const mots = t.split(" "); let ligne = "", yy = y;
   for (const m of mots){ const essai = ligne ? ligne + " " + m : m; if (ctx.measureText(essai).width > larg && ligne){ texte(ligne, x, yy, px, c, al, {gras: false}); ligne = m; yy += px*interligne; } else ligne = essai; }
   if (ligne){ texte(ligne, x, yy, px, c, al, {gras: false}); yy += px*interligne; }
   return yy - y;
@@ -138,8 +139,9 @@ function dessinerMonstre(i, elite, x, y, dir, opt = {}){
   ctx.save(); ctx.translate(Math.round(x), Math.round(y)); if (dir > 0) ctx.scale(-1, 1);
   if (opt.sx) ctx.scale(opt.sx, opt.sy || 1);
   if (opt.alpha !== undefined) ctx.globalAlpha = opt.alpha;
-  ctx.drawImage(im, (i - 1)*64, elite ? 64 : 0, 64, 64, -32*e, -60*e, 64*e, 64*e);
-  if (opt.blanc > 0){ ctx.globalCompositeOperation = "lighter"; ctx.globalAlpha = Math.min(1, opt.blanc); ctx.drawImage(im, (i - 1)*64, elite ? 64 : 0, 64, 64, -32*e, -60*e, 64*e, 64*e); }
+  // cases de 96 px (img/monstres.png), pieds à 92 px du haut de la case
+  ctx.drawImage(im, (i - 1)*96, elite ? 96 : 0, 96, 96, -48*e, -92*e, 96*e, 96*e);
+  if (opt.blanc > 0){ ctx.globalCompositeOperation = "lighter"; ctx.globalAlpha = Math.min(1, opt.blanc); ctx.drawImage(im, (i - 1)*96, elite ? 96 : 0, 96, 96, -48*e, -92*e, 96*e, 96*e); }
   ctx.restore();
 }
 function aura(x, y, t, k = 1){
@@ -277,7 +279,7 @@ function bandeau(){
     ap.slice(0, 6).forEach((m, i) => {
       const x = 22 + i*54, y = 92; ctx.fillStyle = "rgba(0,0,0,.3)"; ctx.fillRect(x, y, 48, 38);
       if (m.cache){ texte("?", x + 24, y + 30, 22, "#ffe14a", "center"); return; }
-      ctx.save(); ctx.beginPath(); ctx.rect(x, y, 48, 38); ctx.clip(); dessinerMonstre(D.MONSTRES[m.k].i, false, x + 24, y + 40, -1, {e: .62}); ctx.restore();
+      ctx.save(); ctx.beginPath(); ctx.rect(x, y, 48, 38); ctx.clip(); dessinerMonstre(D.MONSTRES[m.k].i, false, x + 24, y + 38, -1, {e: .58}); ctx.restore();
       texte(m.boss ? "BOSS" : "x" + m.n, x + 46, y + 36, 12, m.boss ? "#ff7a5a" : "#fff", "right");
     });
   } else if (G.ecran === "combat"){

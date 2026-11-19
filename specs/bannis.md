@@ -184,4 +184,6 @@ Retours de l'utilisateur (19/11, essai de l'artefact) et corrections :
 - **Stats automatiques au niveau** : plus de choix ; gains selon le rôle (`D.CROISSANCE` : corps à corps +12 % de vie, +2 ATQ, +1 DEF ; magie +8 % de vie, +3 ATQ, +1 CRIT ; soins +10 % de vie, +2 ATQ, +1 DEF ; soutien +10 % de vie, +1 ATQ, +1 DEF, +3 % de vitesse), affichés au bilan. Le choix d'un bonus au niveau pourra revenir par l'arbre.
 - **Équiper** : les armes sont réservées (épée, hache, dague, masse pour le corps à corps ; bâton, sceptre, grimoire pour les mages, soins et soutien) ; l'écran « qui le porte » montre chaque héros, ce qu'il porte déjà, ses stats et le changement (+ en vert, − en rouge) ; ceux qui ne peuvent pas le porter sont grisés.
 
+Retours du 19/11 (deuxième essai) : **sprites mal découpés** (un morceau du monstre voisin à côté du spectre) : 10 des 31 monstres de Willibab dépassent 64 px (jusqu'à 81 × 89) ; planche refaite en cases de 96 px, monstre posé au bas de sa case. **Police peu lisible sur les chiffres** : Jersey 10 remplace Pixelify Sans pour tous les textes (agrandie de 30 %, une seule graisse) ; titres toujours en Press Start 2P.
+
 Retour de l'utilisateur : en attente.

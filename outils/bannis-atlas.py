@@ -16,12 +16,13 @@ for i, n in enumerate(HEROS):
     im = Image.open(g(f"pc/x/Pixel_Champions_v3/1x-NormalSize/Battlers/{nom}-battle{('-'+pal) if pal else ''}.png")).convert("RGBA")
     h.alpha_composite(im, (0, i*192))
 h.save(os.path.join(OUT, "heros.png"), optimize=True)
-# monstres : les 31 de Free Mythic Monsters, 2 couleurs (ligne 0 = normale, 1 = élite), retournés pour regarder à gauche
-m = Image.new("RGBA", (64*31, 64*2), (0,0,0,0))
+# monstres : les 31 de Free Mythic Monsters, 2 couleurs (ligne 0 = normale, 1 = élite), retournés pour regarder à gauche.
+# Les images vont de 64 x 64 à 81 x 89 : cases de 96 px, image centrée, bas de l'image à 4 px du bas de la case.
+m = Image.new("RGBA", (96*31, 96*2), (0,0,0,0))
 for i in range(31):
     for c in (1, 2):
         im = ImageOps.mirror(Image.open(g(f"mm/x/*/*/Transparent/1x Size/{i+1:03d}_{c}.png")).convert("RGBA"))
-        m.alpha_composite(im, (i*64, (c-1)*64))
+        m.alpha_composite(im, (i*96 + (96 - im.width)//2, (c-1)*96 + 92 - im.height))
 m.save(os.path.join(OUT, "monstres.png"), optimize=True)
 Image.open(g("ic/x/*/#2*.png")).convert("RGBA").save(os.path.join(OUT, "icones.png"), optimize=True)
 D = "ui-tiny-rpg-dragon-regalia-gui/x/"
