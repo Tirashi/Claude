@@ -127,7 +127,7 @@ Historique des directions : *Escadrille pixel* (gros pixels, sprite dessiné), p
 | 2 · missions | Les 4 missions, l'écran de fin, les étoiles, le boss | Opus — **fait le 18/11** |
 | 3 · sensations | Son, secousses, fumée, jauge de boost, vitesse | opusplan — **fait le 18/11** |
 | 4 · monde | Ailiers, cibles au sol, décors (nuit, orage, désert, neige) | opusplan — **faite le 19/11** (ailiers, raid, cinq ambiances, feux de position) |
-| 5 · progression | Réglages par avion, déblocages, classements, défi du jour éventuel | opusplan |
+| 5 · progression | Réglages par avion, déblocages, classements, défi du jour éventuel | opusplan — **faite le 19/11** (sans défi du jour) |
 
 ## Décision du 17/11 : des vaisseaux, pas d'avions
 Le joueur et les ennemis volent sur des **vaisseaux**. Les avions à hélices sont retirés : les 6 monogon voxel plane et le Corsaire. On garde ce qui ressemble à des avions de chasse : Faucon, Hirondelle, Vipère et Spectre, construits dans le code. Le hangar de la maquette est mis à jour. Les outils des hélices (`vox_glb.py`, `helices.py`) restent dans `outils/escadrille-pixel/conversion/`.
@@ -224,3 +224,9 @@ Retours de l'utilisateur (« trop dur », puis « encore difficile ») : vagues 
 Moteur des ambiances (`AMBS`, `ambiance(k)`, `meteo(dt)`, `CielDeGuerre.ambiance`) : couleurs du ciel (uniformes, étoiles, éclair, couverture nuageuse), du sol (`desert`, `neige`, teintes `tSol` et `tEau`), des nuages, lumières, brume, mer, arbres (cachés au désert, feuillus cachés à la neige), pluie (traits) et flocons (points) qui suivent la caméra, éclairs suivis du tonnerre (la grosse explosion étouffée). Cinq ambiances : crépuscule (d'origine), nuit, orage, désert, neige. [Maquette](https://claude.ai/artifact/51D1vRdeVNJMCFWTkbApSd) (`maquettes/ciel-de-guerre-decors.html`, captures du moteur) : proposition crépuscule pour la côte et la forteresse, désert pour l'escorte, nuit pour le raid, orage pour la survie, neige pour l'amiral ; **validée le 19/11** (« elles sont toutes pas mal ») et branchée : `def.amb` par mission (côte et forteresse crépuscule, escorte désert, raid nuit, survie orage, amiral neige) ; vagues sans fin : une autre ambiance toutes les 5 vagues (`CYCLE_AMB`) ; écran titre au crépuscule. **Feux de position** (demande du 19/11) : rouge au bout de l'aile gauche, vert à droite, double flash blanc toutes les 1,3 s, sur tous les chasseurs et bombardiers, seulement de nuit et sous l'orage (`AMB.feux`, `feuxNav`, `majFeux`, matériaux partagés).
 
 - 19/11 : **fluide sur le téléphone** (essai de l'utilisateur après la qualité adaptative, les ailiers et les ambiances).
+
+## Session 5 (19/11) : progression
+- **Profils** (`PROFILS`, `STATS`) : dans chaque famille, les appareils prennent à tour de rôle le profil RAPIDE (vitesse × 1,08, blindage × 0,9), AGILE (virage × 1,12, vitesse × 0,95), ROBUSTE (blindage × 1,15, virage × 0,94) ou ARME (+1 missile, vitesse × 0,96). Le hangar montre les barres de l'appareil regardé et son profil.
+- **Déblocages** : le premier appareil de chaque famille et l'appareil de départ (polyyai 7) sont ouverts ; les autres coûtent 60 (rangs 1 à 3), 120 (4 à 7) ou 200 (8 et plus) de **solde**. La solde : score / 150 à la fin de chaque partie ou mission, + 15 par nouvelle étoile. Un joueur qui avait déjà choisi un appareil le garde. Clé `cieldeguerre.hangar` {solde, ouverts}, transférée (la plus grosse solde, l'union des appareils).
+- **Classements** `cieldeguerre` : `vagues` (meilleur score en vagues sans fin, envoyé en fin de partie), `etoiles` (total des étoiles, envoyé à chaque nouveau record d'étoiles) ; volet de l'accueil, couronne (`rank`) ; `SYNC` 30. Le jeu n'est plus en démo.
+- Défi du jour : pas fait (à décider).
