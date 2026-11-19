@@ -139,3 +139,4 @@ Maquettes de la carte 2 à 4 (isométrique, puis papier à l'encre validée), é
 - **19/11 — Les Bannis, retours du troisième essai** : textes du butin dans leur cadre, marche animée (bonds, poussière), arme équipée tenue en main et animée pendant le coup (essai).
 - **19/11 — Les Bannis, retours du quatrième essai** : dague et grimoire bien tenus, plus de retour vers la Muraille sans cible, déserteur qui fuit 2,5 s, classes légendaires réservées à l'arbre, début de nuit plus disputé (vague moyenne 5,5 au simulateur).
 - **19/11 — Les Bannis** : contour sombre autour des textes (l'ombre décalée n'était pas lisible), stats de l'écran d'équipement sur deux colonnes.
+- **19/11 — Les Bannis, session 2** : dés et sorts du Mage (réserve de dés à faces spéciales, combos, sort annoncé, lancer d'un geste, déraillements, pages de grimoire, grimoire à onglets) ; artefact republié.

@@ -17,7 +17,7 @@ for (let n = 0; n < nuits; n++){
     R.preparerVague(run);
     const C = R.debutCombat(run); let t = 0, ts = 0;
     while (!C.fin && t < 300){ R.etape(C, 1/30); t += 1/30; ts += 1/30;
-      if (avecDes && ts > 12){ ts = 0; const des = R.lancerDes(), res = R.resultatDes(des); R.jeterSort(C, R.tirerSort(), res.total); }
+      if (avecDes && ts > 12){ ts = 0; const res = R.resultatDes(R.lancerDes(run.des)); R.jeterSort(C, R.tirerSort(run.sorts), res.total, res.deraille); }
       C.ev.length = 0; }
     tempsTotal += t; murVague[run.vague] = (murVague[run.vague] || 0) + (100 - run.mur); nbVague[run.vague] = (nbVague[run.vague] || 0) + 1;
     if (C.fin !== "victoire"){ fin = run.mur <= 0 ? "mur" : "heros"; break; }
