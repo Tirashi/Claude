@@ -1,0 +1,455 @@
+<title>Archipel, maquette 1</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alegreya:wght@700;800&family=Alegreya+Sans+SC:wght@500;800&family=IM+Fell+English:ital@0;1&family=IM+Fell+English+SC&family=Press+Start+2P&family=Inter:wght@400;600;700&display=swap">
+<style>
+/* Page : trois téléphones côte à côte (onglets sur téléphone), une seule partie partagée */
+:root{--bg:#e9ecf1;--fg:#1b2230;--mut:#586274;--line:#cfd5de;--acc:#2c6aa8;--card:#f6f7f9;
+  --f-ui:'Inter',system-ui,sans-serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#12161d;--fg:#e4e8ee;--mut:#97a1b0;--line:#2a313c;--acc:#7db0e4;--card:#1a1f28;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#12161d;--fg:#e4e8ee;--mut:#97a1b0;--line:#2a313c;--acc:#7db0e4;--card:#1a1f28;color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-ui);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 40px}
+header{max-width:1260px;margin:0 auto 20px}
+h1{font-size:22px;margin:0 0 6px;text-wrap:balance}
+.intro{color:var(--mut);max-width:72ch;line-height:1.5;margin:0;font-size:14px}
+.tabs{display:none;gap:6px;margin-top:14px;flex-wrap:wrap}
+.tabs button{font:600 13px var(--f-ui);padding:7px 12px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--fg);cursor:pointer}
+.tabs button.on{background:var(--acc);border-color:var(--acc);color:var(--bg)}
+.grille{display:flex;gap:28px;justify-content:center;flex-wrap:wrap;max-width:1260px;margin:0 auto}
+.col{display:flex;flex-direction:column;gap:10px;width:min(384px,100%);min-width:0}
+.col h2{font-size:15px;margin:0}
+.col p{margin:0;color:var(--mut);font-size:13px;line-height:1.45}
+@media (max-width:1260px){.tabs{display:flex}.col:not(.on){display:none}}
+@media (min-width:1261px){.col{display:flex!important}}
+
+/* Téléphone générique */
+.tel{width:100%;border-radius:26px;overflow:hidden;display:flex;flex-direction:column;gap:8px;padding:12px 10px 14px;box-shadow:0 12px 32px rgba(0,0,0,.28);user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
+.tel .titre{text-align:center}
+.tel canvas.plateau{width:100%;aspect-ratio:360/330;display:block;touch-action:manipulation;cursor:pointer}
+.joueurs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.chip{display:flex;align-items:center;gap:6px;padding:5px 7px;min-width:0}
+.chip .pion{width:12px;height:12px;flex:none}
+.chip .nom{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.msg{min-height:2.9em;display:flex;align-items:center;justify-content:center;text-align:center;padding:0 6px}
+.bas{display:flex;gap:8px;align-items:stretch}
+.des{display:flex;gap:6px;align-items:center}
+.de{width:34px;height:34px;display:grid;grid-template:repeat(3,1fr)/repeat(3,1fr);padding:5px;box-sizing:border-box}
+.de i{width:6px;height:6px;place-self:center;visibility:hidden}
+.de i.on{visibility:visible}
+.main{flex:1;display:grid;grid-template-columns:repeat(5,1fr);gap:4px;min-width:0}
+.carte{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:4px 0;cursor:pointer;min-width:0}
+.carte canvas{width:28px;height:28px}
+.carte.vide{opacity:.45}
+.actions{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.actions button{cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 2px}
+.actions button:disabled{opacity:.38;cursor:default}
+.cout{display:flex;gap:2px;min-height:7px}
+.cout b{width:7px;height:7px;display:block}
+
+/* A : plateau de bois */
+.s-bois{background:repeating-linear-gradient(92deg,rgba(0,0,0,.06) 0 3px,transparent 3px 11px),linear-gradient(170deg,#7a4d2a,#5a361b 60%,#4a2b14);color:#f6e7c8;font-family:'Alegreya Sans SC',Georgia,serif;
+  --c-bois:#3a7535;--c-brique:#b35a32;--c-laine:#93c457;--c-ble:#e2b93f;--c-pierre:#8a8e98}
+.s-bois .titre{font:800 22px 'Alegreya',Georgia,serif;letter-spacing:.06em;color:#f6e3b4;text-shadow:0 2px 0 #2a170a}
+.s-bois .chip{background:rgba(30,15,5,.35);border-radius:10px;font-size:14px}
+.s-bois .chip .pion{border-radius:50% 50% 30% 30%;box-shadow:inset -2px -2px 0 rgba(0,0,0,.3),0 1px 0 #000}
+.s-bois .chip.actif{background:#f2dfb2;color:#2a1a0e}
+.s-bois .msg{font-size:15px;color:#fbefd2}
+.s-bois .de{background:linear-gradient(145deg,#fffaf0,#e8dcc2);border-radius:8px;box-shadow:0 2px 0 #8d7650,0 4px 6px rgba(0,0,0,.4)}
+.s-bois .de i{border-radius:50%;background:#2a1a0e}
+.s-bois .carte{background:linear-gradient(#f7ecd2,#e6d4ac);color:#2a1a0e;border-radius:6px;box-shadow:0 2px 0 #8d7650;font:800 13px 'Alegreya Sans SC',serif}
+.s-bois .carte.sel{outline:3px solid #ffd35a}
+.s-bois .actions button{background:linear-gradient(#d9ab6b,#b8834a);color:#2a170a;border:0;border-radius:9px;box-shadow:0 3px 0 #6b4221,inset 0 1px 0 rgba(255,255,255,.4);font:800 14px 'Alegreya Sans SC',serif}
+.s-bois .actions button.on{background:linear-gradient(#ffe39a,#f0bf52)}
+.s-bois .cout b{border-radius:2px;box-shadow:0 0 0 1px rgba(0,0,0,.35)}
+
+/* B : cartouche 16 bits */
+.s-pixel{background:#151a33;color:#f3f1e4;font-family:'Press Start 2P',monospace;font-size:8px;line-height:1.5;border-radius:10px;
+  --c-bois:#2e7d32;--c-brique:#c0602f;--c-laine:#8cc63f;--c-ble:#e0b62f;--c-pierre:#7d8595}
+.s-pixel .titre{font-size:14px;color:#ffd447;text-shadow:2px 2px 0 #b5361e,4px 4px 0 #000;padding:4px 0}
+.s-pixel canvas.plateau,.s-pixel .carte canvas{image-rendering:pixelated}
+.s-pixel .plateau{box-shadow:0 0 0 2px #000,0 0 0 4px #f3f1e4,0 0 0 6px #000}
+.s-pixel .chip{background:#232b55;box-shadow:inset 0 0 0 2px #000,inset 2px 2px 0 2px #3a4580}
+.s-pixel .chip.actif{background:#ffd447;color:#151a33;box-shadow:inset 0 0 0 2px #000,inset 2px 2px 0 2px #fff2a8}
+.s-pixel .chip .pion{box-shadow:0 0 0 1px #000}
+.s-pixel .msg{background:#0c0f20;box-shadow:inset 0 0 0 2px #000,inset 0 0 0 4px #f3f1e4,inset 0 0 0 6px #000;padding:10px 12px;margin-top:6px}
+.s-pixel .de{background:#f3f1e4;box-shadow:0 0 0 2px #000,3px 3px 0 2px #000}
+.s-pixel .de i{background:#151a33}
+.s-pixel .carte{background:#232b55;box-shadow:inset 0 0 0 2px #000;padding:5px 0 4px}
+.s-pixel .carte.sel{background:#ffd447;color:#151a33}
+.s-pixel .actions button{font:8px 'Press Start 2P',monospace;background:#3d6be0;color:#fff;border:0;box-shadow:inset 0 0 0 2px #000,inset -2px -3px 0 2px #2443a0,inset 2px 2px 0 2px #7ea0ff;padding:9px 2px 8px}
+.s-pixel .actions button.on{background:#ffd447;color:#151a33;box-shadow:inset 0 0 0 2px #000,inset -2px -3px 0 2px #c99a10,inset 2px 2px 0 2px #fff2a8}
+.s-pixel .cout b{box-shadow:0 0 0 1px #000}
+
+/* C : carte du cartographe */
+.s-encre{background:radial-gradient(ellipse at 50% 40%,#f3e8cc 30%,#e3d2a8 100%);color:#2e2216;font-family:'IM Fell English',Georgia,serif;border:1px solid #b89c6a;
+  --c-bois:#6f8a4a;--c-brique:#b0704a;--c-laine:#a9bd78;--c-ble:#d8b462;--c-pierre:#948e84}
+.s-encre .titre{font:26px 'IM Fell English SC',Georgia,serif;letter-spacing:.08em;border-bottom:1px solid #2e2216;box-shadow:0 3px 0 -2px #2e2216;padding-bottom:4px;margin:0 20px}
+.s-encre .chip{border:1px solid #2e2216;font-size:15px;background:rgba(255,250,235,.4)}
+.s-encre .chip.actif{background:#2e2216;color:#f3e8cc}
+.s-encre .chip .pion{border:1px solid #2e2216;transform:rotate(45deg) scale(.8)}
+.s-encre .msg{font-style:italic;font-size:16px}
+.s-encre .de{border:1.5px solid #2e2216;background:#f6edd6;border-radius:3px;transform:rotate(-3deg)}
+.s-encre .de+.de{transform:rotate(4deg)}
+.s-encre .de i{border-radius:50%;background:#2e2216}
+.s-encre .carte{border:1px solid #2e2216;outline:1px solid #2e2216;outline-offset:-4px;font:15px 'IM Fell English SC',serif;padding:6px 0 4px;background:rgba(255,250,235,.35)}
+.s-encre .carte.sel{background:#e9c97a}
+.s-encre .actions button{background:transparent;border:1px solid #2e2216;color:#2e2216;font:16px 'IM Fell English SC',serif;border-radius:2px}
+.s-encre .actions button.on{background:#2e2216;color:#f3e8cc}
+.s-encre .cout b{border:1px solid #2e2216;transform:rotate(45deg) scale(.85)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<header>
+  <h1>Archipel · maquette 1</h1>
+  <p class="intro">Le jeu des colons sur une île en hexagones : on lance les dés, chaque terre dont le numéro sort fait produire les villages qui la touchent (bois, brique, laine, blé, pierre), puis on bâtit routes, villages et villes ; le premier à 10 points gagne. Les trois téléphones montrent la même partie dans trois styles : jouez dans n'importe lequel, les autres suivent. Vous êtes en rouge, contre Ondine et Bertil.</p>
+  <nav class="tabs" id="onglets"></nav>
+</header>
+<main class="grille" id="grille"></main>
+
+<script>
+"use strict";
+const SQ3=Math.sqrt(3);
+const RES=['bois','brique','laine','ble','pierre'];
+const NOM={bois:'Bois',brique:'Brique',laine:'Laine',ble:'Blé',pierre:'Pierre',desert:'Lande'};
+const COUT={route:{bois:1,brique:1},village:{bois:1,brique:1,laine:1,ble:1},ville:{ble:2,pierre:3}};
+function rng(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function melange(t,R){for(let i=t.length-1;i>0;i--){const j=R()*(i+1)|0;[t[i],t[j]]=[t[j],t[i]]}return t}
+function pips(n){return n?6-Math.abs(7-n):0}
+function zero(){return{bois:0,brique:0,laine:0,ble:0,pierre:0}}
+function maxBy(t,f){let b=t[0],bs=-1e9;t.forEach(x=>{const s=f(x);if(s>bs){bs=s;b=x}});return b}
+
+/* ---------- Géométrie : hexagones pointe en haut, coordonnées axiales ---------- */
+const H=[],MER=[];
+for(let q=-3;q<=3;q++)for(let r=-3;r<=3;r++){const s=-q-r,d=Math.max(Math.abs(q),Math.abs(r),Math.abs(s));const h={q,r,x:SQ3*(q+r/2),y:1.5*r};if(d<=2)H.push(h);else if(d===3)MER.push(h)}
+const V=[],E=[],vk={},ek={};
+function coin(h,i){const a=Math.PI/180*(60*i-30);return[h.x+Math.cos(a),h.y+Math.sin(a)]}
+H.forEach((h,hi)=>{h.v=[];for(let i=0;i<6;i++){const[x,y]=coin(h,i);const k=Math.round(x*100)+','+Math.round(y*100);if(!(k in vk)){vk[k]=V.length;V.push({x,y,h:[],e:[],n:[]})}V[vk[k]].h.push(hi);h.v.push(vk[k])}});
+H.forEach((h,hi)=>{for(let i=0;i<6;i++){const a=h.v[i],b=h.v[(i+1)%6];const k=Math.min(a,b)+'-'+Math.max(a,b);if(k in ek){E[ek[k]].hc++;continue}ek[k]=E.length;E.push({a,b,x:(V[a].x+V[b].x)/2,y:(V[a].y+V[b].y)/2,hc:1,hx:hi});V[a].e.push(ek[k]);V[b].e.push(ek[k]);V[a].n.push(b);V[b].n.push(a)}});
+
+/* ---------- Partie ---------- */
+let G;
+function genere(seed){
+  const R=rng(seed);
+  const T=[].concat(Array(4).fill('bois'),Array(3).fill('brique'),Array(4).fill('laine'),Array(4).fill('ble'),Array(3).fill('pierre'),['desert']);
+  const N=[2,3,3,4,4,5,5,6,6,8,8,9,9,10,10,11,11,12];
+  for(let essai=0;essai<3000;essai++){
+    melange(T,R);melange(N,R);let k=0;
+    H.forEach((h,i)=>{h.res=T[i];h.n=T[i]==='desert'?0:N[k++]});
+    let ok=true;
+    for(let i=0;i<H.length&&ok;i++)for(let j=i+1;j<H.length;j++){const a=H[i],b=H[j];if(Math.hypot(a.x-b.x,a.y-b.y)<1.9){const r1=a.n===6||a.n===8,r2=b.n===6||b.n===8;if((r1&&r2)||(a.n&&a.n===b.n)){ok=false;break}}}
+    if(ok)break;
+  }
+  return R;
+}
+function libre(v){return !G.vo[v]&&V[v].n.every(w=>!G.vo[w])}
+function peutVillage(p,v){return libre(v)&&V[v].e.some(e=>G.eo[e]===p)}
+function peutRoute(p,e){if(G.eo[e]!==undefined)return false;return[E[e].a,E[e].b].some(v=>{const o=G.vo[v];if(o)return o.p===p;return V[v].e.some(f=>f!==e&&G.eo[f]===p)})}
+function peutVille(p,v){const o=G.vo[v];return !!o&&o.p===p&&!o.ville}
+function assez(p,c){return Object.keys(COUT[c]).every(r=>G.J[p].res[r]>=COUT[c][r])}
+function payer(p,c){for(const r in COUT[c])G.J[p].res[r]-=COUT[c][r]}
+function total(p){return RES.reduce((s,r)=>s+G.J[p].res[r],0)}
+function score(v,p){const has=new Set();if(p!=null)for(const k in G.vo)if(G.vo[k].p===p)V[k].h.forEach(i=>has.add(H[i].res));let s=0;V[v].h.forEach(i=>{const h=H[i];if(h.res==='desert')return;s+=pips(h.n);if(p!=null&&!has.has(h.res))s+=1.5});return s}
+function compter(){G.J.forEach(j=>j.pts=0);for(const k in G.vo){const o=G.vo[k];G.J[o.p].pts+=o.ville?2:1}}
+function liste(x){return RES.filter(r=>x[r]).map(r=>x[r]+' '+NOM[r].toLowerCase()).join(', ')}
+const idx=n=>Array.from({length:n},(_,i)=>i);
+
+function nouvellePartie(seed){
+  G={seed,J:[{nom:'Vous',res:zero(),pts:0},{nom:'Ondine',res:zero(),pts:0},{nom:'Bertil',res:zero(),pts:0}],vo:{},eo:{},actif:0,phase:'lancer',mode:null,des:[3,4],msg:'',echange:null,fin:false,roulant:false};
+  const R=genere(seed);
+  G.pirate=H.findIndex(h=>h.res==='desert');
+  [0,1,2,2,1,0].forEach((p,k)=>{
+    let best=-1,bs=-1;V.forEach((_,v)=>{if(!libre(v))return;const s=score(v,p)+R()*0.8;if(s>bs){bs=s;best=v}});
+    G.vo[best]={p,ville:false};
+    let be=-1,bes=-1;V[best].e.forEach(e=>{const o=E[e].a===best?E[e].b:E[e].a;let s=0;V[o].n.forEach(w=>{if(w!==best&&libre(w))s=Math.max(s,score(w,p))});s+=R();if(s>bes){bes=s;be=e}});
+    G.eo[be]=p;
+    if(k>=3)V[best].h.forEach(i=>{const r=H[i].res;if(r!=='desert')G.J[p].res[r]++});
+  });
+  compter();
+  G.msg='Votre tour : lancez les dés.';
+  phones.forEach(ph=>ph.refaireFond());
+  maj();
+}
+function produire(n){const g=G.J.map(()=>zero());H.forEach((h,i)=>{if(h.n!==n||i===G.pirate)return;h.v.forEach(v=>{const o=G.vo[v];if(o)g[o.p][h.res]+=o.ville?2:1})});g.forEach((x,p)=>{for(const r of RES)G.J[p].res[r]+=x[r]});return g}
+function voler(q){const t=[];RES.forEach(r=>{for(let i=0;i<G.J[q].res[r];i++)t.push(r)});const r=t[Math.random()*t.length|0];G.J[q].res[r]--;return r}
+function poserPirate(p,hi){G.pirate=hi;const vict=[...new Set(H[hi].v.map(v=>G.vo[v]).filter(o=>o&&o.p!==p).map(o=>o.p))].filter(q=>total(q)>0);if(!vict.length)return null;const q=vict[Math.random()*vict.length|0];const r=voler(q);G.J[p].res[r]++;return{q,r}}
+function lancerDes(cb){G.roulant=true;let t=0;const id=setInterval(()=>{G.des=[1+Math.random()*6|0,1+Math.random()*6|0];maj();if(++t>=8){clearInterval(id);G.roulant=false;cb(G.des[0]+G.des[1])}},70)}
+function verifFin(){const w=G.J.findIndex(j=>j.pts>=10);if(w<0)return;G.fin=true;G.mode=null;G.msg=w===0?'Vous gagnez avec '+G.J[0].pts+' points !':G.J[w].nom+' gagne avec '+G.J[w].pts+' points.'}
+
+/* actions du joueur */
+function aLancer(){if(G.fin||G.actif||G.phase!=='lancer'||G.roulant)return;lancerDes(s=>{
+  if(s===7){G.phase='pirate';G.msg='7 ! Touchez une terre pour y envoyer le pirate.'}
+  else{const g=produire(s);const l=liste(g[0]);G.msg=s+' : '+(l?'vous recevez '+l+'.':'rien pour vous.');G.phase='construire'}
+  maj()})}
+function cibles(){
+  if(G.actif!==0||G.fin||G.roulant)return null;
+  if(G.phase==='pirate')return{t:'h',l:idx(H.length).filter(i=>i!==G.pirate)};
+  if(G.phase!=='construire')return null;
+  if(G.mode==='route')return{t:'e',l:idx(E.length).filter(e=>peutRoute(0,e))};
+  if(G.mode==='village')return{t:'v',l:idx(V.length).filter(v=>peutVillage(0,v))};
+  if(G.mode==='ville')return{t:'v',l:idx(V.length).filter(v=>peutVille(0,v))};
+  return null;
+}
+function toucher(ux,uy){
+  const c=cibles();if(!c||!c.l.length)return;
+  const src=c.t==='h'?H:c.t==='v'?V:E;
+  const b=maxBy(c.l,i=>-Math.hypot(src[i].x-ux,src[i].y-uy));
+  if(Math.hypot(src[b].x-ux,src[b].y-uy)>{h:.9,v:.5,e:.45}[c.t])return;
+  if(G.phase==='pirate'){const r=poserPirate(0,b);G.msg='Le pirate bloque la '+NOM[H[b].res].toLowerCase()+(H[b].n?' ('+H[b].n+')':'')+(r?' et vous volez 1 '+NOM[r.r].toLowerCase()+' à '+G.J[r.q].nom+'.':'.');G.phase='construire'}
+  else if(G.mode==='route'){payer(0,'route');G.eo[b]=0;G.msg='Route tracée.';if(!assez(0,'route'))G.mode=null}
+  else if(G.mode==='village'){payer(0,'village');G.vo[b]={p:0,ville:false};G.msg='Nouveau village : +1 point.';G.mode=null}
+  else if(G.mode==='ville'){payer(0,'ville');G.vo[b].ville=true;G.msg='Le village devient une ville : +1 point, il produit double.';G.mode=null}
+  compter();verifFin();maj();
+}
+function choisirMode(m){
+  if(G.actif||G.phase!=='construire'||G.fin)return;
+  if(G.mode===m){G.mode=null;G.msg='Que voulez-vous faire ?';maj();return}
+  if(m==='echange'){G.mode='echange';G.echange=null;G.msg='Port : choisissez une ressource dont vous avez 4 cartes.';maj();return}
+  G.mode=m;const c=cibles();
+  if(!c.l.length){G.mode=null;G.msg=m==='route'?'Aucune route possible ici.':m==='ville'?'Il faut un village à agrandir.':'Aucun emplacement libre : prolongez vos routes (2 cases d\'écart entre villages).'}
+  else G.msg='Touchez un emplacement qui brille.';
+  maj();
+}
+function toucherCarte(r){
+  if(G.mode!=='echange')return;
+  if(!G.echange){if(G.J[0].res[r]>=4){G.echange=r;G.msg='4 '+NOM[r].toLowerCase()+' contre quoi ?'}else G.msg='Il faut 4 cartes de la même ressource.'}
+  else if(r!==G.echange){G.J[0].res[G.echange]-=4;G.J[0].res[r]++;G.msg='Échange fait : 4 '+NOM[G.echange].toLowerCase()+' contre 1 '+NOM[r].toLowerCase()+'.';G.mode=null;G.echange=null}
+  maj();
+}
+function finTour(){if(G.fin){nouvellePartie(Date.now()%100000);return}if(G.actif||G.phase!=='construire')return;G.mode=null;G.phase='ordi';tourOrdi(1)}
+
+/* l'ordinateur */
+function tourOrdi(p){
+  if(G.fin)return;
+  if(p>2){G.actif=0;G.phase='lancer';G.msg+=' À vous : lancez les dés.';maj();return}
+  G.actif=p;G.msg=G.J[p].nom+' lance les dés…';maj();
+  setTimeout(()=>lancerDes(s=>{
+    let m=G.J[p].nom+' fait '+s;
+    if(s===7){
+      const bi=maxBy(idx(H.length).filter(i=>i!==G.pirate),i=>{const h=H[i];let sc=0;h.v.forEach(v=>{const o=G.vo[v];if(o)sc+=(o.p===p?-4:o.p===0?2:1)*pips(h.n)});return sc+Math.random()});
+      const v=poserPirate(p,bi);m+=' : le pirate accoste'+(v?(v.q===0?' et vous vole 1 '+NOM[v.r].toLowerCase():' et vole '+G.J[v.q].nom):'');
+    }else produire(s);
+    const a=agirOrdi(p);if(a)m+=', '+a;
+    G.msg=m+'.';compter();verifFin();maj();
+    setTimeout(()=>tourOrdi(p+1),1200);
+  }),500);
+}
+function agirOrdi(p){
+  const n={route:0,village:0,ville:0,port:0};
+  for(let k=0;k<6;k++){
+    if(assez(p,'ville')){const vs=idx(V.length).filter(v=>peutVille(p,v));if(vs.length){const v=maxBy(vs,v=>score(v));payer(p,'ville');G.vo[v].ville=true;n.ville++;continue}}
+    const spots=idx(V.length).filter(v=>peutVillage(p,v));
+    if(assez(p,'village')&&spots.length){const v=maxBy(spots,v=>score(v,p));payer(p,'village');G.vo[v]={p,ville:false};n.village++;continue}
+    if(assez(p,'route')&&!spots.length&&Object.values(G.eo).filter(x=>x===p).length<14){const es=idx(E.length).filter(e=>peutRoute(p,e));if(es.length){const e=maxBy(es,e=>Math.max(libre(E[e].a)?score(E[e].a,p):0,libre(E[e].b)?score(E[e].b,p):0)+Math.random()*2);payer(p,'route');G.eo[e]=p;n.route++;continue}}
+    const j=G.J[p].res,but=spots.length?'village':(Object.values(G.vo).some(o=>o.p===p&&!o.ville)&&j.pierre>=1?'ville':'route');
+    const manque=Object.keys(COUT[but]).find(r=>j[r]<COUT[but][r]);
+    const trop=RES.find(r=>j[r]>=4+(COUT[but][r]||0));
+    if(manque&&trop){j[trop]-=4;j[manque]++;n.port++;continue}
+    break;
+  }
+  const a=[];
+  if(n.port)a.push('échange au port');
+  if(n.route)a.push(n.route>1?'trace '+n.route+' routes':'trace une route');
+  if(n.village)a.push(n.village>1?'fonde '+n.village+' villages':'fonde un village');
+  if(n.ville)a.push('bâtit une ville');
+  return a.join(', ');
+}
+
+/* ---------- Dessin commun ---------- */
+const S=28,OX=180,OY=165;
+function P(o){return[OX+o.x*S,OY+o.y*S]}
+function hexPath(c,cx,cy,r,R){c.beginPath();for(let i=0;i<6;i++){const a=Math.PI/180*(60*i-30);const j=R?(R()-.5)*1.4:0,k=R?(R()-.5)*1.4:0;const x=cx+Math.cos(a)*r+j,y=cy+Math.sin(a)*r+k;i?c.lineTo(x,y):c.moveTo(x,y)}c.closePath()}
+const DEC={bois:[[0,-.62],[-.5,-.3],[.5,-.3],[-.42,.48],[.42,.48]],pierre:[[-.45,-.3],[.45,-.3],[0,.55]],laine:[[-.48,-.3],[.46,-.25],[0,.56]],ble:[[-.5,-.28],[.5,-.28],[-.36,.5],[.36,.5]],brique:[[-.46,-.3],[.46,-.3],[0,.56]],desert:[[-.45,-.25],[.4,.45],[.05,-.6]]};
+const tri=t=>t.slice().sort((a,b)=>a[1]-b[1]);
+function lerp(a,b,t){return[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t]}
+
+/* ---------- Style A : plateau de bois ---------- */
+const COLA={bois:['#5d9c4c','#356f31'],brique:['#d98a58','#a9502b'],laine:['#b9de78','#86b54b'],ble:['#f4d36a','#d6a733'],pierre:['#adb1ba','#757a85'],desert:['#f0dcaa','#d2b678']};
+const JA=['#c8202f','#2060c4','#f08a24'];
+function decoA(c,res,x,y,k){
+  c.save();c.translate(x,y);
+  if(res==='bois'){c.fillStyle='#5a3a1e';c.fillRect(-k*.07,k*.12,k*.14,k*.22);for(let i=0;i<3;i++){const w=k*(.36-i*.08),yy=k*(.18-i*.17);c.beginPath();c.moveTo(-w,yy);c.lineTo(w,yy);c.lineTo(0,yy-k*.32);c.closePath();c.fillStyle=i===2?'#4c9a42':'#245a27';c.fill()}}
+  else if(res==='pierre'){c.beginPath();c.moveTo(-k*.45,k*.25);c.lineTo(0,-k*.4);c.lineTo(k*.45,k*.25);c.closePath();c.fillStyle='#646873';c.fill();c.beginPath();c.moveTo(-k*.45,k*.25);c.lineTo(0,-k*.4);c.lineTo(k*.02,k*.25);c.closePath();c.fillStyle='#9ca1ac';c.fill();c.beginPath();c.moveTo(-k*.15,-k*.17);c.lineTo(0,-k*.4);c.lineTo(k*.15,-k*.17);c.lineTo(k*.05,-k*.12);c.lineTo(-k*.05,-k*.2);c.closePath();c.fillStyle='#fff';c.fill()}
+  else if(res==='laine'){c.fillStyle='rgba(0,0,0,.2)';c.beginPath();c.ellipse(0,k*.2,k*.3,k*.08,0,0,7);c.fill();c.fillStyle='#2a2a2a';c.fillRect(-k*.15,k*.05,k*.05,k*.16);c.fillRect(k*.1,k*.05,k*.05,k*.16);c.beginPath();c.ellipse(0,0,k*.27,k*.17,0,0,7);c.fillStyle='#fbf8ef';c.fill();c.strokeStyle='#777';c.lineWidth=.8;c.stroke();c.beginPath();c.ellipse(k*.27,-k*.06,k*.09,k*.07,0,0,7);c.fillStyle='#2a2a2a';c.fill()}
+  else if(res==='ble'){c.strokeStyle='#a6740f';c.lineWidth=Math.max(1,k*.05);for(let i=-2;i<=2;i++){c.beginPath();c.moveTo(0,k*.28);c.lineTo(i*k*.09,-k*.15);c.stroke()}c.fillStyle='#f8e07a';for(let i=-2;i<=2;i++){c.beginPath();c.ellipse(i*k*.09,-k*.2,k*.05,k*.11,i*.15,0,7);c.fill()}c.fillStyle='#8a5a12';c.fillRect(-k*.12,k*.08,k*.24,k*.05)}
+  else if(res==='brique'){for(let r=0;r<3;r++)for(let i=0;i<3-r;i++){const bx=-k*.33+r*k*.11+i*k*.22,by=k*.15-r*k*.13;c.fillStyle='#a4452a';c.fillRect(bx,by,k*.2,k*.11);c.strokeStyle='#f0cfaa';c.lineWidth=.8;c.strokeRect(bx,by,k*.2,k*.11)}}
+  else if(res==='desert'){c.strokeStyle='#b8995c';c.lineWidth=1.2;c.beginPath();c.arc(0,k*.4,k*.35,Math.PI*1.2,Math.PI*1.8);c.stroke();c.fillStyle='#5f8f3e';c.fillRect(-k*.05,-k*.25,k*.1,k*.45);c.fillRect(-k*.2,-k*.1,k*.07,k*.12);c.fillRect(-k*.2,-k*.1+k*.08,k*.16,k*.05);c.fillRect(k*.13,-k*.18,k*.07,k*.12);c.fillRect(k*.04,-k*.1,k*.16,k*.05)}
+  c.restore();
+}
+function jetonA(c,x,y,n){
+  c.beginPath();c.arc(x+.8,y+1.5,S*.3,0,7);c.fillStyle='rgba(0,0,0,.35)';c.fill();
+  c.beginPath();c.arc(x,y,S*.3,0,7);c.fillStyle='#f6e8c6';c.fill();c.strokeStyle='#8a6a3e';c.lineWidth=1.2;c.stroke();
+  c.fillStyle=(n===6||n===8)?'#b3261e':'#2a1a0e';c.font='800 '+Math.round(S*.36)+'px Alegreya, Georgia, serif';c.textAlign='center';c.textBaseline='middle';c.fillText(n,x,y-S*.05);
+  const p=pips(n);for(let i=0;i<p;i++){c.beginPath();c.arc(x+(i-(p-1)/2)*S*.075,y+S*.18,S*.026,0,7);c.fill()}
+}
+function maisonA(c,x,y,col,ville){
+  const w=S*(ville?.27:.19),h=S*(ville?.24:.18);c.save();c.translate(x,y);
+  c.fillStyle='rgba(0,0,0,.4)';c.beginPath();c.ellipse(1.5,h*.85,w*1.15,h*.32,0,0,7);c.fill();
+  c.beginPath();
+  if(!ville){c.moveTo(-w,h*.8);c.lineTo(-w,-h*.15);c.lineTo(0,-h*1.15);c.lineTo(w,-h*.15);c.lineTo(w,h*.8)}
+  else{c.moveTo(-w,h*.8);c.lineTo(-w,-h*1.2);c.lineTo(-w*.25,-h*1.2);c.lineTo(-w*.25,-h*.35);c.lineTo(w*.38,-h*.95);c.lineTo(w,-h*.35);c.lineTo(w,h*.8)}
+  c.closePath();c.fillStyle=col;c.fill();c.lineWidth=1.5;c.strokeStyle='#1e1208';c.stroke();
+  c.clip();c.fillStyle='rgba(255,255,255,.35)';c.fillRect(-w,-h*1.3,w*.45,h*2.2);c.fillStyle='rgba(0,0,0,.22)';c.fillRect(w*.45,-h*1.3,w*.6,h*2.2);
+  c.restore();
+}
+function baseA(c){
+  MER.forEach(h=>{const[x,y]=P(h);hexPath(c,x,y,S*1.03);c.fillStyle='#2c6c99';c.fill()});
+  MER.forEach(h=>{const[x,y]=P(h);c.strokeStyle='rgba(205,232,255,.5)';c.lineWidth=1.4;[[-.3,-.2],[.32,.25]].forEach(([dx,dy])=>{c.beginPath();c.arc(x+dx*S,y+dy*S,S*.17,Math.PI*1.15,Math.PI*1.85);c.stroke()})});
+  H.forEach(h=>{const[x,y]=P(h);hexPath(c,x+1.5,y+2.5,S*.97);c.fillStyle='rgba(0,0,0,.35)';c.fill()});
+  H.forEach(h=>{const[x,y]=P(h);hexPath(c,x,y,S*.95);const g=c.createRadialGradient(x-S*.25,y-S*.35,S*.1,x,y,S);g.addColorStop(0,COLA[h.res][0]);g.addColorStop(1,COLA[h.res][1]);c.fillStyle=g;c.fill();c.strokeStyle='#f3e4c2';c.lineWidth=2;c.stroke();
+    tri(DEC[h.res]).forEach(([dx,dy])=>decoA(c,h.res,x+dx*S,y+dy*S,S*.62));if(h.n)jetonA(c,x,y,h.n)});
+}
+function halo(c,x,y,r,t,col){const a=.5+.5*Math.sin(t/170);c.beginPath();c.arc(x,y,r*(1+.25*a),0,7);c.fillStyle=col.replace('A',(.18+.2*a).toFixed(2));c.fill();c.strokeStyle=col.replace('A',(.6+.4*a).toFixed(2));c.lineWidth=2;c.stroke()}
+function dessinA(c,t){
+  for(const e in G.eo){const a=P(V[E[e].a]),b=P(V[E[e].b]);const p1=lerp(a,b,.14),p2=lerp(a,b,.86);c.lineCap='round';c.beginPath();c.moveTo(...p1);c.lineTo(...p2);c.strokeStyle='#1e1208';c.lineWidth=S*.22;c.stroke();c.strokeStyle=JA[G.eo[e]];c.lineWidth=S*.13;c.stroke()}
+  const[px,py]=P(H[G.pirate]);c.save();c.translate(px+S*.34,py-S*.02);c.fillStyle='rgba(0,0,0,.4)';c.beginPath();c.ellipse(1,S*.2,S*.15,S*.05,0,0,7);c.fill();c.beginPath();c.moveTo(-S*.13,S*.2);c.quadraticCurveTo(-S*.05,-S*.05,-S*.05,-S*.1);c.lineTo(S*.05,-S*.1);c.quadraticCurveTo(S*.05,-S*.05,S*.13,S*.2);c.closePath();c.fillStyle='#26262c';c.fill();c.beginPath();c.arc(0,-S*.17,S*.1,0,7);c.fill();c.fillStyle='rgba(255,255,255,.3)';c.beginPath();c.arc(-S*.03,-S*.2,S*.035,0,7);c.fill();c.restore();
+  for(const v in G.vo){const o=G.vo[v];const[x,y]=P(V[v]);maisonA(c,x,y,JA[o.p],o.ville)}
+  const cb=cibles();if(cb)cb.l.forEach(i=>{const o=cb.t==='h'?H[i]:cb.t==='v'?V[i]:E[i];const[x,y]=P(o);halo(c,x,y,cb.t==='h'?S*.36:S*.13,t,'rgba(255,248,210,A)')});
+}
+function iconeA(c,res,z){c.fillStyle=COLA[res][1];c.beginPath();c.arc(z/2,z/2,z*.48,0,7);c.fill();decoA(c,res,z/2,z*.55,z*.95)}
+
+/* ---------- Style C : carte du cartographe ---------- */
+const ENCRE='#2e2216';
+const LAV={bois:'rgba(111,138,74,.55)',brique:'rgba(176,112,74,.5)',laine:'rgba(169,189,120,.55)',ble:'rgba(216,180,98,.55)',pierre:'rgba(148,142,132,.55)',desert:'rgba(222,204,160,.5)'};
+const JC=['#a3322b','#2d4f7c','#c98a1b'];
+function decoC(c,res,x,y,k,R){
+  c.save();c.translate(x,y);c.strokeStyle=ENCRE;c.fillStyle=ENCRE;c.lineWidth=.9;c.lineCap='round';
+  if(res==='bois'){for(const[dx,dy]of[[-.18,.02],[.16,-.04],[0,.12]]){c.beginPath();c.moveTo(dx*k,dy*k+k*.05);c.lineTo(dx*k,dy*k+k*.25);c.stroke();c.beginPath();c.arc(dx*k,dy*k-k*.06,k*.14,0,7);c.fillStyle='#e9dcb8';c.fill();c.stroke();c.beginPath();c.arc(dx*k+k*.04,dy*k-k*.04,k*.08,-.4,1.6);c.stroke()}}
+  else if(res==='pierre'){c.beginPath();c.moveTo(-k*.42,k*.25);c.lineTo(-k*.05,-k*.38);c.lineTo(k*.18,-k*.05);c.lineTo(k*.28,-k*.18);c.lineTo(k*.45,k*.25);c.stroke();for(let i=0;i<5;i++){const t=i/5;c.beginPath();c.moveTo(-k*.05+t*k*.3,-k*.33+t*k*.45);c.lineTo(-k*.02+t*k*.3,k*.22);c.stroke()}}
+  else if(res==='laine'){c.beginPath();c.arc(-k*.1,0,k*.1,Math.PI*.8,Math.PI*2.1);c.arc(k*.06,-k*.04,k*.11,Math.PI,Math.PI*2.05);c.arc(k*.18,k*.04,k*.08,Math.PI*1.3,Math.PI*2.4);c.stroke();c.beginPath();c.moveTo(-k*.12,k*.08);c.lineTo(-k*.12,k*.2);c.moveTo(k*.1,k*.08);c.lineTo(k*.1,k*.2);c.stroke();c.beginPath();c.arc(k*.29,-k*.03,k*.05,0,7);c.fill()}
+  else if(res==='ble'){for(let i=-2;i<=2;i++){const xx=i*k*.11;c.beginPath();c.moveTo(xx,k*.25);c.lineTo(xx+k*.02,-k*.12);c.stroke();c.beginPath();c.ellipse(xx+k*.02,-k*.18,k*.03,k*.08,.1,0,7);c.stroke()}c.beginPath();c.moveTo(-k*.3,k*.27);c.lineTo(k*.3,k*.27);c.stroke()}
+  else if(res==='brique'){c.beginPath();c.moveTo(-k*.28,k*.22);c.lineTo(-k*.28,-k*.02);c.arc(0,-k*.02,k*.28,Math.PI,0);c.lineTo(k*.28,k*.22);c.closePath();c.stroke();c.beginPath();c.arc(0,k*.22,k*.1,Math.PI,0);c.fill();for(let i=0;i<4;i++){c.beginPath();c.moveTo(-k*.24+i*k*.16,-k*.2+i*.02*k);c.lineTo(-k*.14+i*k*.16,k*.08);c.stroke()}c.beginPath();c.moveTo(k*.05,-k*.3);c.quadraticCurveTo(k*.15,-k*.45,k*.05,-k*.55);c.stroke()}
+  else if(res==='desert'){for(let i=0;i<14;i++){c.beginPath();c.arc((R()-.5)*k*.8,(R()-.5)*k*.5,.6,0,7);c.fill()}c.beginPath();c.arc(0,k*.3,k*.3,Math.PI*1.2,Math.PI*1.8);c.stroke()}
+  c.restore();
+}
+function roseC(c,x,y,r){c.save();c.translate(x,y);c.strokeStyle=ENCRE;c.fillStyle=ENCRE;c.lineWidth=.8;c.beginPath();c.arc(0,0,r*.55,0,7);c.stroke();for(let i=0;i<8;i++){const a=i*Math.PI/4,l=i%2?r*.55:r;c.save();c.rotate(a);c.beginPath();c.moveTo(0,-l);c.lineTo(r*.1,0);c.lineTo(0,0);c.closePath();c.fill();c.beginPath();c.moveTo(0,-l);c.lineTo(-r*.1,0);c.lineTo(0,0);c.closePath();c.stroke();c.restore()}c.font='italic 11px "IM Fell English", Georgia, serif';c.textAlign='center';c.fillText('N',0,-r-4);c.restore()}
+function baseC(c){
+  const R=rng(G.seed+7);
+  c.strokeStyle='rgba(52,74,96,.4)';c.lineWidth=.8;
+  for(let y=10;y<330;y+=13)for(let x=((y/13|0)%2)*18+4;x<360;x+=36){c.beginPath();c.moveTo(x,y);c.quadraticCurveTo(x+4,y-3,x+8,y);c.quadraticCurveTo(x+12,y+3,x+16,y);c.stroke()}
+  H.forEach(h=>{const[x,y]=P(h);hexPath(c,x,y,S*1.01);c.fillStyle='#efe2c2';c.fill()});
+  // lignes d'eau le long de la côte
+  E.forEach(e=>{if(e.hc!==1)return;const h=H[e.hx];let nx=e.x-h.x,ny=e.y-h.y;const l=Math.hypot(nx,ny);nx/=l;ny/=l;[.09,.19,.32].forEach((o,i)=>{const a=P({x:V[e.a].x+nx*o,y:V[e.a].y+ny*o}),b=P({x:V[e.b].x+nx*o,y:V[e.b].y+ny*o});c.beginPath();c.moveTo(...lerp(a,b,-.05));c.lineTo(...lerp(a,b,1.05));c.strokeStyle=`rgba(46,34,22,${.55-i*.16})`;c.lineWidth=.8;c.stroke()})});
+  H.forEach(h=>{const[x,y]=P(h);hexPath(c,x,y,S*.96,R);c.fillStyle=LAV[h.res];c.fill();c.strokeStyle='rgba(46,34,22,.55)';c.lineWidth=.7;c.stroke()});
+  E.forEach(e=>{if(e.hc!==1)return;const a=P(V[e.a]),b=P(V[e.b]);c.beginPath();c.moveTo(...a);c.lineTo(b[0]+(R()-.5),b[1]+(R()-.5));c.strokeStyle=ENCRE;c.lineWidth=2;c.lineCap='round';c.stroke()});
+  H.forEach(h=>{const[x,y]=P(h);tri(DEC[h.res]).forEach(([dx,dy])=>decoC(c,h.res,x+dx*S,y+dy*S,S*.6,R));
+    if(h.n){c.beginPath();c.arc(x,y,S*.29,0,7);c.fillStyle='#f6ecd2';c.fill();c.strokeStyle=ENCRE;c.lineWidth=1.1;c.stroke();c.beginPath();c.arc(x,y,S*.235,0,7);c.lineWidth=.5;c.stroke();
+      c.fillStyle=(h.n===6||h.n===8)?'#9c2a1e':ENCRE;c.font=Math.round(S*.4)+'px "IM Fell English", Georgia, serif';c.textAlign='center';c.textBaseline='middle';c.fillText(h.n,x,y-S*.02);
+      const p=pips(h.n);for(let i=0;i<p;i++){c.beginPath();c.arc(x+(i-(p-1)/2)*S*.065,y+S*.17,S*.02,0,7);c.fill()}}});
+  roseC(c,322,290,20);
+  c.fillStyle=ENCRE;c.font='italic 13px "IM Fell English", Georgia, serif';c.textAlign='left';c.fillText('Mer des Brumes',14,24);
+  c.font='italic 11px "IM Fell English", Georgia, serif';c.fillText('hic sunt pirata',16,318);
+}
+function bateauC(c,x,y){c.save();c.translate(x,y);c.fillStyle=ENCRE;c.strokeStyle=ENCRE;c.lineWidth=1;c.beginPath();c.moveTo(-S*.22,S*.05);c.quadraticCurveTo(0,S*.22,S*.22,S*.05);c.closePath();c.fill();c.beginPath();c.moveTo(0,S*.06);c.lineTo(0,-S*.3);c.stroke();c.beginPath();c.moveTo(S*.02,-S*.28);c.quadraticCurveTo(S*.2,-S*.12,S*.02,0);c.fill();c.beginPath();c.moveTo(-S*.02,-S*.22);c.quadraticCurveTo(-S*.16,-S*.1,-S*.02,-S*.02);c.fill();c.restore()}
+function maisonC(c,x,y,col,ville){c.save();c.translate(x,y);const w=S*(ville?.22:.15),h=S*(ville?.2:.14);c.beginPath();if(!ville){c.moveTo(-w,h);c.lineTo(-w,-h*.2);c.lineTo(0,-h*1.1);c.lineTo(w,-h*.2);c.lineTo(w,h)}else{c.moveTo(-w,h);c.lineTo(-w,-h*1.3);c.lineTo(-w*.15,-h*1.3);c.lineTo(-w*.15,-h*.3);c.lineTo(w*.45,-h*.95);c.lineTo(w,-h*.3);c.lineTo(w,h)}c.closePath();c.fillStyle=col;c.fill();c.strokeStyle=ENCRE;c.lineWidth=1.3;c.stroke();c.beginPath();for(let i=1;i<4;i++){c.moveTo(-w+i*w*.45,-h*.1);c.lineTo(-w+i*w*.45-w*.3,h)}c.strokeStyle='rgba(46,34,22,.5)';c.lineWidth=.6;c.stroke();c.restore()}
+function dessinC(c,t){
+  for(const e in G.eo){const a=P(V[E[e].a]),b=P(V[E[e].b]);const p1=lerp(a,b,.15),p2=lerp(a,b,.85);c.lineCap='butt';c.beginPath();c.moveTo(...p1);c.lineTo(...p2);c.strokeStyle=ENCRE;c.lineWidth=S*.17;c.stroke();c.strokeStyle=JC[G.eo[e]];c.lineWidth=S*.1;c.stroke()}
+  const[px,py]=P(H[G.pirate]);bateauC(c,px+S*.38,py+S*.02);
+  for(const v in G.vo){const o=G.vo[v];const[x,y]=P(V[v]);maisonC(c,x,y,JC[o.p],o.ville)}
+  const cb=cibles();if(cb){c.save();c.setLineDash([3,3]);c.lineDashOffset=-t/60;cb.l.forEach(i=>{const o=cb.t==='h'?H[i]:cb.t==='v'?V[i]:E[i];const[x,y]=P(o);c.beginPath();c.arc(x,y,cb.t==='h'?S*.38:S*.15,0,7);c.strokeStyle='#9c2a1e';c.lineWidth=1.6;c.stroke()});c.restore()}
+}
+function iconeC(c,res,z){c.beginPath();c.arc(z/2,z/2,z*.46,0,7);c.fillStyle=LAV[res];c.fill();decoC(c,res,z/2,z*.52,z*.95,rng(3))}
+
+/* ---------- Style B : pixel 16 bits (toile 180 × 165 agrandie ×2) ---------- */
+const JB=['#e63c3c','#3d7bf0','#f5a623'];
+const FONTE={0:['111','101','101','101','111'],1:['010','110','010','010','111'],2:['111','001','111','100','111'],3:['111','001','111','001','111'],4:['101','101','111','001','001'],5:['111','100','111','001','111'],6:['111','100','111','101','111'],8:['111','101','111','101','111'],9:['111','101','111','001','111']};
+const SPR={
+  arbre:{r:['..k..','.kgk.','.kgk.','kgGgk','kgggk','kkbkk','..b..'],p:{k:'#0f2e14',g:'#1f6b28',G:'#4cb050',b:'#6b4320'}},
+  mont:{r:['....k....','...kwk...','..kwwdk..','.klllddk.','kllllddd k'.replace(' ',''),'kkkkkkkkk'],p:{k:'#1a1a22',w:'#f4f6ff',l:'#aab2c0',d:'#5a606e'}},
+  mouton:{r:['.kkkk..','kwwwwkk','kwwwwkK','kwwwwk.','.k..k..'],p:{k:'#1a1a22',w:'#f7f5ec',K:'#1a1a22'}},
+  ble:{r:['y.y.y','yyyyy','.yyy.','..b..','.bbb.'],p:{y:'#f8e27a',b:'#9a6a12'}},
+  brique:{r:['kkkkkkk','krrkrrk','kkkkkkk','krkrrrk','kkkkkkk'],p:{k:'#4a2012',r:'#d86a38'}},
+  cactus:{r:['..g..','g.g..','ggg.g','..ggg','..g..','.kkk.'],p:{g:'#3f8f3a',k:'#8a6a3a'}},
+  village:{r:['...k...','..kck..','.kccck.','klcccck','kcckcck','kcckcck','kkkkkkk'],p:{}},
+  ville:{r:['kkk......','klk..k...','klk.kck..','klkkccck.','klccccccck'.slice(0,9),'klcccccck','kccckccck','kkkkkkkkk'],p:{}},
+  pirate:{r:['..kkk..','.kgggk.','.kgwgk.','.kgggk.','..kgk..','.kgggk.','kgggggk','kkkkkkk'],p:{k:'#000',g:'#3a3a48',w:'#ff4040'}}
+};
+function spr(c,s,x,y,pal){const rows=s.r,h=rows.length,w=rows[0].length;const ox=Math.round(x-w/2),oy=Math.round(y-h/2);pal=pal||s.p;rows.forEach((row,j)=>{for(let i=0;i<row.length;i++){const ch=row[i];if(ch==='.'||!pal[ch])continue;c.fillStyle=pal[ch];c.fillRect(ox+i,oy+j,1,1)}})}
+function bruit(x,y){const s=Math.sin(x*12.9898+y*78.233)*43758.5453;return s-Math.floor(s)}
+function texB(res,x,y){const n=bruit(x,y);
+  if(res==='bois')return n<.22?'#1f5a2a':n>.9?'#4caf50':'#2e7d32';
+  if(res==='laine')return n>.9?'#d6f07e':n<.1?'#5f9b2e':'#8cc63f';
+  if(res==='ble')return (x+2*y)%5===0?'#b8861c':n>.85?'#f5dc6a':'#e0b62f';
+  if(res==='brique'){const row=y%4,off=((y>>2)&1)*3;return(row===0||(x+off)%6===0)?'#7a3a22':n>.85?'#e08850':'#c0602f'}
+  if(res==='pierre')return n<.3?'#5a606e':n>.82?'#b0b7c4':'#7d8595';
+  return Math.sin(x*.5+y*.9)>.85?'#c9a66a':n>.9?'#f4e3b8':'#e8cf96';
+}
+function hexDe(px,py){const u=(px+.5-90)/14,v=(py+.5-82.5)/14;const qf=SQ3/3*u-v/3,rf=2/3*v,sf=-qf-rf;let q=Math.round(qf),r=Math.round(rf),s=Math.round(sf);const dq=Math.abs(q-qf),dr=Math.abs(r-rf),ds=Math.abs(s-sf);if(dq>dr&&dq>ds)q=-r-s;else if(dr>ds)r=-q-s;return q+','+r}
+function baseB(c){
+  const W=180,HH=165,map={};H.forEach((h,i)=>map[h.q+','+h.r]=i);
+  const id=new Int16Array(W*HH);for(let y=0;y<HH;y++)for(let x=0;x<W;x++){const k=hexDe(x,y);id[y*W+x]=k in map?map[k]:-1}
+  const g=(x,y)=>(x<0||y<0||x>=W||y>=HH)?-1:id[y*W+x];
+  for(let y=0;y<HH;y++)for(let x=0;x<W;x++){const i=g(x,y);let col;
+    if(i<0){const cote=[g(x+1,y),g(x-1,y),g(x,y+1),g(x,y-1)].some(j=>j>=0);const cote2=!cote&&[g(x+2,y),g(x-2,y),g(x,y+2),g(x,y-2)].some(j=>j>=0);col=cote?'#cfeaff':cote2?'#6aa6e8':(((x+((y>>2)*3))%9===0||(x+((y>>2)*3))%9===1)&&y%4===0)?'#4f8fd8':'#2a5ea8'}
+    else{const ext=[g(x+1,y),g(x-1,y),g(x,y+1),g(x,y-1)].some(j=>j<0);const int=g(x+1,y)!==i||g(x,y+1)!==i;col=ext?'#1a1a22':int?'#14301a':texB(H[i].res,x,y);if(int&&!ext)col='rgba(0,0,0,0)';if(int&&!ext)col=shade(texB(H[i].res,x,y))}
+    c.fillStyle=col;c.fillRect(x,y,1,1)}
+  const sp={bois:'arbre',pierre:'mont',laine:'mouton',ble:'ble',brique:'brique',desert:'cactus'};
+  H.forEach(h=>{const x=90+h.x*14,y=82.5+h.y*14;tri(DEC[h.res]).forEach(([dx,dy])=>spr(c,SPR[sp[h.res]],x+dx*14,y+dy*14));if(h.n)jetonB(c,x,y,h.n)});
+}
+function shade(hex){const n=parseInt(hex.slice(1),16);const f=v=>Math.max(0,Math.round(v*.55));return'rgb('+f(n>>16)+','+f(n>>8&255)+','+f(n&255)+')'}
+function jetonB(c,x,y,n){x=Math.round(x);y=Math.round(y);for(let j=-5;j<=5;j++)for(let i=-5;i<=5;i++){const d=i*i+j*j;if(d<=30){c.fillStyle=d>20?'#1a1a22':(j>=3?'#d9cba5':'#f4ead0');c.fillRect(x+i,y+j,1,1)}}
+  const s=String(n),w=s.length*4-1,ox=x-Math.floor(w/2),oy=y-3;c.fillStyle=(n===6||n===8)?'#c0282d':'#1a1a22';[...s].forEach((ch,k)=>FONTE[ch].forEach((row,j)=>{for(let i=0;i<3;i++)if(row[i]==='1')c.fillRect(ox+k*4+i,oy+j,1,1)}))}
+const PB=o=>[90+o.x*14,82.5+o.y*14];
+function dessinB(c,t){
+  for(const e in G.eo){const[x1,y1]=PB(V[E[e].a]),[x2,y2]=PB(V[E[e].b]);for(let pass=0;pass<2;pass++)for(let i=2;i<=8;i++){const u=i/10,x=Math.round(x1+(x2-x1)*u),y=Math.round(y1+(y2-y1)*u);if(!pass){c.fillStyle='#000';c.fillRect(x-2,y-2,4,4)}else{c.fillStyle=JB[G.eo[e]];c.fillRect(x-1,y-1,2,2)}}}
+  const[px,py]=PB(H[G.pirate]);spr(c,SPR.pirate,px+5,py);
+  for(const v in G.vo){const o=G.vo[v];const[x,y]=PB(V[v]);const col=JB[o.p];spr(c,o.ville?SPR.ville:SPR.village,x,y-1,{k:'#000',c:col,l:'#fff'})}
+  const cb=cibles();if(cb&&Math.floor(t/280)%2===0)cb.l.forEach(i=>{const o=cb.t==='h'?H[i]:cb.t==='v'?V[i]:E[i];const[x0,y0]=PB(o);const x=Math.round(x0),y=Math.round(y0);
+    if(cb.t==='h'){c.fillStyle='#fff';for(let a=0;a<12;a++){const an=a*Math.PI/6;c.fillRect(Math.round(x+Math.cos(an)*8)-1,Math.round(y+Math.sin(an)*8)-1,2,2)}}
+    else{c.fillStyle='#000';c.fillRect(x-3,y-3,6,6);c.fillStyle='#fff';c.fillRect(x-2,y-2,4,4)}});
+}
+function iconeB(c,res){const sp={bois:'arbre',pierre:'mont',laine:'mouton',ble:'ble',brique:'brique'};for(let y=0;y<16;y++)for(let x=0;x<16;x++){const e=x===0||y===0||x===15||y===15;c.fillStyle=e?'#000':texB(res,x+3,y+5);c.fillRect(x,y,1,1)}spr(c,SPR[sp[res]],8,8)}
+
+/* ---------- Téléphones ---------- */
+const sansAccent=s=>s.normalize('NFD').replace(/[̀-ͯ]/g,'').toUpperCase();
+const STYLES=[
+  {id:'bois',nom:'A · Plateau de bois',desc:'Le jeu de société posé sur la table : tuiles peintes, bordure de mer en carton, pions et maisons en bois, dés en ivoire. Le plus lisible.',titre:'Archipel',base:baseA,dessin:dessinA,icone:iconeA,J:JA,pixel:false,txt:s=>s,
+    btn:['Lancer','Route','Village','Ville','Port 4:1','Fin du tour']},
+  {id:'pixel',nom:'B · Cartouche 16 bits',desc:'Pixel art façon Super Nintendo, comme le reste de la Ludothèque : terres tramées, sprites, chiffres en pixels, cadres de dialogue.',titre:'ARCHIPEL',base:baseB,dessin:dessinB,icone:iconeB,J:JB,pixel:true,txt:sansAccent,
+    btn:['LANCER','ROUTE','VILLAGE','VILLE','PORT 4:1','FIN']},
+  {id:'encre',nom:'C · Carte du cartographe',desc:'Encre et lavis sur papier, dans la famille de la maquette 4 de Politique : lignes d\'eau le long des côtes, rose des vents, bateau pirate à l\'encre.',titre:'Archipel',base:baseC,dessin:dessinC,icone:iconeC,J:JC,pixel:false,txt:s=>s,
+    btn:['Lancer','Route','Village','Ville','Port 4:1','Fin du tour']}
+];
+const phones=[];
+const PIPS={1:[4],2:[0,8],3:[0,4,8],4:[0,2,6,8],5:[0,2,4,6,8],6:[0,2,3,5,6,8]};
+function creerTel(st,col){
+  const el=document.createElement('div');el.className='tel s-'+st.id;
+  el.innerHTML=`<div class="titre">${st.titre}</div><div class="joueurs"></div><canvas class="plateau"></canvas><div class="msg"></div>
+  <div class="bas"><div class="des"><div class="de">${'<i></i>'.repeat(9)}</div><div class="de">${'<i></i>'.repeat(9)}</div></div><div class="main"></div></div><div class="actions"></div>`;
+  col.appendChild(el);
+  const jo=el.querySelector('.joueurs');[0,1,2].forEach(p=>{const d=document.createElement('div');d.className='chip';d.innerHTML=`<span class="pion" style="background:${st.J[p]}"></span><span class="nom"></span><span class="pts"></span>`;jo.appendChild(d)});
+  const main=el.querySelector('.main');RES.forEach(r=>{const d=document.createElement('div');d.className='carte';const cv=document.createElement('canvas');const z=st.pixel?16:56;cv.width=cv.height=z;d.appendChild(cv);const n=document.createElement('span');d.appendChild(n);d.onclick=()=>toucherCarte(r);main.appendChild(d)});
+  const act=el.querySelector('.actions');const fn=[aLancer,()=>choisirMode('route'),()=>choisirMode('village'),()=>choisirMode('ville'),()=>choisirMode('echange'),finTour];const cle=[null,'route','village','ville',null,null];
+  st.btn.forEach((b,i)=>{const B=document.createElement('button');B.type='button';B.innerHTML=`<span>${b}</span><span class="cout">${cle[i]?Object.entries(COUT[cle[i]]).map(([r,n])=>`<b style="background:var(--c-${r})"></b>`.repeat(n)).join(''):''}</span>`;B.onclick=fn[i];act.appendChild(B)});
+  const cv=el.querySelector('.plateau');
+  const dpr=st.pixel?1:Math.min(2,window.devicePixelRatio||1);
+  const w=st.pixel?180:360*dpr,h=st.pixel?165:330*dpr;cv.width=w;cv.height=h;
+  const ctx=cv.getContext('2d');const fond=document.createElement('canvas');fond.width=w;fond.height=h;
+  cv.addEventListener('click',e=>{const r=cv.getBoundingClientRect();const x=(e.clientX-r.left)*360/r.width,y=(e.clientY-r.top)*330/r.height;toucher((x-OX)/S,(y-OY)/S)});
+  const ph={el,st,
+    refaireFond(){const c=fond.getContext('2d');c.setTransform(1,0,0,1,0,0);c.clearRect(0,0,w,h);if(!st.pixel)c.scale(dpr,dpr);st.base(c);
+      el.querySelectorAll('.carte canvas').forEach((k,i)=>{const c2=k.getContext('2d');c2.clearRect(0,0,k.width,k.height);st.icone(c2,RES[i],k.width)})},
+    dessiner(t){ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,w,h);ctx.drawImage(fond,0,0);if(!st.pixel)ctx.scale(dpr,dpr);st.dessin(ctx,t)},
+    maj(){const T=st.txt;
+      el.querySelectorAll('.chip').forEach((d,p)=>{d.classList.toggle('actif',G.actif===p);d.querySelector('.nom').textContent=T(G.J[p].nom);d.querySelector('.pts').textContent=G.J[p].pts+(st.pixel?'PT':' pts')});
+      el.querySelector('.msg').textContent=T(G.msg);
+      el.querySelectorAll('.de').forEach((d,k)=>d.querySelectorAll('i').forEach((i,j)=>i.classList.toggle('on',PIPS[G.des[k]].includes(j))));
+      el.querySelectorAll('.carte').forEach((d,i)=>{const n=G.J[0].res[RES[i]];d.lastChild.textContent=n;d.classList.toggle('vide',!n);d.classList.toggle('sel',G.mode==='echange'&&G.echange===RES[i])});
+      const bt=el.querySelectorAll('.actions button'),moi=G.actif===0&&!G.roulant&&!G.fin,cons=moi&&G.phase==='construire';
+      bt[0].disabled=!(moi&&G.phase==='lancer');
+      ['route','village','ville'].forEach((m,i)=>{bt[i+1].disabled=!(cons&&assez(0,m));bt[i+1].classList.toggle('on',G.mode===m)});
+      bt[4].disabled=!(cons&&RES.some(r=>G.J[0].res[r]>=4));bt[4].classList.toggle('on',G.mode==='echange');
+      bt[5].disabled=!(cons||G.fin);bt[5].firstChild.textContent=G.fin?T('Rejouer'):st.btn[5];
+    }};
+  phones.push(ph);return ph;
+}
+function maj(){phones.forEach(p=>p.maj())}
+
+const grille=document.getElementById('grille'),onglets=document.getElementById('onglets');
+STYLES.forEach((st,i)=>{
+  const col=document.createElement('section');col.className='col'+(i===0?' on':'');col.innerHTML=`<h2>${st.nom}</h2><p>${st.desc}</p>`;grille.appendChild(col);creerTel(st,col);
+  const b=document.createElement('button');b.type='button';b.textContent=st.nom;b.className=i===0?'on':'';b.onclick=()=>{document.querySelectorAll('.col').forEach((c,j)=>c.classList.toggle('on',j===i));onglets.querySelectorAll('button').forEach((c,j)=>c.classList.toggle('on',j===i))};onglets.appendChild(b);
+});
+nouvellePartie(4242);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>phones.forEach(p=>p.refaireFond()));
+function boucle(t){phones.forEach(ph=>{if(ph.el.offsetParent!==null)ph.dessiner(t)});requestAnimationFrame(boucle)}
+requestAnimationFrame(boucle);
+</script>
