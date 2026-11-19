@@ -188,4 +188,10 @@ Retours du 19/11 (deuxième essai) : **sprites mal découpés** (un morceau du m
 
 Retours du 19/11 (troisième essai) : **texte du butin qui sortait du cadre** (Jersey 10 plus haute) : cartes du butin (104 px) et du marchand (76 px) agrandies. **Personnages plus animés en marchant** : petits bonds, buste penché vers l'avant, poussière aux pieds (héros et monstres). **Montrer l'arme équipée** : essai en jeu, l'icône de l'arme (planche de Shikashi) est tenue dans la main avant (`dessinerArme`, pivot sur la poignée) : au corps à corps elle est levée derrière puis abattue devant pendant le coup ; les bâtons se lèvent pendant le sort ; visible aussi au placement. À garder ou à retirer selon l'avis de l'utilisateur.
 
+Retours du 19/11 (quatrième essai) :
+- **Armes à l'envers** : dans la planche de Shikashi, la dague a la poignée en haut à droite (les autres en bas à gauche) : retournée ; le grimoire est tenu droit.
+- **Des héros partaient vers la Muraille sans finir le combat** : sans cible (entre deux groupes), ils revenaient à leur case de départ, près du mur : ils restent maintenant où ils sont ; le **déserteur** ne fuit plus jusqu'à être soigné mais **2,5 s**, avec « FUIT ! » au-dessus de lui, puis revient (une fois, jusqu'à repasser au-dessus de 50 % de vie).
+- **Classes légendaires débloquées dans l'arbre** de compétences en fin de run : plus d'évolution automatique ; un héros évolue au niveau 5 seulement si sa classe est débloquée (`bannis.arbre.legendaires`, rempli par l'arbre à la session 4) ; la fiche l'indique.
+- **Première run un peu longue, il faut lutter dès le début** : un monstre de plus par vague (5 + vague, 16 au plus), monstres du premier palier plus solides (vie +25 % environ, attaque +1), vie +15 % et attaque +10 % de départ, puis +15 % / +9 % par vague. Simulateur : vague moyenne 5,5 sans dés, 6,2 avec (avant : 6,5 et 7,8) ; la Muraille perd déjà 8, 16 puis 26 aux vagues 1 à 3 ; quelques nuits perdues dès la vague 2 ou 3.
+
 Retour de l'utilisateur : en attente.

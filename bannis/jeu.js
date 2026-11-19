@@ -17,6 +17,8 @@ const lire = (k, d) => { try { const v = localStorage.getItem(k); return v === n
 const ecrire = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e){} };
 const effacer = k => { try { localStorage.removeItem(k); } catch (e){} };
 function statsJoueur(){ return Object.assign({nuits: 0, record: 0, gagnees: 0, eclats: 0, kills: 0}, lire("bannis.stats", {})); }
+// arbre de compétences (session 4) : pour l'instant, seulement la liste des classes légendaires débloquées
+function legendaires(){ const a = lire("bannis.arbre", {}); return Array.isArray(a && a.legendaires) ? a.legendaires : []; }
 function runSauvee(){ try { const t = localStorage.getItem("bannis.run"); return t ? R.charger(t) : null; } catch (e){ return null; } }
 function sauverRun(){ try { localStorage.setItem("bannis.run", R.sauver(G.run)); } catch (e){} }
 
@@ -164,9 +166,11 @@ function dessinerArme(u, x, y){
   if (u.act === "coup"){ const k = Math.min(1, u.ta/0.3);
     if (cac){ a = k < 0.35 ? -1.7*(k/0.35) : -1.7 + 3.2*((k - 0.35)/0.65); hx = 13 + k*6; }
     else { a = -0.75 - Math.sin(k*Math.PI)*0.5; hy = -24 - Math.sin(k*Math.PI)*8; } }
-  const s = 0.75;
-  ctx.save(); ctx.translate(Math.round(x + dir*hx), Math.round(y + hy)); if (dir < 0) ctx.scale(-1, 1); ctx.rotate(a);
-  ctx.drawImage(im, o.ic[1]*32, o.ic[0]*32, 32, 32, -7*s, -25*s, 32*s, 32*s);
+  const s = 0.75, sx = o.ic[1]*32, sy = o.ic[0]*32;
+  ctx.save(); ctx.translate(Math.round(x + dir*hx), Math.round(y + hy)); if (dir < 0) ctx.scale(-1, 1);
+  if (o.ic[0] === 13){ ctx.rotate(Math.sin(u.ta*3)*0.06); ctx.drawImage(im, sx, sy, 32, 32, -16*s, -26*s, 32*s, 32*s); }   // grimoire tenu droit
+  else if (o.ic[0] === 5 && o.ic[1] === 6){ ctx.rotate(a + Math.PI); ctx.drawImage(im, sx, sy, 32, 32, -25*s, -7*s, 32*s, 32*s); }   // dague : poignée en haut à droite dans l'icône
+  else { ctx.rotate(a); ctx.drawImage(im, sx, sy, 32, 32, -7*s, -25*s, 32*s, 32*s); }   // poignée en bas à gauche, pointe en haut à droite
   ctx.restore();
 }
 function poussiere(u){ if (reduit) return; u.pas = (u.pas || 0) + 1; if (u.pas % 14) return;
@@ -389,6 +393,7 @@ function traiterEvenements(){
     else if (e.k === "boss"){ flotte(W/2, 210, "LE BOSS ARRIVE", "#ff6a3a", {titre: true}); SON.boum(); if (!reduit) G.sec = 8; }
     else if (e.k === "chant"){ SON.chant(); for (const h of R.vivants(C, "h")) etincelles(h.x, h.y - 50, 4, "#9ff0ff", true); }
     else if (e.k === "rate") flotte(e.x, e.y - 70, "RATE", "#c8c8c8", {petit: true});
+    else if (e.k === "fuite") flotte(e.u.x, e.u.y - 80, "FUIT !", "#ffb08a", {petit: true});
     else if (e.k === "eclair"){ G.fx.push({k: "foudre", x: e.x, t: 0}); SON.crit(); }
   }
   C.ev.length = 0;
@@ -484,7 +489,7 @@ function finDeVague(){
 }
 function suiteButin(){
   const B = G.butin;
-  const ev = G.run.heros.find(h => R.peutEvoluer(h));
+  const ev = G.run.heros.find(h => R.peutEvoluer(h, legendaires()));
   if (ev){ B.etape = "evolution"; G.evo = {h: ev, t: 0, fait: false, avant: R.classeDe(ev).n}; SON.sort(); return; }
   if (!B.pris){ B.etape = "objet"; return; }
   B.etape = "marchand";
@@ -607,7 +612,7 @@ function ecranFin(){
   texte(F.gagne ? "LA NUIT EST TENUE" : "EST TOMBEE", W/2, 228, 16, F.gagne ? "#ffe14a" : "#ff6a4a", "center", {titre: true});
   const l = [["Vague atteinte", F.vague + " / " + D.NB_VAGUES], ["Monstres abattus", F.kills], ["Boss abattus", F.boss], ["Éclats de Gueule gagnés", "+" + F.eclats], ["Éclats en réserve", F.total], ["Record", "vague " + F.record]];
   l.forEach(([a, b], i) => { texte(a, 50, 280 + i*34, 16, "#fff"); texte(String(b), W - 50, 280 + i*34, 16, "#ffe14a", "right"); });
-  paragraphe("Les éclats serviront à l'arbre de compétences (bientôt) pour mieux dompter le hasard.", 50, 500, W - 100, 13, "#ffe3a8");
+  paragraphe("Les éclats serviront à l'arbre de compétences (bientôt) : choix des recrues, classes légendaires, dés...", 50, 500, W - 100, 13, "#ffe3a8");
   bouton(50, 540, W - 100, 50, "NOUVELLE NUIT", () => { nouvelleNuit(); SON.clic(); }, true, true);
   bouton(80, 620, W - 160, 44, "TITRE", () => { G.ecran = "titre"; SON.clic(); }, true, false, 3);
 }
@@ -638,7 +643,7 @@ function ficheHeros(){
     if (o){ icone(o.ic, 40, y + 9, 32); texte(o.n, 82, y + 22, 14, D.RARETES[o.rar].c, "left", {max: W - 124}); texte(R.texteBonus(o), 82, y + 40, 12, "#d8ffd8", "left", {gras: false, max: W - 124}); }
     else texte(D.SLOTS[sl].n + " : rien", 46, y + 31, 14, "#a8a0b8", "left", {gras: false});
   });
-  if (!h.leg) texte("Au niveau " + D.NIV_LEGENDAIRE + " : " + C.leg.n, W/2, 650, 13, "#ffd76a", "center", {max: W - 60});
+  if (!h.leg) texte(legendaires().includes(h.cls) ? "Au niveau " + D.NIV_LEGENDAIRE + " : " + C.leg.n : "Légendaire : " + C.leg.n + " (à débloquer dans l'arbre)", W/2, 650, 13, "#ffd76a", "center", {max: W - 60});
   bouton(90, 664, W - 180, 46, "FERMER", () => { G.fiche = null; SON.clic(); }, true, false, 3);
 }
 

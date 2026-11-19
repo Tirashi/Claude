@@ -60,7 +60,8 @@ function gagnerXp(h, v){
 }
 function propositionsNiveau(){ return melange(D.BONUS_NIVEAU).slice(0, 2); }
 function appliquerBonus(h, b){ const avant = stats(h).pv; b.f(h); h.pv = Math.min(stats(h).pv, h.pv + Math.max(0, stats(h).pv - avant)); }
-function peutEvoluer(h){ return !h.leg && h.niv >= D.NIV_LEGENDAIRE; }
+// la classe légendaire se débloque dans l'arbre de compétences (liste des classes débloquées)
+function peutEvoluer(h, debloquees){ return !h.leg && h.niv >= D.NIV_LEGENDAIRE && (debloquees || []).includes(h.cls); }
 function evoluer(h){ h.leg = true; h.pv = stats(h).pv; }
 
 /* ---------- objets ---------- */
@@ -107,7 +108,7 @@ function preparerVague(run){
 }
 function composerVague(v){
   const pal = D.PALIERS.find(p => v <= p.jusqua) || D.PALIERS[D.PALIERS.length-1];
-  const n = Math.min(4 + v, 15), liste = [];
+  const n = Math.min(5 + v, 16), liste = [];
   const boss = D.BOSS[v];
   const especes = melange(pal.l).slice(0, 3 + Math.min(2, Math.floor(v/3)));
   for (let i = 0; i < (boss ? n - 2 : n); i++){ const k = pick(especes); liste.push({k, elite: alea() < 0.04 + v*0.035}); }
@@ -134,7 +135,8 @@ function uniteHeros(h){
     x: c[0], y: c[1], bx: c[0], by: c[1], kx: 0, ky: 0, dir: 1, cd: r(0.2, 0.8), act: "repos", ta: r(0, 2), cib: null, lunge: 0, flash: 0, mort: 0, hate: 0, kills: 0, frappe: null};
 }
 function uniteMonstre(e, vague){
-  const M = D.MONSTRES[e.k], f = 1 + (vague-1)*0.13, fa = 1 + (vague-1)*0.08, el = e.elite ? 1 : 0;
+  // vie +15 % et attaque +9 % par vague ; le début (paliers 1) est déjà disputé
+  const M = D.MONSTRES[e.k], f = 1.15 + (vague-1)*0.15, fa = 1.1 + (vague-1)*0.09, el = e.elite ? 1 : 0;
   const pv = Math.round(M.pv * f * (el ? 1.8 : 1) * r(0.9, 1.1));
   return {camp: "m", k: e.k, nom: (el ? "ELITE " : "") + M.n, role: M.role, i: M.i, elite: !!el, boss: !!M.boss, t: M.t*(el ? 1.1 : 1),
     pv, pvMax: pv, atq: Math.round(M.atq*fa*(el ? 1.3 : 1)), def: M.def, vit: M.vit*r(0.92, 1.08), crit: 6, critMul: 1.6, vol: 0, rate: 0, soinRecu: 1, vitDep: 1,
@@ -201,7 +203,9 @@ function etape(C, dt){
     let vx = 0, vy = 0;
     const occupe = (u.act === "coup" && u.ta < 0.3) || (u.act === "mal" && u.ta < 0.2);
     // le déserteur fuit vers la Muraille quand il est presque mort
-    const fuit = u.trait === "deserteur" && u.pv < u.pvMax*0.2;
+    if (u.trait === "deserteur"){ if (u.pv < u.pvMax*0.2 && !u.fuiteFaite){ u.fuiteFaite = true; u.fuite = 2.5; C.ev.push({k: "fuite", u}); }
+      if (u.pv > u.pvMax*0.5) u.fuiteFaite = false; u.fuite = Math.max(0, (u.fuite || 0) - dt); }
+    const fuit = u.fuite > 0;
     if (fuit){ vx = -1; vy = (u.by - u.y)/100; u.dir = -1; }
     if (!fuit && u.role === "soin"){
       const blesse = vivants(C, "h").filter(h => h.pv < h.pvMax*0.75).sort((a, b) => a.pv/a.pvMax - b.pv/b.pvMax)[0];
@@ -222,8 +226,6 @@ function etape(C, dt){
       vx = -1; u.dir = -1;
       if (u.x <= ZONE.x0 + 2){ vx = 0; if (u.cd <= 0){ u.act = "coup"; u.ta = 0; u.lunge = 0.25; const v = Math.max(1, Math.round(u.atq*0.6));
         C.run.mur = Math.max(0, C.run.mur - v); C.ev.push({k: "mur", v, y: u.y}); u.cd = r(1, 1.4); } }
-    } else if (!c && u.camp === "h" && !fuit){
-      const dx = u.bx - u.x, dy = u.by - u.y, d = Math.hypot(dx, dy); if (d > 8){ vx = dx/d*0.6; vy = dy/d*0.6; }
     }
     // écartement
     for (const o of tous) if (o !== u && o.pv > 0){ const ox = u.x - o.x, oy = (u.y - o.y)*1.4, od = Math.hypot(ox, oy), rr = (u.boss || o.boss) ? 52 : 36;

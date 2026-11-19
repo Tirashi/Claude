@@ -32,7 +32,7 @@ const CROISSANCE = {cac: {pv: 12, atq: 2, def: 1}, magie: {pv: 8, atq: 3, crit: 
 const TRAITS = {
   ivrogne:    {n: "IVROGNE", d: "+15 % d'attaque, mais rate 15 % de ses coups."},
   pieux:      {n: "PIEUX", d: "Reçoit 30 % de soins en plus."},
-  deserteur:  {n: "DESERTEUR", d: "Court plus vite, mais fuit vers la Muraille sous 20 % de vie."},
+  deserteur:  {n: "DESERTEUR", d: "Court plus vite, mais fuit quelques secondes quand il tombe sous 20 % de vie."},
   cleptomane: {n: "CLEPTOMANE", d: "+2 pièces d'or par monstre qu'il achève."},
   tetebrulee: {n: "TETE BRULEE", d: "+10 % de critiques, -1 de défense."},
   balafre:    {n: "BALAFRE", d: "+15 % de vie."},
@@ -43,12 +43,12 @@ const TRAITS = {
 // Monstres : numéro dans img/monstres.png (Free Mythic Monsters de Willibab), regard vers la gauche.
 // role : cac ou dist (tire de loin) ; t : taille d'affichage ; or : pièces gagnées.
 const MONSTRES = {
-  gobelin:   {n: "GOBELIN", i: 19, pv: 26, atq: 5, def: 0, vit: 1.1, role: "cac", t: 1.0},
-  gelee:     {n: "GELEE", i: 16, pv: 24, atq: 4, def: 1, vit: 0.75, role: "cac", t: 1.0},
-  guepe:     {n: "GUEPE", i: 8, pv: 15, atq: 4, def: 0, vit: 1.6, role: "cac", t: 0.9},
-  serpent:   {n: "SERPENT", i: 9, pv: 20, atq: 5, def: 0, vit: 1.2, role: "cac", t: 0.9},
-  diablotin: {n: "DIABLOTIN", i: 24, pv: 22, atq: 5, def: 0, vit: 1.3, role: "cac", t: 0.95},
-  ver:       {n: "VER DE SANG", i: 3, pv: 30, atq: 5, def: 1, vit: 0.8, role: "cac", t: 1.0},
+  gobelin:   {n: "GOBELIN", i: 19, pv: 32, atq: 6, def: 0, vit: 1.1, role: "cac", t: 1.0},
+  gelee:     {n: "GELEE", i: 16, pv: 32, atq: 5, def: 1, vit: 0.75, role: "cac", t: 1.0},
+  guepe:     {n: "GUEPE", i: 8, pv: 20, atq: 5, def: 0, vit: 1.6, role: "cac", t: 0.9},
+  serpent:   {n: "SERPENT", i: 9, pv: 26, atq: 6, def: 0, vit: 1.2, role: "cac", t: 0.9},
+  diablotin: {n: "DIABLOTIN", i: 24, pv: 28, atq: 6, def: 0, vit: 1.3, role: "cac", t: 0.95},
+  ver:       {n: "VER DE SANG", i: 3, pv: 38, atq: 6, def: 1, vit: 0.8, role: "cac", t: 1.0},
   araignee:  {n: "ARAIGNEE", i: 7, pv: 34, atq: 7, def: 1, vit: 1.25, role: "cac", t: 1.05},
   spectre:   {n: "SPECTRE", i: 6, pv: 32, atq: 7, def: 0, vit: 1.0, role: "cac", t: 1.0},
   bete:      {n: "BETE ROUGE", i: 17, pv: 44, atq: 8, def: 2, vit: 0.95, role: "cac", t: 1.05},
