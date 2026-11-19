@@ -605,6 +605,18 @@ function batirVille(c){const g=new THREE.Group(),cols=['#f4ead8','#efe0c8','#e8d
 // le point d'arrivée de l'escorte : une colonne de lumière
 function balise(p){const m=new THREE.Mesh(new THREE.CylinderGeometry(3,3,400,8,1,true).translate(0,200,0),new THREE.MeshBasicMaterial({color:'#6ae0ff',transparent:true,opacity:.35,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}));m.position.copy(p);m.position.y=0;sc.add(m);return m;}
 const ETOILES=(M,ok2,ok3)=>ok3?3:ok2?2:1;
+// cibles au sol (session 4) : batteries antiaériennes (elles tirent), dépôts et radar, en blocs low poly aux couleurs rouges ; une base sur une île
+function trouverBase(){const f=new THREE.Vector3(-Math.sin(S.yaw),0,-Math.cos(S.yaw));for(let r=450;r<2600;r+=60)for(let k=0;k<18;k++){const a=Math.atan2(f.z,f.x)+(k%2?1:-1)*Math.ceil(k/2)*.35,x=S.p.x+Math.cos(a)*r,z=S.p.z+Math.sin(a)*r,h=H(x,z);
+    if(h<5||h>45||pente(x,z)>2.5)continue;let ok=0;for(let b=0;b<6.28;b+=1.05)if(H(x+Math.cos(b)*55,z+Math.sin(b)*55)>2.5)ok++;if(ok>=5)return{x,z,h};}return{x:S.p.x+f.x*600,z:S.p.z+f.z*600,h:Math.max(3,H(S.p.x+f.x*600,S.p.z+f.z*600))};}
+function cibleSol(type,x,z){const h=Math.max(.5,H(x,z)),g=new THREE.Group();g.position.set(x,h,z);const t={type,g:new THREE.Object3D(),m:g,vie:{batterie:14,depot:10,radar:8}[type],rayon:{batterie:8.5,depot:11,radar:8}[type],tirT:2+Math.random()*2};
+  const B=(w,hh,d,col,px=0,py=0,pz=0,par=g)=>{const m=new THREE.Mesh(new THREE.BoxGeometry(w,hh,d),M(col));m.position.set(px,py,pz);par.add(m);return m;};
+  if(type==='batterie'){B(9,1.2,9,'#6a6458',0,.6,0);B(7,1.6,7,'#4a4450',0,1.6,0);const tr=new THREE.Group();tr.position.y=3;g.add(tr);B(3.4,2,3.4,'#5a5260',0,0,0,tr);B(1.2,.7,1.2,'#c8242c',0,1.2,0,tr);
+    for(const s of[-.7,.7]){const c=new THREE.Mesh(new THREE.CylinderGeometry(.25,.3,5,6).rotateX(Math.PI/2).translate(0,0,-2.6),M('#2e2a34'));c.position.set(s,.5,0);c.rotation.x=.5;tr.add(c);}t.tour=tr;t.g.position.set(x,h+4.5,z);}
+  else if(type==='depot'){for(const[dx,dz]of[[-4,-3],[4,-3],[0,4]]){const c=new THREE.Mesh(new THREE.CylinderGeometry(2.6,2.6,5,10).translate(0,2.5,0),M(dx>0?'#c8242c':'#e8e0d8'));c.position.set(dx,0,dz);g.add(c);B(5.4,.4,.6,'#c8242c',dx,4.2,dz);}t.g.position.set(x,h+4.5,z);}
+  else{B(1,9,1,'#4a4450',0,4.5,0);const pl=new THREE.Group();pl.position.y=9.5;g.add(pl);const d=new THREE.Mesh(new THREE.CylinderGeometry(4,1,1.2,10,1,true),M('#dcd4cc'));d.rotation.x=1.1;pl.add(d);B(.6,.6,3,'#c8242c',0,.3,-1,pl);t.tour=pl;t.g.position.set(x,h+12,z);}
+  g.scale.setScalar(1.5);sc.add(g);return t;}/* une fois et demie : lisibles de haut */
+// une cible détruite : grosse explosion, carcasse noircie qui fume
+function cibleDetruite(t){t.mort=1;boom(t.g.position,30);fumee(t.g.position,8);t.m.traverse(o=>{if(o.isMesh)o.material=M('#2a2428');});if(t.tour)t.tour.visible=false;t.m.scale.y=.45;S.score+=400;}
 const MISSIONS=[
  {id:'cote',nom:'LA COTE',titre:'DEFENDRE LE PORT',brief:'Trois vagues de bombardiers rouges arrivent de la mer vers le port. Abats-les avant qu’ils ne rasent la ville. Le destroyer bleu Héron tourne au-dessus du port : ses tourelles t’aident.',sansRouges:1,ailiers:{n:3,fam:'inter'},
   debut(M){const c=trouverCote();M.c=c;M.g=batirVille(c);M.ville=objectif('PORT',new THREE.Vector3(c.x,c.h+6,c.z),55,100);M.ville.deg=.9;S.degJ=.6;/* première mission : plus douce (18/11) */
@@ -627,6 +639,23 @@ const MISSIONS=[
     if(M.ob.vie<=0){if(!n.chute){n.chute=.01;for(const t of n.tourelles)t.mort=1;}return M.t>(M.coule=M.coule||M.t+2.5)?'perdu':null;}
     if(M.parcouru>=M.trajet)return'gagne';},
   etat:M=>({txt:'ESCORTE L’ALBATROS JUSQU’A LA BALISE',v:M.ob.vie/100,info:`ALBATROS ${Math.max(0,Math.round(M.ob.vie))} % · ARRIVEE DANS ${Math.max(0,Math.round((M.trajet-M.parcouru)/14))} S`}),buts:['Reste près du destroyer bleu Albatros : il avance seul vers la balise de lumière.','Abats les chasseurs et les bombardiers qui l’attaquent.','S’il est coulé, la mission échoue.'],et:['Albatros intact à 50 % ou plus','Albatros intact à 80 %, sans perdre d’appareil'],etoiles:M=>ETOILES(M,M.ob.vie>=50,M.ob.vie>=80&&S.vies===3),fin(M){retirerNavire(M.n0);sc.remove(M.bal);}},
+ {id:'raid',nom:'LE RAID',titre:'DETRUIRE LA BASE ROUGE',brief:'Les rouges ont installé une base sur une île : trois batteries antiaériennes, deux dépôts et un radar. Rase-la ; attention aux tirs de la DCA.',
+  debut(M){const b=trouverBase();M.b=b;M.cibles=[];const pl=[['batterie',-38,-20],['batterie',36,-26],['batterie',2,40],['depot',-14,8],['depot',18,10],['radar',0,-36]];
+    for(const[ty,dx,dz]of pl){let x=b.x+dx,z=b.z+dz;if(H(x,z)<1.5){x=b.x+dx*.5;z=b.z+dz*.5;}M.cibles.push(cibleSol(ty,x,z));}
+    M.ob={nom:'BASE',pos:new THREE.Vector3(b.x,b.h+20,b.z)};OBJ.push(M.ob);M.prochaine=25;M.k=0;},
+  maj(M,dt){M.t+=dt;let r=0;for(const t of M.cibles){if(t.mort){if(Math.random()<dt*2)fumee(t.g.position,1);continue;}
+      if(t.vie<=0){cibleDetruite(t);continue;}r++;TOURS.push(t);
+      if(t.type==='radar')t.tour.rotation.y+=dt*1.5;
+      if(t.type==='batterie'){const d=S.p.clone().sub(t.g.position),L=d.length();t.tour.rotation.y=Math.atan2(-d.x,-d.z);t.tirT-=dt;
+        if(L<230&&t.tirT<=0&&S.mode==='jeu'){t.tirT=1.7+Math.random()*1.3;/* une rafale de DCA, un peu dispersée, vers l'endroit où sera le joueur */
+          for(let q=0;q<3;q++){const vise=S.p.clone().addScaledVector(S.fwd,S.v*L/130).add(new THREE.Vector3((Math.random()-.5)*6,(Math.random()-.5)*6,(Math.random()-.5)*6)).sub(t.g.position).normalize();
+            const bm=new THREE.Mesh(GEO_TIR,MAT_TIR);bm.position.copy(t.g.position).addScaledVector(vise,4+q*3);bm.lookAt(bm.position.clone().add(vise));sc.add(bm);tirsEnnemis.push({b:bm,v:vise.multiplyScalar(130),t:2});}}}}
+    M.reste=r;if(r&&M.ob.pos)M.ob.pos.copy((M.cibles.find(t=>!t.mort)||M.cibles[0]).g.position).setY(M.b.h+20);
+    if(M.t>=M.prochaine&&M.k<3){M.k++;M.prochaine+=40;escadre(1+M.k,{centre:new THREE.Vector3(M.b.x,M.b.h,M.b.z),a:Math.random()*6.28,dist:300,y:M.b.h+60,opt:k=>({fam:M.k>2&&k%2?'inter':'poly'})});annonce(`PATROUILLE<b>${1+M.k} CHASSEURS</b>Ils défendent la base.`);}
+    if(!r&&!ennemis.length)return'gagne';},
+  etat:M=>{const n=M.cibles.length,r=M.reste??n,dca=M.cibles.filter(t=>t.type==='batterie'&&!t.mort).length;return{txt:'DETRUIS LA BASE ROUGE',v:r/n,genre:'detruire',info:`${r} CIBLE${r>1?'S':''} · DCA ${dca}${ennemis.length?' · '+ennemis.length+' CHASSEUR'+(ennemis.length>1?'S':''):''}`};},
+  buts:['Détruis les 6 cibles au sol : 3 batteries de DCA, 2 dépôts, 1 radar (canon ou missiles).','Les batteries tirent quand tu passes à moins de 230 m : attaque-les en piqué, puis remonte.','Des patrouilles de chasseurs viennent défendre la base.'],
+  et:['en moins de 3 minutes','en moins de 3 minutes, sans perdre d’appareil'],etoiles:M=>ETOILES(M,M.t<180,M.t<180&&S.vies===3),fin(M){for(const t of M.cibles)sc.remove(t.m);}},
  {id:'survie',nom:'LA SURVIE',titre:'TENIR 3 MINUTES',brief:'Tu es seul au milieu de l’escadre rouge. Tiens bon trois minutes, jusqu’aux renforts.',
   debut(M){M.prochaine=4;M.k=0;},
   maj(M,dt){M.t+=dt;if(M.t>=M.prochaine&&M.t<170){M.k++;M.prochaine+=Math.max(11,19-M.k);const f=['poly','inter','lourd','furtif'];

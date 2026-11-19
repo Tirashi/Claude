@@ -125,6 +125,9 @@ const shots = process.argv[2];
         await wait(300); C.nouvellePartie(0); if (!C.mission || C.mission.def.id !== 'cote' || !C.mission.ville) return 'la mission 1 ne démarre pas';
         C.finMission(true); await wait(3000); if (document.getElementById('eFin').hidden || document.getElementById('fSuivante').hidden) return "pas d'écran de victoire avec MISSION SUIVANTE";
         const m = JSON.parse(localStorage.getItem('cieldeguerre.missions') || '{}'); if (!(m.cote && m.cote.e >= 1)) return "la mission réussie n'est pas sauvegardée";
+        // le raid (session 4) : une base de 6 cibles au sol ; des ailiers volent avec le joueur
+        const ir = C.missions.findIndex(d => d.id === 'raid'); C.nouvellePartie(ir); if (!C.mission || !C.mission.cibles || C.mission.cibles.length !== 6) return 'le raid ne pose pas ses 6 cibles au sol';
+        for (let i = 0; i < 20 && !C.ailiers.length; i++) await wait(250); if (!C.ailiers.length) return "pas d'ailiers";
         return 'ok';
       });
       if (r !== 'ok') errs.push('Ciel de guerre : ' + r);

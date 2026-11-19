@@ -463,11 +463,12 @@ Minage spatial, gestion et batailles automatiques : une grande partie de 3 à 5 
 Combat aérien en 3D low poly au-dessus d'un archipel, au crépuscule, au milieu d'une bataille entre deux flottes de grands vaisseaux 
 
 - **Le vol** : vue de derrière l'appareil, loopings, tonneaux, boost ; canon et missiles qui se verrouillent sur la cible dans l'axe.
-- **Les missions** : défendre un port contre les bombardiers, escorter le destroyer Albatros, tenir trois minutes, abattre le croiseur amiral, puis la forteresse volante (boucliers à détruire avant les tourelles, chasseurs qui décollent de ses flancs). Jusqu'à trois étoiles par mission ; chaque réussite ouvre la suivante.
+- **Les missions** : défendre un port contre les bombardiers, escorter le destroyer Albatros, raser une base au sol (batteries de DCA, dépôts, radar), tenir trois minutes, abattre le croiseur amiral, puis la forteresse volante (boucliers à détruire avant les tourelles, chasseurs qui décollent de ses flancs). Jusqu'à trois étoiles par mission ; chaque réussite ouvre la suivante.
 - **Les vagues sans fin** : des escadrilles de chasseurs rouges arrivent de face, par derrière, sur les flancs, par le dessus ; des corvettes et des frégates bombardent. Trois appareils par partie.
 - **La bataille** : les grands vaisseaux bleus et rouges se canonnent ; les tourelles rouges tirent aussi sur toi, et se détruisent (un vaisseau sans tourelles tombe en flammes).
+- **Les ailiers** : des chasseurs bleus volent en formation avec toi et attaquent les rouges qui approchent.
 - **Le hangar** : 35 chasseurs en 4 familles (intercepteurs, polyvalents, lourds, furtifs), chacune avec sa vitesse, son virage, son blindage et ses missiles.
-- Au téléphone : un joystick sous le pouce et des boutons ronds ; au PC : la souris dirige l'appareil, clic gauche pour le feu, clic droit pour les missiles. Sons et musique synthétisés, secousses, épaves qui tombent en fumée, jauge d'énergie du boost. À venir : des ailiers, des cibles au sol, d'autres décors.
+- Au téléphone : un joystick sous le pouce et des boutons ronds ; au PC : la souris dirige l'appareil, clic gauche pour le feu, clic droit pour les missiles. Explosions et réacteur enregistrés, musique synthétisée, secousses, épaves qui tombent en fumée, jauge d'énergie du boost. À venir : d'autres décors (nuit, orage, désert, neige).
 
 ## Les classiques passés en 16 bits
 

@@ -126,7 +126,7 @@ Historique des directions : *Escadrille pixel* (gros pixels, sprite dessiné), p
 | 1 · socle | Dossier `ciel-de-guerre/` en scripts classiques. Three.js r128 et GLTFLoader de `lib/`. Modèles en fichiers `.glb` dans `ciel-de-guerre/modeles/` (plus de base64 ; mis en cache par `sw.js`), pour les seuls avions retenus. Moteur, avions, flottes et commandes repris de la maquette. Écran titre avec retour au menu, fiche, accueil, service worker, crédits. | Opus |
 | 2 · missions | Les 4 missions, l'écran de fin, les étoiles, le boss | Opus — **fait le 18/11** |
 | 3 · sensations | Son, secousses, fumée, jauge de boost, vitesse | opusplan — **fait le 18/11** |
-| 4 · monde | Ailiers, cibles au sol, décors (nuit, orage, désert, neige) | opusplan |
+| 4 · monde | Ailiers, cibles au sol, décors (nuit, orage, désert, neige) | opusplan — ailiers et raid **faits le 19/11**, décors à venir |
 | 5 · progression | Réglages par avion, déblocages, classements, défi du jour éventuel | opusplan |
 
 ## Décision du 17/11 : des vaisseaux, pas d'avions
@@ -207,3 +207,8 @@ Le repérage automatique (points les plus en arrière, puis un essai par les fac
 
 ## Mission 1 adoucie (18 et 19/11)
 Retours de l'utilisateur (« trop dur », puis « encore difficile ») : vagues plus petites et plus espacées, port moins fragile (`deg` 0,9), dégâts reçus × 0,6 (`S.degJ`) ; puis **pas de grands vaisseaux rouges** pendant la mission (`sansRouges` dans la définition : la flotte rouge de fond se retire) et **le Héron**, destroyer bleu allié invulnérable, qui tourne autour du port (rayon 130) : ses tourelles tirent sur les chasseurs et bombardiers rouges. Autre piste proposée par l'utilisateur, gardée pour la session 4 : 3 intercepteurs ailiers.
+
+## Session 4 (19/11) : ailiers et cibles au sol
+- **Ailiers** (`AILIERS`, `creerAiliers`, `majAiliers`) : chasseurs bleus en formation à côté du joueur (`PLACES`, devant = −z), qui prennent pour cible les rouges à moins de 300 du joueur en se répartissant les cibles ; invulnérables, balles à 0,5 de dégât (+50 au score). `def.ailiers = {n, fam}` : mission 1 trois intercepteurs ; sinon deux polyvalents (vagues aussi). Créés 0,3 s après le départ (une fois le joueur placé).
+- **Le raid** (mission 3, `id: 'raid'`) : `trouverBase()` cherche une île devant le joueur ; `cibleSol(type, x, z)` : 3 batteries de DCA (tourelle qui suit le joueur, rafales de 3 traçantes à moins de 230 m), 2 dépôts, 1 radar ; poussées chaque image dans `TOURS` (balles, missiles, verrouillage comme les tourelles des grands vaisseaux) ; `cibleDetruite` : carcasse noircie qui fume, +400. Trois patrouilles de chasseurs. Étoiles : en moins de 3 minutes, puis sans perdre d'appareil. Six missions : la fiche compte sur 18 étoiles.
+- Reste de la session 4 : les décors (nuit, orage, désert, neige).
