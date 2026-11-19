@@ -57,6 +57,14 @@ section.q a{color:var(--or)}
   <figure><canvas id="g2" width="520" height="560"></canvas><figcaption><b>The Mighty Palm</b> (direction 3). 32 héros en 9 familles : les paires viennent du pack lui-même.</figcaption></figure>
 </div>
 <section class="q">
+  <h2>BESTIAIRE GRATUIT DE WILLIBAB (DIRECTIONS 1 ET 2)</h2>
+  <p><b>Free Mythic Monsters</b> : 31 monstres, chacun en 3 couleurs (93 sprites ; une couleur peut servir de version d'élite). Ils regardent à droite dans le pack : on les retourne (corrigé dans les téléphones).</p>
+  <img id="bestMM" alt="Les 31 monstres de Free Mythic Monsters en trois couleurs" style="width:100%;max-width:820px;image-rendering:pixelated;background:#1d1726;border:4px solid var(--cadre);border-radius:12px">
+  <p><b>Willibab's Monster Pack</b> (gratuit) : 12 lignées de monstres qui <b>évoluent en 2 ou 3 stades</b> (vers, golems, serpents de mer, nagas, dragons), parfaites pour des vagues qui se renforcent et des boss ; et 3 monstres de <b>Nostalgic Enemy Sprites</b> (gratuit).</p>
+  <img id="bestWP" alt="Les lignées de Willibab's Monster Pack" style="width:100%;max-width:740px;image-rendering:pixelated;background:#1d1726;border:4px solid var(--cadre);border-radius:12px">
+  <p>Au total, environ <b>45 espèces et 140 sprites gratuits</b>, dont des monstres de feu pour la Gueule (élémentaire, démon, dragons). Pour plus tard : <a href="https://willibab.itch.io/mythic-monsters-i">Mythic Monsters I</a> ajoute 100 espèces (7,49 $).</p>
+</section>
+<section class="q">
   <h2>PACKS PAYANTS MIS DE COTE (A REGARDER PLUS TARD)</h2>
   <ul>
     <li><b>Time Fantasy</b> (finalbossblues) : <a href="https://finalbossblues.itch.io/side-view-animated-rpg-battlers">héros vus de côté</a> (7,99 $, 80 personnages dont chevaliers et armées), <a href="https://finalbossblues.itch.io/time-fantasy-monsters">monstres</a> (10 $), <a href="https://finalbossblues.itch.io/icons">icônes</a> (6 $), <a href="https://finalbossblues.itch.io/pixel-animations-and-effects">effets</a> (6 $), <a href="https://finalbossblues.itch.io/tf-faces">portraits</a> (8 $). Le plus soigné.</li>
@@ -130,7 +138,7 @@ const FAM = {
         {b:"DOMPTEUR", bs:"pc-ley-2", l:"MAITRE DES BETES", ls:"pc-ley-3", portee:"cac"},
         {b:"BARDE", bs:"pc-ouzo", l:"BARDE LEGENDAIRE", ls:"pc-ouzo-3", portee:"magie", palette:true}],
        monstres:[{nom:"GOBELIN", spr:"mm-019", pv:44, atq:9}, {nom:"GELEE", spr:"mm-016", pv:40, atq:8}, {nom:"SPECTRE", spr:"mm-006", pv:58, atq:12}, {nom:"DRAGON ROUGE", spr:"mm-014", pv:90, atq:13}],
-       mon:{ech:1.35, ax:32, ay:60, flip:false} },
+       mon:{ech:1.35, ax:32, ay:60, flip:true} },
   mg:{ fs:96, ech:1.05, ax:48, ay:92, classes:[
         {b:"SOLDAT", bs:"mg-h1", l:"PALADIN", ls:"mg-p1", portee:"cac"},
         {b:"APPRENTIE", bs:"mg-w2", l:"ARCHIMAGE", ls:"mg-w1", portee:"magie"},
@@ -724,6 +732,7 @@ function Partie(canvas, sk){
   requestAnimationFrame(boucle);
 }
 document.fonts && document.fonts.ready.then(()=>{}).catch(()=>{});
+document.getElementById("bestMM").src = IMG["best-mm"]; document.getElementById("bestWP").src = IMG["best-wp"];
 window.PARTIES = [new Partie(document.getElementById("c1"), SK.R), new Partie(document.getElementById("c2"), SK.S), new Partie(document.getElementById("c3"), SK.M)];
 new Galerie(document.getElementById("g1"), "pc"); new Galerie(document.getElementById("g2"), "mg");
 </script>

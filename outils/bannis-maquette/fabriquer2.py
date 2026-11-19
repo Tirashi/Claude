@@ -23,6 +23,23 @@ for a in ["h1", "p1", "w2", "w1", "r1", "n1", "c1", "p3"]:
 for e in ["Goblin", "Skeleton", "Werewolf", "Vampire"]:
     A["me-" + e] = uri(o(f"mp-mighty-battle-pack-addon/x/*/sv_enemies/{e}.png"))
 A["icones"] = uri(o("ic/x/*/#2*.png"))
+# bestiaire gratuit de Willibab : Free Mythic Monsters (31 x 3 couleurs, retournés pour regarder à gauche),
+# Monster Pack (lignées en 2 ou 3 stades) et Nostalgic (3 monstres)
+def planche(ps, retourner, cols, case):
+    from PIL import ImageOps
+    lignes = (len(ps)+cols-1)//cols; out = Image.new("RGBA", (cols*case, lignes*case), (0,0,0,0))
+    for i, p in enumerate(ps):
+        im = Image.open(p).convert("RGBA")
+        if retourner: im = ImageOps.mirror(im)
+        im.thumbnail((case-4, case-4), Image.NEAREST)
+        out.alpha_composite(im, ((i%cols)*case + (case-im.width)//2, (i//cols)*case + case-2-im.height))
+    return out
+mm = sorted(glob.glob(os.path.join(P, "mm/x/*/*/Transparent/1x Size/*.png")))
+mm.sort(key=lambda p: (os.path.basename(p).split("_")[1], os.path.basename(p)))
+A["best-mm"] = uri(planche(mm, True, 12, 68))
+wp = [p for p in sorted(glob.glob(os.path.join(P, "x-willibabs-monster-pack/x/**/*.png"), recursive=True)) if Image.open(p).width > 40]
+wp += sorted(glob.glob(os.path.join(P, "x-nostalgic-retro-enemy-sprites/x/**/*.png"), recursive=True))[:3]
+A["best-wp"] = uri(planche(wp, False, 8, 92))
 D = "ui-tiny-rpg-dragon-regalia-gui/x/"
 for k, f in [("rg-A", "20240707dragon9SlicesA.png"), ("rg-B", "20240707dragon9SlicesB.png"), ("rg-C", "20240707dragon9SlicesC.png"),
              ("rg-btnA", "20240709dragonButtonA-Sheet.png"), ("rg-btnB", "20240709dragonButtonB-Sheet.png"),

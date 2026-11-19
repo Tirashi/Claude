@@ -125,4 +125,6 @@ Retour de l'utilisateur (18/11) : « à la limite le B est pas mal, mais c'est p
 
 **Packs payants mis de côté** (liens aussi dans la maquette 2) : Time Fantasy (finalbossblues : héros vus de côté 7,99 $, monstres 10 $, icônes 6 $, effets 6 $, portraits 8 $ ; le plus soigné, 80 héros dont chevaliers et armées) ; Pixel Champions II (alexpixels : 25 héros 8,99 $, 22 monstres 12,50 $, portraits 1,99 $) ; Tiny RPG de Zerie (2 × 2,50 $) ; Willibab (Mythic Monsters I 7,49 $, créateur de héros en calques 3,74 $) ; The Mighty Palm (Mighty Daemons héros 5 $ et monstres 5 $, portraits 15 $) ; Tiny Tales Heroes (megatiles, 24,99 $) ; 8bit Retro SV Actors (koji-marumugi, 6,60 $).
 
-Retour de l'utilisateur : en attente.
+Retour de l'utilisateur (19/11) : la **direction 1 (Regalia) plaît**, à condition que les monstres soient assez variés ; les monstres de Willibab étaient **dans le mauvais sens** (ils regardent à droite dans le pack : corrigé, on les retourne). Bestiaire ajouté à la maquette 2 (même lien) : **Free Mythic Monsters** (31 espèces × 3 couleurs = 93 sprites, une couleur pour les élites), **Willibab's Monster Pack** (gratuit, 12 lignées qui évoluent en 2 ou 3 stades : vers, golems, serpents de mer, nagas, dragons ; elles regardent déjà à gauche), **Nostalgic Enemy Sprites** (3 monstres) : environ 45 espèces et 140 sprites gratuits. Écartés : monstres de solaarnoble (trop petits, autre style). Pour plus tard : Mythic Monsters I (100 espèces, 7,49 $).
+
+Retour de l'utilisateur : en attente (direction 1 confirmée ?).
