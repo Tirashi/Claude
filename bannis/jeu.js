@@ -87,7 +87,8 @@ function texte(t, x, y, px, c = "#fff", al = "left", opt = {}){
   police(px, opt.titre); let p = px;
   if (opt.max) while (p > 8 && ctx.measureText(t).width > opt.max){ p--; police(p, opt.titre); }
   ctx.textAlign = al; ctx.textBaseline = "alphabetic";
-  if (opt.ombre !== false){ ctx.fillStyle = opt.ombreC || "#1a0e2e"; ctx.fillText(t, x + 2, y + 2); }
+  // contour sombre tout autour (une ombre décalée dédoublait les lettres, retour du 19/11)
+  if (opt.ombre !== false){ ctx.lineJoin = "round"; ctx.lineWidth = opt.titre ? 4 : 3; ctx.strokeStyle = opt.ombreC || "#1a0e2e"; ctx.strokeText(t, x, y); }
   ctx.fillStyle = c; ctx.fillText(t, x, y);
 }
 // texte sur plusieurs lignes ; renvoie la hauteur occupée
@@ -365,7 +366,7 @@ function champPlacement(){
       for (const u of G.unitesPlace){ const cc = R.CASES[u.h.slot]; u.tx = cc[0]; u.ty = cc[1]; } sauverRun(); });
   }
   texte("ARRIERE", 92, 540, 12, "#ffe3a8", "center"); texte("AVANT", 162, 540, 12, "#ffe3a8", "center");
-  if (G.sel < 0) texte("Touche un héros, puis une case", 260, 300, 14, "#fff", "center", {gras: false});
+  if (G.sel < 0) texte("Touche un héros, puis une case", 268, 250, 14, "#fff", "center", {max: 170});
   for (const u of G.unitesPlace){ if (u.tx !== undefined){ u.x += (u.tx - u.x)*.25; u.y += (u.ty - u.y)*.25; }
     if (u.h.leg) aura(u.x, u.y, G.t);
     dessinerHeros(R.classeDe(u.h).spr, "repos", G.t + u.ta, u.x, u.y, 1);
@@ -554,9 +555,10 @@ function ecranButin(dt){
       texte(ok ? (ac ? "porte : " + ac.n : D.SLOTS[o.slot].n + " : rien") : "ne peut pas porter cet objet", 88, y + 44, 12, ok ? (ac ? D.RARETES[ac.rar].c : "#c8e8c8") : "#ffb0a0", "left", {gras: !ac, max: W - 124});
       // stats actuelles et changement
       const L = [["VIE", s0.pv, s1.pv], ["ATQ", s0.atq, s1.atq], ["DEF", s0.def, s1.def], ["CRIT", s0.crit, s1.crit], ["VIT", s0.vit, s1.vit, 2], ["VOL", Math.round(s0.vol*100), Math.round(s1.vol*100)]];
-      L.forEach(([n, a, b, dec], j) => { const x = 88 + (j % 3)*((W - 120)/3), yy = y + 70 + Math.floor(j/3)*24, d = Math.round((b - a)*100)/100;
-        texte(n + " " + (dec ? a.toFixed(dec) : a), x, yy, 13, "#e8f0ff", "left", {gras: false});
-        if (ok && d) texte((d > 0 ? "+" : "") + (dec ? d.toFixed(dec) : d), x + 62, yy, 13, d > 0 ? "#6dff8a" : "#ff7a6a", "left"); });
+      // deux colonnes ; le changement suit la valeur
+      L.forEach(([n, a, b, dec], j) => { const x = 88 + (j % 2)*((W - 120)/2), yy = y + 66 + Math.floor(j/2)*20, d = Math.round((b - a)*100)/100;
+        const t = n + " " + (dec ? a.toFixed(dec) : a); texte(t, x, yy, 13, "#e8f0ff", "left"); police(13); const lw = ctx.measureText(t).width;
+        if (ok && d) texte((d > 0 ? "+" : "") + (dec ? d.toFixed(dec) : d), x + lw + 6, yy, 13, d > 0 ? "#6dff8a" : "#ff7a6a", "left"); });
       ctx.restore();
       if (ok) zone(24, y, W - 48, 122, () => { const ancien = R.equiper(h, o); if (ancien) G.run.or += Math.round(ancien.prix/2); SON.pose(); suiteButin(); });
     });
