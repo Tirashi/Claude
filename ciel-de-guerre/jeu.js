@@ -39,31 +39,32 @@ const sc=new THREE.Scene(),cam=new THREE.PerspectiveCamera(LW>LH?50:62,LW/LH,.5,
 const SOLEIL=new THREE.Vector3(-.45,.2,-1).normalize(),BRUME=new THREE.Color('#f1c6aa'),BN=220,BF=760;
 sc.fog=new THREE.Fog(BRUME,BN,BF);
 // ciel du crépuscule, peint par la carte graphique : dégradé, soleil et halo, traînées de nuages
-const matCiel=new THREE.ShaderMaterial({side:THREE.BackSide,depthWrite:false,fog:false,uniforms:{soleil:{value:SOLEIL},temps:{value:0}},
+const matCiel=new THREE.ShaderMaterial({side:THREE.BackSide,depthWrite:false,fog:false,uniforms:{soleil:{value:SOLEIL},temps:{value:0},cH:{value:new THREE.Color(.56,.46,.70)},cR:{value:new THREE.Color(.92,.60,.64)},cP:{value:new THREE.Color(.98,.76,.60)},cJ:{value:new THREE.Color(1,.88,.62)},cB:{value:new THREE.Color(.945,.776,.667)},cS:{value:new THREE.Color(1,.93,.75)},halo:{value:.55},disque:{value:1},nu1:{value:new THREE.Color(1,.86,.78)},nu2:{value:new THREE.Color(.82,.56,.66)},couv:{value:.52},etoiles:{value:0},eclair:{value:0}},
   vertexShader:'varying vec3 vD;void main(){vD=position;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
   fragmentShader:`float h21(vec2 p){p=fract(p*vec2(123.34,456.21));p+=dot(p,p+45.32);return fract(p.x*p.y);}
 float vn(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(h21(i),h21(i+vec2(1.,0.)),f.x),mix(h21(i+vec2(0.,1.)),h21(i+vec2(1.,1.)),f.x),f.y);}
 float fb(vec2 p){float v=0.,a=.5;for(int i=0;i<5;i++){v+=a*vn(p);p=p*2.03+vec2(1.7,9.2);a*=.5;}return v;}
-  uniform vec3 soleil;uniform float temps;varying vec3 vD;
+  uniform vec3 soleil,cH,cR,cP,cJ,cB,cS,nu1,nu2;uniform float temps,halo,disque,couv,etoiles,eclair;varying vec3 vD;
   void main(){vec3 d=normalize(vD);float y=d.y;
-    vec3 haut=vec3(.56,.46,.70),rose=vec3(.92,.60,.64),peche=vec3(.98,.76,.60),jaune=vec3(1.,.88,.62),brume=vec3(.945,.776,.667);
+    vec3 haut=cH,rose=cR,peche=cP,jaune=cJ,brume=cB;
     vec3 c=y<0.?brume:y<.07?mix(brume,jaune,y/.07):y<.22?mix(jaune,peche,(y-.07)/.15):y<.45?mix(peche,rose,(y-.22)/.23):mix(rose,haut,clamp((y-.45)/.45,0.,1.));
-    float s=dot(d,soleil);c=mix(c,vec3(1.,.93,.75),smoothstep(.95,.995,s)*.55);c=mix(c,vec3(1.,.97,.88),smoothstep(.9975,.9985,s));
-    if(y>.01){vec2 q=d.xz/(y+.12);float n=fb(vec2(q.x*.9+temps*.004,q.y*3.2));float k=smoothstep(.52,.68,n)*smoothstep(.01,.12,y)*(1.-smoothstep(.55,.9,y));
-      vec3 nu=mix(vec3(1.,.86,.78),vec3(.82,.56,.66),clamp(.5-y*1.2+n*.3,0.,1.));c=mix(c,nu,k*.8);}
-    gl_FragColor=vec4(c,1.);}`});
+    if(etoiles>0.&&y>.02){vec2 e=floor(d.xz/(y+.3)*260.);float h=h21(e);c+=vec3(.9,.92,1.)*step(.9965,h)*etoiles*smoothstep(.02,.2,y)*(.6+.4*sin(temps*3.+h*90.));}
+    float s=dot(d,soleil);c=mix(c,cS,smoothstep(.95,.995,s)*halo);c=mix(c,mix(cS,vec3(1.),.5),smoothstep(.9975,.9985,s)*disque);
+    if(y>.01){vec2 q=d.xz/(y+.12);float n=fb(vec2(q.x*.9+temps*.004,q.y*3.2));float k=smoothstep(couv,couv+.16,n)*smoothstep(.01,.12,y)*(1.-smoothstep(.55,.9,y));
+      vec3 nu=mix(nu1,nu2,clamp(.5-y*1.2+n*.3,0.,1.));c=mix(c,nu,k*.8);}
+    c+=vec3(.75,.78,.9)*eclair;gl_FragColor=vec4(c,1.);}`});
 var ciel=new THREE.Mesh(new THREE.SphereGeometry(900,32,24),matCiel);ciel.renderOrder=-1;sc.add(ciel);
 const hemi=new THREE.HemisphereLight('#ffe6d6','#5a4a70',.8);sc.add(hemi);const L=new THREE.DirectionalLight('#ffd6b0',.85);L.position.copy(SOLEIL).multiplyScalar(10).add(new THREE.Vector3(0,6,0));sc.add(L);hemi.layers.enable(AVIONS);L.layers.enable(AVIONS);
 // au-delà des carreaux : la mer profonde
 const mer=new THREE.Mesh(new THREE.PlaneGeometry(4000,4000).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({color:'#2a4f86'}));mer.position.y=-.3;sc.add(mer);
 // relief : la hauteur dans la géométrie ; les couleurs (forêts d'automne, roche, plage, profondeur de l'eau, écume) calculées pixel par pixel
-const matSol=new THREE.ShaderMaterial({uniforms:{soleil:{value:SOLEIL},temps:{value:0},brume:{value:BRUME},bN:{value:BN},bF:{value:BF}},
+const matSol=new THREE.ShaderMaterial({uniforms:{soleil:{value:SOLEIL},temps:{value:0},brume:{value:BRUME},bN:{value:BN},bF:{value:BF},tSol:{value:new THREE.Color(1,1,1)},tEau:{value:new THREE.Color(1,1,1)},desert:{value:0},neige:{value:0}},
   vertexShader:`attribute float hauteur;varying vec3 vP;varying float vH;varying vec3 vN;varying float vDist;
   void main(){vec4 w=modelMatrix*vec4(position,1.);vP=w.xyz;vH=hauteur;vN=normal;vec4 m=viewMatrix*w;vDist=length(m.xyz);gl_Position=projectionMatrix*m;}`,
   fragmentShader:`float h21(vec2 p){vec3 q=fract(vec3(p.xyx)*.1031);q+=dot(q,q.yzx+33.33);return fract((q.x+q.y)*q.z);}/* hasard sans motif qui revient (l'ancien se répétait toutes les 50 cases) */
 float vn(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(h21(i),h21(i+vec2(1.,0.)),f.x),mix(h21(i+vec2(0.,1.)),h21(i+vec2(1.,1.)),f.x),f.y);}
 float fb(vec2 p){float v=0.,a=.5;for(int i=0;i<5;i++){v+=a*vn(p);p=p*2.03+vec2(1.7,9.2);a*=.5;}return v;}
-  uniform vec3 soleil,brume;uniform float temps,bN,bF;varying vec3 vP;varying float vH;varying vec3 vN;varying float vDist;
+  uniform vec3 soleil,brume,tSol,tEau;uniform float temps,bN,bF,desert,neige;varying vec3 vP;varying float vH;varying vec3 vN;varying float vDist;
   void main(){vec3 c;vec3 n=normalize(vN);float li=clamp(dot(n,soleil)*.9+.35,0.,1.2);
     if(vH<.15){float d=max(0.,-vH);
       c=mix(vec3(.36,.78,.76),vec3(.17,.50,.70),smoothstep(0.,2.5,d));c=mix(c,vec3(.12,.25,.50),smoothstep(2.5,11.,d));c=mix(c,vec3(.10,.20,.42),smoothstep(11.,30.,d));
@@ -72,13 +73,15 @@ float fb(vec2 p){float v=0.,a=.5;for(int i=0;i<5;i++){v+=a*vn(p);p=p*2.03+vec2(1
       float ec=1.-smoothstep(0.,1.6,d+(vn(vP.xz*.35+temps*.4)-.5)*1.4);c=mix(c,vec3(.97,.94,.9),ec*.9);
       vec2 q=vec2((w.x+dw.x)*.5-temps*1.4,(w.y+dw.y)*1.4);float cr=vn(q*.55)*.65+vn(q*1.6+5.)*.35;/* moutons : traînées étirées dans le sens du vent, qui avancent et apparaissent par endroits */
       float mo=smoothstep(.66,.74,cr)*smoothstep(.28,.6,fb(w*.008+vec2(temps*.02,3.)))*smoothstep(3.,9.,d);c=mix(c,vec3(.93,.95,1.),mo*.85);
-      float sp=step(.996,h21(floor((w+dw)*1.3)+floor(temps*2.)*7.1))*smoothstep(2.,6.,d)*smoothstep(.45,.7,gr);c=mix(c,vec3(1.,.9,.75),sp*.6);/* reflets du soleil, rares et changeants */
+      float sp=step(.996,h21(floor((w+dw)*1.3)+floor(temps*2.)*7.1))*smoothstep(2.,6.,d)*smoothstep(.45,.7,gr);c=mix(c,vec3(1.,.9,.75),sp*.6);/* reflets du soleil, rares et changeants */c*=tEau;
     }else{float n1=fb(vP.xz*.006),n2=fb(vP.xz*.03+7.),g=h21(floor(vP.xz*1.5)),g2=h21(floor(vP.xz*.6)+5.);
       vec3 vert=vec3(.20,.44,.27),jaune=vec3(.94,.72,.26),orange=vec3(.88,.46,.17),rouge=vec3(.70,.23,.15),olive=vec3(.66,.63,.38),mauve=vec3(.47,.40,.55);
       vec3 b=n1<.40?vert:n1<.47?mix(vert,jaune,(n1-.40)/.07):n1<.55?jaune:n1<.62?mix(jaune,orange,(n1-.55)/.07):n1<.68?orange:rouge;
       b=mix(b,olive,smoothstep(.56,.74,n2)*.65);b*=.8+.34*g;if(g2>.9)b=mix(b,vert*.85,.65);if(g>.96)b=mix(b,vec3(1.,.88,.6),.6);
       float pente=1.-n.y;b=mix(b,mauve*(.82+.3*g),smoothstep(.3,.45,pente));b=mix(b,vec3(.92,.86,.88),smoothstep(34.,46.,vH)*(1.-pente));
-      vec3 sable=vec3(.95,.86,.64)*(.93+.1*g);c=mix(sable,b,smoothstep(.6,2.4,vH+(n2-.5)*1.6));c*=li;}
+      if(desert>0.){vec3 ds=mix(vec3(.94,.77,.50),vec3(.84,.60,.36),smoothstep(.38,.66,n1+(n2-.5)*.3))*(.9+.15*g);ds=mix(ds,vec3(.66,.40,.28)*(.85+.25*g),smoothstep(.25,.45,pente));b=mix(b,ds,desert);}/* désert : dunes, falaises rouges */
+      if(neige>0.){vec3 sn=vec3(.93,.95,1.)*(.92+.1*g);sn=mix(sn,vec3(.50,.52,.60)*(.85+.3*g),smoothstep(.35,.55,pente));if(g2>.93)sn=mix(sn,vec3(.25,.38,.30),.7);b=mix(b,sn,neige);}/* neige : blanc, roche grise sur les pentes, quelques sapins */
+      vec3 sable=mix(vec3(.95,.86,.64),vec3(.86,.88,.93),neige)*(.93+.1*g);c=mix(sable,b,smoothstep(.6,2.4,vH+(n2-.5)*1.6));c*=mix(li,1.05,.5*neige)*tSol;}/* la neige renvoie la lumière : moins d'ombre */
     c=mix(c,brume,smoothstep(bN,bF,vDist));gl_FragColor=vec4(c,1.);}`});
 const T=200,SEG=50;const carreaux=new Map();
 // décor posé sur le relief : arbres (sapins et feuillus d'automne), villages, voiliers ; en instances (un seul dessin par sorte et par carreau)
@@ -97,7 +100,7 @@ function decor(i,j){let s=(i*73856093^j*19349663)>>>0||1;const r=()=>(s=(s*16807
   for(let k=0;k<6;k++){const x=i*T+(r()-.5)*T,z=j*T+(r()-.5)*T,h=H(x,z);if(h>-2.5||h<-14)continue;const rot=r()*6.28,ech=.9+r()*.4;pose('coque',x,0,z,ech,rot);pose('voile',x,0,z,ech,rot,'#fbf4ea');}
   const ims=[];for(const sorte in L){const li=L[sorte];const im=new THREE.InstancedMesh(GEO[sorte],matDecor,li.length);
     li.forEach(([x,y,z,ech,rot,c],k)=>{q.setFromEuler(e.set(0,rot,0));mat.compose(new THREE.Vector3(x,y,z),q,new THREE.Vector3(ech,ech*(sorte==='sapin'?1+((k*37)%10)/14:1),ech));im.setMatrixAt(k,mat);im.setColorAt(k,new THREE.Color(c));});
-    im.instanceMatrix.needsUpdate=true;if(im.instanceColor)im.instanceColor.needsUpdate=true;sc.add(im);ims.push(im);}
+    im.instanceMatrix.needsUpdate=true;if(im.instanceColor)im.instanceColor.needsUpdate=true;im.userData.arbre=sorte==='sapin'||sorte==='feuillu'||sorte==='tronc';im.userData.feuillu=sorte==='feuillu'||sorte==='tronc';im.visible=!(im.userData.arbre&&AMB.sansArbres||im.userData.feuillu&&AMB.sansFeuillus);sc.add(im);ims.push(im);}
   return ims;}
 
 function carreau(i,j){const g=new THREE.PlaneGeometry(T,T,SEG,SEG).rotateX(-Math.PI/2);const p=g.attributes.position,hh=new Float32Array(p.count);
@@ -106,12 +109,45 @@ function carreau(i,j){const g=new THREE.PlaneGeometry(T,T,SEG,SEG).rotateX(-Math
 function majCarreaux(x,z){const ci=Math.round(x/T),cj=Math.round(z/T),vus=new Set();let neuf=0;for(let a=-3;a<=3;a++)for(let b=-3;b<=3;b++){const k=(ci+a)+','+(cj+b);vus.add(k);if(!carreaux.has(k)&&neuf<3){carreaux.set(k,carreau(ci+a,cj+b));neuf++;}}
   for(const[k,m]of carreaux)if(!vus.has(k)){sc.remove(m);m.geometry.dispose();for(const d of m.userData.decor)sc.remove(d);carreaux.delete(k);}}
 // nuages en volume : des grappes de boules low poly, éclairées en 3 tons (rose clair, rose, mauve)
-const matNuage=new THREE.ShaderMaterial({uniforms:{soleil:{value:SOLEIL},brume:{value:BRUME},bN:{value:BN},bF:{value:BF}},
+const matNuage=new THREE.ShaderMaterial({uniforms:{soleil:{value:SOLEIL},brume:{value:BRUME},bN:{value:BN},bF:{value:BF},n1:{value:new THREE.Color(1,.9,.86)},n2:{value:new THREE.Color(.96,.74,.76)},n3:{value:new THREE.Color(.72,.58,.72)}},
   vertexShader:'varying vec3 vN;varying float vDist;void main(){vN=normalize(mat3(modelMatrix)*normal);vec4 m=modelViewMatrix*vec4(position,1.);vDist=length(m.xyz);gl_Position=projectionMatrix*m;}',
-  fragmentShader:'uniform vec3 soleil,brume;uniform float bN,bF;varying vec3 vN;varying float vDist;void main(){float l=dot(normalize(vN),soleil)+.25*normalize(vN).y;vec3 c=l>.35?vec3(1.,.9,.86):l>-.05?vec3(.96,.74,.76):vec3(.72,.58,.72);c=mix(c,brume,smoothstep(bN,bF,vDist)*.9);gl_FragColor=vec4(c,1.);}'});
+  fragmentShader:'uniform vec3 soleil,brume,n1,n2,n3;uniform float bN,bF;varying vec3 vN;varying float vDist;void main(){float l=dot(normalize(vN),soleil)+.25*normalize(vN).y;vec3 c=l>.35?n1:l>-.05?n2:n3;c=mix(c,brume,smoothstep(bN,bF,vDist)*.9);gl_FragColor=vec4(c,1.);}'});
 const nuages=[];{const geo=new THREE.IcosahedronGeometry(1,1);for(let i=0;i<34;i++){const g=new THREE.Group();const n=4+Math.random()*5|0,tl=8+Math.random()*16;
   for(let k=0;k<n;k++){const b=new THREE.Mesh(geo,matNuage);const r=tl*(.45+Math.random()*.45);b.scale.set(r,r*.72,r);b.position.set((Math.random()-.5)*tl*1.8,Math.random()*tl*.25,(Math.random()-.5)*tl*1.2);g.add(b);}
   g.userData={dx:(Math.random()-.5)*1100,dz:(Math.random()-.5)*1100,y:28+Math.random()*80};sc.add(g);nuages.push(g);}}
+// ambiances (session 4, maquette du 19/11) : crépuscule (celle d'origine), nuit, orage, désert, neige ; couleurs du ciel, du sol, de l'eau, des nuages, lumières, brume, météo
+const C3=(r,g,b)=>new THREE.Color(r,g,b);
+const AMBS={
+  crepuscule:{nom:'CREPUSCULE',ciel:[C3(.56,.46,.70),C3(.92,.60,.64),C3(.98,.76,.60),C3(1,.88,.62),C3(.945,.776,.667)],cS:C3(1,.93,.75),halo:.55,disque:1,nu:[C3(1,.86,.78),C3(.82,.56,.66)],couv:.52,
+    nuages:[C3(1,.9,.86),C3(.96,.74,.76),C3(.72,.58,.72)],brume:'#f1c6aa',bN:220,bF:760,hemi:['#ffe6d6','#5a4a70',.8],soleil:['#ffd6b0',.85],tSol:C3(1,1,1),tEau:C3(1,1,1),mer:'#2a4f86',decor:'#ffffff',dir:[-.45,.2,-1]},
+  nuit:{nom:'NUIT',ciel:[C3(.03,.04,.11),C3(.06,.07,.17),C3(.10,.10,.22),C3(.15,.15,.28),C3(.10,.11,.21)],cS:C3(.85,.9,1),halo:.35,disque:1,nu:[C3(.30,.32,.46),C3(.16,.17,.30)],couv:.6,etoiles:1,
+    nuages:[C3(.38,.40,.55),C3(.24,.26,.40),C3(.14,.15,.27)],brume:'#1a1c36',bN:160,bF:620,hemi:['#6a7ab0','#14142a',.6],soleil:['#a8bcff',.5],tSol:C3(.28,.32,.52),tEau:C3(.2,.24,.42),mer:'#0e1a36',decor:'#4e5a80',dir:[.35,.38,-1]},
+  orage:{nom:'ORAGE',ciel:[C3(.20,.22,.27),C3(.28,.30,.35),C3(.36,.37,.41),C3(.42,.42,.45),C3(.40,.41,.44)],cS:C3(.7,.72,.75),halo:0,disque:0,nu:[C3(.50,.51,.55),C3(.26,.27,.32)],couv:.34,
+    nuages:[C3(.56,.57,.62),C3(.40,.41,.47),C3(.26,.27,.33)],brume:'#666a72',bN:110,bF:520,hemi:['#a8adb8','#2a2c34',.75],soleil:['#c8ccd6',.4],tSol:C3(.62,.66,.72),tEau:C3(.55,.6,.66),mer:'#1e2e44',decor:'#8a9098',dir:[-.3,.5,-1],pluie:1,eclairs:1},
+  desert:{nom:'DESERT',ciel:[C3(.32,.55,.86),C3(.55,.72,.90),C3(.86,.84,.78),C3(1,.92,.74),C3(.96,.86,.70)],cS:C3(1,.97,.85),halo:.5,disque:1,nu:[C3(1,.97,.92),C3(.92,.85,.78)],couv:.66,
+    nuages:[C3(1,.98,.94),C3(.94,.88,.80),C3(.80,.72,.66)],brume:'#f2dcb4',bN:240,bF:820,hemi:['#fff2dc','#8a6a4a',.85],soleil:['#fff0d0',.9],tSol:C3(1.04,1,.96),tEau:C3(.95,1.08,1.06),mer:'#2a6a96',decor:'#ffffff',dir:[.2,.55,-1],desert:1,sansArbres:1},
+  neige:{nom:'NEIGE',ciel:[C3(.48,.60,.80),C3(.68,.76,.88),C3(.82,.86,.93),C3(.92,.93,.96),C3(.86,.88,.93)],cS:C3(1,.98,.94),halo:.35,disque:1,nu:[C3(.97,.98,1),C3(.80,.84,.92)],couv:.48,
+    nuages:[C3(.98,.99,1),C3(.84,.87,.94),C3(.66,.70,.80)],brume:'#dfe4ee',bN:150,bF:620,hemi:['#eef2ff','#6a7088',.85],soleil:['#fff6ea',.7],tSol:C3(.98,1,1.04),tEau:C3(.62,.72,.84),mer:'#2a4462',decor:'#a8bcc8',dir:[-.4,.25,-1],neige:1,flocons:1,sansFeuillus:1}};
+let AMB=AMBS.crepuscule;
+function ambiance(k){const A=AMBS[k]||AMBS.crepuscule;AMB=A;const u=matCiel.uniforms;[u.cH,u.cR,u.cP,u.cJ,u.cB].forEach((x,i)=>x.value.copy(A.ciel[i]));u.cS.value.copy(A.cS);u.halo.value=A.halo;u.disque.value=A.disque;u.nu1.value.copy(A.nu[0]);u.nu2.value.copy(A.nu[1]);u.couv.value=A.couv;u.etoiles.value=A.etoiles||0;
+  SOLEIL.set(...A.dir).normalize();L.position.copy(SOLEIL).multiplyScalar(10).add(new THREE.Vector3(0,6,0));
+  BRUME.set(A.brume);sc.fog.color.copy(BRUME);sc.fog.near=A.bN;sc.fog.far=A.bF;for(const m of[matSol,matNuage]){m.uniforms.bN.value=A.bN;m.uniforms.bF.value=A.bF;}
+  hemi.color.set(A.hemi[0]);hemi.groundColor.set(A.hemi[1]);hemi.intensity=A.hemi[2];L.color.set(A.soleil[0]);L.intensity=A.soleil[1];A.lum=A.soleil[1];
+  const s=matSol.uniforms;s.tSol.value.copy(A.tSol);s.tEau.value.copy(A.tEau);s.desert.value=A.desert||0;s.neige.value=A.neige||0;mer.material.color.set(A.mer);matDecor.color.set(A.decor);
+  const n=matNuage.uniforms;n.n1.value.copy(A.nuages[0]);n.n2.value.copy(A.nuages[1]);n.n3.value.copy(A.nuages[2]);
+  for(const[,m]of carreaux)for(const d of m.userData.decor)if(d.userData.arbre)d.visible=!(A.sansArbres||d.userData.feuillu&&A.sansFeuillus);
+  PLUIE.visible=!!A.pluie;FLOCONS.visible=!!A.flocons;}
+// pluie (traits) et neige (points) : une boîte de particules qui suit la caméra
+const PLUIE=(()=>{const n=900,p=new Float32Array(n*6);for(let i=0;i<n;i++){const x=(Math.random()-.5)*160,y=(Math.random()-.5)*100,z=(Math.random()-.5)*160;p.set([x,y,z,x-.4,y-3.2,z],i*6);}
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(p,3));const l=new THREE.LineSegments(g,new THREE.LineBasicMaterial({color:'#b8c4d4',transparent:true,opacity:.55,fog:false}));l.visible=false;l.frustumCulled=false;sc.add(l);return l;})();
+const FLOCONS=(()=>{const n=1100,p=new Float32Array(n*3);for(let i=0;i<n;i++)p.set([(Math.random()-.5)*160,(Math.random()-.5)*100,(Math.random()-.5)*160],i*3);
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(p,3));const m=new THREE.Points(g,new THREE.PointsMaterial({color:'#ffffff',size:2,sizeAttenuation:false,fog:false}));m.visible=false;m.frustumCulled=false;sc.add(m);return m;})();
+function meteo(dt){const P=AMB.pluie?PLUIE:AMB.flocons?FLOCONS:null;
+  if(P){P.position.set(Math.round(cam.position.x/160)*160,cam.position.y,Math.round(cam.position.z/160)*160);P.userData.t=((P.userData.t||0)+dt*(AMB.pluie?90:9))%100;P.position.y-=P.userData.t-50;
+    if(AMB.flocons)P.position.x+=Math.sin(S.t*.5)*4;}
+  if(AMB.eclairs){AMB.ecT=(AMB.ecT??4)-dt;if(AMB.ecT<=0){AMB.ecT=5+Math.random()*9;AMB.ec=1;const d=.5+Math.random()*.45;setTimeout(()=>window.CDGSons&&CDGSons.jouer('boomGros',.5*(1.2-d),d),400+d*1600);}/* l'éclair, puis le tonnerre (la grosse explosion étouffée) */
+    AMB.ec=Math.max(0,(AMB.ec||0)-dt*3.2);const f=AMB.ec>.6||(AMB.ec>.2&&AMB.ec<.35)?AMB.ec:0;matCiel.uniforms.eclair.value=f*.8;L.intensity=AMB.lum+f*2.2;}
+  else matCiel.uniforms.eclair.value=0;}
 // avions low poly construits dans le code : chacun renvoie {g, tuy (tuyères), env (demi-envergure), helice}
 const MATS={};const M=col=>MATS[col]||(MATS[col]=new THREE.MeshLambertMaterial({color:col,flatShading:true,side:THREE.DoubleSide}));
 const V2=(x,y)=>new THREE.Vector2(x,y);
@@ -385,7 +421,7 @@ function changerAvion(){choisir((choix+1)%NOMS.length);}
 document.getElementById('charge').remove();
 // pilotage
 const S={cx:0,cy:0,mode:'titre',vies:3,dx:0,dy:0,blindage:100,p:new THREE.Vector3(0,40,0),yaw:0,pitch:0,bank:0,roll:0,rollT:-1,loopT:-1,v:46,boost:0,auto:true,doigt:null,dernier:0,vue:0,tir:false,munB:300,munM:5,t:0,score:0};
-S.munM=FAM().mis;const Q=new THREE.Quaternion(),E=new THREE.Euler(0,0,0,'YXZ');window.CielDeGuerre={S,get ailiers(){return AILIERS;},outils:{construire,chargerModele,COULEURS,NOMS,texRepeinte},get ennemis(){return ennemis;},FLOTTE,nouvellePartie:d=>nouvellePartie(typeof d==='number'?MISSIONS[d]:d||null),get mission(){return MIS;},get missions(){return MISSIONS;},finMission:g=>finMission(g),abattre:e=>abattre(e),get epaves(){return EPAVES.length;},abattu:()=>abattu(),pause:()=>pause(),reprendre:()=>reprendre(),get mode(){return S.mode;},get vague(){return V.n;}};/* pour les tests */
+S.munM=FAM().mis;const Q=new THREE.Quaternion(),E=new THREE.Euler(0,0,0,'YXZ');window.CielDeGuerre={S,ambiance,AMBS,get ailiers(){return AILIERS;},outils:{construire,chargerModele,COULEURS,NOMS,texRepeinte},get ennemis(){return ennemis;},FLOTTE,nouvellePartie:d=>nouvellePartie(typeof d==='number'?MISSIONS[d]:d||null),get mission(){return MIS;},get missions(){return MISSIONS;},finMission:g=>finMission(g),abattre:e=>abattre(e),get epaves(){return EPAVES.length;},abattu:()=>abattu(),pause:()=>pause(),reprendre:()=>reprendre(),get mode(){return S.mode;},get vague(){return V.n;}};/* pour les tests */
 // visée : au doigt et au clavier, droit devant ; à la souris, là où est le curseur (le rayon de la caméra à travers lui),
 // ramené dans un cône de 35° autour du nez : le réticule est sous le curseur, les balles partent vers lui
 const CONE=.6;function visee(fwd){if(!S.souris||S.auto||S.mode!=='jeu'||S.loopT>=0||S.demiT>=0){S.horsCone=false;return fwd;}
@@ -534,7 +570,7 @@ function image(m){const brut=(m-av)/1000,dt=Math.min(.05,brut);av=m;
   V.flash-=dt;el.style.boxShadow=V.flash>0?'inset 0 0 0 6px rgba(226,104,46,.85)':'none';
   // nuages
   for(const n of nuages){const u=n.userData;let x=u.dx,z=u.dz;x=((x-S.p.x)%1100+1650)%1100-550+S.p.x;z=((z-S.p.z)%1100+1650)%1100-550+S.p.z;n.position.set(x,u.y,z);}
-  flotte(dt);if(MIS&&S.mode==='jeu')majMission(dt);
+  flotte(dt);meteo(dt);if(MIS&&S.mode==='jeu')majMission(dt);
   matSol.uniforms.temps.value=S.t;matCiel.uniforms.temps.value=S.t;
   majCarreaux(S.p.x,S.p.z);mer.position.x=S.p.x;mer.position.z=S.p.z;
   // caméra derrière l'avion
