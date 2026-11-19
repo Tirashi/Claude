@@ -468,7 +468,7 @@ Combat aérien en 3D low poly au-dessus d'un archipel, au crépuscule, au milieu
 - **La bataille** : les grands vaisseaux bleus et rouges se canonnent ; les tourelles rouges tirent aussi sur toi, et se détruisent (un vaisseau sans tourelles tombe en flammes).
 - **Les ailiers** : des chasseurs bleus volent en formation avec toi et attaquent les rouges qui approchent.
 - **Le hangar** : 35 chasseurs en 4 familles (intercepteurs, polyvalents, lourds, furtifs), chacune avec sa vitesse, son virage, son blindage et ses missiles.
-- Au téléphone : un joystick sous le pouce et des boutons ronds ; au PC : la souris dirige l'appareil, clic gauche pour le feu, clic droit pour les missiles. Explosions et réacteur enregistrés, musique synthétisée, secousses, épaves qui tombent en fumée, jauge d'énergie du boost. À venir : d'autres décors (nuit, orage, désert, neige).
+- Au téléphone : un joystick sous le pouce et des boutons ronds ; au PC : la souris dirige l'appareil, clic gauche pour le feu, clic droit pour les missiles. Explosions et réacteur enregistrés, musique synthétisée, secousses, épaves qui tombent en fumée, jauge d'énergie du boost. - **Les décors** : crépuscule, nuit étoilée, orage (pluie, éclairs), désert, neige ; chaque mission a le sien, et le temps change toutes les 5 vagues. La nuit et sous l'orage, les appareils allument leurs feux de position.
 
 ## Les classiques passés en 16 bits
 

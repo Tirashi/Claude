@@ -121,9 +121,9 @@ const AMBS={
   crepuscule:{nom:'CREPUSCULE',ciel:[C3(.56,.46,.70),C3(.92,.60,.64),C3(.98,.76,.60),C3(1,.88,.62),C3(.945,.776,.667)],cS:C3(1,.93,.75),halo:.55,disque:1,nu:[C3(1,.86,.78),C3(.82,.56,.66)],couv:.52,
     nuages:[C3(1,.9,.86),C3(.96,.74,.76),C3(.72,.58,.72)],brume:'#f1c6aa',bN:220,bF:760,hemi:['#ffe6d6','#5a4a70',.8],soleil:['#ffd6b0',.85],tSol:C3(1,1,1),tEau:C3(1,1,1),mer:'#2a4f86',decor:'#ffffff',dir:[-.45,.2,-1]},
   nuit:{nom:'NUIT',ciel:[C3(.03,.04,.11),C3(.06,.07,.17),C3(.10,.10,.22),C3(.15,.15,.28),C3(.10,.11,.21)],cS:C3(.85,.9,1),halo:.35,disque:1,nu:[C3(.30,.32,.46),C3(.16,.17,.30)],couv:.6,etoiles:1,
-    nuages:[C3(.38,.40,.55),C3(.24,.26,.40),C3(.14,.15,.27)],brume:'#1a1c36',bN:160,bF:620,hemi:['#6a7ab0','#14142a',.6],soleil:['#a8bcff',.5],tSol:C3(.28,.32,.52),tEau:C3(.2,.24,.42),mer:'#0e1a36',decor:'#4e5a80',dir:[.35,.38,-1]},
+    nuages:[C3(.38,.40,.55),C3(.24,.26,.40),C3(.14,.15,.27)],brume:'#1a1c36',bN:160,bF:620,hemi:['#6a7ab0','#14142a',.6],soleil:['#a8bcff',.5],tSol:C3(.28,.32,.52),tEau:C3(.2,.24,.42),mer:'#0e1a36',decor:'#4e5a80',dir:[.35,.38,-1],feux:1},
   orage:{nom:'ORAGE',ciel:[C3(.20,.22,.27),C3(.28,.30,.35),C3(.36,.37,.41),C3(.42,.42,.45),C3(.40,.41,.44)],cS:C3(.7,.72,.75),halo:0,disque:0,nu:[C3(.50,.51,.55),C3(.26,.27,.32)],couv:.34,
-    nuages:[C3(.56,.57,.62),C3(.40,.41,.47),C3(.26,.27,.33)],brume:'#666a72',bN:110,bF:520,hemi:['#a8adb8','#2a2c34',.75],soleil:['#c8ccd6',.4],tSol:C3(.62,.66,.72),tEau:C3(.55,.6,.66),mer:'#1e2e44',decor:'#8a9098',dir:[-.3,.5,-1],pluie:1,eclairs:1},
+    nuages:[C3(.56,.57,.62),C3(.40,.41,.47),C3(.26,.27,.33)],brume:'#666a72',bN:110,bF:520,hemi:['#a8adb8','#2a2c34',.75],soleil:['#c8ccd6',.4],tSol:C3(.62,.66,.72),tEau:C3(.55,.6,.66),mer:'#1e2e44',decor:'#8a9098',dir:[-.3,.5,-1],pluie:1,eclairs:1,feux:1},
   desert:{nom:'DESERT',ciel:[C3(.32,.55,.86),C3(.55,.72,.90),C3(.86,.84,.78),C3(1,.92,.74),C3(.96,.86,.70)],cS:C3(1,.97,.85),halo:.5,disque:1,nu:[C3(1,.97,.92),C3(.92,.85,.78)],couv:.66,
     nuages:[C3(1,.98,.94),C3(.94,.88,.80),C3(.80,.72,.66)],brume:'#f2dcb4',bN:240,bF:820,hemi:['#fff2dc','#8a6a4a',.85],soleil:['#fff0d0',.9],tSol:C3(1.04,1,.96),tEau:C3(.95,1.08,1.06),mer:'#2a6a96',decor:'#ffffff',dir:[.2,.55,-1],desert:1,sansArbres:1},
   neige:{nom:'NEIGE',ciel:[C3(.48,.60,.80),C3(.68,.76,.88),C3(.82,.86,.93),C3(.92,.93,.96),C3(.86,.88,.93)],cS:C3(1,.98,.94),halo:.35,disque:1,nu:[C3(.97,.98,1),C3(.80,.84,.92)],couv:.48,
@@ -251,7 +251,17 @@ function flamme(s,camp='b',add=false){const T=TEINTES[camp],f=new THREE.Group();
   for(const[col,r,l,op]of[[T[0],1,4.6,.42],[T[1],.66,3,.62],[T[2],.38,1.6,.92]]){const m=new THREE.Mesh(GEO_FL,matFl(col,op,add));m.scale.set(r*s,r*s,l*s);m.renderOrder=5;f.add(m);}
   const p=new THREE.Mesh(GEO_PT,matFl(T[3],.9,add));p.scale.setScalar(.6*s);p.renderOrder=5;f.add(p);return f;}
 function animeFlammes(fl,boost){for(const f of fl){const k=(boost?1.8:1)*(.82+Math.random()*.36);f.scale.set(1+(boost?.15:0),1+(boost?.15:0),k);}}
-function construire(c,flammes,camp='b'){if(c.m==='import'){const r=importe(c.cle+(c.repeint?'_'+camp:''),c.rot,c.taille||6.4);r.tuy=c.helice?[]:r.tuyeres(c.tuy,c.coupe);r.flammes=[];
+// feux de position (19/11) : rouge au bout de l'aile gauche, vert à droite, et un flash blanc qui clignote ; seulement quand il fait sombre (AMB.feux).
+// Matériaux partagés : on les allume, les éteint et les fait clignoter tous ensemble (majFeux), sans liste d'appareils.
+const MAT_FEUX={r:new THREE.MeshBasicMaterial({color:'#ff3a3a',transparent:true,opacity:.95,depthWrite:false,fog:false}),v:new THREE.MeshBasicMaterial({color:'#3aff7a',transparent:true,opacity:.95,depthWrite:false,fog:false}),
+  f:new THREE.MeshBasicMaterial({color:'#ffffff',transparent:true,opacity:1,depthWrite:false,fog:false}),hr:new THREE.MeshBasicMaterial({color:'#ff3a3a',transparent:true,opacity:.3,depthWrite:false,fog:false}),hv:new THREE.MeshBasicMaterial({color:'#3aff7a',transparent:true,opacity:.3,depthWrite:false,fog:false})};
+for(const m of Object.values(MAT_FEUX))m.visible=false;
+const GEO_FEU=new THREE.BoxGeometry(1,1,1);
+function feuxNav(r){if(!r.bouts)return;const s=Math.max(.22,(r.larg||6)*.04);
+  r.bouts.forEach((b,k)=>{const cote=b[0]<0?'r':'v';for(const[mat,e]of[[MAT_FEUX[cote],s],[MAT_FEUX['h'+cote],s*2.4],[MAT_FEUX.f,s*1.5]]){const m=new THREE.Mesh(GEO_FEU,mat);m.scale.setScalar(e);m.position.set(b[0],b[1],b[2]);m.renderOrder=6;r.g.add(m);}});}
+function majFeux(){const on=!!AMB.feux;for(const m of Object.values(MAT_FEUX))m.visible=on;if(!on)return;const t=(S.t||0)%1.3;MAT_FEUX.f.visible=t<.06||(t>.16&&t<.22);/* double flash toutes les 1,3 s */
+  const p=.8+.2*Math.sin((S.t||0)*6);MAT_FEUX.hr.opacity=MAT_FEUX.hv.opacity=.3*p;}
+function construire(c,flammes,camp='b'){if(c.m==='import'){const r=importe(c.cle+(c.repeint?'_'+camp:''),c.rot,c.taille||6.4);feuxNav(r);r.tuy=c.helice?[]:r.tuyeres(c.tuy,c.coupe);r.flammes=[];
     if(flammes){const s=Math.max(.26,Math.min(.6,r.larg*.05/Math.sqrt(Math.max(1,r.tuy.length/2))));for(const t of r.tuy){const f=flamme(s,camp);f.position.set(t[0],t[1],t[2]-s*.3);r.g.add(f);r.flammes.push(f);}}
     return r;}
   const r=MODELES3D[c.m](c);r.flammes=[];if(flammes)for(const t of r.tuy){const f=flamme(.36,camp);f.position.set(t[0],t[1],t[2]-.1);r.g.add(f);r.flammes.push(f);}return r;}
@@ -478,7 +488,8 @@ const V={n:0,pause:4,flash:0};const annonce=(h,ms=2600)=>{if(S.mode==='jeu')wind
 const MOTIFS=[{nom:'DE FACE',ang:[0]},{nom:'PAR DERRIERE !',ang:[Math.PI]},{nom:'SUR LES FLANCS',ang:[Math.PI/2,-Math.PI/2]},
   {nom:'PAR LE DESSUS',ang:[.35,-.35],dy:70},{nom:'ENCERCLES !',ang:[0,Math.PI*2/3,-Math.PI*2/3]},{nom:'EN DEUX TEMPS',ang:[0,Math.PI],decale:6}];
 V.file=[];
-function vague(){V.n++;const nb=Math.min(12,1+V.n*2);const m=V.n===1?MOTIFS[0]:V.n===2?MOTIFS[2]:MOTIFS[Math.random()*MOTIFS.length|0];const G=m.ang.length;
+const CYCLE_AMB=['crepuscule','desert','nuit','neige','orage'];
+function vague(){V.n++;if(V.n>1&&(V.n-1)%5===0){const a=CYCLE_AMB[((V.n-1)/5)%CYCLE_AMB.length];ambiance(a);annonce(`VAGUE ${V.n}<b>${AMBS[a].nom}</b>Le temps change.`,2600);}/* vagues sans fin : une autre ambiance toutes les 5 vagues */const nb=Math.min(12,1+V.n*2);const m=V.n===1?MOTIFS[0]:V.n===2?MOTIFS[2]:MOTIFS[Math.random()*MOTIFS.length|0];const G=m.ang.length;
   for(let g=0;g<G;g++){const a=S.yaw+m.ang[g]+(Math.random()-.5)*.5;const dir=new THREE.Vector3(-Math.sin(a),0,-Math.cos(a));const cote=new THREE.Vector3(-dir.z,0,dir.x);
     const tete=S.p.clone().addScaledVector(dir,270);tete.y=Math.max(28,S.p.y+(m.dy||0)+(Math.random()-.5)*20);const n=Math.ceil(nb/G)-(g===G-1?Math.ceil(nb/G)*G-nb:0);
     const forme=['V','ligne','disperse'][Math.random()*3|0];const vers=S.p.clone().sub(tete).normalize();
@@ -570,7 +581,7 @@ function image(m){const brut=(m-av)/1000,dt=Math.min(.05,brut);av=m;
   V.flash-=dt;el.style.boxShadow=V.flash>0?'inset 0 0 0 6px rgba(226,104,46,.85)':'none';
   // nuages
   for(const n of nuages){const u=n.userData;let x=u.dx,z=u.dz;x=((x-S.p.x)%1100+1650)%1100-550+S.p.x;z=((z-S.p.z)%1100+1650)%1100-550+S.p.z;n.position.set(x,u.y,z);}
-  flotte(dt);meteo(dt);if(MIS&&S.mode==='jeu')majMission(dt);
+  flotte(dt);meteo(dt);majFeux();if(MIS&&S.mode==='jeu')majMission(dt);
   matSol.uniforms.temps.value=S.t;matCiel.uniforms.temps.value=S.t;
   majCarreaux(S.p.x,S.p.z);mer.position.x=S.p.x;mer.position.z=S.p.z;
   // caméra derrière l'avion
@@ -664,7 +675,7 @@ function cibleSol(type,x,z){const h=Math.max(.5,H(x,z)),g=new THREE.Group();g.po
 // une cible détruite : grosse explosion, carcasse noircie qui fume
 function cibleDetruite(t){t.mort=1;boom(t.g.position,30);fumee(t.g.position,8);t.m.traverse(o=>{if(o.isMesh)o.material=M('#2a2428');});if(t.tour)t.tour.visible=false;t.m.scale.y=.45;S.score+=400;}
 const MISSIONS=[
- {id:'cote',nom:'LA COTE',titre:'DEFENDRE LE PORT',brief:'Trois vagues de bombardiers rouges arrivent de la mer vers le port. Abats-les avant qu’ils ne rasent la ville. Le destroyer bleu Héron tourne au-dessus du port : ses tourelles t’aident.',sansRouges:1,ailiers:{n:3,fam:'inter'},
+ {id:'cote',amb:'crepuscule',nom:'LA COTE',titre:'DEFENDRE LE PORT',brief:'Trois vagues de bombardiers rouges arrivent de la mer vers le port. Abats-les avant qu’ils ne rasent la ville. Le destroyer bleu Héron tourne au-dessus du port : ses tourelles t’aident.',sansRouges:1,ailiers:{n:3,fam:'inter'},
   debut(M){const c=trouverCote();M.c=c;M.g=batirVille(c);M.ville=objectif('PORT',new THREE.Vector3(c.x,c.h+6,c.z),55,100);M.ville.deg=.9;S.degJ=.6;/* première mission : plus douce (18/11) */
     const a=c.mer;S.p.set(c.x+Math.cos(a)*160,55,c.z+Math.sin(a)*160);S.yaw=Math.atan2(Math.cos(a),Math.sin(a))+Math.PI;/* au-dessus de la mer, face au large */
     M.vagues=[[6,3,1,0,0],[50,3,2,0,0],[100,3,3,1,1]];M.n=0;
@@ -676,7 +687,7 @@ const MISSIONS=[
     if(M.ville.vie<60&&Math.random()<dt*3)fumee(M.ville.pos.clone().add(new THREE.Vector3((Math.random()-.5)*50,-4,(Math.random()-.5)*50)),1);
     if(M.ville.vie<=0)return'perdu';if(M.n>=M.vagues.length&&!ennemis.length&&!V.file.length)return'gagne';},
   etat:M=>({txt:'PROTEGE LE PORT',v:M.ville.vie/100,info:`PORT ${Math.max(0,Math.round(M.ville.vie))} % · VAGUE ${M.n} / 3`}),buts:['Abats les bombardiers rouges (les grosses corvettes) avant qu’ils n’atteignent le port.','Le destroyer bleu qui tourne au-dessus du port tire sur les rouges : reste près de lui.','Trois intercepteurs bleus volent avec toi et attaquent les rouges.','Trois vagues arrivent de la mer. Leurs chasseurs d’escorte s’en prennent à toi.','Le port est encadré en bleu ; sa jauge est en haut de l’écran.'],et:['port intact à 50 % ou plus','port intact à 80 %, sans perdre d’appareil'],etoiles:M=>ETOILES(M,M.ville.vie>=50,M.ville.vie>=80&&S.vies===3),fin(M){sc.remove(M.g);retirerNavire(M.allie);}},
- {id:'escorte',nom:"L'ESCORTE",titre:'PROTEGER LE DESTROYER',brief:'Le destroyer bleu Albatros traverse l’archipel. Reste près de lui : les chasseurs rouges vont tout tenter pour le couler.',
+ {id:'escorte',amb:'desert',nom:"L'ESCORTE",titre:'PROTEGER LE DESTROYER',brief:'Le destroyer bleu Albatros traverse l’archipel. Reste près de lui : les chasseurs rouges vont tout tenter pour le couler.',
   debut(M){const d=new THREE.Vector3(-Math.sin(S.yaw),0,-Math.cos(S.yaw));M.dir=d;M.n0=navire('fga_destroyer2',0,110,{fixe:1,yaw:S.yaw,v:0,base:S.p.clone().addScaledVector(d,90).add(new THREE.Vector3(-d.z*50,0,d.x*50))});
     M.n0.base.y=80;M.trajet=1500;M.parcouru=0;M.dest=M.n0.base.clone().addScaledVector(d,M.trajet);M.bal=balise(M.dest);M.ob=objectif('ALBATROS',new THREE.Vector3(),45,100);M.ob.deg=.8;OBJ.push({nom:'ARRIVEE',pos:M.dest.clone().setY(120)});M.prochaine=6;M.k=0;},
   maj(M,dt){M.t+=dt;const n=M.n0;const v=14;M.parcouru+=v*dt;n.base.addScaledVector(M.dir,v*dt);M.ob.pos.copy(n.g.position);
@@ -685,7 +696,7 @@ const MISSIONS=[
     if(M.ob.vie<=0){if(!n.chute){n.chute=.01;for(const t of n.tourelles)t.mort=1;}return M.t>(M.coule=M.coule||M.t+2.5)?'perdu':null;}
     if(M.parcouru>=M.trajet)return'gagne';},
   etat:M=>({txt:'ESCORTE L’ALBATROS JUSQU’A LA BALISE',v:M.ob.vie/100,info:`ALBATROS ${Math.max(0,Math.round(M.ob.vie))} % · ARRIVEE DANS ${Math.max(0,Math.round((M.trajet-M.parcouru)/14))} S`}),buts:['Reste près du destroyer bleu Albatros : il avance seul vers la balise de lumière.','Abats les chasseurs et les bombardiers qui l’attaquent.','S’il est coulé, la mission échoue.'],et:['Albatros intact à 50 % ou plus','Albatros intact à 80 %, sans perdre d’appareil'],etoiles:M=>ETOILES(M,M.ob.vie>=50,M.ob.vie>=80&&S.vies===3),fin(M){retirerNavire(M.n0);sc.remove(M.bal);}},
- {id:'raid',nom:'LE RAID',titre:'DETRUIRE LA BASE ROUGE',brief:'Les rouges ont installé une base sur une île : trois batteries antiaériennes, deux dépôts et un radar. Rase-la ; attention aux tirs de la DCA.',
+ {id:'raid',amb:'nuit',nom:'LE RAID',titre:'DETRUIRE LA BASE ROUGE',brief:'Les rouges ont installé une base sur une île : trois batteries antiaériennes, deux dépôts et un radar. Rase-la ; attention aux tirs de la DCA.',
   debut(M){const b=trouverBase();M.b=b;M.cibles=[];const pl=[['batterie',-38,-20],['batterie',36,-26],['batterie',2,40],['depot',-14,8],['depot',18,10],['radar',0,-36]];
     for(const[ty,dx,dz]of pl){let x=b.x+dx,z=b.z+dz;if(H(x,z)<1.5){x=b.x+dx*.5;z=b.z+dz*.5;}M.cibles.push(cibleSol(ty,x,z));}
     M.ob={nom:'BASE',pos:new THREE.Vector3(b.x,b.h+20,b.z)};OBJ.push(M.ob);M.prochaine=25;M.k=0;},
@@ -702,19 +713,19 @@ const MISSIONS=[
   etat:M=>{const n=M.cibles.length,r=M.reste??n,dca=M.cibles.filter(t=>t.type==='batterie'&&!t.mort).length;return{txt:'DETRUIS LA BASE ROUGE',v:r/n,genre:'detruire',info:`${r} CIBLE${r>1?'S':''} · DCA ${dca}${ennemis.length?' · '+ennemis.length+' CHASSEUR'+(ennemis.length>1?'S':''):''}`};},
   buts:['Détruis les 6 cibles au sol : 3 batteries de DCA, 2 dépôts, 1 radar (canon ou missiles).','Les batteries tirent quand tu passes à moins de 230 m : attaque-les en piqué, puis remonte.','Des patrouilles de chasseurs viennent défendre la base.'],
   et:['en moins de 3 minutes','en moins de 3 minutes, sans perdre d’appareil'],etoiles:M=>ETOILES(M,M.t<180,M.t<180&&S.vies===3),fin(M){for(const t of M.cibles)sc.remove(t.m);}},
- {id:'survie',nom:'LA SURVIE',titre:'TENIR 3 MINUTES',brief:'Tu es seul au milieu de l’escadre rouge. Tiens bon trois minutes, jusqu’aux renforts.',
+ {id:'survie',amb:'orage',nom:'LA SURVIE',titre:'TENIR 3 MINUTES',brief:'Tu es seul au milieu de l’escadre rouge. Tiens bon trois minutes, jusqu’aux renforts.',
   debut(M){M.prochaine=4;M.k=0;},
   maj(M,dt){M.t+=dt;if(M.t>=M.prochaine&&M.t<170){M.k++;M.prochaine+=Math.max(11,19-M.k);const f=['poly','inter','lourd','furtif'];
       escadre(Math.min(6,2+(M.k>>1)),{a:S.yaw+(Math.random()-.5)*4,dist:300,opt:k=>({fam:f[(M.k+k)%Math.min(4,1+(M.k>>1))],as:M.k>5&&k===0})});if(M.k>=4&&M.k%3===1)escadre(2,{a:Math.random()*6.28,dist:340,t:1,opt:{bomb:1,escorte:M.k>6}});}
     if(M.t>=180)return'gagne';},
   etat:M=>({txt:'TIENS JUSQU’AUX RENFORTS',v:Math.max(0,180-M.t)/180,genre:'temps',info:`ENCORE ${temps(Math.max(0,180-M.t))} · ${ennemis.length} ENNEMI${ennemis.length>1?'S':''}`}),buts:['Survis trois minutes : les escadres arrivent de plus en plus vite.','Pas besoin de tout abattre : il suffit de tenir.','Le tonneau esquive les tirs ; le looping sème les poursuivants.'],et:['au plus un appareil perdu','aucun appareil perdu'],etoiles:M=>ETOILES(M,S.vies>=2,S.vies===3),fin(){}},
- {id:'amiral',nom:"L'AMIRAL",titre:'ABATTRE LE CROISEUR AMIRAL',brief:'Le croiseur amiral rouge Tempête escorte la flotte ennemie. Détruis ses six tourelles : il tombera.',
+ {id:'amiral',amb:'neige',nom:"L'AMIRAL",titre:'ABATTRE LE CROISEUR AMIRAL',brief:'Le croiseur amiral rouge Tempête escorte la flotte ennemie. Détruis ses six tourelles : il tombera.',
   debut(M){const d=new THREE.Vector3(-Math.sin(S.yaw),0,-Math.cos(S.yaw));M.n0=navire('fga_destroyer3',1,170,{fixe:1,vieT:10,yaw:S.yaw+Math.PI*.8,v:4,base:S.p.clone().addScaledVector(d,430)});M.n0.base.y=95;
     M.ob={nom:'TEMPETE',pos:new THREE.Vector3()};OBJ.push(M.ob);M.prochaine=10;M.k=0;},
   maj(M,dt){M.t+=dt;M.ob.pos.copy(M.n0.g.position);if(M.t>=M.prochaine&&!M.n0.chute){M.k++;M.prochaine+=26;escadre(Math.min(5,2+M.k),{centre:M.n0.g.position,a:Math.random()*6.28,dist:200,opt:k=>({fam:k%2?'lourd':'poly'})});annonce(`RENFORTS<b>CHASSEURS</b>Le croiseur appelle son escorte.`);}
     if(M.n0.chute>3||M.n0.coule)return'gagne';},
   etat:M=>{const r=M.n0.tourelles.filter(t=>!t.mort).length,n=M.n0.tourelles.length;return{txt:`DETRUIS LES ${n} TOURELLES DU CROISEUR`,v:r/n,genre:'detruire',info:`${r} TOURELLE${r>1?'S':''} RESTANTE${r>1?'S':''} · ${temps(M.t)}`};},buts:['Le croiseur Tempête est encadré en bleu. Ses tourelles (les canons sur la coque) tirent sur toi.','Vise chaque tourelle au canon, ou verrouille-la et tire un missile.','Quand les six sont détruites, il tombe.'],et:['au plus un appareil perdu','aucun appareil perdu, en moins de 3 min 20'],etoiles:M=>ETOILES(M,S.vies>=2,S.vies===3&&M.t<200),fin(M){retirerNavire(M.n0);}},
- {id:'forteresse',nom:'LA FORTERESSE',titre:'LE VAISSEAU-MERE',brief:'La forteresse volante Léviathan. Ses quatre générateurs bleus protègent ses tourelles : détruis-les d’abord. Des chasseurs décollent de ses flancs.',
+ {id:'forteresse',amb:'crepuscule',nom:'LA FORTERESSE',titre:'LE VAISSEAU-MERE',brief:'La forteresse volante Léviathan. Ses quatre générateurs bleus protègent ses tourelles : détruis-les d’abord. Des chasseurs décollent de ses flancs.',
   debut(M){const d=new THREE.Vector3(-Math.sin(S.yaw),0,-Math.cos(S.yaw));const n=M.n0=navire('fga_destroyer4',1,300,{fixe:1,vieT:12,yaw:S.yaw+Math.PI*.7,v:3,base:S.p.clone().addScaledVector(d,650)});n.base.y=140;n.bouclier=4;
     n.g.updateMatrixWorld(true);const b=new THREE.Box3().setFromObject(n.g),inv=n.g.matrixWorld.clone().invert();const s=new THREE.Vector3();b.getSize(s);M.gens=[];
     for(const[fx,fz]of[[-.11,-.22],[.11,-.22],[-.11,.18],[.11,.18]]){const lp=new THREE.Vector3(fx*n.lg,0,fz*n.lg),m=new THREE.Mesh(new THREE.IcosahedronGeometry(n.lg*.03,1),new THREE.MeshBasicMaterial({color:'#7fe8ff'}));
@@ -750,14 +761,14 @@ function montrer(id){for(const e of ECRANS)$(e).hidden=e!==id;el.classList.toggl
 function lireRecord(){try{return JSON.parse(localStorage.getItem('cieldeguerre.record'))||{};}catch(e){return{};}}
 function majTitre(){const r=lireRecord(),m=lireMissions(),et=Object.values(m).reduce((a,v)=>a+(v.e||0),0);$('tEtoiles').textContent=et?`${et} / ${MISSIONS.length*3} ETOILES`:'';$('tRecord').innerHTML=r.parties?`RECORD ${String(r.score).padStart(6,'0')}<br>VAGUE ${r.vague||0} · ${r.parties||0} PARTIE${(r.parties||0)>1?'S':''}`:'';}
 function viderCombat(){viderAiliers();for(const E of EPAVES)sc.remove(E.g);EPAVES.length=0;for(const e of ennemis)sc.remove(e.g);ennemis.length=0;for(const b of tirsEnnemis)sc.remove(b.b);tirsEnnemis.length=0;V.file.length=0;}
-function nouvellePartie(def){finMissionNettoie();viderCombat();S.dernier=def||null;V.n=0;V.pause=2.5;V.fin=0;Object.assign(S,{degJ:1,energie:100,vide:false,secousse:0,bSouris:0,cx:0,cy:0,mode:'jeu',vies:3,blindage:100,score:0,munB:300,munM:FAM().mis,auto:false,tir:false,boost:0,loopT:-1,rollT:-1,demiT:-1,demiR:0,demiP:0,dx:0,dy:0});
+function nouvellePartie(def){finMissionNettoie();viderCombat();ambiance(def&&def.amb||'crepuscule');S.dernier=def||null;V.n=0;V.pause=2.5;V.fin=0;Object.assign(S,{degJ:1,energie:100,vide:false,secousse:0,bSouris:0,cx:0,cy:0,mode:'jeu',vies:3,blindage:100,score:0,munB:300,munM:FAM().mis,auto:false,tir:false,boost:0,loopT:-1,rollT:-1,demiT:-1,demiR:0,demiP:0,dx:0,dy:0});
   S.p.set(S.p.x,Math.max(S.p.y,40),S.p.z);montrer(null);
   if(def){MIS={def,t:0};def.debut(MIS);S.qc=null;annonce(`MISSION ${MISSIONS.indexOf(def)+1} · ${def.nom}<b>${def.etat(MIS).txt}</b>Bonne chance !`,3500);}
   else annonce('VAGUES SANS FIN<b>ARCHIPEL</b>Abats les chasseurs rouges. Leurs grands vaisseaux tirent aussi !');
   setTimeout(()=>{if(S.mode==='jeu')creerAiliers(def?def.ailiers||{n:2,fam:'poly'}:{n:2,fam:'poly'});},300);/* une fois le joueur placé par la mission */}
 function pause(){if(S.mode!=='jeu')return;S.mode='pause';S.tir=false;try{document.exitPointerLock();}catch(x){}montrer('ePause');}
 function reprendre(){if(S.mode!=='pause')return;S.mode='jeu';montrer(null);}
-function versTitre(){finMissionNettoie();viderCombat();S.mode='titre';S.auto=true;S.souris=0;el.classList.remove('souris');S.doigt=null;joy.classList.remove('on');majTitre();montrer('eTitre');}
+function versTitre(){finMissionNettoie();viderCombat();ambiance('crepuscule');S.mode='titre';S.auto=true;S.souris=0;el.classList.remove('souris');S.doigt=null;joy.classList.remove('on');majTitre();montrer('eTitre');}
 function abattu(){boom(S.p,30);secouer(2.6);S.vies--;V.flash=.4;if(S.vies<=0){finPartie();return;}S.blindage=100;annonce(`ABATTU !<b>${S.vies} APPAREIL${S.vies>1?'S':''} RESTANT${S.vies>1?'S':''}</b>Un nouvel appareil decolle.`);}
 function finPartie(){if(MIS){finMission(false);return;}S.mode='fin';S.auto=true;S.tir=false;S.blindage=100;try{document.exitPointerLock();}catch(x){}const r=lireRecord(),neuf=S.score>(r.score||0);
   const n={score:Math.max(S.score,r.score||0),vague:Math.max(V.n,r.vague||0),parties:(r.parties||0)+1};try{localStorage.setItem('cieldeguerre.record',JSON.stringify(n));}catch(e){}
