@@ -127,4 +127,13 @@ Retour de l'utilisateur (18/11) : « à la limite le B est pas mal, mais c'est p
 
 Retour de l'utilisateur (19/11) : la **direction 1 (Regalia) plaît**, à condition que les monstres soient assez variés ; les monstres de Willibab étaient **dans le mauvais sens** (ils regardent à droite dans le pack : corrigé, on les retourne). Bestiaire ajouté à la maquette 2 (même lien) : **Free Mythic Monsters** (31 espèces × 3 couleurs = 93 sprites, une couleur pour les élites), **Willibab's Monster Pack** (gratuit, 12 lignées qui évoluent en 2 ou 3 stades : vers, golems, serpents de mer, nagas, dragons ; elles regardent déjà à gauche), **Nostalgic Enemy Sprites** (3 monstres) : environ 45 espèces et 140 sprites gratuits. Écartés : monstres de solaarnoble (trop petits, autre style). Pour plus tard : Mythic Monsters I (100 espèces, 7,49 $).
 
-Retour de l'utilisateur : en attente (direction 1 confirmée ?).
+Retour de l'utilisateur (19/11) : **direction 1 (Regalia) retenue** avec ces monstres, mais les personnages ne doivent pas rester sur place : **plutôt un action-RPG qu'un RPG au tour par tour**.
+
+## 12. Maquette 3 : le combat en mouvement (19/11)
+[Artefact](https://claude.ai/artifact/PGcXeLKe7nJc13NA3tUBre), source `maquettes/bannis-3.html` (fabriquée par `python3 -I outils/bannis-maquette/fabriquer3.py <dossier des packs>` depuis `source3.html`, dérivé de la maquette 2). Direction Regalia, deux façons de jouer :
+- **A Mêlée libre** (vue de côté) : les hordes sortent de la droite en 3 groupes (4, 5 puis 6 monstres dont le boss, le dragon rouge, plus gros) ; tout le monde se déplace librement.
+- **B Assaut de la Muraille** (couloir vertical) : les monstres descendent vers la Muraille en bas (barre de vie) ; sans héros à moins de 160 px, ils marchent vers le mur et le frappent ; Muraille à 0 = vague perdue.
+- Règles du mouvement : chacun choisit la cible la plus proche (garde la sienne de préférence) ; corps à corps à 30 px, arc à 150, magie à 135 ; les tireurs **reculent** quand un monstre est à moins de 55 % de leur portée ; la prêtresse **suit** le plus blessé et soigne à 110 px ; **écartement** entre unités (36 px, 52 avec le boss) ; **recul** sous les coups (plus fort sur un critique, réduit pour le boss) ; animation de marche (Pixel Champions : ligne « marche » du format MV ; monstres fixes : petits sauts) ; orientation selon la cible.
+- Le placement décide seulement d'où partent les héros ; monstres plus nombreux et moins solides (16 à 40 PV, boss 150), héros plus solides (80 à 120 PV).
+
+Retour de l'utilisateur : en attente (A, B ou les deux).
