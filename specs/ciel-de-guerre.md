@@ -204,3 +204,6 @@ Demande de l'utilisateur : un onglet par famille (INTERCEPTEURS, POLYVALENTS, LO
 
 ## Tuyères des chasseurs relevées à la main (19/11)
 Le repérage automatique (points les plus en arrière, puis un essai par les faces tournées vers l'arrière) plaçait mal les flammes de plusieurs appareils (polyyai 2, 3, 7, 28… : flammes au bout des ailes, tuyères fusionnées). Les 35 positions sont maintenant dans `TUY_PY` (`jeu.js`) : [x, y] en fractions de la largeur, lues sur une vue orthographique de l'arrière avec une grille ; `tuyeres(g, force)` trouve la profondeur. `CielDeGuerre.outils` (`construire`, `chargerModele`, `COULEURS`, `NOMS`) sert aux planches de contrôle.
+
+## Mission 1 adoucie (18 et 19/11)
+Retours de l'utilisateur (« trop dur », puis « encore difficile ») : vagues plus petites et plus espacées, port moins fragile (`deg` 0,9), dégâts reçus × 0,6 (`S.degJ`) ; puis **pas de grands vaisseaux rouges** pendant la mission (`sansRouges` dans la définition : la flotte rouge de fond se retire) et **le Héron**, destroyer bleu allié invulnérable, qui tourne autour du port (rayon 130) : ses tourelles tirent sur les chasseurs et bombardiers rouges. Autre piste proposée par l'utilisateur, gardée pour la session 4 : 3 intercepteurs ailiers.

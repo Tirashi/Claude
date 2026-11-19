@@ -124,3 +124,4 @@ Maquettes de la carte 2 à 4 (isométrique, puis papier à l'encre validée), é
 - **18/11 — Ciel de guerre, sons enregistrés** : jauges du téléphone empilées (plus de chevauchement) ; explosions enregistrées choisies au banc (NIIIEMAND, Matthew Flat), dans `ciel-de-guerre/sons/` ; réacteur : sons D et I d'OpenGameArt mêlés, discrets ([cdc](ciel-de-guerre.md)).
 - **18/11 — Ciel de guerre, hangar** : onglets par famille, aperçu 3D qui tourne, bouton CHOISIR ; mission 1 plus facile ; gros son d'écrasement réservé aux grands vaisseaux ([cdc](ciel-de-guerre.md)).
 - **19/11 — Ciel de guerre, tuyères** : flammes des 35 chasseurs replacées à la main (`TUY_PY`) ([cdc](ciel-de-guerre.md)).
+- **19/11 — Ciel de guerre, mission 1** : sans grands vaisseaux rouges, avec un destroyer allié (le Héron) qui tourne autour du port ([cdc](ciel-de-guerre.md)).
