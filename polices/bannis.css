@@ -1,0 +1,4 @@
+/* Polices des Bannis, hébergées dans le dépôt (sous-ensembles latins de Google Fonts, SIL Open Font License 1.1) :
+   Pixelify Sans (textes, lisible en petit), Press Start 2P (titres, en MAJUSCULES sans accent). */
+@font-face { font-family: 'Pixelify Sans'; font-style: normal; font-weight: 400 700; font-display: swap; src: url(pixelify-sans.woff2) format('woff2'); }
+@font-face { font-family: 'Press Start 2P'; font-style: normal; font-weight: 400; font-display: swap; src: url(press-start-2p.woff2) format('woff2'); }

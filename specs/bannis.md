@@ -160,4 +160,19 @@ Retour de l'utilisateur (19/11) : **le nom « Les Bannis » est gardé** ; **le 
 4. **Session 4, la méta** : éclats de Gueule, arbre de compétences, déblocages.
 5. **Session 5, la finition** : sons, musique, effets, interface peaufinée ; classement et défi du jour.
 
-Retour de l'utilisateur : en attente (ajustements prioritaires).
+Retour de l'utilisateur (19/11) : les problèmes relevés au § 14 sont bien les siens ; **lancer la session 1**.
+
+## 16. Session 1 : le socle (19/11)
+Dossier `bannis/` (démo sur l'accueil, carte « BANNIS ») ; détails des fichiers dans [`bannis/CLAUDE.md`](../bannis/CLAUDE.md).
+- **Une nuit** : titre (continuer, nouvelle nuit, son), **recrutement** (5 condamnés tirés au sort, on en garde 3 ; classe, stats, trait expliqué), **placement** (6 cases devant la Muraille, placement par défaut : corps à corps devant), **combat** en mouvement (règles de la maquette 4 dans `regles.js`), **butin** : bilan, bonus de niveau au choix (1 parmi 2), **évolution** légendaire au niveau 5 (animation de la maquette 2), objet à choisir (2, ou 3 après un boss ; ou 12 pièces d'or), héros qui le porte (l'ancien objet est revendu), **marchand** (potion, parchemin d'éclair, longue-vue, réparer la Muraille) ; **fin de nuit** (vague atteinte, monstres, boss, éclats de Gueule gagnés et en réserve, record).
+- **12 vagues**, 3 paliers de monstres (26 espèces de Willibab, élites dans la seconde couleur : vie ×1,8, attaque ×1,3, or ×3), boss aux vagues 4 (hydre), 8 (reine naga), 12 (seigneur des flammes et dragon rouge) ; monstres à distance (prêtre maudit, grimoire de feu, œil ailé). Les héros tombés reviennent à 30 % de vie à la vague suivante ; la Muraille ne se répare qu'au marchand.
+- **Classes** : les 6 lignées de la maquette 4, avec un vrai rôle (corps à corps, magie, soin, chant du barde qui accélère l'escouade) et un **pouvoir légendaire** (épéiste : recul et vol de vie ; champion : critiques qui fendent ; grand sage : magie en zone ; sorcière du temps : ralentit ; grande prêtresse : soigne toute l'escouade ; barde légendaire : son chant soigne).
+- **Traits** avec un effet réel (ivrogne, pieux, déserteur qui fuit sous 20 % de vie, cleptomane, tête brûlée, balafré, vantard, parjure).
+- **Équipement** : arme, armure, bijou ; 4 raretés, 1 à 3 bonus (attaque, défense, vie, critiques, vitesse, vol de vie) ; fiche d'un héros en touchant sa carte (stats, trait, équipement, légendaire à venir).
+- **Dés** : ceux de la maquette (d6, d8, d20, face ×2, combos, une relance par vague, dés gardés) ; le sort est annoncé avec ce qu'il fait. Session 2 pour aller plus loin.
+- **Interface** : Dragon Regalia, textes en Pixelify Sans (plus lisibles), titres en Press Start 2P ; cartes allégées (nom, classe, niveau, vie, expérience) ; vitesse ×1 / ×2 ; pause (son, abandonner, retour à la Ludothèque).
+- **Sauvegarde** : `bannis.run` au début de chaque vague ; `bannis.stats` (records, éclats) avec transfert `LUDO1-`.
+- **Simulateur** `outils/bannis-simulateur.js` : sans dés, vague moyenne 7 (la Muraille cause la plupart des défaites) ; avec un sort toutes les 12 s, vague 8 à 9. Équilibrage fin à la session 3.
+- Pas encore : classement, défi du jour, arbre de compétences (les éclats s'accumulent déjà), vrais sons, archers sur la Muraille.
+
+Retour de l'utilisateur : en attente (essai sur le téléphone).

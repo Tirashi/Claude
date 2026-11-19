@@ -1,0 +1,4 @@
+/* Les Bannis : la page ne contient qu'un canvas, agrandi sans lissage et centré. */
+html, body { margin: 0; height: 100%; background: #0c0814; overflow: hidden; }
+body { display: flex; align-items: center; justify-content: center; touch-action: manipulation; -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
+#cv { display: block; image-rendering: pixelated; touch-action: none; }

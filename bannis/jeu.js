@@ -1,0 +1,675 @@
+/* Les Bannis : affichage, écrans, toucher, effets et sons. Les règles sont dans regles.js (window.Bannis.R),
+   les données dans donnees.js (window.Bannis.D). Canvas logique de 360 x 760, agrandi sans lissage.
+   Sauvegardes : bannis.run (nuit en cours, écrite au début de chaque vague), bannis.stats, bannis.son. */
+(function(){
+"use strict";
+const {D, R} = window.Bannis;
+const W = 360, H = 760;
+const cv = document.getElementById("cv"), ctx = cv.getContext("2d");
+let dpr = 1, echelle = 1;
+const reduit = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const alea = (a, b) => a + Math.random()*(b-a);
+const ent = (a, b) => Math.floor(alea(a, b+1));
+const pick = t => t[Math.floor(Math.random()*t.length)];
+
+/* ---------- sauvegarde ---------- */
+const lire = (k, d) => { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch (e){ return d; } };
+const ecrire = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e){} };
+const effacer = k => { try { localStorage.removeItem(k); } catch (e){} };
+function statsJoueur(){ return Object.assign({nuits: 0, record: 0, gagnees: 0, eclats: 0, kills: 0}, lire("bannis.stats", {})); }
+function runSauvee(){ try { const t = localStorage.getItem("bannis.run"); return t ? R.charger(t) : null; } catch (e){ return null; } }
+function sauverRun(){ try { localStorage.setItem("bannis.run", R.sauver(G.run)); } catch (e){} }
+
+/* ---------- images ---------- */
+const IMG = {};
+for (const k of ["heros", "monstres", "icones", "ui-cadre", "ui-panneau", "ui-petit", "ui-boutons", "ui-boutons2", "ui-barre", "ui-ruban"]){
+  const i = new Image(); i.src = "img/" + k + ".png"; IMG[k] = i; }
+
+/* ---------- sons synthétisés (de vrais sons viendront à la session 5) ---------- */
+let AC = null, sonOn = lire("bannis.son", true) !== false;
+function audio(){ if (!AC){ try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch (e){} } if (AC && AC.state === "suspended") AC.resume(); }
+function bip(f, d, type = "square", vol = .08, glisse = 0, t0 = 0){
+  if (!sonOn || !AC) return; const t = AC.currentTime + t0;
+  const o = AC.createOscillator(), g = AC.createGain(); o.type = type; o.frequency.setValueAtTime(f, t);
+  if (glisse) o.frequency.exponentialRampToValueAtTime(Math.max(30, f*glisse), t + d);
+  g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.001, t + d); o.connect(g).connect(AC.destination); o.start(t); o.stop(t + d + .02);
+}
+function bruit(d, vol = .12, filtre = 1800, t0 = 0){
+  if (!sonOn || !AC) return; const t = AC.currentTime + t0;
+  const n = AC.createBuffer(1, Math.max(1, AC.sampleRate*d), AC.sampleRate), c = n.getChannelData(0);
+  for (let i = 0; i < c.length; i++) c[i] = (Math.random()*2 - 1)*(1 - i/c.length);
+  const s = AC.createBufferSource(); s.buffer = n; const f = AC.createBiquadFilter(); f.type = "lowpass"; f.frequency.value = filtre;
+  const g = AC.createGain(); g.gain.value = vol; s.connect(f).connect(g).connect(AC.destination); s.start(t);
+}
+let dernierCoup = 0;
+const SON = {
+  coup(){ const t = performance.now(); if (t - dernierCoup < 45) return; dernierCoup = t; bruit(.08, .16, 2500); bip(110, .12, "triangle", .13, .5); },
+  crit(){ bruit(.14, .2, 4000); bip(220, .18, "square", .09, .4); bip(880, .12, "square", .05, 1.5, .03); },
+  tir(){ bip(1200, .08, "triangle", .035, .4); },
+  sort(){ bip(500, .25, "sine", .06, 2.5); bip(750, .25, "sine", .04, 2, .05); },
+  mort(){ bip(300, .35, "sawtooth", .05, .2); bruit(.25, .07, 600); },
+  soin(){ [523, 659, 784].forEach((f, i) => bip(f, .16, "sine", .05, 1, i*.06)); },
+  de(){ bruit(.03, .1, 6000); bip(ent(900, 1500), .03, "square", .025); },
+  pose(){ bip(180, .08, "square", .07, .6); bruit(.05, .09, 1500); },
+  combo(){ [392, 523, 659, 784, 1046].forEach((f, i) => bip(f, .35, "square", .045, 1, i*.06)); },
+  boum(){ bruit(.6, .28, 900); bip(80, .5, "sine", .22, .4); },
+  niveau(){ [523, 659, 784, 1046, 1318].forEach((f, i) => bip(f, .22, "triangle", .06, 1, i*.08)); },
+  clic(){ bip(660, .05, "square", .045); },
+  or(){ bip(1568, .06, "square", .03); bip(2093, .08, "square", .025, 1, .05); },
+  butin(){ [784, 988, 1175, 1568].forEach((f, i) => bip(f, .3, "triangle", .055, 1, i*.09)); },
+  defaite(){ [392, 349, 311, 262].forEach((f, i) => bip(f, .4, "triangle", .07, 1, i*.22)); },
+  victoire(){ [523, 659, 784, 1046, 784, 1046, 1318].forEach((f, i) => bip(f, .3, "square", .05, 1, i*.11)); },
+  mur(){ bruit(.12, .14, 900); bip(70, .15, "sine", .14, .6); },
+  chant(){ [880, 1109, 1319].forEach((f, i) => bip(f, .2, "sine", .04, 1, i*.07)); },
+  poule(){ bip(1400, .06, "square", .035, .7); bip(1100, .06, "square", .035, .7, .08); }
+};
+
+/* ---------- état ---------- */
+const G = {ecran: "titre", run: null, C: null, sel: -1, fiche: null, pause: false, vitesse: lire("bannis.vitesse", 1), t: 0, txt: [], part: [], fx: [], sec: 0, gel: 0,
+  des: null, evo: null, butin: null, recrues: null, choisies: [], fin: null, jauge: 0, ouvert: 0, nuages: []};
+for (let i = 0; i < 40; i++) G.nuages.push({x: Math.random()*W, y: Math.random()*560, v: alea(8, 22), r: alea(.6, 1.8)});
+
+/* ---------- dessin : outils ---------- */
+function nine(cle, sx, sy, sw, sh, c, x, y, w, h){
+  const im = IMG[cle]; if (!im.complete || !im.width) return; x = Math.round(x); y = Math.round(y); w = Math.round(w); h = Math.round(h);
+  const d = Math.min(c, Math.floor(w/2), Math.floor(h/2)), mw = sw - 2*c, mh = sh - 2*c, dw = w - 2*d, dh = h - 2*d;
+  const PX = [[0, c, 0, d], [c, mw, d, dw], [c + mw, c, d + dw, d]], PY = [[0, c, 0, d], [c, mh, d, dh], [c + mh, c, d + dh, d]];
+  for (const [ox, ow, px, pw] of PX) for (const [oy, oh, py, ph] of PY) if (pw > 0 && ph > 0) ctx.drawImage(im, sx + ox, sy + oy, ow, oh, x + px, y + py, pw, ph);
+}
+const panneau = (x, y, w, h) => nine("ui-panneau", 0, 0, 72, 72, 24, x, y, w, h);
+const grand = (x, y, w, h) => nine("ui-cadre", 0, 0, 144, 144, 48, x, y, w, h);
+const petit = (x, y, w, h) => nine("ui-petit", 0, 0, 48, 48, 16, x, y, w, h);
+function police(px, titre, gras = true){ ctx.font = titre ? `${Math.round(px)}px "Press Start 2P", monospace` : `${gras ? "700 " : ""}${Math.round(px)}px "Pixelify Sans", sans-serif`; }
+function texte(t, x, y, px, c = "#fff", al = "left", opt = {}){
+  police(px, opt.titre, opt.gras !== false); let p = px;
+  if (opt.max) while (p > 8 && ctx.measureText(t).width > opt.max){ p--; police(p, opt.titre, opt.gras !== false); }
+  ctx.textAlign = al; ctx.textBaseline = "alphabetic";
+  if (opt.ombre !== false){ ctx.fillStyle = opt.ombreC || "#1a0e2e"; ctx.fillText(t, x + 2, y + 2); }
+  ctx.fillStyle = c; ctx.fillText(t, x, y);
+}
+// texte sur plusieurs lignes ; renvoie la hauteur occupée
+function paragraphe(t, x, y, larg, px, c = "#fff", interligne = 1.3, al = "left"){
+  police(px, false, false); const mots = t.split(" "); let ligne = "", yy = y;
+  for (const m of mots){ const essai = ligne ? ligne + " " + m : m; if (ctx.measureText(essai).width > larg && ligne){ texte(ligne, x, yy, px, c, al, {gras: false}); ligne = m; yy += px*interligne; } else ligne = essai; }
+  if (ligne){ texte(ligne, x, yy, px, c, al, {gras: false}); yy += px*interligne; }
+  return yy - y;
+}
+function icone(rc, x, y, s = 28){ const im = IMG.icones; if (!im.width) return; ctx.drawImage(im, rc[1]*32, rc[0]*32, 32, 32, x, y, s, s); }
+function barre(x, y, w, h, v, c){
+  nine("ui-barre", 0, 0, 96, 16, 6, x - 5, y - 5, w + 10, h + 10);
+  ctx.fillStyle = c; ctx.fillRect(x, y, Math.max(0, w*Math.min(1, v)), h);
+  ctx.fillStyle = "rgba(255,255,255,.3)"; ctx.fillRect(x, y, Math.max(0, w*Math.min(1, v)), Math.ceil(h/3));
+}
+let zones = [];
+function zone(x, y, w, h, f){ zones.push({x, y, w, h, f}); }
+function bouton(x, y, w, h, t, f, actif = true, pulse = false, couleur = 0){
+  // couleurs de la planche Dragon Regalia : 0 rouge, 1 bleu ciel, 2 prune, 3 ardoise
+  nine("ui-boutons", (actif ? couleur : 3)*100, 0, 100, 35, 14, x, y, w, h);
+  if (pulse && actif){ ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.globalAlpha = .16 + .16*Math.sin(G.t*8); nine("ui-boutons", 100, 0, 100, 35, 14, x, y, w, h); ctx.restore(); }
+  ctx.save(); ctx.globalAlpha = actif ? 1 : .6;
+  texte(t, x + w/2, y + h/2 + 7, 19, pulse ? "#fff3a8" : "#fff", "center", {max: w - 26}); ctx.restore();
+  if (actif) zone(x, y, w, h, f);
+}
+function rr(x, y, w, h, r){ ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
+
+/* ---------- sprites ---------- */
+const MV = {repos: [0, 1], marche: [0, 0], coup: [1, 1], mal: [0, 4], mort: [2, 5], sort: [1, 4], victoire: [2, 1]};
+function dessinerHeros(spr, act, ta, x, y, dir, opt = {}){
+  const im = IMG.heros; if (!im.width) return; const idx = D.HEROS.indexOf(spr); if (idx < 0) return;
+  const [c, r] = MV[act] || MV.repos;
+  const f = (act === "repos" || act === "victoire" || act === "marche") ? [0, 1, 2, 1][Math.floor(ta*(act === "marche" ? 10 : 5)) % 4] : Math.min(2, Math.floor(ta*8));
+  const e = opt.e || 2.2, sx = (c*3 + f)*32, sy = idx*192 + r*32;
+  ctx.save(); ctx.translate(Math.round(x), Math.round(y)); if (dir > 0) ctx.scale(-1, 1);
+  if (opt.alpha !== undefined) ctx.globalAlpha = opt.alpha;
+  ctx.drawImage(im, sx, sy, 32, 32, -16*e, -30*e, 32*e, 32*e);
+  if (opt.blanc > 0){ ctx.globalCompositeOperation = "lighter"; ctx.globalAlpha = Math.min(1, opt.blanc); ctx.drawImage(im, sx, sy, 32, 32, -16*e, -30*e, 32*e, 32*e); }
+  ctx.restore();
+}
+function dessinerMonstre(i, elite, x, y, dir, opt = {}){
+  const im = IMG.monstres; if (!im.width) return; const e = opt.e || 1.2;
+  ctx.save(); ctx.translate(Math.round(x), Math.round(y)); if (dir > 0) ctx.scale(-1, 1);
+  if (opt.sx) ctx.scale(opt.sx, opt.sy || 1);
+  if (opt.alpha !== undefined) ctx.globalAlpha = opt.alpha;
+  ctx.drawImage(im, (i - 1)*64, elite ? 64 : 0, 64, 64, -32*e, -60*e, 64*e, 64*e);
+  if (opt.blanc > 0){ ctx.globalCompositeOperation = "lighter"; ctx.globalAlpha = Math.min(1, opt.blanc); ctx.drawImage(im, (i - 1)*64, elite ? 64 : 0, 64, 64, -32*e, -60*e, 64*e, 64*e); }
+  ctx.restore();
+}
+function aura(x, y, t, k = 1){
+  ctx.save(); ctx.globalCompositeOperation = "lighter";
+  const g = ctx.createRadialGradient(x, y - 30, 4, x, y - 30, 46); g.addColorStop(0, `rgba(255,214,110,${.3*k})`); g.addColorStop(1, "rgba(255,190,60,0)");
+  ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(x, y - 30, 40, 52, 0, 0, 7); ctx.fill();
+  ctx.fillStyle = `rgba(255,236,160,${.9*k})`;
+  for (let i = 0; i < 6; i++){ const p = ((t*.6 + i/6) % 1), px = x + Math.sin(i*2.3 + t*2)*22, py = y - p*70; ctx.globalAlpha = (1 - p)*k; ctx.fillRect(px - 1, py - 1, 2, 2); }
+  ctx.restore();
+}
+function dessinerUnite(u){
+  let x = u.x + (u.lunge > 0 ? Math.sin((.25 - u.lunge)/.25*Math.PI)*(u.dir || 1)*16 : 0), y = u.y;
+  const blanc = Math.max(u.flash*6, u.blanc || 0);
+  if (u.camp === "h"){
+    if (u.pv <= 0){ dessinerHeros(u.spr, "mort", 1, x, y, u.dir, {alpha: .55}); return; }
+    if (u.leg) aura(x, y, G.t);
+    if (u.hate > 0){ ctx.fillStyle = "rgba(160,240,255,.35)"; ctx.beginPath(); ctx.ellipse(x, y + 2, 22, 6, 0, 0, 7); ctx.fill(); }
+    let a = u.act, sh = 0; if (a === "mal") sh = Math.sin(u.ta*60)*3;
+    dessinerHeros(u.spr, a === "coup" ? (u.role === "cac" ? "coup" : "sort") : a, u.ta, x + sh, y, u.dir, {blanc});
+  } else {
+    const k = u.t*1.2, mort = u.pv <= 0;
+    let yy = y, sx = 1, sy = 1;
+    if (mort){ sy = Math.max(.05, 1 - u.mort*1.2); }
+    else if (u.act === "marche"){ yy -= Math.abs(Math.sin(u.ta*9))*5; const b = Math.sin(u.ta*18)*.05; sx = 1 - b; sy = 1 + b; }
+    else { const b = Math.sin(u.ta*3)*.04; sx = 1 + b; sy = 1 - b; }
+    let xx = x; if (u.act === "coup" && u.ta < .3 && u.role === "dist") xx -= (u.dir || -1)*Math.sin(u.ta/.3*Math.PI)*10;
+    if (u.act === "mal") xx += Math.sin(u.ta*60)*3;
+    if (u.ralenti > 0){ ctx.fillStyle = "rgba(140,200,255,.35)"; ctx.beginPath(); ctx.ellipse(x, y + 2, 26*u.t, 7, 0, 0, 7); ctx.fill(); }
+    dessinerMonstre(u.i, u.elite, xx, yy, u.dir, {e: k, sx, sy, blanc, alpha: mort ? Math.max(0, 1 - u.mort*1.4) : undefined});
+  }
+}
+
+/* ---------- décor : crépuscule, volcan, Muraille ---------- */
+function fond(){
+  const t = G.t;
+  let g = ctx.createLinearGradient(0, 0, 0, 560); g.addColorStop(0, "#1a1040"); g.addColorStop(.5, "#6a3a7a"); g.addColorStop(.75, "#e07a5a"); g.addColorStop(1, "#40243a");
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = "#fff"; for (let i = 0; i < 30; i++){ ctx.globalAlpha = .3 + .3*Math.sin(t*2 + i); ctx.fillRect((i*97) % W, (i*53) % 150, 2, 2); } ctx.globalAlpha = 1;
+  // la Gueule au loin
+  ctx.fillStyle = "#3a2050"; ctx.beginPath(); ctx.moveTo(0, 240); [[50, 170], [120, 205], [215, 118], [250, 118], [300, 160], [360, 190], [360, 240]].forEach(p => ctx.lineTo(...p)); ctx.fill();
+  const lg = .6 + Math.sin(t*2)*.2; ctx.fillStyle = `rgba(255,${110 + lg*60},40,${lg})`; ctx.fillRect(216, 114, 33, 7);
+  ctx.fillStyle = "rgba(90,50,70,.45)"; for (let i = 0; i < 4; i++){ const yy = 112 - ((t*12 + i*28) % 110); ctx.beginPath(); ctx.arc(232 + Math.sin(t + i)*12, yy, 10 + i*4, 0, 7); ctx.fill(); }
+  // sol
+  ctx.fillStyle = "#2a1838"; ctx.fillRect(0, 236, W, 330);
+  for (let y = 236; y < 560; y += 4){ ctx.fillStyle = y % 8 ? "#33204a" : "#2a1838"; ctx.fillRect(0, y, W, 2); }
+  ctx.fillStyle = "rgba(0,0,0,.22)"; for (let x = 0; x < W; x += 8) for (let y = 240; y < 560; y += 8) if (((x + y)/8) % 2 === 0) ctx.fillRect(x, y, 4, 4);
+  // cendres
+  ctx.fillStyle = "#ffae6a"; for (const c of G.nuages){ c.y -= c.v*.016; c.x += Math.sin(t + c.y*.05)*.2; if (c.y < 0){ c.y = 560; c.x = Math.random()*W; } ctx.globalAlpha = .4; ctx.fillRect(c.x, c.y, c.r, c.r); } ctx.globalAlpha = 1;
+}
+function muraille(){
+  const y0 = 200, y1 = 546, X = R.MUR_X;
+  ctx.fillStyle = "#4a4458"; ctx.fillRect(0, y0, X, y1 - y0);
+  ctx.fillStyle = "#3a3448"; for (let y = y0 + 8; y < y1; y += 14) for (let x = ((y/14) % 2)*12; x < X; x += 24) ctx.fillRect(x, y, 22, 1);
+  ctx.fillStyle = "#2c2838"; ctx.fillRect(X - 4, y0, 4, y1 - y0);
+  ctx.fillStyle = "#5c566c"; for (let x = 0; x < X; x += 16) ctx.fillRect(x, y0 - 12, 10, 12);
+  ctx.fillStyle = "#6a6480"; ctx.fillRect(0, y0, X, 4);
+  ctx.fillStyle = "rgba(255,190,90,.6)"; ctx.fillRect(14, y0 + 30, 6, 10); ctx.fillRect(28, y0 + 120, 6, 10);
+  if (G.run){ const v = G.run.mur/G.run.murMax; barre(10, y0 - 34, 110, 8, v, v > .35 ? "#e8dcc0" : "#e8402a"); texte("MURAILLE " + Math.ceil(G.run.mur), 128, y0 - 25, 13, "#fff"); }
+}
+
+/* ---------- écrans : titre ---------- */
+function ecranTitre(){
+  fond(); muraille();
+  const s = statsJoueur(), sauve = runSauvee();
+  ctx.save(); const k = 1 + Math.sin(G.t*1.5)*.02; ctx.translate(W/2, 112); ctx.scale(k, k);
+  texte("LES BANNIS", 0, 0, 28, "#ffd76a", "center", {titre: true, ombreC: "#3a0a20"}); ctx.restore();
+  texte("Tenir la Muraille jusqu'au matin", W/2, 146, 16, "#ffe9c8", "center");
+  // l'escouade de l'écran titre
+  [["glenys-3", 120, 470], ["ley-2", 92, 400], ["linail-2", 160, 410]].forEach(([spr, x, y], i) => dessinerHeros(spr, "repos", G.t + i, x, y, 1));
+  dessinerMonstre(19, false, 290, 440, -1, {e: 1.2}); dessinerMonstre(14, false, 320, 360, -1, {e: 1.5});
+  panneau(24, 520, W - 48, 210);
+  let y = 548;
+  if (sauve){ bouton(44, y, W - 88, 46, "CONTINUER  ·  VAGUE " + sauve.vague, () => { G.run = sauve; R.preparerVague(G.run); allerPlacement(); SON.clic(); }, true, true); y += 54; }
+  bouton(44, y, W - 88, 46, "NOUVELLE NUIT", () => { if (sauve) effacer("bannis.run"); nouvelleNuit(); SON.clic(); }, true, !sauve, sauve ? 2 : 0); y += 54;
+  if (!window.ludoArtefact){ bouton(44, y, W - 88, 40, "◀ LUDOTHEQUE", () => { location.href = "../index.html"; }, true, false, 3); y += 48; }
+  const rec = s.nuits ? `Record : vague ${s.record}${s.gagnees ? "  ·  nuits tenues : " + s.gagnees : ""}  ·  éclats : ${s.eclats}` : "Le Mage banni et ses condamnés contre la Gueule.";
+  texte(rec, W/2, Math.min(y + 18, 718), 13, "#ffe3a8", "center", {gras: false, max: W - 70});
+  // son
+  petit(W - 58, 14, 44, 40); texte(sonOn ? "SON" : "MUET", W - 36, 40, 12, "#fff", "center"); zone(W - 58, 14, 44, 40, () => { sonOn = !sonOn; ecrire("bannis.son", sonOn); audio(); SON.clic(); });
+}
+
+/* ---------- recrutement ---------- */
+function nouvelleNuit(){
+  G.run = R.nouvelleRun(); G.recrues = R.recrues(5); G.choisies = []; G.ecran = "recrutement";
+}
+function ecranRecrutement(){
+  fond();
+  grand(10, 14, W - 20, 732);
+  texte("LE BATEAU-PRISON", W/2, 62, 15, "#ffd76a", "center", {titre: true});
+  paragraphe("Cinq condamnés ont choisi la Muraille plutôt que la corde. Prends-en trois.", 34, 90, W - 68, 15, "#fff");
+  G.recrues.forEach((h, i) => {
+    const y = 128 + i*104, x = 28, w = W - 56, hh = 96, choisi = G.choisies.includes(h);
+    if (choisi){ ctx.fillStyle = "rgba(255,225,74,.25)"; rr(x - 4, y - 4, w + 8, hh + 8, 10); ctx.fill(); }
+    petit(x, y, w, hh);
+    const C = D.CLASSES[h.cls], s = R.stats(h);
+    dessinerHeros(C.spr, "repos", G.t + i*.7, x + 34, y + 78, 1, {e: 2});
+    texte(h.nom, x + 70, y + 26, 18, "#fff");
+    texte(C.n, x + w - 12, y + 26, 14, "#ffe3a8", "right");
+    texte(`VIE ${s.pv}   ATQ ${s.atq}   DEF ${s.def}   VIT ${s.vit.toFixed(2)}`, x + 70, y + 48, 14, "#e8f0ff", "left", {gras: false, max: w - 82});
+    texte(D.TRAITS[h.trait].n, x + 70, y + 68, 14, "#ffb08a");
+    texte(D.TRAITS[h.trait].d, x + 70, y + 86, 12, "#ffd8c8", "left", {gras: false, max: w - 82});
+    if (choisi) texte("✓", x + w - 18, y + hh - 12, 22, "#ffe14a", "center");
+    zone(x, y, w, hh, () => { if (choisi) G.choisies = G.choisies.filter(c => c !== h); else if (G.choisies.length < 3) G.choisies.push(h); SON.clic(); });
+  });
+  const ok = G.choisies.length === 3;
+  bouton(40, 664, W - 80, 52, ok ? "A LA MURAILLE !" : `CHOISIS ${3 - G.choisies.length} RECRUE${3 - G.choisies.length > 1 ? "S" : ""}`, () => {
+    G.run.heros = G.choisies.slice(); R.placerParDefaut(G.run); R.preparerVague(G.run); allerPlacement(); SON.pose(); }, ok, ok);
+}
+
+/* ---------- placement et combat ---------- */
+function allerPlacement(){
+  G.ecran = "place"; G.sel = -1; G.C = null; G.des = null; G.evo = null; G.butin = null; G.jauge = 0; G.txt = []; G.part = []; G.fx = [];
+  G.unitesPlace = G.run.heros.map(h => { const c = R.CASES[h.slot]; return {h, x: c[0], y: c[1], ta: Math.random()*2}; });
+  sauverRun();
+}
+function lancerCombat(){
+  G.C = R.debutCombat(G.run); G.ecran = "combat"; G.jauge = 0; G.sel = -1; SON.pose();
+}
+function hud(){
+  panneau(8, 8, W - 16, 50);
+  texte("VAGUE " + G.run.vague + "/" + D.NB_VAGUES, 24, 40, 18, "#fff");
+  icone([12, 7], 142, 18, 28); texte(String(G.run.or), 172, 40, 18, "#ffe14a");
+  if (G.ecran === "combat"){
+    petit(W - 112, 14, 46, 38); texte("x" + G.vitesse, W - 89, 40, 16, "#fff", "center");
+    zone(W - 112, 14, 46, 38, () => { G.vitesse = G.vitesse === 1 ? 2 : 1; ecrire("bannis.vitesse", G.vitesse); SON.clic(); });
+  }
+  petit(W - 60, 14, 46, 38); ctx.fillStyle = "#fff"; ctx.fillRect(W - 44, 23, 5, 20); ctx.fillRect(W - 34, 23, 5, 20);
+  zone(W - 60, 14, 46, 38, () => { G.pause = true; SON.clic(); });
+}
+function bandeau(){
+  if (G.ecran === "place"){
+    panneau(8, 62, W - 16, 74);
+    texte("VAGUE ANNONCEE", 22, 86, 14, "#ffe3a8");
+    texte(G.run.revele ? "VAGUE REVELEE" : "", W - 22, 86, 13, "#ffe14a", "right");
+    const ap = R.apercu(G.run);
+    ap.slice(0, 6).forEach((m, i) => {
+      const x = 22 + i*54, y = 92; ctx.fillStyle = "rgba(0,0,0,.3)"; ctx.fillRect(x, y, 48, 38);
+      if (m.cache){ texte("?", x + 24, y + 30, 22, "#ffe14a", "center"); return; }
+      ctx.save(); ctx.beginPath(); ctx.rect(x, y, 48, 38); ctx.clip(); dessinerMonstre(D.MONSTRES[m.k].i, false, x + 24, y + 40, -1, {e: .62}); ctx.restore();
+      texte(m.boss ? "BOSS" : "x" + m.n, x + 46, y + 36, 12, m.boss ? "#ff7a5a" : "#fff", "right");
+    });
+  } else if (G.ecran === "combat"){
+    panneau(8, 62, W - 16, 50);
+    texte("LE MAGE INSTABLE", 22, 84, 13, "#ffe3a8");
+    const C = G.C, reste = C.file.length + R.vivants(C, "m").length;
+    texte("monstres : " + reste, W - 22, 84, 13, "#fff", "right", {gras: false});
+    barre(22, 92, W - 44, 9, G.jauge, G.jauge >= 1 ? `hsl(${(G.t*200) % 360},90%,62%)` : "#a77bff");
+  }
+}
+function cartes(){
+  const hs = G.run.heros, n = hs.length, w = Math.floor((W - 16 - (n - 1)*6)/n);
+  hs.forEach((h, i) => {
+    const x = 8 + i*(w + 6), y = 552, hh = 88, s = R.stats(h), cl = R.classeDe(h);
+    const u = G.C ? G.C.unites.find(v => v.h === h) : null, pv = u ? u.pv : h.pv, pvMax = u ? u.pvMax : s.pv, mort = pv <= 0;
+    panneau(x, y, w, hh);
+    ctx.save(); if (mort) ctx.globalAlpha = .5;
+    texte(h.nom, x + 12, y + 26, 16, "#fff", "left", {max: w - 50});
+    texte("NIV " + h.niv, x + w - 12, y + 26, 13, "#ffe14a", "right");
+    texte(cl.n, x + 12, y + 46, 13, h.leg ? "#ffd76a" : "#d8e4ff", "left", {max: w - 24, gras: !!h.leg});
+    barre(x + 12, y + 56, w - 24, 8, pv/pvMax, pv/pvMax > .35 ? "#4ad05a" : "#e8402a");
+    const xp0 = D.XP_NIVEAUX[h.niv - 1] || 0, xp1 = R.nivSuivant(h);
+    ctx.fillStyle = "rgba(0,0,0,.35)"; ctx.fillRect(x + 12, y + 72, w - 24, 3); ctx.fillStyle = "#9ad8ff"; ctx.fillRect(x + 12, y + 72, (w - 24)*Math.min(1, (h.xp - xp0)/Math.max(1, xp1 - xp0)), 3);
+    ctx.restore();
+    if (G.sel === i){ ctx.strokeStyle = "#ffe14a"; ctx.lineWidth = 3; rr(x + 3, y + 3, w - 6, hh - 6, 6); ctx.stroke(); }
+    zone(x, y, w, hh, () => { G.fiche = h; SON.clic(); });
+  });
+}
+function objets(){
+  const st = G.run.stock, liste = [["potion", [9, 0]], ["parchemin", [21, 1]], ["vue", [10, 7]]];
+  liste.forEach(([k, ic], i) => {
+    const x = 8 + i*62, y = 648, n = st[k] || 0;
+    const utile = n > 0 && ((k === "potion" && G.ecran === "combat") || (k === "parchemin" && G.ecran === "combat") || (k === "vue" && G.ecran === "place" && !G.run.revele));
+    panneau(x, y, 56, 58); ctx.save(); ctx.globalAlpha = utile ? 1 : .4; icone(ic, x + 12, y + 9, 32); ctx.restore();
+    texte("x" + n, x + 50, y + 53, 13, "#fff", "right");
+    zone(x, y, 56, 58, () => {
+      if (!utile){ SON.clic(); return; }
+      if (k === "vue"){ st.vue--; G.run.revele = true; SON.butin(); sauverRun(); }
+      else if (R.utiliserObjet(G.C, k)){ if (k === "potion") SON.soin(); }
+    });
+  });
+  const bx = 196, bw = W - 204;
+  if (G.ecran === "place") bouton(bx, 648, bw, 58, "COMBATTRE", lancerCombat, true, true);
+  else if (G.ecran === "combat") bouton(bx, 648, bw, 58, "LANCER LES DES", () => { if (G.jauge >= 1 && !G.des) lancerDes(false); }, G.jauge >= 1 && !G.des, G.jauge >= 1);
+}
+function champPlacement(){
+  // cases de départ devant la Muraille
+  for (let s = 0; s < 6; s++){ const c = R.CASES[s], occ = G.run.heros.findIndex(h => h.slot === s), sel = G.sel >= 0 && G.run.heros[G.sel].slot === s;
+    ctx.strokeStyle = sel ? "#ffe14a" : "rgba(255,255,255,.35)"; ctx.lineWidth = sel ? 3 : 1.5; ctx.setLineDash(sel ? [] : [5, 4]);
+    ctx.beginPath(); ctx.ellipse(c[0], c[1] + 2, 30, 11, 0, 0, 7); ctx.stroke(); ctx.setLineDash([]);
+    zone(c[0] - 36, c[1] - 66, 72, 82, () => {
+      if (G.sel < 0){ if (occ >= 0){ G.sel = occ; SON.clic(); } return; }
+      const h = G.run.heros[G.sel]; if (occ >= 0 && occ !== G.sel) G.run.heros[occ].slot = h.slot; h.slot = s; G.sel = -1; SON.pose();
+      for (const u of G.unitesPlace){ const cc = R.CASES[u.h.slot]; u.tx = cc[0]; u.ty = cc[1]; } sauverRun(); });
+  }
+  texte("ARRIERE", 92, 540, 12, "#ffe3a8", "center"); texte("AVANT", 162, 540, 12, "#ffe3a8", "center");
+  if (G.sel < 0) texte("Touche un héros, puis une case", 260, 300, 14, "#fff", "center", {gras: false});
+  for (const u of G.unitesPlace){ if (u.tx !== undefined){ u.x += (u.tx - u.x)*.25; u.y += (u.ty - u.y)*.25; }
+    if (u.h.leg) aura(u.x, u.y, G.t);
+    dessinerHeros(R.classeDe(u.h).spr, "repos", G.t + u.ta, u.x, u.y, 1); }
+}
+
+/* ---------- événements du combat : effets et sons ---------- */
+function etincelles(x, y, n, c, monte){ if (reduit) n = Math.ceil(n/3);
+  for (let i = 0; i < n; i++){ const a = Math.random()*Math.PI*2, v = alea(40, 170); G.part.push({x, y, vx: Math.cos(a)*v, vy: Math.sin(a)*v - (monte ? 80 : 0), t: 0, d: alea(.3, .7), c, g: monte ? -60 : 320}); } }
+function flotte(x, y, v, c, opt = {}){ G.txt.push(Object.assign({x: x + alea(-6, 6), y, v, c, t: 0}, opt)); }
+function traiterEvenements(){
+  const C = G.C; if (!C) return;
+  for (const e of C.ev){
+    if (e.k === "degats"){
+      flotte(e.x, e.y - 70, e.crit ? e.v + "!" : String(e.v), e.crit ? "#ffdf3a" : e.u.camp === "h" ? "#ff8a7a" : "#fff", {gros: e.crit});
+      etincelles(e.x, e.y - 30, e.crit ? 16 : 7, e.c || (e.crit ? "#ffdf3a" : "#fff"));
+      if (!reduit){ G.gel = Math.max(G.gel, e.crit ? .08 : .035); G.sec = Math.max(G.sec, e.crit ? 6 : 2.5); }
+      if (e.crit) { SON.crit(); flotte(e.x, e.y - 96, "CRITIQUE", "#ff6a3a", {petit: true}); } else SON.coup();
+      if (e.u.camp === "m") G.jauge = Math.min(1, G.jauge + .035); else G.jauge = Math.min(1, G.jauge + .02);
+    } else if (e.k === "mort"){ SON.mort(); etincelles(e.u.x, e.u.y - 30, 22, e.u.camp === "h" ? "#ff4040" : "#ffb040"); }
+    else if (e.k === "or"){ flotte(e.x, e.y - 50, "+" + e.v, "#ffe14a", {petit: true}); SON.or(); }
+    else if (e.k === "soin"){ flotte(e.x, e.y - 70, "+" + e.v, "#6dff8a"); etincelles(e.x, e.y - 40, 8, "#6dff8a", true); }
+    else if (e.k === "soinLance") SON.soin();
+    else if (e.k === "tir") SON.tir();
+    else if (e.k === "mur"){ SON.mur(); etincelles(R.MUR_X, e.y - 30, 8, "#d8c8a8"); if (!reduit) G.sec = Math.max(G.sec, 3); flotte(R.MUR_X + 6, e.y - 60, "-" + e.v, "#ffb0a0", {petit: true}); }
+    else if (e.k === "boss"){ flotte(W/2, 210, "LE BOSS ARRIVE", "#ff6a3a", {titre: true}); SON.boum(); if (!reduit) G.sec = 8; }
+    else if (e.k === "chant"){ SON.chant(); for (const h of R.vivants(C, "h")) etincelles(h.x, h.y - 50, 4, "#9ff0ff", true); }
+    else if (e.k === "rate") flotte(e.x, e.y - 70, "RATE", "#c8c8c8", {petit: true});
+    else if (e.k === "eclair"){ G.fx.push({k: "foudre", x: e.x, t: 0}); SON.crit(); }
+  }
+  C.ev.length = 0;
+}
+
+/* ---------- dés du Mage ---------- */
+function lancerDes(relance){
+  const garder = relance && G.des ? G.des.des.map(d => d.garde ? d : null) : null;
+  const des = R.lancerDes(garder);
+  G.des = {t: 0, etat: "roule", des: des.map((d, i) => Object.assign(d, {fin: garder && garder[i] ? 0 : .7 + i*.35, sp: alea(7, 11), garde: !!(garder && garder[i]), pose: !!(garder && garder[i])})),
+    sort: relance && G.des ? G.des.sort : R.tirerSort()};
+  SON.clic();
+}
+function dessinerDe(d, x, y, taille, rot, valeur, fini){
+  ctx.save(); ctx.translate(x, y); ctx.rotate(rot);
+  const s = taille*.42; ctx.fillStyle = "#000"; ctx.beginPath();
+  if (d.k === "d6") ctx.rect(-s - 3, -s - 3, 2*s + 6, 2*s + 6);
+  else if (d.k === "d8"){ ctx.moveTo(0, -s - 6); ctx.lineTo(s + 6, 0); ctx.lineTo(0, s + 6); ctx.lineTo(-s - 6, 0); }
+  else for (let i = 0; i < 6; i++){ const a = i*Math.PI/3 + Math.PI/6; ctx.lineTo(Math.cos(a)*(s + 5), Math.sin(a)*(s + 5)); }
+  ctx.fill();
+  ctx.fillStyle = d.k === "d20" ? "#e03030" : d.k === "d8" ? "#3060e0" : "#f4f4f4"; ctx.beginPath();
+  if (d.k === "d6") ctx.rect(-s, -s, 2*s, 2*s);
+  else if (d.k === "d8"){ ctx.moveTo(0, -s - 1); ctx.lineTo(s + 1, 0); ctx.lineTo(0, s + 1); ctx.lineTo(-s - 1, 0); }
+  else for (let i = 0; i < 6; i++){ const a = i*Math.PI/3 + Math.PI/6; ctx.lineTo(Math.cos(a)*s, Math.sin(a)*s); }
+  ctx.fill(); ctx.fillStyle = "rgba(255,255,255,.5)"; ctx.fillRect(-s + 3, -s + 3, s*.6, 3);
+  ctx.rotate(-rot); texte(String(valeur), 0, 9, fini ? 28 : 20, d.k === "d6" ? "#202040" : "#fff", "center", {titre: false});
+  ctx.restore();
+}
+function plateauDes(dt){
+  const Dd = G.des; if (!Dd) return; Dd.t += dt;
+  ctx.fillStyle = "rgba(0,0,0,.5)"; ctx.fillRect(0, 0, W, H);
+  const py = 260; grand(14, py - 104, W - 28, 330);
+  texte(Dd.sort.n, W/2, py - 58, 16, Dd.sort.c, "center", {titre: true, max: W - 70});
+  texte(Dd.sort.d, W/2, py - 34, 14, "#fff", "center", {gras: false, max: W - 70});
+  let tousFinis = true;
+  Dd.des.forEach((d, i) => {
+    const fini = Dd.t >= d.fin; if (!fini) tousFinis = false;
+    const x = 90 + i*90; let y = py + 32, rot = 0, v = d.v;
+    if (!fini){ const k = Dd.t/d.fin; y += -Math.abs(Math.sin(k*Math.PI*3))*40*(1 - k); rot = Dd.t*d.sp; v = ent(1, {d6: 6, d8: 8, d20: 20}[d.k]); if (Math.random() < .25) SON.de(); }
+    else if (!d.pose){ d.pose = true; SON.pose(); if (!reduit) G.sec = Math.max(G.sec, 3); etincelles(x, py + 32, 8, "#fff"); }
+    const z = fini ? 1 + Math.max(0, .3 - (Dd.t - d.fin))*1.2 : 1;
+    dessinerDe(d, x, y, 78*z, rot, v, fini);
+    if (fini && d.x2) texte("x2", x + 32, y - 30, 18, "#ffdf3a", "center");
+    texte(d.k.toUpperCase(), x, py + 92, 12, "#ffe3a8", "center");
+    if (Dd.etat === "choix"){ zone(x - 42, py - 10, 84, 90, () => { d.garde = !d.garde; SON.clic(); });
+      if (d.garde){ ctx.strokeStyle = "#ffe14a"; ctx.lineWidth = 3; rr(x - 42, py - 10, 84, 90, 8); ctx.stroke(); texte("GARDE", x, py - 16, 12, "#ffe14a", "center"); } }
+  });
+  if (tousFinis && Dd.etat === "roule"){ Object.assign(Dd, R.resultatDes(Dd.des)); Dd.etat = "choix"; if (Dd.combo && Dd.combo !== "FIASCO") SON.combo(); else SON.pose(); }
+  if (Dd.etat === "choix"){
+    if (Dd.combo){ const p = 1 + Math.sin(G.t*10)*.06; ctx.save(); ctx.translate(W/2, py + 124); ctx.scale(p, p); texte(Dd.combo, 0, 0, 16, Dd.combo === "FIASCO" ? "#ff5040" : "#ffdf3a", "center", {titre: true, max: W - 60}); ctx.restore(); }
+    texte("PUISSANCE " + Dd.total + (Dd.mult !== 1 ? "  (x" + Dd.mult + ")" : ""), W/2, py + 152, 18, "#fff", "center");
+    const rel = G.run.relances || 0;
+    bouton(30, py + 166, 146, 46, "RELANCER (" + rel + ")", () => { if (G.run.relances > 0){ G.run.relances--; lancerDes(true); } }, rel > 0, false, 2);
+    bouton(184, py + 166, W - 214, 46, "LANCER LE SORT", jeterSort, true, true);
+    texte("Touche un dé pour le garder avant de relancer", W/2, py + 222, 12, "#ffe3a8", "center", {gras: false});
+  }
+}
+function jeterSort(){
+  const Dd = G.des, sp = Dd.sort, tot = Dd.total; G.jauge = 0; G.des = null;
+  flotte(W/2, 200, sp.n, sp.c, {titre: true});
+  if (sp.k === "feu"){ SON.boum(); if (!reduit) G.sec = 12; G.fx.push({k: "feu", t: 0}); setTimeout(() => { if (G.C) R.jeterSort(G.C, sp, tot); }, 450); }
+  else if (sp.k === "soin"){ SON.soin(); G.fx.push({k: "soin", t: 0}); R.jeterSort(G.C, sp, tot); }
+  else if (sp.k === "foudre"){ const ms = R.vivants(G.C, "m"); ms.forEach((m, i) => setTimeout(() => { if (G.C && m.pv > 0){ G.fx.push({k: "foudre", x: m.x, t: 0}); SON.crit(); } }, i*120)); R.jeterSort(G.C, sp, tot); }
+  else { SON.poule(); for (let i = 0; i < Math.min(12, 4 + Math.round(tot/6)); i++) G.fx.push({k: "poule", x: -20 - i*26, y: alea(260, 520), t: 0});
+    setTimeout(() => { if (G.C) R.jeterSort(G.C, sp, tot); }, 1000); }
+}
+function effets(dt){
+  for (const f of G.fx){ f.t += dt;
+    if (f.k === "feu"){ const k = f.t/.9; for (let i = 0; i < 5; i++){ const x = 220 + i*28 - k*60, y = -40 + k*520 - i*30; ctx.fillStyle = "#ff6a1f"; ctx.beginPath(); ctx.arc(x, y, 16, 0, 7); ctx.fill(); ctx.fillStyle = "#ffe08a"; ctx.beginPath(); ctx.arc(x, y, 8, 0, 7); ctx.fill(); }
+      if (f.t > .45 && f.t < .8){ ctx.fillStyle = `rgba(255,140,40,${.5 - (f.t - .45)})`; ctx.fillRect(0, 0, W, H); } if (f.t > .9) f.fini = true; }
+    else if (f.k === "soin"){ ctx.fillStyle = `rgba(110,255,140,${Math.max(0, .3 - f.t*.3)})`; ctx.fillRect(0, 0, W, H); if (f.t > 1.2) f.fini = true; }
+    else if (f.k === "foudre"){ ctx.strokeStyle = `rgba(200,240,255,${1 - f.t*3})`; ctx.lineWidth = 4; ctx.beginPath(); let x = f.x, y = 0; ctx.moveTo(x, y);
+      while (y < 520){ y += 30; x = f.x + alea(-14, 14); ctx.lineTo(x, y); } ctx.stroke(); if (f.t > .33) f.fini = true; }
+    else if (f.k === "poule"){ f.x += dt*190; const sx = f.x, sy = f.y - Math.abs(Math.sin(f.t*12))*10;
+      ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.ellipse(sx, sy, 10, 8, 0, 0, 7); ctx.fill(); ctx.beginPath(); ctx.arc(sx + 8, sy - 7, 5, 0, 7); ctx.fill();
+      ctx.fillStyle = "#e33"; ctx.fillRect(sx + 7, sy - 14, 4, 4); ctx.fillStyle = "#fb2"; ctx.fillRect(sx + 12, sy - 7, 5, 3);
+      if (Math.random() < .02) SON.poule(); if (f.x > W + 30) f.fini = true; }
+  }
+  G.fx = G.fx.filter(f => !f.fini);
+}
+
+/* ---------- fin de vague : expérience, niveaux, évolution, butin, marchand ---------- */
+function finDeVague(){
+  const run = G.run, gagne = run.vague >= D.NB_VAGUES;
+  const xp = R.xpDeVague(run), file = [];
+  for (const h of run.heros){ const n = R.gagnerXp(h, h.mort ? xp/2 : xp); for (let i = 0; i < n; i++) file.push(h); }
+  if (gagne){ finDeNuit(true); return; }
+  const boss = !!D.BOSS[run.vague];
+  G.butin = {etape: "bilan", t: 0, xp, niveaux: file, choix: null, objets: [0, 1, 2].slice(0, boss ? 3 : 2).map(() => R.genererObjet(run.vague, boss)), pris: null};
+  G.ecran = "butin"; SON.victoire();
+}
+function suiteButin(){
+  const B = G.butin;
+  if (B.niveaux.length){ const h = B.niveaux.shift(); B.etape = "niveau"; B.h = h; B.choix = R.propositionsNiveau(); SON.niveau(); return; }
+  const ev = G.run.heros.find(h => R.peutEvoluer(h));
+  if (ev){ B.etape = "evolution"; G.evo = {h: ev, t: 0, fait: false, avant: R.classeDe(ev).n}; SON.sort(); return; }
+  if (!B.pris){ B.etape = "objet"; return; }
+  B.etape = "marchand";
+}
+function ecranButin(dt){
+  const B = G.butin; B.t += dt;
+  fond(); muraille();
+  // l'escouade au repos
+  for (const h of G.run.heros){ const c = R.CASES[h.slot]; if (h.leg) aura(c[0], c[1], G.t);
+    if (G.evo && G.evo.h === h) continue; dessinerHeros(R.classeDe(h).spr, h.mort ? "mort" : "victoire", G.t + h.id, c[0], c[1], 1, {alpha: h.mort ? .55 : 1}); }
+  hud();
+  if (B.etape === "bilan"){
+    grand(20, 150, W - 40, 300);
+    texte("VAGUE TENUE !", W/2, 206, 18, "#ffe14a", "center", {titre: true});
+    texte("+" + B.xp + " d'expérience pour chaque héros debout", W/2, 246, 15, "#fff", "center", {max: W - 80});
+    texte("(la moitié pour les héros tombés)", W/2, 268, 13, "#ffe3a8", "center", {gras: false});
+    texte("Or : " + G.run.or + "   ·   Muraille : " + Math.ceil(G.run.mur) + " / " + G.run.murMax, W/2, 304, 15, "#fff", "center");
+    texte("Monstres abattus cette nuit : " + G.run.kills, W/2, 330, 15, "#fff", "center");
+    bouton(70, 370, W - 140, 50, "CONTINUER", () => { suiteButin(); SON.clic(); }, true, true);
+  } else if (B.etape === "niveau"){
+    const h = B.h, cl = R.classeDe(h);
+    grand(20, 130, W - 40, 380);
+    texte("NIVEAU " + h.niv + " !", W/2, 186, 18, "#ffe14a", "center", {titre: true});
+    dessinerHeros(cl.spr, "victoire", G.t, W/2, 286, 1, {e: 3});
+    texte(h.nom + " · " + cl.n, W/2, 316, 16, "#fff", "center", {max: W - 80});
+    texte("Choisis un bonus :", W/2, 346, 15, "#ffe3a8", "center");
+    B.choix.forEach((b, i) => bouton(44, 362 + i*58, W - 88, 50, b.n, () => { R.appliquerBonus(h, b); SON.pose(); suiteButin(); }, true, false, i ? 2 : 1));
+  } else if (B.etape === "evolution"){
+    evolution(dt);
+  } else if (B.etape === "objet"){
+    grand(14, 112, W - 28, 470);
+    texte("BUTIN", W/2, 160, 18, "#ffe14a", "center", {titre: true});
+    texte("Choisis un objet, puis le héros qui le porte.", W/2, 190, 14, "#fff", "center", {gras: false});
+    B.objets.forEach((o, i) => {
+      const y = 208 + i*96, R0 = D.RARETES[o.rar];
+      petit(34, y, W - 68, 88); ctx.strokeStyle = R0.c; ctx.lineWidth = 2; rr(36, y + 2, W - 72, 84, 8); ctx.stroke();
+      icone(o.ic, 46, y + 14, 48);
+      texte(o.n, 106, y + 30, 15, "#fff", "left", {max: W - 150});
+      texte(R0.n + " · " + D.SLOTS[o.slot].n, 106, y + 52, 13, R0.c);
+      texte(R.texteBonus(o), 106, y + 74, 14, "#d8ffd8", "left", {gras: false, max: W - 150});
+      zone(34, y, W - 68, 88, () => { B.pris = o; B.etape = "equiper"; SON.clic(); });
+    });
+    bouton(60, 512, W - 120, 46, "PRENDRE 12 PIECES D'OR", () => { G.run.or += 12; B.pris = {or: true}; SON.or(); suiteButin(); }, true, false, 3);
+  } else if (B.etape === "equiper"){
+    const o = B.pris, R0 = D.RARETES[o.rar];
+    grand(14, 112, W - 28, 430);
+    texte("QUI LE PORTE ?", W/2, 160, 16, "#ffe14a", "center", {titre: true});
+    icone(o.ic, 34, 176, 40); texte(o.n, 82, 196, 15, R0.c, "left", {max: W - 110}); texte(R.texteBonus(o), 82, 216, 14, "#d8ffd8", "left", {gras: false, max: W - 110});
+    G.run.heros.forEach((h, i) => {
+      const y = 236 + i*80, ac = h.equip[o.slot];
+      petit(30, y, W - 60, 72);
+      dessinerHeros(R.classeDe(h).spr, "repos", G.t + i, 64, y + 64, 1, {e: 1.7});
+      texte(h.nom + " · " + R.classeDe(h).n, 96, y + 26, 15, "#fff", "left", {max: W - 140});
+      texte(ac ? "remplace : " + ac.n + " (" + R.texteBonus(ac) + ")" : D.SLOTS[o.slot].n + " vide", 96, y + 50, 12, ac ? "#ffc8a8" : "#c8e8c8", "left", {gras: false, max: W - 140});
+      zone(30, y, W - 60, 72, () => { const ancien = R.equiper(h, o); if (ancien) G.run.or += Math.round(ancien.prix/2); SON.pose(); suiteButin(); });
+    });
+    bouton(60, 482, W - 120, 44, "VENDRE (" + Math.round(o.prix/2) + " OR)", () => { G.run.or += Math.round(o.prix/2); SON.or(); suiteButin(); }, true, false, 3);
+  } else if (B.etape === "marchand"){
+    grand(14, 112, W - 28, 500);
+    texte("LE MARCHAND", W/2, 160, 18, "#ffe14a", "center", {titre: true});
+    texte("Tu as " + G.run.or + " pièces d'or.", W/2, 190, 15, "#fff", "center");
+    D.MARCHAND.forEach((m, i) => {
+      const y = 206 + i*78, ok = G.run.or >= m.prix && !(m.k === "mur" && G.run.mur >= G.run.murMax);
+      petit(34, y, W - 68, 70); ctx.save(); if (!ok) ctx.globalAlpha = .5;
+      icone(m.ic, 44, y + 14, 42);
+      texte(m.n, 96, y + 28, 15, "#fff", "left", {max: W - 200});
+      paragraphe(m.d, 96, y + 46, W - 196, 12, "#ffe3a8", 1.15);
+      texte(m.prix + " OR", W - 48, y + 28, 15, "#ffe14a", "right");
+      if (m.k !== "mur") texte("x" + (G.run.stock[m.k] || 0), W - 48, y + 52, 13, "#fff", "right");
+      ctx.restore();
+      if (ok) zone(34, y, W - 68, 70, () => { G.run.or -= m.prix; if (m.k === "mur") G.run.mur = Math.min(G.run.murMax, G.run.mur + 30); else G.run.stock[m.k] = (G.run.stock[m.k] || 0) + 1; SON.or(); });
+    });
+    bouton(50, 540, W - 100, 54, "VAGUE SUIVANTE", () => { G.run.vague++; R.preparerVague(G.run); allerPlacement(); SON.pose(); }, true, true);
+  }
+}
+function evolution(dt){
+  const E = G.evo; E.t += dt; const h = E.h, c = R.CASES[h.slot];
+  const blanc = E.t < 1.1 ? Math.min(1, E.t*1.1)*(.6 + .4*Math.sin(E.t*30)) : Math.max(0, 1 - (E.t - 1.1)*2.5);
+  if (!E.fait && E.t >= 1.1){ E.fait = true; R.evoluer(h); etincelles(c[0], c[1] - 40, 50, "#ffe27a"); etincelles(c[0], c[1] - 40, 20, "#fff"); if (!reduit) G.sec = 9; SON.combo(); SON.niveau(); }
+  ctx.fillStyle = `rgba(0,0,0,${Math.min(.55, E.t*.8)})`; ctx.fillRect(0, 0, W, H);
+  ctx.save(); ctx.globalCompositeOperation = "lighter";
+  const g = ctx.createLinearGradient(c[0] - 30, 0, c[0] + 30, 0); g.addColorStop(0, "rgba(255,220,120,0)"); g.addColorStop(.5, `rgba(255,230,150,${.5*Math.min(1, E.t)})`); g.addColorStop(1, "rgba(255,220,120,0)");
+  ctx.fillStyle = g; ctx.fillRect(c[0] - 30, 0, 60, c[1] + 6); ctx.restore();
+  if (h.leg) aura(c[0], c[1], G.t);
+  dessinerHeros(R.classeDe(h).spr, "victoire", G.t, c[0], c[1], 1, {blanc});
+  if (E.t > 1.1){ const k = Math.min(1, (E.t - 1.1)*4); ctx.save(); ctx.translate(W/2, 170); ctx.scale(2 - k, 2 - k); ctx.globalAlpha = k; texte("EVOLUTION !", 0, 0, 20, "#ffe14a", "center", {titre: true}); ctx.restore();
+    texte(E.avant + "  >  " + R.classeDe(h).n, W/2, 206, 16, "#fff", "center", {max: W - 30});
+    paragraphe(D.CLASSES[h.cls].leg.d, 200, 260, W - 220, 14, "#ffe3a8"); }
+  if (E.t > 2.8){ G.evo = null; suiteButin(); }
+}
+
+/* ---------- fin de nuit ---------- */
+function finDeNuit(gagne){
+  const run = G.run, s = statsJoueur(), ec = R.eclatsDeRun(run, gagne);
+  s.nuits++; s.record = Math.max(s.record, run.vague); if (gagne) s.gagnees++; s.eclats += ec; s.kills += run.kills;
+  ecrire("bannis.stats", s); effacer("bannis.run");
+  G.fin = {gagne, vague: run.vague, kills: run.kills, boss: run.boss, eclats: ec, total: s.eclats, record: s.record}; G.ecran = "fin";
+  gagne ? SON.victoire() : SON.defaite();
+}
+function ecranFin(){
+  fond(); muraille();
+  const F = G.fin;
+  ctx.fillStyle = F.gagne ? "rgba(40,20,0,.35)" : "rgba(30,0,0,.55)"; ctx.fillRect(0, 0, W, H);
+  grand(20, 140, W - 40, 470);
+  texte(F.gagne ? "LE JOUR SE LEVE" : "LA MURAILLE", W/2, 200, 16, F.gagne ? "#ffe14a" : "#ff6a4a", "center", {titre: true});
+  texte(F.gagne ? "LA NUIT EST TENUE" : "EST TOMBEE", W/2, 228, 16, F.gagne ? "#ffe14a" : "#ff6a4a", "center", {titre: true});
+  const l = [["Vague atteinte", F.vague + " / " + D.NB_VAGUES], ["Monstres abattus", F.kills], ["Boss abattus", F.boss], ["Éclats de Gueule gagnés", "+" + F.eclats], ["Éclats en réserve", F.total], ["Record", "vague " + F.record]];
+  l.forEach(([a, b], i) => { texte(a, 50, 280 + i*34, 16, "#fff"); texte(String(b), W - 50, 280 + i*34, 16, "#ffe14a", "right"); });
+  paragraphe("Les éclats serviront à l'arbre de compétences (bientôt) pour mieux dompter le hasard.", 50, 500, W - 100, 13, "#ffe3a8");
+  bouton(50, 540, W - 100, 50, "NOUVELLE NUIT", () => { nouvelleNuit(); SON.clic(); }, true, true);
+  bouton(80, 620, W - 160, 44, "TITRE", () => { G.ecran = "titre"; SON.clic(); }, true, false, 3);
+}
+
+/* ---------- fiche d'un héros ---------- */
+function ficheHeros(){
+  const h = G.fiche, s = R.stats(h), cl = R.classeDe(h), C = D.CLASSES[h.cls];
+  ctx.fillStyle = "rgba(0,0,0,.6)"; ctx.fillRect(0, 0, W, H); zone(0, 0, W, H, () => {});
+  grand(10, 40, W - 20, 690);
+  if (h.leg) aura(70, 196, G.t);
+  dessinerHeros(cl.spr, "repos", G.t, 70, 196, 1, {e: 3});
+  texte(h.nom, 130, 104, 22, "#fff");
+  texte(cl.n, 130, 130, 15, h.leg ? "#ffd76a" : "#d8e4ff", "left", {max: W - 160});
+  texte("NIVEAU " + h.niv + (C.sexe === "F" ? " · FEMME" : C.sexe === "H" ? " · HOMME" : ""), 130, 154, 13, "#ffe14a");
+  const xp0 = D.XP_NIVEAUX[h.niv - 1] || 0, xp1 = R.nivSuivant(h);
+  barre(130, 166, W - 170, 6, (h.xp - xp0)/Math.max(1, xp1 - xp0), "#9ad8ff");
+  texte(h.xp + " / " + (isFinite(xp1) ? xp1 : "max") + " xp", 130, 192, 12, "#d8f0ff", "left", {gras: false});
+  paragraphe(cl.d, 34, 236, W - 68, 13, "#ffe3a8");
+  const pvAct = G.C ? (G.C.unites.find(u => u.h === h) || {pv: h.pv}).pv : h.pv;
+  const lignes = [["VIE", Math.ceil(pvAct) + " / " + s.pv], ["ATTAQUE", s.atq], ["DEFENSE", s.def], ["VITESSE", s.vit.toFixed(2)], ["CRITIQUES", s.crit + " %"], ["VOL DE VIE", Math.round(s.vol*100) + " %"]];
+  lignes.forEach(([a, b], i) => { const x = 34 + (i % 2)*((W - 68)/2), y = 290 + Math.floor(i/2)*26; texte(a, x, y, 14, "#d8e4ff", "left", {gras: false}); texte(String(b), x + (W - 68)/2 - 12, y, 14, "#fff", "right"); });
+  texte("TRAIT : " + D.TRAITS[h.trait].n, 34, 384, 15, "#ffb08a");
+  paragraphe(D.TRAITS[h.trait].d, 34, 404, W - 68, 13, "#ffd8c8");
+  texte("EQUIPEMENT", 34, 452, 15, "#ffe14a");
+  ["arme", "armure", "bijou"].forEach((sl, i) => {
+    const o = h.equip[sl], y = 462 + i*56; petit(30, y, W - 60, 50);
+    if (o){ icone(o.ic, 40, y + 9, 32); texte(o.n, 82, y + 22, 14, D.RARETES[o.rar].c, "left", {max: W - 124}); texte(R.texteBonus(o), 82, y + 40, 12, "#d8ffd8", "left", {gras: false, max: W - 124}); }
+    else texte(D.SLOTS[sl].n + " : rien", 46, y + 31, 14, "#a8a0b8", "left", {gras: false});
+  });
+  if (!h.leg) texte("Au niveau " + D.NIV_LEGENDAIRE + " : " + C.leg.n, W/2, 650, 13, "#ffd76a", "center", {max: W - 60});
+  bouton(90, 664, W - 180, 46, "FERMER", () => { G.fiche = null; SON.clic(); }, true, false, 3);
+}
+
+/* ---------- pause ---------- */
+function ecranPause(){
+  ctx.fillStyle = "rgba(0,0,0,.6)"; ctx.fillRect(0, 0, W, H); zone(0, 0, W, H, () => {});
+  grand(30, 170, W - 60, 420);
+  texte("PAUSE", W/2, 228, 20, "#ffe14a", "center", {titre: true});
+  bouton(60, 256, W - 120, 48, "REPRENDRE", () => { G.pause = false; SON.clic(); }, true, true);
+  bouton(60, 314, W - 120, 48, sonOn ? "SON : OUI" : "SON : NON", () => { sonOn = !sonOn; ecrire("bannis.son", sonOn); SON.clic(); }, true, false, 2);
+  bouton(60, 372, W - 120, 48, "ABANDONNER LA NUIT", () => { G.pause = false; finDeNuit(false); }, true, false, 2);
+  let y = 430; if (!window.ludoArtefact){ bouton(60, y, W - 120, 44, "◀ LUDOTHEQUE", () => { location.href = "../index.html"; }, true, false, 3); y += 52; }
+  paragraphe("La nuit est sauvegardée au début de chaque vague : tu peux quitter et reprendre plus tard.", 60, y + 16, W - 120, 12, "#ffe3a8");
+}
+
+/* ---------- boucle ---------- */
+let der = performance.now();
+function boucle(now){
+  let dt = Math.min(.05, (now - der)/1000); der = now;
+  zones = [];
+  G.t += dt;
+  ctx.setTransform(dpr*echelle, 0, 0, dpr*echelle, 0, 0); ctx.imageSmoothingEnabled = false;
+  ctx.save();
+  if (G.sec > 0 && !G.pause){ ctx.translate(alea(-G.sec, G.sec), alea(-G.sec, G.sec)); G.sec = Math.max(0, G.sec - dt*40); }
+  if (G.ecran === "titre") ecranTitre();
+  else if (G.ecran === "recrutement") ecranRecrutement();
+  else if (G.ecran === "fin") ecranFin();
+  else if (G.ecran === "butin") ecranButin(dt);
+  else if (G.ecran === "place" || G.ecran === "combat"){
+    // simulation
+    if (G.ecran === "combat" && !G.pause && !G.fiche){
+      let ds = dt*G.vitesse; if (G.gel > 0){ G.gel -= dt; ds = 0; } if (G.des) ds = 0;
+      for (let pas = ds; pas > 0; pas -= 1/60) R.etape(G.C, Math.min(1/60, pas));
+      for (const u of G.C.unites){ u.ta += ds; u.flash = Math.max(0, u.flash - ds); u.lunge = Math.max(0, u.lunge - ds); if (u.pv <= 0) u.mort += ds;
+        if (u.pv > 0 && (u.act === "coup" || u.act === "mal") && u.ta > .45){ u.act = "repos"; u.ta = 0; } }
+      traiterEvenements();
+      if (G.C.fin && !G.attenteFin){ G.attenteFin = true; const f = G.C.fin; setTimeout(() => { G.attenteFin = false; if (f === "victoire") finDeVague(); else finDeNuit(false); }, 1300); }
+    }
+    fond(); muraille();
+    if (G.ecran === "place") champPlacement();
+    else { const l = G.C.unites.filter(u => u.pv > 0 || u.camp === "h" || u.mort < 1.2).sort((a, b) => a.y - b.y);
+      for (const u of l){ if (u.pv > 0){ ctx.fillStyle = "rgba(0,0,0,.3)"; ctx.beginPath(); ctx.ellipse(u.x, u.y + 2, u.boss ? 30 : 18, 6, 0, 0, 7); ctx.fill(); }
+        dessinerUnite(u);
+        if (u.pv > 0) barre(u.x - (u.boss ? 30 : 18), u.y + 12, u.boss ? 60 : 36, 4, u.pv/u.pvMax, u.camp === "h" ? "#4ad05a" : u.elite ? "#ffb31f" : "#e8402a"); }
+      for (const p of G.C.proj){ ctx.fillStyle = p.c; ctx.globalAlpha = .4; ctx.beginPath(); ctx.arc(p.x, p.y, 9, 0, 7); ctx.fill(); ctx.globalAlpha = 1; ctx.beginPath(); ctx.arc(p.x, p.y, 4, 0, 7); ctx.fill(); } }
+    // particules et textes
+    for (const q of G.part){ q.t += dt; q.x += q.vx*dt; q.y += q.vy*dt; q.vy += q.g*dt; ctx.globalAlpha = Math.max(0, 1 - q.t/q.d); ctx.fillStyle = q.c; ctx.fillRect(q.x - 2, q.y - 2, 4, 4); }
+    ctx.globalAlpha = 1; G.part = G.part.filter(q => q.t < q.d);
+    effets(dt);
+    for (const t of G.txt){ t.t += dt;
+      if (t.titre){ const k = Math.min(1, t.t*5); ctx.save(); ctx.globalAlpha = Math.max(0, 1 - (t.t - 1.1)*2); ctx.translate(t.x, t.y); ctx.scale(2 - k, 2 - k); texte(t.v, 0, 0, 16, t.c, "center", {titre: true, max: W - 40}); ctx.restore(); t.d = 1.6; continue; }
+      const s = t.gros ? 1.4 - Math.min(.4, t.t*2) : 1; ctx.save(); ctx.globalAlpha = Math.max(0, 1 - (t.t - .5)*2); ctx.translate(t.x, t.y - t.t*40); ctx.scale(s, s);
+      texte(t.v, 0, 0, t.petit ? 13 : 20, t.c, "center"); ctx.restore(); t.d = 1; }
+    G.txt = G.txt.filter(t => t.t < (t.d || 1));
+    hud(); bandeau(); cartes(); objets();
+    plateauDes(dt);
+  }
+  ctx.restore();
+  if (G.fiche) ficheHeros();
+  if (G.pause) ecranPause();
+  requestAnimationFrame(boucle);
+}
+
+/* ---------- toucher et taille ---------- */
+cv.addEventListener("pointerdown", e => {
+  audio();
+  const r = cv.getBoundingClientRect(), x = (e.clientX - r.left)*W/r.width, y = (e.clientY - r.top)*H/r.height;
+  for (let i = zones.length - 1; i >= 0; i--){ const z = zones[i]; if (x >= z.x && x <= z.x + z.w && y >= z.y && y <= z.y + z.h){ z.f(); return; } }
+  if (G.ecran === "place") G.sel = -1;
+});
+document.addEventListener("keydown", e => { if (e.key === "Escape" && (G.ecran === "combat" || G.ecran === "place")){ if (G.fiche) G.fiche = null; else G.pause = !G.pause; } });
+function taille(){
+  dpr = Math.min(3, window.devicePixelRatio || 1);
+  echelle = Math.min(window.innerWidth/W, window.innerHeight/H);
+  cv.style.width = Math.floor(W*echelle) + "px"; cv.style.height = Math.floor(H*echelle) + "px";
+  cv.width = Math.floor(W*echelle*dpr); cv.height = Math.floor(H*echelle*dpr);
+}
+window.addEventListener("resize", taille); taille();
+document.addEventListener("visibilitychange", () => { if (document.hidden && G.ecran === "combat") G.pause = true; });
+// pour les tests
+window.Bannis.G = G;
+window.Bannis.J = {nouvelleNuit, allerPlacement, lancerCombat, finDeVague, finDeNuit, lancerDes, jeterSort, suiteButin};
+requestAnimationFrame(boucle);
+})();
