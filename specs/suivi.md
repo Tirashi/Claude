@@ -128,3 +128,4 @@ Maquettes de la carte 2 à 4 (isométrique, puis papier à l'encre validée), é
 - **19/11 — Ciel de guerre, session 4 (1re partie)** : ailiers (3 intercepteurs en mission 1, 2 polyvalents ailleurs) ; mission 3 « Le raid » (base au sol : DCA, dépôts, radar) ; six missions ([cdc](ciel-de-guerre.md)).
 - **19/11 — Ciel de guerre, retours** : ailiers remis dans le bon sens, demi-tour (2 × S, 2 × FREIN), qualité qui baisse toute seule si le téléphone peine ([cdc](ciel-de-guerre.md)).
 - **19/11 — Ciel de guerre, décors** : [maquette](https://claude.ai/artifact/51D1vRdeVNJMCFWTkbApSd) validée ; cinq ambiances (crépuscule, nuit, orage, désert, neige), une par mission, et toutes les 5 vagues ; feux de position de nuit et sous l'orage : **session 4 finie** ([cdc](ciel-de-guerre.md)).
+- **19/11 — Ciel de guerre** : sur main (e8b14a5) ; fluide sur le téléphone, confirmé par l'utilisateur.
