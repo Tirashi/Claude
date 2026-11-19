@@ -152,6 +152,25 @@ function aura(x, y, t, k = 1){
   for (let i = 0; i < 6; i++){ const p = ((t*.6 + i/6) % 1), px = x + Math.sin(i*2.3 + t*2)*22, py = y - p*70; ctx.globalAlpha = (1 - p)*k; ctx.fillRect(px - 1, py - 1, 2, 2); }
   ctx.restore();
 }
+// arme équipée tenue dans la main avant : icône du butin (en diagonale, pointe en haut à droite), pivot sur la poignée.
+// Corps à corps : levée derrière puis abattue devant pendant le coup ; bâtons : levés pendant le sort.
+function dessinerArme(u, x, y){
+  const o = u.h && u.h.equip.arme; if (!o || u.pv <= 0) return;
+  const im = IMG.icones; if (!im.width) return;
+  const cac = u.role === "cac", dir = u.dir || 1;
+  let a = cac ? -0.15 : -0.75, hx = 13, hy = -24;
+  if (u.act === "marche") a += Math.sin(u.ta*12)*0.12;
+  else if (u.act === "repos" || u.act === "victoire") a += Math.sin(u.ta*2.5)*0.05;
+  if (u.act === "coup"){ const k = Math.min(1, u.ta/0.3);
+    if (cac){ a = k < 0.35 ? -1.7*(k/0.35) : -1.7 + 3.2*((k - 0.35)/0.65); hx = 13 + k*6; }
+    else { a = -0.75 - Math.sin(k*Math.PI)*0.5; hy = -24 - Math.sin(k*Math.PI)*8; } }
+  const s = 0.75;
+  ctx.save(); ctx.translate(Math.round(x + dir*hx), Math.round(y + hy)); if (dir < 0) ctx.scale(-1, 1); ctx.rotate(a);
+  ctx.drawImage(im, o.ic[1]*32, o.ic[0]*32, 32, 32, -7*s, -25*s, 32*s, 32*s);
+  ctx.restore();
+}
+function poussiere(u){ if (reduit) return; u.pas = (u.pas || 0) + 1; if (u.pas % 14) return;
+  G.part.push({x: u.x - (u.dir || 1)*6, y: u.y, vx: -(u.dir || 1)*alea(10, 30), vy: alea(-25, -10), t: 0, d: .45, c: "rgba(210,190,220,.55)", g: 20}); }
 function dessinerUnite(u){
   let x = u.x + (u.lunge > 0 ? Math.sin((.25 - u.lunge)/.25*Math.PI)*(u.dir || 1)*16 : 0), y = u.y;
   const blanc = Math.max(u.flash*6, u.blanc || 0);
@@ -159,13 +178,18 @@ function dessinerUnite(u){
     if (u.pv <= 0){ dessinerHeros(u.spr, "mort", 1, x, y, u.dir, {alpha: .55}); return; }
     if (u.leg) aura(x, y, G.t);
     if (u.hate > 0){ ctx.fillStyle = "rgba(160,240,255,.35)"; ctx.beginPath(); ctx.ellipse(x, y + 2, 22, 6, 0, 0, 7); ctx.fill(); }
-    let a = u.act, sh = 0; if (a === "mal") sh = Math.sin(u.ta*60)*3;
-    dessinerHeros(u.spr, a === "coup" ? (u.role === "cac" ? "coup" : "sort") : a, u.ta, x + sh, y, u.dir, {blanc});
+    let a = u.act, sh = 0, saut = 0, pench = 0; if (a === "mal") sh = Math.sin(u.ta*60)*3;
+    // marche : petits bonds, buste penché vers l'avant, poussière aux pieds
+    if (a === "marche"){ saut = -Math.abs(Math.sin(u.ta*11))*4; pench = (u.dir || 1)*0.07; poussiere(u); }
+    ctx.save(); ctx.translate(x + sh, y + saut); ctx.rotate(pench);
+    dessinerHeros(u.spr, a === "coup" ? (u.role === "cac" ? "coup" : "sort") : a, u.ta, 0, 0, u.dir, {blanc});
+    dessinerArme(u, 0, 0);
+    ctx.restore();
   } else {
     const k = u.t*1.2, mort = u.pv <= 0;
     let yy = y, sx = 1, sy = 1;
     if (mort){ sy = Math.max(.05, 1 - u.mort*1.2); }
-    else if (u.act === "marche"){ yy -= Math.abs(Math.sin(u.ta*9))*5; const b = Math.sin(u.ta*18)*.05; sx = 1 - b; sy = 1 + b; }
+    else if (u.act === "marche"){ yy -= Math.abs(Math.sin(u.ta*9))*5; const b = Math.sin(u.ta*18)*.05; sx = 1 - b; sy = 1 + b; poussiere(u); }
     else { const b = Math.sin(u.ta*3)*.04; sx = 1 + b; sy = 1 - b; }
     let xx = x; if (u.act === "coup" && u.ta < .3 && u.role === "dist") xx -= (u.dir || -1)*Math.sin(u.ta/.3*Math.PI)*10;
     if (u.act === "mal") xx += Math.sin(u.ta*60)*3;
@@ -339,7 +363,8 @@ function champPlacement(){
   if (G.sel < 0) texte("Touche un héros, puis une case", 260, 300, 14, "#fff", "center", {gras: false});
   for (const u of G.unitesPlace){ if (u.tx !== undefined){ u.x += (u.tx - u.x)*.25; u.y += (u.ty - u.y)*.25; }
     if (u.h.leg) aura(u.x, u.y, G.t);
-    dessinerHeros(R.classeDe(u.h).spr, "repos", G.t + u.ta, u.x, u.y, 1); }
+    dessinerHeros(R.classeDe(u.h).spr, "repos", G.t + u.ta, u.x, u.y, 1);
+    dessinerArme({h: u.h, pv: 1, role: D.CLASSES[u.h.cls].role, dir: 1, act: "repos", ta: G.t + u.ta}, u.x, u.y); }
 }
 
 /* ---------- événements du combat : effets et sons ---------- */
@@ -495,20 +520,20 @@ function ecranButin(dt){
   } else if (B.etape === "evolution"){
     evolution(dt);
   } else if (B.etape === "objet"){
-    grand(14, 112, W - 28, 470);
-    texte("BUTIN", W/2, 160, 18, "#ffe14a", "center", {titre: true});
-    texte("Choisis un objet, puis le héros qui le porte.", W/2, 190, 14, "#fff", "center", {gras: false});
+    grand(14, 104, W - 28, 520);
+    texte("BUTIN", W/2, 150, 18, "#ffe14a", "center", {titre: true});
+    texte("Choisis un objet, puis le héros qui le porte.", W/2, 178, 14, "#fff", "center", {gras: false});
     B.objets.forEach((o, i) => {
-      const y = 208 + i*96, R0 = D.RARETES[o.rar];
-      petit(34, y, W - 68, 88); ctx.strokeStyle = R0.c; ctx.lineWidth = 2; rr(36, y + 2, W - 72, 84, 8); ctx.stroke();
-      icone(o.ic, 46, y + 14, 48);
-      texte(o.n, 106, y + 30, 15, "#fff", "left", {max: W - 150});
-      texte(R0.n + " · " + D.SLOTS[o.slot].n, 106, y + 52, 13, R0.c);
-      texte(R.texteBonus(o), 106, y + 70, 14, "#d8ffd8", "left", {gras: false, max: W - 150});
-      if (o.pour) texte(o.pour === "cac" ? "pour le corps à corps" : "pour les mages, soins et soutien", 106, y + 84, 11, "#ffe3a8", "left", {gras: false});
-      zone(34, y, W - 68, 88, () => { B.pris = o; B.etape = "equiper"; SON.clic(); });
+      const y = 194 + i*112, R0 = D.RARETES[o.rar];
+      petit(30, y, W - 60, 104); ctx.strokeStyle = R0.c; ctx.lineWidth = 2; rr(32, y + 2, W - 64, 100, 8); ctx.stroke();
+      icone(o.ic, 42, y + 26, 48);
+      texte(o.n, 102, y + 28, 15, "#fff", "left", {max: W - 146});
+      texte(R0.n + " · " + D.SLOTS[o.slot].n, 102, y + 48, 13, R0.c, "left", {max: W - 146});
+      texte(R.texteBonus(o), 102, y + 69, 14, "#d8ffd8", "left", {max: W - 146});
+      if (o.pour) texte(o.pour === "cac" ? "pour le corps à corps" : "pour les mages, soins et soutien", 102, y + 90, 12, "#ffe3a8", "left", {max: W - 146});
+      zone(30, y, W - 60, 104, () => { B.pris = o; B.etape = "equiper"; SON.clic(); });
     });
-    bouton(60, 512, W - 120, 46, "PRENDRE 12 PIECES D'OR", () => { G.run.or += 12; B.pris = {or: true}; SON.or(); suiteButin(); }, true, false, 3);
+    bouton(60, 556, W - 120, 46, "PRENDRE 12 PIECES D'OR", () => { G.run.or += 12; B.pris = {or: true}; SON.or(); suiteButin(); }, true, false, 3);
   } else if (B.etape === "equiper"){
     const o = B.pris, R0 = D.RARETES[o.rar];
     grand(10, 70, W - 20, 600);
@@ -536,17 +561,17 @@ function ecranButin(dt){
     texte("LE MARCHAND", W/2, 160, 18, "#ffe14a", "center", {titre: true});
     texte("Tu as " + G.run.or + " pièces d'or.", W/2, 190, 15, "#fff", "center");
     D.MARCHAND.forEach((m, i) => {
-      const y = 206 + i*78, ok = G.run.or >= m.prix && !(m.k === "mur" && G.run.mur >= G.run.murMax);
-      petit(34, y, W - 68, 70); ctx.save(); if (!ok) ctx.globalAlpha = .5;
-      icone(m.ic, 44, y + 14, 42);
-      texte(m.n, 96, y + 28, 15, "#fff", "left", {max: W - 200});
-      paragraphe(m.d, 96, y + 46, W - 196, 12, "#ffe3a8", 1.15);
-      texte(m.prix + " OR", W - 48, y + 28, 15, "#ffe14a", "right");
-      if (m.k !== "mur") texte("x" + (G.run.stock[m.k] || 0), W - 48, y + 52, 13, "#fff", "right");
+      const y = 200 + i*82, ok = G.run.or >= m.prix && !(m.k === "mur" && G.run.mur >= G.run.murMax);
+      petit(30, y, W - 60, 76); ctx.save(); if (!ok) ctx.globalAlpha = .5;
+      icone(m.ic, 40, y + 17, 42);
+      texte(m.n, 92, y + 26, 15, "#fff", "left", {max: W - 190});
+      paragraphe(m.d, 92, y + 46, W - 186, 12, "#ffe3a8", 1.05);
+      texte(m.prix + " OR", W - 44, y + 26, 15, "#ffe14a", "right");
+      if (m.k !== "mur") texte("x" + (G.run.stock[m.k] || 0), W - 44, y + 62, 13, "#fff", "right");
       ctx.restore();
-      if (ok) zone(34, y, W - 68, 70, () => { G.run.or -= m.prix; if (m.k === "mur") G.run.mur = Math.min(G.run.murMax, G.run.mur + 30); else G.run.stock[m.k] = (G.run.stock[m.k] || 0) + 1; SON.or(); });
+      if (ok) zone(30, y, W - 60, 76, () => { G.run.or -= m.prix; if (m.k === "mur") G.run.mur = Math.min(G.run.murMax, G.run.mur + 30); else G.run.stock[m.k] = (G.run.stock[m.k] || 0) + 1; SON.or(); });
     });
-    bouton(50, 540, W - 100, 54, "VAGUE SUIVANTE", () => { G.run.vague++; R.preparerVague(G.run); allerPlacement(); SON.pose(); }, true, true);
+    bouton(50, 538, W - 100, 54, "VAGUE SUIVANTE", () => { G.run.vague++; R.preparerVague(G.run); allerPlacement(); SON.pose(); }, true, true);
   }
 }
 function evolution(dt){

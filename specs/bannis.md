@@ -186,4 +186,6 @@ Retours de l'utilisateur (19/11, essai de l'artefact) et corrections :
 
 Retours du 19/11 (deuxième essai) : **sprites mal découpés** (un morceau du monstre voisin à côté du spectre) : 10 des 31 monstres de Willibab dépassent 64 px (jusqu'à 81 × 89) ; planche refaite en cases de 96 px, monstre posé au bas de sa case. **Police peu lisible sur les chiffres** : Jersey 10 remplace Pixelify Sans pour tous les textes (agrandie de 30 %, une seule graisse) ; titres toujours en Press Start 2P.
 
+Retours du 19/11 (troisième essai) : **texte du butin qui sortait du cadre** (Jersey 10 plus haute) : cartes du butin (104 px) et du marchand (76 px) agrandies. **Personnages plus animés en marchant** : petits bonds, buste penché vers l'avant, poussière aux pieds (héros et monstres). **Montrer l'arme équipée** : essai en jeu, l'icône de l'arme (planche de Shikashi) est tenue dans la main avant (`dessinerArme`, pivot sur la poignée) : au corps à corps elle est levée derrière puis abattue devant pendant le coup ; les bâtons se lèvent pendant le sort ; visible aussi au placement. À garder ou à retirer selon l'avis de l'utilisateur.
+
 Retour de l'utilisateur : en attente.
