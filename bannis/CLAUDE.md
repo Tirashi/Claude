@@ -6,7 +6,7 @@ Autobattler rogue-lite, démo sur l'accueil. Cahier des charges : [`specs/bannis
 - `donnees.js` : `Bannis.D` — classes (et légendaires), traits, monstres (`i` = case de `img/monstres.png`), vagues, boss, objets, niveaux, sorts, marchand.
 - `regles.js` : `Bannis.R` — sans affichage : héros (`stats()` = base + trait + équipement + légendaire), run, vagues (`composerVague`, `apercu`), **combat** (`debutCombat`, `etape(C, dt)` ; il remplit `C.ev` d'événements : degats, mort, or, soin, tir, mur, boss, chant, rate, eclair), dés et sorts, sauvegarde (`sauver` / `charger`, `VERSION_RUN`).
 - `jeu.js` : canvas 360 × 760 agrandi sans lissage ; tous les écrans, fiche d'un héros, pause, sons synthétisés. `Bannis.G` (état) et `Bannis.J` (fonctions) servent aux tests.
-- `img/` : planches fabriquées par `outils/bannis-atlas.py` (packs dans un dossier à part) : `heros.png` (12 feuilles RPG Maker MV de 288 × 192, ordre `D.HEROS`, regard à gauche), `monstres.png` (31 × 2 cases de 64, retournées), `icones.png` (Shikashi), `ui-*.png` (Dragon Regalia).
+- `img/` : planches de `outils/bannis-atlas.py` : `heros.png` (12 feuilles RPG Maker MV, ordre `D.HEROS`), `monstres.png` (31 × 2 cases de 64), `icones.png` (Shikashi), `ui-*.png` (Dragon Regalia).
 - Polices : `polices/bannis.css` (Pixelify Sans pour les textes, Press Start 2P pour les titres, en MAJUSCULES sans accent).
 
 ## Sauvegardes
