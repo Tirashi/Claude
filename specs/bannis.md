@@ -194,4 +194,4 @@ Retours du 19/11 (quatrième essai) :
 - **Classes légendaires débloquées dans l'arbre** de compétences en fin de run : plus d'évolution automatique ; un héros évolue au niveau 5 seulement si sa classe est débloquée (`bannis.arbre.legendaires`, rempli par l'arbre à la session 4) ; la fiche l'indique.
 - **Première run un peu longue, il faut lutter dès le début** : un monstre de plus par vague (5 + vague, 16 au plus), monstres du premier palier plus solides (vie +25 % environ, attaque +1), vie +15 % et attaque +10 % de départ, puis +15 % / +9 % par vague. Simulateur : vague moyenne 5,5 sans dés, 6,2 avec (avant : 6,5 et 7,8) ; la Muraille perd déjà 8, 16 puis 26 aux vagues 1 à 3 ; quelques nuits perdues dès la vague 2 ou 3.
 
-Retour de l'utilisateur : en attente.
+Retour de l'utilisateur (19/11) : « c'est pas mal là » : **session 1 validée** après les retours d'essai (contour des textes, vignettes, armes, début plus dur). Prochaine étape : session 2 (dés et sorts).
