@@ -43,7 +43,6 @@ const CDGSons = (function () {
     missile(t, v) { bruit(t, "bandpass", 500, 2, .02, .7, .3 * v, 2600); note(t, 220, "sawtooth", .01, .35, .04 * v, null, 660); },
     boom(t, v, d) { if (!boomEnr(t, v, d, false)) explosion(t, v, d, false); },
     boomGros(t, v, d) { if (!boomEnr(t, v, d, true)) explosion(t, v, d, true); },
-    crash(t, v, d) { if (!echantillon(t, "crash", 1.1 * v, 900 * (1 - .4 * (d || 0)))) explosion(t, v, d, true); },
     touche(t, v) { bruit(t, "highpass", 1800, .8, .002, .09, .3 * v); note(t, 140, "square", .002, .08, .1 * v, null, 70); },
     verrou(t, v) { note(t, 1320, "square", .002, .06, .07 * v); note(t + .08, 1760, "square", .002, .1, .07 * v); },
     annonce(t, v) { note(t, 660, "triangle", .01, .25, .08 * v); note(t + .12, 990, "triangle", .01, .35, .07 * v); },
@@ -54,8 +53,8 @@ const CDGSons = (function () {
 
   // ---------- explosions enregistrées (choisies au banc d'essai du 18/11) : sons/*.mp3, ou window.CDG_SONS (base64) dans l'artefact ----------
   // expl-1, expl-4, expl-7 : NIIIEMAND (CC0), explosions proches ; expl-3 : NIIIEMAND, grave comme un gros canon, pour les explosions lointaines ;
-  // crash : Matthew Flat, explosion-large_1 (CC BY-ND 3.0, fichier entier), étouffée, quand un grand vaisseau s'écrase.
-  const ECH = {}, NOMS_ECH = ["expl-1", "expl-3", "expl-4", "expl-7", "crash", "reacteur-d", "reacteur-i"];
+  // (le gros son d'écrasement, Matthew Flat, a été retiré le 19/11 : trop fort, il détonnait)
+  const ECH = {}, NOMS_ECH = ["expl-1", "expl-3", "expl-4", "expl-7", "reacteur-d", "reacteur-i"];
   function chargerEchantillons() {
     for (const k of NOMS_ECH) {
       const b64 = window.CDG_SONS && window.CDG_SONS[k];

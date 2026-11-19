@@ -217,3 +217,5 @@ Retours de l'utilisateur (« trop dur », puis « encore difficile ») : vagues 
 - Les ailiers volaient en marche arrière : `lookAt` tourne le groupe vers +z, le modèle doit être retourné (`rotation.y = π`, comme les ennemis).
 - **Demi-tour** (`demiTour`, `S.demiT`, `S.demiP`, `S.demiR`) : deux appuis rapides sur S (souris) ou sur FREIN (téléphone) ; demi-looping en 1,35 s, puis à mi-parcours l'orientation est réécrite (lacet + π, tangage π − tangage, roulis + π : même attitude) et un demi-tonneau de 0,55 s remet à l'endroit ; on repart dans l'autre sens environ 35 m plus haut.
 - **« Ça lag un peu »** : impossible à mesurer ici (navigateur sans carte graphique). Qualité qui s'adapte (`QUAL`, `redim`) : en vol, si les images arrivent à plus de 27 ms en moyenne pendant 4 s, la résolution interne baisse de 20 % (deux fois au plus). Repeinture des textures par couleur (palette) et chargement de fond étalé (un modèle tous les 0,25 s).
+
+- 19/11 : le gros son d'écrasement (Matthew Flat, `sons/crash.mp3`) est **retiré** à la demande de l'utilisateur (trop fort, il détonnait) : un grand vaisseau qui coule fait une grosse explosion ordinaire (`boomGros`).
