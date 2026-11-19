@@ -175,7 +175,7 @@ const shots = process.argv[2];
       // Les Bannis : une nuit commence (3 recrues), la vague 1 se joue jusqu'au bout, le butin s'ouvre, la nuit sauvegardée se recharge, la fin de nuit s'enregistre
       const r = await p.evaluate(async () => {
         const B = window.Bannis, wait = ms => new Promise(r => setTimeout(r, ms));
-        B.J.nouvelleNuit(); const G = B.G; if (G.ecran !== 'recrutement' || G.recrues.length !== 5) return 'pas de recrutement';
+        B.J.nouvelleNuit(); const G = B.G; if (G.ecran !== 'recrutement' || G.recrues.length !== 3) return 'pas de recrutement';
         G.run.heros = G.recrues.slice(0, 3); B.R.placerParDefaut(G.run); B.R.preparerVague(G.run); B.J.allerPlacement();
         if (!B.R.charger(localStorage.getItem('bannis.run'))) return "la nuit n'est pas sauvegardée";
         B.J.lancerCombat(); G.vitesse = 2;

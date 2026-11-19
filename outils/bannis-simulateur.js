@@ -1,5 +1,5 @@
 // Les Bannis : simulateur sans écran. Joue des nuits entières avec une escouade tirée au sort
-// (3 recrues parmi 5, placement par défaut, premier bonus de niveau, objet équipé s'il vaut mieux), sans dés
+// (3 recrues au hasard, placement par défaut, stats qui montent seules, objet équipé si le héros peut le porter), sans dés
 // sauf option --des (sort lancé dès que la jauge serait pleine, approximé : un sort toutes les 12 s).
 // Usage : node outils/bannis-simulateur.js [nuits=40] [--des]
 "use strict";
@@ -11,7 +11,7 @@ const nuits = Number(process.argv[2]) || 40, avecDes = process.argv.includes("--
 const atteint = [], causes = {mur: 0, heros: 0, gagne: 0}, morts = {};
 let tempsTotal = 0;
 for (let n = 0; n < nuits; n++){
-  const run = R.nouvelleRun(); run.heros = R.recrues(5).slice(0, 3); R.placerParDefaut(run);
+  const run = R.nouvelleRun(); run.heros = R.recrues(3); R.placerParDefaut(run);
   let fin = null;
   while (!fin){
     R.preparerVague(run);
@@ -21,8 +21,8 @@ for (let n = 0; n < nuits; n++){
       C.ev.length = 0; }
     tempsTotal += t;
     if (C.fin !== "victoire"){ fin = run.mur <= 0 ? "mur" : "heros"; break; }
-    for (const h of run.heros){ const k = R.gagnerXp(h, R.xpDeVague(run)*(h.mort ? 0.5 : 1)); for (let i = 0; i < k; i++) R.appliquerBonus(h, R.propositionsNiveau()[0]); if (R.peutEvoluer(h)) R.evoluer(h); }
-    const o = R.genererObjet(run.vague, !!D.BOSS[run.vague]); const h = run.heros.find(x => !x.equip[o.slot]) || run.heros[0]; R.equiper(h, o);
+    for (const h of run.heros){ const k = R.gagnerXp(h, R.xpDeVague(run)*(h.mort ? 0.5 : 1)); for (let i = 0; i < k; i++) R.monterNiveau(h); if (R.peutEvoluer(h)) R.evoluer(h); }
+    const o = R.genererObjet(run.vague, !!D.BOSS[run.vague]); const h = run.heros.find(x => R.peutPorter(x, o) && !x.equip[o.slot]) || run.heros.find(x => R.peutPorter(x, o)); if (h) R.equiper(h, o);
     if (run.or >= 15 && run.mur < 70){ run.or -= 15; run.mur = Math.min(run.murMax, run.mur + 30); }
     if (run.vague >= D.NB_VAGUES){ fin = "gagne"; break; }
     run.vague++;

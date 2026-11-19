@@ -95,10 +95,18 @@ function paragraphe(t, x, y, larg, px, c = "#fff", interligne = 1.3, al = "left"
   return yy - y;
 }
 function icone(rc, x, y, s = 28){ const im = IMG.icones; if (!im.width) return; ctx.drawImage(im, rc[1]*32, rc[0]*32, 32, 32, x, y, s, s); }
+// barre dans le cadre du pack : bouts de 12 px de chaque côté (dessinés hors de x..x+w), creux de 10 px de haut
 function barre(x, y, w, h, v, c){
-  nine("ui-barre", 0, 0, 96, 16, 6, x - 5, y - 5, w + 10, h + 10);
+  const im = IMG["ui-barre"], k = (h + 6)/16, y0 = Math.round(y - 3);
+  if (im.width){ ctx.drawImage(im, 0, 0, 12, 16, x - 12, y0, 12, h + 6); ctx.drawImage(im, 13, 0, 10, 16, x, y0, w, h + 6); ctx.drawImage(im, 84, 0, 12, 16, x + w, y0, 12, h + 6); }
+  ctx.fillStyle = "#241430"; ctx.fillRect(x, y, w, h);
   ctx.fillStyle = c; ctx.fillRect(x, y, Math.max(0, w*Math.min(1, v)), h);
   ctx.fillStyle = "rgba(255,255,255,.3)"; ctx.fillRect(x, y, Math.max(0, w*Math.min(1, v)), Math.ceil(h/3));
+}
+// petite barre sans cadre (vie au-dessus des unités)
+function jauge(x, y, w, h, v, c){
+  ctx.fillStyle = "#120a1a"; ctx.fillRect(x - 1, y - 1, w + 2, h + 2); ctx.fillStyle = "#3a1c2a"; ctx.fillRect(x, y, w, h);
+  ctx.fillStyle = c; ctx.fillRect(x, y, Math.max(0, w*Math.min(1, v)), h);
 }
 let zones = [];
 function zone(x, y, w, h, f){ zones.push({x, y, w, h, f}); }
@@ -189,7 +197,7 @@ function muraille(){
   ctx.fillStyle = "#5c566c"; for (let x = 0; x < X; x += 16) ctx.fillRect(x, y0 - 12, 10, 12);
   ctx.fillStyle = "#6a6480"; ctx.fillRect(0, y0, X, 4);
   ctx.fillStyle = "rgba(255,190,90,.6)"; ctx.fillRect(14, y0 + 30, 6, 10); ctx.fillRect(28, y0 + 120, 6, 10);
-  if (G.run){ const v = G.run.mur/G.run.murMax; barre(10, y0 - 34, 110, 8, v, v > .35 ? "#e8dcc0" : "#e8402a"); texte("MURAILLE " + Math.ceil(G.run.mur), 128, y0 - 25, 13, "#fff"); }
+  if (G.run){ const v = G.run.mur/G.run.murMax; barre(20, y0 - 34, 96, 8, v, v > .35 ? "#e8dcc0" : "#e8402a"); texte("MURAILLE " + Math.ceil(G.run.mur), 134, y0 - 25, 13, "#fff"); }
 }
 
 /* ---------- écrans : titre ---------- */
@@ -215,30 +223,29 @@ function ecranTitre(){
 
 /* ---------- recrutement ---------- */
 function nouvelleNuit(){
-  G.run = R.nouvelleRun(); G.recrues = R.recrues(5); G.choisies = []; G.ecran = "recrutement";
+  G.run = R.nouvelleRun(); G.recrues = R.recrues(3); G.choisies = G.recrues.slice(); G.ecran = "recrutement";
 }
 function ecranRecrutement(){
   fond();
   grand(10, 14, W - 20, 732);
-  texte("LE BATEAU-PRISON", W/2, 62, 15, "#ffd76a", "center", {titre: true});
-  paragraphe("Cinq condamnés ont choisi la Muraille plutôt que la corde. Prends-en trois.", 34, 90, W - 68, 15, "#fff");
+  texte("TON ESCOUADE", W/2, 62, 15, "#ffd76a", "center", {titre: true});
+  paragraphe("Trois condamnés ont choisi la Muraille plutôt que la corde. Le sort les a désignés pour cette nuit.", 34, 90, W - 68, 14, "#fff");
   G.recrues.forEach((h, i) => {
-    const y = 128 + i*104, x = 28, w = W - 56, hh = 96, choisi = G.choisies.includes(h);
-    if (choisi){ ctx.fillStyle = "rgba(255,225,74,.25)"; rr(x - 4, y - 4, w + 8, hh + 8, 10); ctx.fill(); }
+    const y = 136 + i*168, x = 28, w = W - 56, hh = 160;
     petit(x, y, w, hh);
     const C = D.CLASSES[h.cls], s = R.stats(h);
-    dessinerHeros(C.spr, "repos", G.t + i*.7, x + 34, y + 78, 1, {e: 2});
-    texte(h.nom, x + 70, y + 26, 18, "#fff");
+    dessinerHeros(C.spr, "repos", G.t + i*.7, x + 36, y + 84, 1, {e: 2.2});
+    texte(h.nom, x + 76, y + 26, 18, "#fff");
     texte(C.n, x + w - 12, y + 26, 14, "#ffe3a8", "right");
-    texte(`VIE ${s.pv}   ATQ ${s.atq}   DEF ${s.def}   VIT ${s.vit.toFixed(2)}`, x + 70, y + 48, 14, "#e8f0ff", "left", {gras: false, max: w - 82});
-    texte(D.TRAITS[h.trait].n, x + 70, y + 68, 14, "#ffb08a");
-    texte(D.TRAITS[h.trait].d, x + 70, y + 86, 12, "#ffd8c8", "left", {gras: false, max: w - 82});
-    if (choisi) texte("✓", x + w - 18, y + hh - 12, 22, "#ffe14a", "center");
-    zone(x, y, w, hh, () => { if (choisi) G.choisies = G.choisies.filter(c => c !== h); else if (G.choisies.length < 3) G.choisies.push(h); SON.clic(); });
+    texte(D.ROLES[C.role], x + 76, y + 46, 13, "#9ad8ff");
+    paragraphe(C.d, x + 76, y + 64, w - 88, 12, "#e8f0ff", 1.15);
+    texte(`VIE ${s.pv}   ATQ ${s.atq}   DEF ${s.def}   VIT ${s.vit.toFixed(2)}`, x + 12, y + 112, 13, "#fff", "left", {max: w - 24});
+    texte("TRAIT : " + D.TRAITS[h.trait].n, x + 12, y + 132, 13, "#ffb08a");
+    texte(D.TRAITS[h.trait].d, x + 12, y + 150, 12, "#ffd8c8", "left", {gras: false, max: w - 24});
   });
-  const ok = G.choisies.length === 3;
-  bouton(40, 664, W - 80, 52, ok ? "A LA MURAILLE !" : `CHOISIS ${3 - G.choisies.length} RECRUE${3 - G.choisies.length > 1 ? "S" : ""}`, () => {
-    G.run.heros = G.choisies.slice(); R.placerParDefaut(G.run); R.preparerVague(G.run); allerPlacement(); SON.pose(); }, ok, ok);
+  paragraphe("Le trait est un défaut ou une qualité du condamné : il change sa façon de se battre.", 34, 648, W - 68, 12, "#ffe3a8", 1.15);
+  bouton(40, 680, W - 80, 50, "A LA MURAILLE !", () => {
+    G.run.heros = G.recrues.slice(); R.placerParDefaut(G.run); R.preparerVague(G.run); allerPlacement(); SON.pose(); }, true, true);
 }
 
 /* ---------- placement et combat ---------- */
@@ -278,7 +285,7 @@ function bandeau(){
     texte("LE MAGE INSTABLE", 22, 84, 13, "#ffe3a8");
     const C = G.C, reste = C.file.length + R.vivants(C, "m").length;
     texte("monstres : " + reste, W - 22, 84, 13, "#fff", "right", {gras: false});
-    barre(22, 92, W - 44, 9, G.jauge, G.jauge >= 1 ? `hsl(${(G.t*200) % 360},90%,62%)` : "#a77bff");
+    barre(36, 92, W - 72, 9, G.jauge, G.jauge >= 1 ? `hsl(${(G.t*200) % 360},90%,62%)` : "#a77bff");
   }
 }
 function cartes(){
@@ -291,7 +298,7 @@ function cartes(){
     texte(h.nom, x + 12, y + 26, 16, "#fff", "left", {max: w - 50});
     texte("NIV " + h.niv, x + w - 12, y + 26, 13, "#ffe14a", "right");
     texte(cl.n, x + 12, y + 46, 13, h.leg ? "#ffd76a" : "#d8e4ff", "left", {max: w - 24, gras: !!h.leg});
-    barre(x + 12, y + 56, w - 24, 8, pv/pvMax, pv/pvMax > .35 ? "#4ad05a" : "#e8402a");
+    barre(x + 22, y + 56, w - 44, 8, pv/pvMax, pv/pvMax > .35 ? "#4ad05a" : "#e8402a");
     const xp0 = D.XP_NIVEAUX[h.niv - 1] || 0, xp1 = R.nivSuivant(h);
     ctx.fillStyle = "rgba(0,0,0,.35)"; ctx.fillRect(x + 12, y + 72, w - 24, 3); ctx.fillStyle = "#9ad8ff"; ctx.fillRect(x + 12, y + 72, (w - 24)*Math.min(1, (h.xp - xp0)/Math.max(1, xp1 - xp0)), 3);
     ctx.restore();
@@ -439,16 +446,17 @@ function effets(dt){
 /* ---------- fin de vague : expérience, niveaux, évolution, butin, marchand ---------- */
 function finDeVague(){
   const run = G.run, gagne = run.vague >= D.NB_VAGUES;
-  const xp = R.xpDeVague(run), file = [];
-  for (const h of run.heros){ const n = R.gagnerXp(h, h.mort ? xp/2 : xp); for (let i = 0; i < n; i++) file.push(h); }
+  const xp = R.xpDeVague(run), gains = [];
+  for (const h of run.heros){ const n = R.gagnerXp(h, h.mort ? xp/2 : xp); if (!n) continue;
+    const t = {pv: 0, atq: 0, def: 0, crit: 0, vit: 0}; for (let i = 0; i < n; i++){ const g = R.monterNiveau(h); for (const k in t) t[k] += g[k]; }
+    gains.push({h, niv: h.niv, t}); }
   if (gagne){ finDeNuit(true); return; }
   const boss = !!D.BOSS[run.vague];
-  G.butin = {etape: "bilan", t: 0, xp, niveaux: file, choix: null, objets: [0, 1, 2].slice(0, boss ? 3 : 2).map(() => R.genererObjet(run.vague, boss)), pris: null};
+  G.butin = {etape: "bilan", t: 0, xp, gains, choix: null, objets: [0, 1, 2].slice(0, boss ? 3 : 2).map(() => R.genererObjet(run.vague, boss)), pris: null};
   G.ecran = "butin"; SON.victoire();
 }
 function suiteButin(){
   const B = G.butin;
-  if (B.niveaux.length){ const h = B.niveaux.shift(); B.etape = "niveau"; B.h = h; B.choix = R.propositionsNiveau(); SON.niveau(); return; }
   const ev = G.run.heros.find(h => R.peutEvoluer(h));
   if (ev){ B.etape = "evolution"; G.evo = {h: ev, t: 0, fait: false, avant: R.classeDe(ev).n}; SON.sort(); return; }
   if (!B.pris){ B.etape = "objet"; return; }
@@ -462,13 +470,18 @@ function ecranButin(dt){
     if (G.evo && G.evo.h === h) continue; dessinerHeros(R.classeDe(h).spr, h.mort ? "mort" : "victoire", G.t + h.id, c[0], c[1], 1, {alpha: h.mort ? .55 : 1}); }
   hud();
   if (B.etape === "bilan"){
-    grand(20, 150, W - 40, 300);
+    grand(20, 150, W - 40, 300 + B.gains.length*22);
     texte("VAGUE TENUE !", W/2, 206, 18, "#ffe14a", "center", {titre: true});
     texte("+" + B.xp + " d'expérience pour chaque héros debout", W/2, 246, 15, "#fff", "center", {max: W - 80});
     texte("(la moitié pour les héros tombés)", W/2, 268, 13, "#ffe3a8", "center", {gras: false});
     texte("Or : " + G.run.or + "   ·   Muraille : " + Math.ceil(G.run.mur) + " / " + G.run.murMax, W/2, 304, 15, "#fff", "center");
     texte("Monstres abattus cette nuit : " + G.run.kills, W/2, 330, 15, "#fff", "center");
-    bouton(70, 370, W - 140, 50, "CONTINUER", () => { suiteButin(); SON.clic(); }, true, true);
+    // niveaux gagnés : les stats montent toutes seules
+    B.gains.forEach((g, i) => { const t = g.t, l = [];
+      if (t.pv) l.push("VIE +" + t.pv); if (t.atq) l.push("ATQ +" + t.atq); if (t.def) l.push("DEF +" + t.def); if (t.crit) l.push("CRIT +" + t.crit); if (t.vit) l.push("VIT +" + t.vit.toFixed(2));
+      texte(g.h.nom + " NIVEAU " + g.niv + " : " + l.join("  "), W/2, 362 + i*22, 14, "#ffe14a", "center", {max: W - 70}); });
+    if (B.gains.length && !B.sonNiv){ B.sonNiv = true; SON.niveau(); }
+    bouton(70, 370 + B.gains.length*22 + 10, W - 140, 50, "CONTINUER", () => { suiteButin(); SON.clic(); }, true, true);
   } else if (B.etape === "niveau"){
     const h = B.h, cl = R.classeDe(h);
     grand(20, 130, W - 40, 380);
@@ -489,24 +502,33 @@ function ecranButin(dt){
       icone(o.ic, 46, y + 14, 48);
       texte(o.n, 106, y + 30, 15, "#fff", "left", {max: W - 150});
       texte(R0.n + " · " + D.SLOTS[o.slot].n, 106, y + 52, 13, R0.c);
-      texte(R.texteBonus(o), 106, y + 74, 14, "#d8ffd8", "left", {gras: false, max: W - 150});
+      texte(R.texteBonus(o), 106, y + 70, 14, "#d8ffd8", "left", {gras: false, max: W - 150});
+      if (o.pour) texte(o.pour === "cac" ? "pour le corps à corps" : "pour les mages, soins et soutien", 106, y + 84, 11, "#ffe3a8", "left", {gras: false});
       zone(34, y, W - 68, 88, () => { B.pris = o; B.etape = "equiper"; SON.clic(); });
     });
     bouton(60, 512, W - 120, 46, "PRENDRE 12 PIECES D'OR", () => { G.run.or += 12; B.pris = {or: true}; SON.or(); suiteButin(); }, true, false, 3);
   } else if (B.etape === "equiper"){
     const o = B.pris, R0 = D.RARETES[o.rar];
-    grand(14, 112, W - 28, 430);
-    texte("QUI LE PORTE ?", W/2, 160, 16, "#ffe14a", "center", {titre: true});
-    icone(o.ic, 34, 176, 40); texte(o.n, 82, 196, 15, R0.c, "left", {max: W - 110}); texte(R.texteBonus(o), 82, 216, 14, "#d8ffd8", "left", {gras: false, max: W - 110});
-    G.run.heros.forEach((h, i) => {
-      const y = 236 + i*80, ac = h.equip[o.slot];
-      petit(30, y, W - 60, 72);
-      dessinerHeros(R.classeDe(h).spr, "repos", G.t + i, 64, y + 64, 1, {e: 1.7});
-      texte(h.nom + " · " + R.classeDe(h).n, 96, y + 26, 15, "#fff", "left", {max: W - 140});
-      texte(ac ? "remplace : " + ac.n + " (" + R.texteBonus(ac) + ")" : D.SLOTS[o.slot].n + " vide", 96, y + 50, 12, ac ? "#ffc8a8" : "#c8e8c8", "left", {gras: false, max: W - 140});
-      zone(30, y, W - 60, 72, () => { const ancien = R.equiper(h, o); if (ancien) G.run.or += Math.round(ancien.prix/2); SON.pose(); suiteButin(); });
+    grand(10, 70, W - 20, 600);
+    texte("QUI LE PORTE ?", W/2, 116, 16, "#ffe14a", "center", {titre: true});
+    icone(o.ic, 30, 130, 40); texte(o.n, 78, 148, 15, R0.c, "left", {max: W - 104}); texte(R.texteBonus(o), 78, 168, 14, "#d8ffd8", "left", {gras: false, max: W - 104});
+    const hs = G.run.heros.slice().sort((a, b) => (R.peutPorter(b, o) ? 1 : 0) - (R.peutPorter(a, o) ? 1 : 0));
+    hs.forEach((h, i) => {
+      const y = 186 + i*130, ok = R.peutPorter(h, o), ac = h.equip[o.slot], s0 = R.stats(h), s1 = R.statsAvec(h, o);
+      petit(24, y, W - 48, 122); ctx.save(); if (!ok) ctx.globalAlpha = .45;
+      dessinerHeros(R.classeDe(h).spr, "repos", G.t + i, 56, y + 72, 1, {e: 1.8});
+      texte(h.nom + " · " + R.classeDe(h).n, 88, y + 24, 15, "#fff", "left", {max: W - 124});
+      texte(ok ? (ac ? "porte : " + ac.n : D.SLOTS[o.slot].n + " : rien") : "ne peut pas porter cet objet", 88, y + 44, 12, ok ? (ac ? D.RARETES[ac.rar].c : "#c8e8c8") : "#ffb0a0", "left", {gras: !ac, max: W - 124});
+      // stats actuelles et changement
+      const L = [["VIE", s0.pv, s1.pv], ["ATQ", s0.atq, s1.atq], ["DEF", s0.def, s1.def], ["CRIT", s0.crit, s1.crit], ["VIT", s0.vit, s1.vit, 2], ["VOL", Math.round(s0.vol*100), Math.round(s1.vol*100)]];
+      L.forEach(([n, a, b, dec], j) => { const x = 88 + (j % 3)*((W - 120)/3), yy = y + 70 + Math.floor(j/3)*24, d = Math.round((b - a)*100)/100;
+        texte(n + " " + (dec ? a.toFixed(dec) : a), x, yy, 13, "#e8f0ff", "left", {gras: false});
+        if (ok && d) texte((d > 0 ? "+" : "") + (dec ? d.toFixed(dec) : d), x + 62, yy, 13, d > 0 ? "#6dff8a" : "#ff7a6a", "left"); });
+      ctx.restore();
+      if (ok) zone(24, y, W - 48, 122, () => { const ancien = R.equiper(h, o); if (ancien) G.run.or += Math.round(ancien.prix/2); SON.pose(); suiteButin(); });
     });
-    bouton(60, 482, W - 120, 44, "VENDRE (" + Math.round(o.prix/2) + " OR)", () => { G.run.or += Math.round(o.prix/2); SON.or(); suiteButin(); }, true, false, 3);
+    texte("L'objet remplacé est revendu.", W/2, 590, 12, "#ffe3a8", "center", {gras: false});
+    bouton(60, 602, W - 120, 44, "VENDRE (" + Math.round(o.prix/2) + " OR)", () => { G.run.or += Math.round(o.prix/2); SON.or(); suiteButin(); }, true, false, 3);
   } else if (B.etape === "marchand"){
     grand(14, 112, W - 28, 500);
     texte("LE MARCHAND", W/2, 160, 18, "#ffe14a", "center", {titre: true});
@@ -574,13 +596,14 @@ function ficheHeros(){
   texte(cl.n, 130, 130, 15, h.leg ? "#ffd76a" : "#d8e4ff", "left", {max: W - 160});
   texte("NIVEAU " + h.niv + (C.sexe === "F" ? " · FEMME" : C.sexe === "H" ? " · HOMME" : ""), 130, 154, 13, "#ffe14a");
   const xp0 = D.XP_NIVEAUX[h.niv - 1] || 0, xp1 = R.nivSuivant(h);
-  barre(130, 166, W - 170, 6, (h.xp - xp0)/Math.max(1, xp1 - xp0), "#9ad8ff");
+  barre(142, 166, W - 196, 6, (h.xp - xp0)/Math.max(1, xp1 - xp0), "#9ad8ff");
   texte(h.xp + " / " + (isFinite(xp1) ? xp1 : "max") + " xp", 130, 192, 12, "#d8f0ff", "left", {gras: false});
-  paragraphe(cl.d, 34, 236, W - 68, 13, "#ffe3a8");
+  texte(D.ROLES[C.role], 34, 222, 14, "#9ad8ff");
+  paragraphe(cl.d, 34, 242, W - 68, 13, "#ffe3a8");
   const pvAct = G.C ? (G.C.unites.find(u => u.h === h) || {pv: h.pv}).pv : h.pv;
   const lignes = [["VIE", Math.ceil(pvAct) + " / " + s.pv], ["ATTAQUE", s.atq], ["DEFENSE", s.def], ["VITESSE", s.vit.toFixed(2)], ["CRITIQUES", s.crit + " %"], ["VOL DE VIE", Math.round(s.vol*100) + " %"]];
   lignes.forEach(([a, b], i) => { const x = 34 + (i % 2)*((W - 68)/2), y = 290 + Math.floor(i/2)*26; texte(a, x, y, 14, "#d8e4ff", "left", {gras: false}); texte(String(b), x + (W - 68)/2 - 12, y, 14, "#fff", "right"); });
-  texte("TRAIT : " + D.TRAITS[h.trait].n, 34, 384, 15, "#ffb08a");
+  texte("TRAIT DE CARACTERE : " + D.TRAITS[h.trait].n, 34, 384, 14, "#ffb08a", "left", {max: W - 68});
   paragraphe(D.TRAITS[h.trait].d, 34, 404, W - 68, 13, "#ffd8c8");
   texte("EQUIPEMENT", 34, 452, 15, "#ffe14a");
   ["arme", "armure", "bijou"].forEach((sl, i) => {
@@ -632,7 +655,7 @@ function boucle(now){
     else { const l = G.C.unites.filter(u => u.pv > 0 || u.camp === "h" || u.mort < 1.2).sort((a, b) => a.y - b.y);
       for (const u of l){ if (u.pv > 0){ ctx.fillStyle = "rgba(0,0,0,.3)"; ctx.beginPath(); ctx.ellipse(u.x, u.y + 2, u.boss ? 30 : 18, 6, 0, 0, 7); ctx.fill(); }
         dessinerUnite(u);
-        if (u.pv > 0) barre(u.x - (u.boss ? 30 : 18), u.y + 12, u.boss ? 60 : 36, 4, u.pv/u.pvMax, u.camp === "h" ? "#4ad05a" : u.elite ? "#ffb31f" : "#e8402a"); }
+        if (u.pv > 0) jauge(u.x - (u.boss ? 30 : 18), u.y + 12, u.boss ? 60 : 36, 4, u.pv/u.pvMax, u.camp === "h" ? "#4ad05a" : u.elite ? "#ffb31f" : "#e8402a"); }
       for (const p of G.C.proj){ ctx.fillStyle = p.c; ctx.globalAlpha = .4; ctx.beginPath(); ctx.arc(p.x, p.y, 9, 0, 7); ctx.fill(); ctx.globalAlpha = 1; ctx.beginPath(); ctx.arc(p.x, p.y, 4, 0, 7); ctx.fill(); } }
     // particules et textes
     for (const q of G.part){ q.t += dt; q.x += q.vx*dt; q.y += q.vy*dt; q.vy += q.g*dt; ctx.globalAlpha = Math.max(0, 1 - q.t/q.d); ctx.fillStyle = q.c; ctx.fillRect(q.x - 2, q.y - 2, 4, 4); }

@@ -10,19 +10,23 @@ const HEROS = ["glenys-3", "glenys", "oratio-2", "oratio", "ley-2", "prime", "he
 // Classes de base et leur classe légendaire (même sexe). portee : cac (corps à corps), magie, soin, chant.
 const CLASSES = {
   guerriere:    {n: "GUERRIERE", sexe: "F", spr: "glenys-3", role: "cac", pv: 115, atq: 12, def: 4, vit: 1.0, crit: 8,
-                 d: "Tient la ligne au corps à corps, solide.", leg: {n: "EPEISTE DEMONIAQUE", spr: "glenys", d: "Ses coups font reculer et volent de la vie."}},
+                 d: "Combattante au corps à corps, la plus solide : elle tient la ligne devant les autres.", leg: {n: "EPEISTE DEMONIAQUE", spr: "glenys", d: "Ses coups font reculer et volent de la vie."}},
   mercenaire:   {n: "MERCENAIRE", sexe: "H", spr: "oratio-2", role: "cac", pv: 100, atq: 14, def: 3, vit: 1.1, crit: 12,
-                 d: "Frappe fort et vite au corps à corps.", leg: {n: "CHAMPION", spr: "oratio", d: "Ses critiques frappent aussi les monstres voisins."}},
+                 d: "Combattant au corps à corps, moins solide mais il frappe fort et vite.", leg: {n: "CHAMPION", spr: "oratio", d: "Ses critiques frappent aussi les monstres voisins."}},
   illusionniste:{n: "ILLUSIONNISTE", sexe: "H", spr: "ley-2", role: "magie", pv: 72, atq: 11, def: 1, vit: 0.95, crit: 10,
-                 d: "Tire des éclairs de loin et recule si on l'approche.", leg: {n: "GRAND SAGE", spr: "prime", d: "Ses sorts touchent aussi les monstres autour de la cible."}},
+                 d: "Mage qui lance des éclairs de loin ; fragile, il recule si un monstre approche.", leg: {n: "GRAND SAGE", spr: "prime", d: "Ses sorts touchent aussi les monstres autour de la cible."}},
   magicienne:   {n: "MAGICIENNE", sexe: "F", spr: "hex", role: "magie", pv: 66, atq: 13, def: 1, vit: 0.9, crit: 8,
-                 d: "Boules de feu à distance, fragile.", leg: {n: "SORCIERE DU TEMPS", spr: "hex-3", d: "Ses sorts ralentissent les monstres touchés."}},
+                 d: "Mage qui lance des boules de feu de loin ; la plus forte, mais très fragile.", leg: {n: "SORCIERE DU TEMPS", spr: "hex-3", d: "Ses sorts ralentissent les monstres touchés."}},
   pretresse:    {n: "PRETRESSE", sexe: "F", spr: "linail-2", role: "soin", pv: 78, atq: 9, def: 2, vit: 1.0, crit: 6,
-                 d: "Soigne le héros le plus blessé, attaque sinon.", leg: {n: "GRANDE PRETRESSE", spr: "wyvera", d: "Ses soins touchent toute l'escouade."}},
+                 d: "Soigneuse : elle suit le héros le plus blessé et le soigne ; sinon elle attaque de loin.", leg: {n: "GRANDE PRETRESSE", spr: "wyvera", d: "Ses soins touchent toute l'escouade."}},
   barde:        {n: "BARDE", sexe: "?", spr: "ouzo", role: "chant", pv: 84, atq: 8, def: 2, vit: 1.0, crit: 6,
-                 d: "Son chant accélère l'escouade ; tire des notes de loin.", leg: {n: "BARDE LEGENDAIRE", spr: "ouzo-3", d: "Son chant soigne aussi un peu."}}
+                 d: "Soutien : son chant accélère toute l'escouade ; il tire aussi des notes de loin.", leg: {n: "BARDE LEGENDAIRE", spr: "ouzo-3", d: "Son chant soigne aussi un peu."}}
 };
 const PORTEE = {cac: 30, magie: 135, soin: 130, chant: 120, dist: 125};
+// ce que fait chaque rôle, en une ligne (écran de recrutement, fiche)
+const ROLES = {cac: "CORPS A CORPS", magie: "MAGIE A DISTANCE", soin: "SOINS", chant: "SOUTIEN"};
+// gains automatiques à chaque niveau, selon le rôle (pv en %, vit en %)
+const CROISSANCE = {cac: {pv: 12, atq: 2, def: 1}, magie: {pv: 8, atq: 3, crit: 1}, soin: {pv: 10, atq: 2, def: 1}, chant: {pv: 10, atq: 1, def: 1, vit: 3}};
 
 // Traits des recrues : un effet réel chacun (appliqué par regles.js).
 const TRAITS = {
@@ -78,7 +82,8 @@ const NB_VAGUES = 12;
 
 // Objets : emplacement, icône (ligne, colonne dans img/icones.png), noms possibles.
 const SLOTS = {
-  arme:   {n: "ARME", noms: [["EPEE DU DESERTEUR", [5,1]], ["HACHE DU BOURREAU", [5,11]], ["DAGUE DU VOLEUR", [5,6]], ["BATON FELE", [6,7]], ["SCEPTRE DE BRAISE", [6,9]], ["MASSE DU GEOLIER", [5,13]]]},
+  // la 3e valeur d'une arme : qui peut la porter (cac = corps à corps, mage = magie, soin et chant)
+  arme:   {n: "ARME", noms: [["EPEE DU DESERTEUR", [5,1], "cac"], ["HACHE DU BOURREAU", [5,11], "cac"], ["DAGUE DU VOLEUR", [5,6], "cac"], ["MASSE DU GEOLIER", [5,13], "cac"], ["BATON FELE", [6,7], "mage"], ["SCEPTRE DE BRAISE", [6,9], "mage"], ["GRIMOIRE DU BANNI", [13,7], "mage"]]},
   armure: {n: "ARMURE", noms: [["COTTE RAPIECEE", [7,5]], ["PLASTRON DE LA MURAILLE", [7,4]], ["CASQUE CABOSSE", [7,1]], ["CAPE DU BANNI", [7,14]], ["BOUCLIER DE CHENE", [6,1]]]},
   bijou:  {n: "BIJOU", noms: [["ANNEAU DU PARJURE", [8,5]], ["AMULETTE DE CENDRE", [8,6]], ["CHAPELET DU PENITENT", [8,7]], ["BAGUE D'OR VOLE", [8,4]]]}
 };
@@ -128,5 +133,5 @@ const MARCHAND = [
 const NOMS = ["BRAM", "ODA", "KESS", "MARL", "TOVE", "RHYS", "ILSE", "GARN", "SEFA", "OREK", "VALE", "NELL", "JORN", "AUDE", "THEO", "MAUD", "YSOLDE", "CORBIN", "ELNA", "HUGUES", "ISEUT", "BALDO", "RENAUD", "OLWEN"];
 const NOMS_F = ["ODA", "KESS", "TOVE", "ILSE", "SEFA", "VALE", "NELL", "AUDE", "MAUD", "YSOLDE", "ELNA", "ISEUT", "OLWEN"];
 
-B.D = {HEROS, CLASSES, PORTEE, TRAITS, MONSTRES, PALIERS, BOSS, NB_VAGUES, SLOTS, RARETES, AFFIXES, BONUS_NIVEAU, XP_NIVEAUX, NIV_LEGENDAIRE, SORTS, MARCHAND, NOMS, NOMS_F};
+B.D = {HEROS, CLASSES, PORTEE, ROLES, CROISSANCE, TRAITS, MONSTRES, PALIERS, BOSS, NB_VAGUES, SLOTS, RARETES, AFFIXES, BONUS_NIVEAU, XP_NIVEAUX, NIV_LEGENDAIRE, SORTS, MARCHAND, NOMS, NOMS_F};
 })();

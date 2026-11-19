@@ -65,15 +65,25 @@ function evoluer(h){ h.leg = true; h.pv = stats(h).pv; }
 
 /* ---------- objets ---------- */
 function genererObjet(vague, mieux){
-  const slot = pick(Object.keys(D.SLOTS)), [nom, ic] = pick(D.SLOTS[slot].noms);
+  const slot = pick(Object.keys(D.SLOTS)), [nom, ic, pour] = pick(D.SLOTS[slot].noms);
   let rar = tirage(D.RARETES.map((x, i) => Object.assign({}, x, {p: x.p * (i === 0 ? Math.max(0.3, 1 - vague*0.05) : 1 + (mieux ? 1.5 : 0) + vague*0.08), i})));
   const R = D.RARETES[rar.i], b = {};
   const possibles = melange(Object.keys(D.AFFIXES).filter(a => D.AFFIXES[a].s.includes(slot)));
   const echelle = R.k * (1 + vague*0.07);
   for (const a of possibles.slice(0, R.aff)) b[a] = Math.max(1, Math.round(D.AFFIXES[a].v * echelle * r(0.8, 1.2)));
-  return {slot, n: nom, ic, rar: rar.i, b, prix: Math.round(6 + 8*R.k + vague)};
+  return {slot, n: nom, ic, rar: rar.i, b, pour: pour || null, prix: Math.round(6 + 8*R.k + vague)};
 }
 function texteBonus(o){ return Object.entries(o.b).map(([a, v]) => "+" + v + " " + D.AFFIXES[a].n.replace(/^% /, "% ")).map(t => t.replace("+" , "+")).join("  "); }
+function peutPorter(h, o){ if (!o.pour) return true; return (o.pour === "cac") === (D.CLASSES[h.cls].role === "cac"); }
+// stats du héros s'il portait cet objet (sans rien changer)
+function statsAvec(h, o){ const e = h.equip; h.equip = Object.assign({}, e, {[o.slot]: o}); const s = stats(h); h.equip = e; return s; }
+// niveau gagné : les stats montent toutes seules selon le rôle ; renvoie les gains
+function monterNiveau(h){
+  const g = D.CROISSANCE[D.CLASSES[h.cls].role], avant = stats(h), b = h.base;
+  if (g.pv) b.pv = Math.round(b.pv*(1 + g.pv/100)); if (g.atq) b.atq += g.atq; if (g.def) b.def += g.def; if (g.crit) b.crit += g.crit; if (g.vit) b.vit = Math.round(b.vit*(100 + g.vit))/100;
+  const apres = stats(h); h.pv = Math.min(apres.pv, h.pv + (apres.pv - avant.pv));
+  return {pv: apres.pv - avant.pv, atq: apres.atq - avant.atq, def: apres.def - avant.def, crit: apres.crit - avant.crit, vit: Math.round((apres.vit - avant.vit)*100)/100};
+}
 function equiper(h, o){ const ancien = h.equip[o.slot]; const avant = stats(h).pv; h.equip[o.slot] = o; const apres = stats(h).pv; h.pv = Math.max(1, Math.min(apres, h.pv + (apres - avant))); return ancien; }
 
 /* ---------- run ---------- */
@@ -289,7 +299,7 @@ function charger(txt){
 }
 
 B.R = {W, ZONE, MUR_X, CASES, creerHeros, recrues, stats, classeDe, nivSuivant, gagnerXp, propositionsNiveau, appliquerBonus, peutEvoluer, evoluer,
-  genererObjet, texteBonus, equiper, nouvelleRun, nomsPris, placerParDefaut, preparerVague, composerVague, apercu, debutCombat, vivants, etape,
+  genererObjet, texteBonus, equiper, peutPorter, statsAvec, monterNiveau, nouvelleRun, nomsPris, placerParDefaut, preparerVague, composerVague, apercu, debutCombat, vivants, etape,
   lancerDes, resultatDes, tirerSort, jeterSort, utiliserObjet, xpDeVague, eclatsDeRun, sauver, charger,
   graine(f){ alea = f || Math.random; }};
 })();

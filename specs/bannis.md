@@ -177,4 +177,11 @@ Dossier `bannis/` (démo sur l'accueil, carte « BANNIS ») ; détails des fichi
 
 Artefact du jeu : https://claude.ai/artifact/XnEsz7CYgnAcRDCfhchcHh (`python3 outils/bannis-artefact.py <sortie>`).
 
-Retour de l'utilisateur : en attente (essai).
+Retours de l'utilisateur (19/11, essai de l'artefact) et corrections :
+- **La barre du Mage sortait de son cadre** (et les autres) : le cadre `ui-barre.png` a des bouts en losange de 12 px, découpé maintenant en trois morceaux (bouts hors de la barre, milieu étiré) ; petites barres sans cadre au-dessus des unités (`jauge()`).
+- **À quoi servent les classes, les traits ?** Le recrutement et la fiche affichent le rôle (CORPS A CORPS, MAGIE A DISTANCE, SOINS, SOUTIEN) et une description claire ; le trait s'appelle « trait de caractère », expliqué (un défaut ou une qualité du condamné qui change sa façon de se battre).
+- **Escouade tirée au sort** : 3 condamnés imposés au départ ; **le choix des recrues viendra de l'arbre** de compétences (plus tard).
+- **Stats automatiques au niveau** : plus de choix ; gains selon le rôle (`D.CROISSANCE` : corps à corps +12 % de vie, +2 ATQ, +1 DEF ; magie +8 % de vie, +3 ATQ, +1 CRIT ; soins +10 % de vie, +2 ATQ, +1 DEF ; soutien +10 % de vie, +1 ATQ, +1 DEF, +3 % de vitesse), affichés au bilan. Le choix d'un bonus au niveau pourra revenir par l'arbre.
+- **Équiper** : les armes sont réservées (épée, hache, dague, masse pour le corps à corps ; bâton, sceptre, grimoire pour les mages, soins et soutien) ; l'écran « qui le porte » montre chaque héros, ce qu'il porte déjà, ses stats et le changement (+ en vert, − en rouge) ; ceux qui ne peuvent pas le porter sont grisés.
+
+Retour de l'utilisateur : en attente.
