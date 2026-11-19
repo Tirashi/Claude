@@ -144,4 +144,20 @@ Retour de l'utilisateur (19/11) : **A (mêlée libre) avec la Muraille à gauche
 - **Sexe des héros** (Pixel Champions gratuit, d'après les sprites ; pas de noms dans le pack) : femmes Hex, Linail, Wyvera, Glenys ; hommes Oratio, Prime, Ley ; Ouzo est un loup. Lignées : guerrière → épéiste démoniaque (Glenys, autre palette), **illusionniste → grand sage** (Ley → Prime, vraie paire), **prêtresse → grande prêtresse** (Linail → Wyvera, vraie paire), mercenaire → champion (Oratio, autre palette), magicienne → sorcière du temps (Hex, autre palette), barde → barde légendaire (Ouzo, autre palette). Noms accordés au sexe. Le registre indique le sexe et le genre d'évolution.
 - Limite : 8 héros gratuits seulement ; pour chaque classe en homme et en femme avec une vraie évolution, il faudra un pack plus fourni (Pixel Champions II ou Time Fantasy, payants).
 
-Retour de l'utilisateur : en attente.
+Retour de l'utilisateur (19/11) : **le nom « Les Bannis » est gardé** ; **le concept de la maquette 4 est validé**, mais il y a beaucoup d'ajustements à faire : interface, sons, dés, stats des personnages, etc.
+
+## 14. Ajustements à faire avant et pendant le jeu (propositions du 19/11, à trier avec l'utilisateur)
+**Interface** (Dragon Regalia) : textes trop petits et peu lisibles en Press Start 2P réduite (passer à une police pixel plus haute, ou agrandir) ; cartes des héros surchargées (garder nom, classe, PV, et le détail en touchant la carte) ; écran plus aéré (moins de cadres empilés) ; vrai écran de recrutement, fiche d'un héros (stats, équipement, trait), écran de butin avec choix, écran de fin de run, arbre de compétences ; portraits ? (pas dans le pack gratuit).
+**Sons** : remplacer une partie des sons synthétisés par de vrais sons gratuits (Leohpaz RPG Essentials, Halfwits *Rolling Dice* pour les dés, Pixel Combat SFX) ; musique de nuit qui monte avec les vagues ; volume et coupure dans les options.
+**Dés** : plateau plus lisible (dés plus gros, faces spéciales visibles avant le lancer) ; geste pour lancer (glisser, comme le Yams) ; règles des combos à écrire et équilibrer ; décider quand on lance (jauge, début de vague, à la demande) ; montrer à l'avance ce que fait chaque sort ; réserve de dés qui grandit pendant la run.
+**Stats et équilibrage** : fiches de classes (PV, attaque, défense, vitesse, portée, critique) ; traits avec un vrai effet ; montée de niveau au choix ; équipement visible dans la fiche ; courbe des vagues (12 par nuit, boss tous les 4) ; simulateur sans écran pour régler (comme pour Terres franches ou Politique).
+**Combat** : vitesse réglable (×1, ×2) ; nombre de monstres à l'écran ; ciblage plus lisible (petite flèche ou trait) ; archers sur la Muraille (plus tard).
+
+## 15. Découpage proposé (Opus)
+1. **Session 1, le socle** : dossier `bannis/` (scripts classiques), boucle d'une nuit (recrutement, placement, vagues, butin, fin de run), combat de la maquette 4 nettoyé, sauvegarde de la run, fiche sur l'accueil (démo).
+2. **Session 2, les dés et les sorts** : plateau de dés, faces spéciales, combos, relances, sorts du Mage.
+3. **Session 3, le RPG** : stats, niveaux, traits, équipement, classes légendaires, simulateur d'équilibrage.
+4. **Session 4, la méta** : éclats de Gueule, arbre de compétences, déblocages.
+5. **Session 5, la finition** : sons, musique, effets, interface peaufinée ; classement et défi du jour.
+
+Retour de l'utilisateur : en attente (ajustements prioritaires).
