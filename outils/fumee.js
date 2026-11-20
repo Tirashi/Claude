@@ -5,7 +5,7 @@
    node outils/fumee.js [dossier-captures]   (code de sortie 1 en cas d'erreur) */
 const { BASE, phone } = require('./pw');
 const PAGES = ['index.html', 'classements/index.html#sudoku-1', 'queens/index.html', 'picross/index.html', 'lignee/index.html', 'injagility/index.html', 'injagility/parcours.html',
-  'touche-coule/index.html', 'amiral/index.html', 'club/index.html', 'orbite/index.html', 'lune-rover/index.html', 'pont-stellaire/index.html', 'sudoku/index.html', 'calculator/index.html', 'alunissage/index.html', 'nebula/index.html', 'ile/index.html', 'empilage/index.html', 'odyssee/index.html', 'yams/index.html', 'escadrille/index.html', 'capitaine-du-port/index.html', 'magasinier/index.html', 'ciel-de-guerre/index.html', 'tank-arena/index.html', 'romet/index.html', 'dragon-simulator/index.html', 'bastion/index.html', 'terres-franches/index.html', 'duche/index.html', 'bannieres/index.html', 'boutique/index.html', 'mineur-de-l-espace/index.html', 'the-des-jarls/index.html', 'doggy-saga/index.html',
+  'touche-coule/index.html', 'amiral/index.html', 'club/index.html', 'orbite/index.html', 'lune-rover/index.html', 'pont-stellaire/index.html', 'sudoku/index.html', 'calculator/index.html', 'alunissage/index.html', 'nebula/index.html', 'ile/index.html', 'empilage/index.html', 'odyssee/index.html', 'yams/index.html', 'escadrille/index.html', 'capitaine-du-port/index.html', 'magasinier/index.html', 'ciel-de-guerre/index.html', 'ecurie/index.html', 'tank-arena/index.html', 'romet/index.html', 'dragon-simulator/index.html', 'bastion/index.html', 'terres-franches/index.html', 'duche/index.html', 'bannieres/index.html', 'boutique/index.html', 'mineur-de-l-espace/index.html', 'the-des-jarls/index.html', 'doggy-saga/index.html',
   'mot-d-or/index.html', 'lanterne/index.html', 'tetris/index.html', 'snake/index.html', 'asteroids/index.html', 'solitaire/index.html', 'jeu-de-la-vie/index.html', 'pokedex/index.html'];
 const shots = process.argv[2];
 (async () => {
@@ -125,6 +125,23 @@ const shots = process.argv[2];
       });
       if (r !== 'ok') errs.push('Ciel de guerre : ' + r);
       if (shots) await p.screenshot({ path: `${shots}/fumee-ciel-de-guerre.png` });
+    }
+    if (url === 'ecurie/index.html') {
+      // Écurie miniature : écran titre, nouvelle partie, les six onglets, un grand prix en 3D, résultat direct, semaine suivante
+      const r = await p.evaluate(async () => {
+        const wait = ms => new Promise(r => setTimeout(r, ms));
+        for (let i = 0; i < 80 && !document.querySelector('.titre'); i++) await wait(250);
+        if (!document.querySelector('.titre')) return "pas d'écran titre (modèles pas chargés ?)";
+        const Ec = window.Ecurie; Ec.nouvelle();
+        for (const o of ['garage', 'achat', 'sponsors', 'semaine', 'fans', 'ecurie']) { document.querySelector(`[data-o=${o}]`).click(); if (!document.querySelector('.corps .bloc')) return "onglet vide : " + o; }
+        const gp = Ec.etat().gp; Ec.lancer(); if (!Ec.jeu()) return 'le grand prix ne se lance pas';
+        Ec.course(); await wait(1500); if (!document.querySelector('.course canvas')) return 'pas de course 3D';
+        Ec.finirCourse(); Ec.resultats(); if (Ec.etat().gp !== gp + 1) return 'résultats pas appliqués';
+        Ec.apres(); if (!document.querySelector('nav')) return 'pas de retour à la gestion';
+        return 'ok';
+      });
+      if (r !== 'ok') errs.push('Écurie miniature : ' + r);
+      if (shots) await p.screenshot({ path: `${shots}/fumee-ecurie.png` });
     }
     if (url === 'magasinier/index.html') {
       // Le Magasinier : un niveau avec de la glace gagné par sa solution, écran de fin ; annuler revient en arrière

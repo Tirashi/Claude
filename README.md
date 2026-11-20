@@ -468,6 +468,15 @@ Combat aérien en 3D low poly au-dessus d'un archipel, au crépuscule, au milieu
 - **Le hangar** : 35 chasseurs en 4 familles (intercepteurs, polyvalents, lourds, furtifs), chacune avec sa vitesse, son virage, son blindage et ses missiles.
 - Au téléphone : un joystick sous le pouce et des boutons ronds ; au PC : la souris dirige l'appareil, clic gauche pour le feu, clic droit pour les missiles. À venir : des missions, un boss, des sons, des décors.
 
+## Écurie miniature
+
+Gestion d'une petite écurie de course (première version). On ne pilote pas : on prépare la semaine, puis on regarde la course en 3D low poly sur un circuit de ville.
+
+- **Le paddock** : six onglets (écurie, garage, achat, sponsors, semaine, fans). Chaque pilote reçoit une voiture du parc, les autres restent en réserve et remplacent une voiture cassée.
+- **Le garage et la concession** : douze voitures neuves et des occasions qui changent chaque semaine ; six pièces (moteur, turbo, aileron, pneus, freins, allègement), peinture ; une voiture trop puissante pour la division ne peut pas courir.
+- **La course** : grille issue des qualifications, 8 tours, dépassements, erreurs, sorties de piste, accidents et casses ; caméra derrière ses pilotes, diorama ou télé ; course accélérée ou résultat direct.
+- **La saison** : 8 grands prix sur trois circuits ; les 3 premiers du championnat montent de division (Coupe 300 ch, Trophée 500 ch, Grand Prix illimité). La réputation ouvre des places de pilotes et des sponsors ; les fans finissent par rapporter (boutique de goodies, convention, fan club).
+
 ## Les classiques passés en 16 bits
 
 Touché Coulé était déjà en 16 bits : il n'a gagné que son record (victoire en le moins de tirs) et le classement. Les quatre autres ont gardé leurs règles et leurs commandes d'origine, avec une nouvelle direction artistique pixel art (police pixel, fenêtres façon RPG, scanlines, bruitages chiptune).

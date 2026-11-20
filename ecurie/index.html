@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Écurie miniature</title>
+<meta name="description" content="Écurie miniature : gère ton écurie de course (pilotes, voitures, pièces, sponsors, fans) et regarde tes pilotes courir en 3D.">
+<link rel="manifest" href="../manifest.webmanifest">
+<meta name="theme-color" content="#1c1630">
+<link rel="icon" href="../icons/icon-192.png">
+<link rel="apple-touch-icon" href="../icons/apple-touch-icon.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="boite"><div class="app A" id="app">
+  <div class="charge" id="charge">CHARGEMENT…</div>
+</div></div>
+<script src="../lib/three.min.js"></script>
+<script src="../lib/GLTFLoader.js"></script>
+<script src="donnees.js"></script>
+<script src="modeles.js"></script>
+<script src="circuit.js"></script>
+<script src="course.js"></script>
+<script src="regles.js"></script>
+<script src="scene.js"></script>
+<script src="jeu.js"></script>
+<script>
+/* Ludothèque : mode hors connexion. Pas de bouton « ◀ MENU » ajouté par-dessus le jeu :
+   le retour à la Ludothèque est sur l'écran titre du jeu. */
+(function () {
+  try {
+    if ("serviceWorker" in navigator && (location.protocol === "https:" || /^(localhost|127\.0\.0\.1)$/.test(location.hostname)))
+      navigator.serviceWorker.register("../sw.js").catch(function () {});
+  } catch (e) {}
+})();
+</script>
+</body>
+</html>

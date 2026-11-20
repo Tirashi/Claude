@@ -48,7 +48,18 @@ Idée de l'utilisateur (18/11) : un petit jeu de **gestion d'écurie de course**
 - Catégories par puissance (150, 300, 500 ch, illimité) : une pièce peut faire sortir la voiture de sa catégorie.
 - Accidents et pannes (fiabilité) : une voiture abîmée part en réparation, la réserve sert alors.
 
+## Session 1 (20/11) : le jeu dans `ecurie/` (démo)
+- **Boucle** : gestion (six onglets) → LANCER LE GRAND PRIX → effets de la semaine et **grille de départ** (qualifications : voiture, talent, un peu de hasard selon la constance) → course 3D (CAMERA : suivie de chacun de ses pilotes, diorama, télé ; ×1 / ×2 / ×4 ; RESULTAT direct) → résultats (points, primes, sponsors, fans, salaires, entretien) → semaine suivante.
+- **Grille inversée abandonnée** : mesuré, une voiture plus rapide partie derrière finissait plus loin (dépasser est difficile) ; avec les qualifications, environ 9 dépassements par course, 10 incidents, moins d'un abandon.
+- **Notes → simulation** : vitesse max 44 + 1,6 × vitesse (m/s), accélération 7 + 0,5 × note, adhérence 1,1 + 0,06 × note (g), casse (10 − fiabilité) × 1,2 % par course ; l'état de la voiture (usure) et les essais (+1 % par jour, 3 au plus) jouent un peu. Pilote : talent et constance réduits par la fatigue (forme).
+- **Saison** de 8 GP sur 3 circuits (ville, port, parc), points 10-8-6-5-4-3-2-1, primes par place × la division (×1, ×2,5, ×6), prime de fin de saison ; **les 3 premiers montent** : Coupe 300 ch → Trophée 500 ch → Grand Prix illimité (une voiture trop puissante ne court pas : le turbo peut faire sortir de la catégorie). 6 rivaux par division ; la grille compte toujours 8 voitures.
+- **Écurie** : réputation = points marqués ; niveau 2 à 40 (3 places de pilote), 3 à 120 (4 places), 4 à 250 ; sponsors à débloquer par niveau (Voltage, Orbital TV), conditions (top 5, pas d'abandon, podium tous les 3 GP, victoire tous les 4 GP) ; contrat rompu jusqu'à la fin de la saison.
+- **Semaine** : essais, atelier (+8 % d'état, réparations plus rapides avec 2 jours), simulateur (talent, plus vite avant 24 ans), repos (+10 forme ; essais, simulateur et médias fatiguent), médias (+1 000 $, +60 fans).
+- **Voitures** : accident (2 semaines de réparation) ou casse (1 semaine) ; la réserve remplace automatiquement une voiture indisponible ; réparer tout de suite (4 000 $ par semaine), remettre à neuf, revendre une voiture de réserve ; occasions tirées chaque semaine.
+- **Faillite** sous −20 000 $. Sauvegarde `ecurie.partie`, records `ecurie.record` (GP, victoires, podiums, titres).
+- **Équilibre** (`node outils/ecurie-simulateur.js equilibre`) : avec les voitures de départ, milieu de tableau en division 1 ; avec deux RG Sport et trois pièces, champion presque à chaque fois.
+
 ## Questions ouvertes
 - Durée d'une partie (une saison, une carrière ?), classement ou non.
 - Comment l'écurie grandit (niveaux ? réputation ?) et ce que ça débloque (places de pilotes, garage plus grand, goodies, convention).
-- Prochaine étape : session 1 du jeu (boucle semaine → course → résultats → argent et fans), Opus.
+- Prochaine étape : essai sur le téléphone, puis réglages selon les retours (plus de dépassements ? plus de circuits ? sons ?).
