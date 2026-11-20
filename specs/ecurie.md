@@ -23,10 +23,12 @@ Idée de l'utilisateur (18/11) : un petit jeu de **gestion d'écurie de course**
 - Voiture : vitesse max (m/s), accélération, adhérence (g). Pilote : talent, constance, agressivité (0 à 1).
 - Vitesse en virage = √(adhérence × g × rayon) ; le pilote regarde 70 m devant et freine (13 m/s², un peu plus tard avec du talent).
 - Aspiration +5 % en ligne droite derrière une voiture. Erreurs (vitesse × 0,55 pendant 1 à 2 s), plus fréquentes sans constance.
-- Deux files ; attaque si plus rapide et file libre (selon l'agressivité), le défenseur peut fermer la porte. Pas de voitures qui se traversent : on se cale à une longueur, on ne change de file que sur une place libre.
+- **Trajectoire de course** (20/11) : une ligne idéale calculée une fois (extérieur jusqu'à 34 m avant le virage, corde au milieu, extérieur en sortie, lissée sur 19 m, bornée à ±3,7 m du centre) ; elle élargit le rayon pris (rayon + 9,4 m). Chaque voiture la suit avec un écart latéral : 0 sur la ligne, ±3,3 m pour attaquer du côté où il y a de la place ; hors de la ligne, −5 % d'adhérence en virage. Changements de côté progressifs (3,2 m/s), la voiture s'oriente dans le sens de son déplacement, et rejoint la ligne quand la place est libre.
+- Attaque si plus rapide et place libre (selon l'agressivité) ; le défenseur peut fermer la porte (agressivité × 0,3). Pas de voitures qui se traversent : on se cale à une longueur, on ne change de file que sur une place libre.
 - Classement avec une marge de 2,5 m (sinon deux voitures côte à côte s'échangent la place à chaque image). Grille inversée (les plus fortes derrière).
 - Mesuré sur 8 tours : environ 35 dépassements, 7 erreurs, une douzaine de portes fermées, aucun chevauchement.
-- **À améliorer** (demande du 20/11) : trajectoires (corde des virages au lieu de deux files fixes, sorties larges), pilotage plus naturel (changements de file progressifs, freinages visibles, pas de blocages brusques).
+- Mesuré avec la trajectoire (20/11) : environ 27 dépassements sur 8 tours, aucun chevauchement, tours plus rapides (≈ 15 s).
+- **Reste à améliorer** : freinages visibles (feux stop, voiture qui plonge), dépassements au freinage par l'intérieur, sorties de piste après une erreur, réglage des stats.
 
 ## Boucle de jeu (proposition des maquettes 1 et 2, à confirmer)
 - Saison de grands prix (circuits différents), une course par « semaine ».

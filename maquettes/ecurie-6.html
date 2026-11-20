@@ -144,46 +144,58 @@ Promise.all([decoder(),glb('Road1'),glb('Road1_Curve3'),glb('Road1_Curve4')]).th
     {n:'rgsdev-muscle',c:'#e8c43a',pil:'HAY',nom:'HAYASHI',voit:'RG MUSCLE',vmax:58,acc:11,grip:1.3,tal:.75,cst:.75,agr:.5},
     {n:'cosmo-kamaro',c:'#7a2a9a',pil:'RUI',nom:'RUIZ',voit:'KAMARO',vmax:56,acc:10.8,grip:1.32,tal:.55,cst:.6,agr:.85},
     {n:'cosmo-lamb',c:'#18b4b0',pil:'NOV',nom:'NOVAK',voit:'LAMB',vmax:59,acc:10.4,grip:1.48,tal:.85,cst:.65,agr:.55}];
-  const LV=4.4,Y=.2,VOIE=2.6,TOURS=8,FREIN=13,LONG=4.8,LARG=2.3;
+  const LV=4.4,Y=.2,TOURS=8,FREIN=13,LONG=4.8,LARG=2.25,BORD=3.7,COTE=3.3,VLAT=3.2;
+  /* ---------- la trajectoire idéale : extérieur avant le virage, corde au milieu, extérieur en sortie ----------
+     (tous les virages tournent du même côté : l'intérieur est du côté dec > 0) */
+  const idx=s=>{s=((s%TOT)+TOT)%TOT;let lo=0,hi=pts.length-1;while(lo<hi){const m=(lo+hi+1)>>1;if(Ls[m]<=s)lo=m;else hi=m-1;}return lo;};
+  const NP=pts.length,brut=new Float32Array(NP),OFF=new Float32Array(NP);
+  for(let i=0;i<NP;i++)brut[i]=0;
+  {let i=0;while(i<NP){if(RAD[i]<1e8){let j=i;while(j<NP&&RAD[j]<1e8)j++;const n=j-i,mi=i+n/2,ap=Math.min(BORD,1.2+90/RAD[i]);
+      for(let k=i;k<j;k++)brut[k]=ap*Math.sin(Math.PI*(k-i+.5)/n);
+      const avant=Math.round(Math.min(34,RAD[i]*1.4));for(let d=1;d<=avant;d++){const a=(i-d+NP)%NP,b=(j-1+d)%NP,f=-BORD*Math.sin(Math.PI*d/(avant+1));if(RAD[a]>1e8)brut[a]=Math.min(brut[a],f);if(RAD[b]>1e8)brut[b]=Math.min(brut[b],f);}
+      i=j;}else i++;}}
+  {const W=9;for(let i=0;i<NP;i++){let s=0;for(let d=-W;d<=W;d++)s+=brut[(i+d+NP)%NP];OFF[i]=Math.max(-BORD,Math.min(BORD,s/(2*W+1)));}}
+  const ligne=s=>{const i=idx(s),j=(i+1)%NP,f=(((s%TOT)+TOT)%TOT-Ls[i])/(Ls[i+1]-Ls[i]);return OFF[i]+(OFF[j]-OFF[i])*f;};
+  // rayon réellement pris : la trajectoire élargit le virage
+  const RAYON=new Float32Array(NP);for(let i=0;i<NP;i++)RAYON[i]=RAD[i]<1e8?RAD[i]+2*BORD+2:1e9;
   // grille : les plus rapides partent derrière, pour qu'il y ait des dépassements
   const note=g=>g.vmax*.3+g.grip*20+g.tal*12;
   const depart=GRILLE.map((g,k)=>k).sort((a,b)=>note(GRILLE[a])-note(GRILLE[b]));
   const V=GRILLE.map((g,k)=>{const m=maillage(M,g.n,g.c);m.scale.setScalar(LV);sc.add(m);const rang=depart.indexOf(k);
-    return Object.assign({},g,{k,m,coul:g.c,s:-4-rang*7,dec:rang%2?VOIE:-VOIE,cible:rang%2?VOIE:-VOIE,v:0,erreur:0,bloque:0,mem:0});});
-  // vitesse de virage selon le rayon et l'adhérence ; le pilote freine au bon moment selon son talent
-  const vVirage=(i,g)=>Math.sqrt(g*9.81*Math.min(RAD[((i%RAD.length)+RAD.length)%RAD.length],400));
-  const idx=s=>{s=((s%TOT)+TOT)%TOT;let lo=0,hi=pts.length-1;while(lo<hi){const m=(lo+hi+1)>>1;if(Ls[m]<=s)lo=m;else hi=m-1;}return lo;};
+    const lat=rang%2?2.4:-2.4;return Object.assign({},g,{k,m,coul:g.c,s:-4-rang*7,lat,cibleLat:lat,dec:lat,v:0,erreur:0,bloque:0,mem:0,lacet:0});});
+  const vVirage=(i,g)=>Math.sqrt(g*9.81*Math.min(RAYON[((i%NP)+NP)%NP],400));
   let t=0,ordre=V.slice();const EV=[],NB={};const evenement=x=>{const k=x.split(' ')[0];NB[k]=(NB[k]||0)+1;EV.unshift(x);EV.length=Math.min(EV.length,3);};
-  const ecart=(a,b)=>a.s-b.s;
+  const cote=(a,b)=>Math.abs(a.dec-b.dec)<LARG; // se recouvrent en largeur
   function course(dt){t+=dt;const R=Math.random;
-    for(const v of V){const g=v.grip*(.94+.08*v.tal);let cible=v.vmax*(.97+.03*v.tal);const i0=idx(v.s);
+    for(const v of V){
+      // hors de la trajectoire, on passe un peu moins vite en virage
+      const g=v.grip*(.94+.08*v.tal)*(1-.05*Math.min(1,Math.abs(v.lat)/COTE));let cible=v.vmax*(.97+.03*v.tal);const i0=idx(v.s);
       for(let d=0;d<70;d+=3){const vc=vVirage(i0+d,g);cible=Math.min(cible,Math.sqrt(vc*vc+2*FREIN*(.9+.1*v.tal)*d));}
-      // aspiration derrière une voiture en ligne droite
-      for(const o of V)if(o!==v){const e=ecart(o,v);if(e>0&&e<20&&Math.abs(o.dec-v.dec)<3&&RAD[i0]>1e8)cible*=1.05;}
-      // erreurs : plus souvent pour les pilotes peu constants
+      for(const o of V)if(o!==v){const e=o.s-v.s;if(e>0&&e<20&&cote(o,v)&&RAD[i0]>1e8)cible*=1.05;}
       if(v.erreur>0){v.erreur-=dt;cible*=.55;}else if(t>4&&R()<(1-v.cst)*.035*dt){v.erreur=1+R();evenement(`ERREUR DE ${v.nom} !`);}
-      v.cibleV=cible;if(v.v<cible)v.v=Math.min(cible,v.v+v.acc*(1-v.v/(v.vmax*1.1))*dt*1.6);else v.v=Math.max(cible,v.v-FREIN*1.3*dt);}
-    // attaques, défenses, dépassements
+      v.cibleV=cible;if(v.v<cible)v.v=Math.min(cible,v.v+v.acc*(1-v.v/(v.vmax*1.1))*dt*1.6);else v.v=Math.max(cible,v.v-FREIN*1.3*dt);
+      v.cibleLat=v.mem>0||v.bloque>0?v.cibleLat:0;}
+    // attaques et défenses : l'attaquant quitte la trajectoire du côté où il y a de la place
     const O=V.slice().sort((a,b)=>b.s-a.s);
     for(let i=1;i<O.length;i++){const b=O[i],a=O[i-1],e=a.s-b.s;
-      if(e<9&&Math.abs(a.dec-b.dec)<3){
+      if(e<10&&cote(a,b)){
         const plusVite=b.cibleV>a.v+.6||b.v>a.v+.8;
-        const libre=V.every(o=>o===b||o===a||Math.abs(o.dec+a.dec)>=3||Math.abs(o.s-b.s)>7);
-        if(plusVite&&libre&&b.mem<=0&&R()<b.agr*dt*4){b.cible=-a.dec;b.mem=2;
-          if(a.bloque<=0&&R()<a.agr*.5){a.cible=-a.dec;a.bloque=3;evenement(`${a.nom} FERME LA PORTE A ${b.nom}`);}}
-        else{b.v=Math.min(b.v,a.v+(e-6.5)*.8);}}
-      if(e>-5&&e<5&&Math.abs(a.dec-b.dec)<2.4&&a.cible===b.cible)b.v=Math.min(b.v,a.v*.97);}
+        if(plusVite&&b.mem<=0&&R()<b.agr*dt*4){const l=ligne(b.s);const cote1=l>0?-COTE:COTE;const ok=c=>Math.abs(l+c)<=BORD+.01&&V.every(o=>o===b||Math.abs(o.s-b.s)>LONG+1||Math.abs(o.dec-(l+c))>=LARG);
+          const c=ok(cote1)?cote1:ok(-cote1)?-cote1:0;
+          if(c){b.cibleLat=c;b.mem=2.5;if(a.bloque<=0&&R()<a.agr*.3){a.cibleLat=c*.7;a.bloque=2.5;evenement(`${a.nom} FERME LA PORTE A ${b.nom}`);}}}
+        if(Math.abs(a.dec-b.dec)<LARG)b.v=Math.min(b.v,a.v+(e-6.5)*.8);}}
     for(const v of V){v.mem-=dt;v.bloque-=dt;v.s+=v.v*dt;}
-    // pas de voitures qui se traversent : on n'avance pas dans celle de devant, on ne change de file que si la place est libre
+    // pas de voitures qui se traversent
     const P2=V.slice().sort((a,b)=>b.s-a.s);
-    for(let i=1;i<P2.length;i++)for(let j=0;j<i;j++){const a=P2[j],b=P2[i];if(a.s-b.s<LONG&&Math.abs(a.dec-b.dec)<LARG){b.s=a.s-LONG;b.v=Math.min(b.v,a.v);}}
-    for(const v of V){const nd=v.dec+(v.cible-v.dec)*Math.min(1,dt*2.4);
-      const gene=V.some(o=>o!==v&&Math.abs(o.s-v.s)<LONG+.4&&Math.abs(o.dec-nd)<LARG&&Math.abs(o.dec-nd)<Math.abs(o.dec-v.dec));
-      if(gene){if(Math.abs(v.cible-v.dec)>.2&&Math.abs(v.cible-v.dec)<VOIE*2)v.cible=Math.abs(v.dec-VOIE)<Math.abs(v.dec+VOIE)?VOIE:-VOIE;}else v.dec=nd;
-      const[x,z,h]=at(v.s,v.dec);v.m.position.set(x,Y,z);v.m.rotation.y=-h;}
+    for(let i=1;i<P2.length;i++)for(let j=0;j<i;j++){const a=P2[j],b=P2[i];if(a.s-b.s<LONG&&cote(a,b)){b.s=a.s-LONG;b.v=Math.min(b.v,a.v);}}
+    // déplacement latéral progressif, bloqué si la place est prise
+    for(const v of V){const l=ligne(v.s);const vise=Math.max(-BORD,Math.min(BORD,l+v.cibleLat));const pas=Math.max(-VLAT*dt,Math.min(VLAT*dt,vise-v.dec));
+      const nd=v.dec+pas;const gene=V.some(o=>o!==v&&Math.abs(o.s-v.s)<LONG+.4&&Math.abs(o.dec-nd)<LARG&&Math.abs(o.dec-nd)<Math.abs(o.dec-v.dec));
+      if(!gene){v.lat+= (nd-l)-v.lat;v.dec=nd;}else{v.lat=v.dec-l;}
+      const[x,z,h]=at(v.s,v.dec);v.lacet+=((Math.atan2(gene?0:pas,Math.max(.01,v.v*dt)))-v.lacet)*Math.min(1,dt*8);
+      v.m.position.set(x,Y,z);v.m.rotation.y=-h-v.lacet;}
     const avant=ordre;ordre=ordre.slice();for(let p=0;p<3;p++)for(let i=1;i<ordre.length;i++)if(ordre[i].s>ordre[i-1].s+2.5){const x=ordre[i];ordre[i]=ordre[i-1];ordre[i-1]=x;}
     if(t>3)ordre.forEach((v,i)=>{const j=avant.indexOf(v);if(j===i+1){const p=avant[i];evenement(`DEPASSEMENT ! ${v.nom} PASSE ${p.nom} (P${i+1})`);}});}
-
   const tourTxt=()=>'TOUR '+Math.min(TOURS,Math.max(1,Math.floor(ordre[0].s/TOT)+1))+'/'+TOURS;
   const hud=(el,n,ecarts)=>{el.querySelector('.tourN').textContent=tourTxt();const L0=ordre[0];
     el.querySelector('.tour').innerHTML=ordre.slice(0,n).map((v,i)=>`<div class="${v.k===0?'moi':''}"><span>${i+1}</span><i style="background:${v.coul}"></i>${v.pil}${ecarts&&i?' <small>+'+((L0.s-v.s)/Math.max(10,v.v)).toFixed(1)+'</small>':''}</div>`).join('');
