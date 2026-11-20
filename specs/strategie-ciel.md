@@ -37,3 +37,17 @@ Chasseurs grossis (15 m au lieu de 4) pour rester lisibles.
 - **Arbre d'améliorations en deux étages** :
   1. **Entre les missions** (permanent, payé en étoiles ou en solde comme dans Ciel de guerre) : trois branches, CHASSEURS (blindage, missiles, nouvelles familles des 35 chasseurs), NAVIRES (frégates, destroyers, croiseurs à débloquer, tourelles), PORTE-VAISSEAUX (vitesse du chantier, blindage, collecteurs plus rapides, deuxième file de production).
   2. **Pendant la partie** (payé en cristal, perdu à la fin) : quelques modules du porte-vaisseaux, comme dans un jeu de stratégie classique.
+
+## Retours du 20/11 et maquette 3 (même lien, version 3)
+- **Deux étages d'améliorations : oui.** L'escarmouche se joue **comme Age of Empires** : le porte-vaisseaux est le centre-ville, les collecteurs sont les villageois (ils minent et posent les stations), et **3 âges** (choix de l'utilisateur) débloquent vaisseaux, stations et améliorations :
+  - **I · Avant-poste** (au départ) : collecteur, chasseur ; raffinerie (dépôt près d'un gisement), tourelle ; collecte +20 %, blindage I.
+  - **II · Flotte** (500◆ + 1 raffinerie) : bombardier (corvette), frégate ; station orbitale (prend une planète riche), chantier naval (deuxième file) ; missiles, boucliers I.
+  - **III · Armada** (1 200◆ + 1 station orbitale) : destroyer, croiseur ; forteresse (bouclier de zone), canon orbital ; boucliers II, saut du porte-vaisseaux.
+  - Entre les missions : les étoiles débloquent les modèles (35 chasseurs, corvettes, frégates…) et des bonus de départ.
+  - (Contenu proposé, à valider.)
+- **Peut-être entièrement dans l'espace**, carte plus grande, avec des **planètes** comme dans Mineur de l'espace. **Rôle des planètes : gisements riches** (choix de l'utilisateur) ; une station orbitale les prend ; les astéroïdes restent les gisements de départ.
+- **Style des planètes** : comparer les planètes de Mineur et des packs trouvés. Maquette 3 : espace par défaut (archipel gardé pour comparer), carte de ±2 500 m (zoom jusqu'à 4 200 m), 6 planètes (Gaia bleue avec station, Brasier rouge avec station, Borea et Dune riches, Titan géante à anneaux, Echo), 1 100 astéroïdes, stations en orbite faites dans le code, étiquettes des planètes, âge dans l'en-tête et le chantier (vaisseaux d'âge II grisés, bouton AGE II), onglet **ARBRE DES AGES**. Trois styles :
+  - **PIXEL 3D** : « 3D Pixel Planet Pack 0001 » d'AstroJar (CC0) ;
+  - **LOW POLY** : « Low Poly Planets Pack » de Heck (CC0, système solaire en photo) ;
+  - **MINEUR** : les shaders de Deep-Fold de `mineur-de-l-espace/planetes.js` (seulement terre, lune et mars), en image plate face à la caméra.
+  - Conversion : `python3 -I outils/strategie-ciel/planetes.py <PixelPlanet1_TOON> <LowPolyPlanetsPack/OBJ>` → `maquettes/strategie-ciel-planetes.js` (761 Ko ; un maillage par pack, 6 textures chacun). Crédits ajoutés.

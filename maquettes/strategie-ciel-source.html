@@ -50,20 +50,23 @@ svg.ov{position:absolute;left:0;top:0;overflow:visible}
 .astuce{position:absolute;font-size:calc(var(--hs)*.8);color:#e8dcf8;background:rgba(0,0,0,.35);border-radius:6px;padding:3px 8px;letter-spacing:.05em}
 </style></head><body><main>
 <h1>STRATEGIE DANS LE CIEL</h1>
-<p class="sous">Maquette 2 du 20/11 : la caméra A devient la caméra libre du jeu (molette ou pincement : zoom ; clic droit glissé ou deux doigts : pivoter ; glisser : déplacer). Rendu net par défaut, niveau dans l'espace, collecteurs qui vont chercher le cristal. B et C restent pour comparer.</p>
+<p class="sous">Maquette 3 du 20/11 : tout dans l'espace, sur une carte deux fois plus grande, avec des planètes (gisements riches, à prendre avec une station en orbite) et l'escarmouche « à la Age of Empires » en trois âges (onglet ARBRE DES AGES). Trois styles de planètes à comparer. Caméra : molette ou pincement pour zoomer, clic droit glissé ou deux doigts pour pivoter, glisser pour déplacer.</p>
 <div class="barreop">
- <div class="grp" id="gDir"><button data-v="A" class="on">A · ETAT-MAJOR</button><button data-v="B">B · CARTE VIVANTE</button><button data-v="C">C · PASSERELLE</button></div>
+ <div class="grp" id="gDir"><button data-v="A" class="on">LA BATAILLE</button><button data-v="T">ARBRE DES AGES</button></div>
  <div class="grp" id="gApp"><button data-v="pc" class="on">PC</button><button data-v="tel">TELEPHONE</button></div>
- <div class="grp" id="gAmb"><button data-v="crepuscule" class="on">CREPUSCULE</button><button data-v="nuit">NUIT</button><button data-v="desert">DESERT</button><button data-v="espace">ESPACE</button></div>
+ <div class="grp" id="gAmb"><button data-v="espace" class="on">ESPACE</button><button data-v="crepuscule">ARCHIPEL</button><button data-v="nuit">NUIT</button><button data-v="desert">DESERT</button></div>
+ <div class="grp" id="gPla"><button data-v="astro" class="on">PLANETES PIXEL 3D</button><button data-v="heck">LOW POLY</button><button data-v="mineur">MINEUR</button></div>
  <div class="grp" id="gNet"><button data-v="net" class="on">NET</button><button data-v="pixel">PIXEL</button></div>
  <div class="grp"><button id="bPlein">PLEIN ECRAN</button></div>
 </div>
 <div id="cadre"><canvas id="c"></canvas><div id="ui"></div><div id="chg">CHARGEMENT DES VAISSEAUX…</div></div>
 <div class="desc" id="desc"></div>
-<p class="note">Vaisseaux et ambiances repris de Ciel de guerre (modèles craftpix et polyyai, déjà crédités). Les chasseurs sont grossis pour rester lisibles de loin. Le porte-vaisseaux est provisoirement le croiseur bleu, en plus grand.</p>
+<p class="note">Vaisseaux et ambiances repris de Ciel de guerre (modèles craftpix et polyyai, déjà crédités). Planètes : « 3D Pixel Planet Pack 0001 » d'AstroJar et « Low Poly Planets Pack » de Heck (CC0, itch.io), et les shaders de Deep-Fold déjà utilisés dans Mineur de l'espace (MIT). Les chasseurs sont grossis pour rester lisibles de loin. Le porte-vaisseaux est provisoirement le croiseur bleu, en plus grand.</p>
 </main>
 <script src="../lib/three.min.js"></script>
 <script src="../lib/GLTFLoader.js"></script>
+<script src="strategie-ciel-planetes.js"></script>
+<script src="../mineur-de-l-espace/planetes.js"></script>
 <script>/*MODELES*/</script>
 <script>
 (async function(){
@@ -90,7 +93,7 @@ const AMBS={
 let AMB=AMBS.crepuscule;
 // ---------- rendu ----------
 const R=new THREE.WebGLRenderer({canvas:cv,antialias:true});R.setPixelRatio(1);let NET=true;
-const sc=new THREE.Scene();const cam=new THREE.PerspectiveCamera(36,16/9,5,7000);
+const sc=new THREE.Scene();const cam=new THREE.PerspectiveCamera(36,16/9,5,14000);
 const hemi=new THREE.HemisphereLight('#fff','#444',.8),sol=new THREE.DirectionalLight('#fff',.8);sc.add(hemi,sol,new THREE.AmbientLight('#ffffff',.22));
 const cielCv=document.createElement('canvas');cielCv.width=2;cielCv.height=256;const cielTex=new THREE.CanvasTexture(cielCv);sc.background=cielTex;
 sc.fog=new THREE.Fog('#f1c6aa',1000,3000);
@@ -119,16 +122,41 @@ for(const I of ILES){if(!I.nom)continue;let hx=I.x,hz=I.z,hy=-99;for(let e=0;e<6
   if(I.prise){mk(COUL_CAMP[0],Math.PI/2,I.prise*6.283,.9);mk(COUL_CAMP[2],Math.PI/2+I.prise*6.283,(1-I.prise)*6.283,.45);}else mk(COUL_CAMP[I.camp<0?2:I.camp],0,6.283,I.camp<0?.45:.8);
   if(I.camp>=0){const t=new THREE.Group(),gr=new THREE.MeshPhongMaterial({color:'#9a94a8',flatShading:true});const b=new THREE.Mesh(new THREE.CylinderGeometry(7,10,34,6),gr);b.position.y=17;const c=new THREE.Mesh(new THREE.ConeGeometry(11,12,6),new THREE.MeshPhongMaterial({color:COUL_CAMP[I.camp],flatShading:true}));c.position.y=40;t.add(b,c);t.position.copy(I.sommet).add(new THREE.Vector3(34,-6,18));sc.add(t);I.poste=t;}}
 // ---------- niveau dans l'espace : champ d'astéroïdes, gros astéroïdes à la place des îles ----------
+const PLAN0=[[-1250,-560,360],[1320,560,400],[220,-1300,290],[1250,-1250,480],[-420,1250,270],[-1350,820,150]];
 const ESPACE=new THREE.Group();ESPACE.visible=false;sc.add(ESPACE);
 function caillou(det,amp,seed){const g=new THREE.IcosahedronGeometry(1,det),p=g.attributes.position,v=new THREE.Vector3();for(let i=0;i<p.count;i++){v.fromBufferAttribute(p,i);const k=Math.round(v.x*97)*7+Math.round(v.y*97)*131+Math.round(v.z*97)*1009+seed;v.multiplyScalar(1+amp*((Math.sin(k*12.9898)*43758.5453)%1));p.setXYZ(i,v.x,v.y*.8,v.z);}g.computeVertexNormals();return g;}
-{const champ=new THREE.InstancedMesh(caillou(1,.35,1),new THREE.MeshPhongMaterial({flatShading:true,shininess:0}),700),m=new THREE.Matrix4(),q=new THREE.Quaternion(),e=new THREE.Euler(),c=new THREE.Color();graine=41;
-  let n=0;for(let e2=0;e2<2000&&n<520;e2++){const s=3+Math.pow(rnd(),3)*34,P=new THREE.Vector3((rnd()-.5)*2600,-220+rnd()*480,(rnd()-.5)*2600);if(Math.hypot(P.x+60,P.z-40)<420&&s>8)continue;const i=n++;e.set(rnd()*6,rnd()*6,rnd()*6);q.setFromEuler(e);m.compose(P,q,new THREE.Vector3(s,s*(.7+rnd()*.5),s));champ.setMatrixAt(i,m);c.set(['#5e5258','#4e4552','#6a5c58','#45404e'][rnd()*4|0]);champ.setColorAt(i,c);}champ.count=n;
+{const champ=new THREE.InstancedMesh(caillou(1,.35,1),new THREE.MeshPhongMaterial({flatShading:true,shininess:0}),1100),m=new THREE.Matrix4(),q=new THREE.Quaternion(),e=new THREE.Euler(),c=new THREE.Color();graine=41;
+  let n=0;for(let e2=0;e2<4000&&n<1100;e2++){const s=3+Math.pow(rnd(),3)*34,P=new THREE.Vector3((rnd()-.5)*5000,-220+rnd()*480,(rnd()-.5)*5000);if(PLAN0.some(Q=>Math.hypot(P.x-Q[0],P.z-Q[1])<Q[2]*1.1))continue;if(Math.hypot(P.x+60,P.z-40)<420&&s>8)continue;const i=n++;e.set(rnd()*6,rnd()*6,rnd()*6);q.setFromEuler(e);m.compose(P,q,new THREE.Vector3(s,s*(.7+rnd()*.5),s));champ.setMatrixAt(i,m);c.set(['#5e5258','#4e4552','#6a5c58','#45404e'][rnd()*4|0]);champ.setColorAt(i,c);}champ.count=n;
   ESPACE.add(champ);}
 for(const I of ILES){const g=new THREE.Mesh(caillou(2,.22,I.r|0),new THREE.MeshPhongMaterial({color:'#6a5c60',flatShading:true,shininess:0}));g.scale.set(I.r*.5,I.r*.36,I.r*.45);g.position.set(I.x,-25,I.z);g.rotation.y=I.x*.01;ESPACE.add(g);I.espSommet=new THREE.Vector3(I.x,-25+I.r*.3,I.z);}
 const fondCv=document.createElement('canvas');fondCv.width=2048;fondCv.height=1024;{const x=fondCv.getContext('2d');x.fillStyle='#07061a';x.fillRect(0,0,2048,1024);
   for(const[cx,cy,r,c]of[[600,420,520,'rgba(120,60,170,.38)'],[1300,560,600,'rgba(40,90,170,.32)'],[1700,300,380,'rgba(190,70,110,.24)'],[300,700,400,'rgba(60,120,160,.22)']]){const g=x.createRadialGradient(cx,cy,0,cx,cy,r);g.addColorStop(0,c);g.addColorStop(1,'rgba(0,0,0,0)');x.fillStyle=g;x.fillRect(0,0,2048,1024);}
   graine=99;for(let i=0;i<3000;i++){const b=rnd();x.fillStyle=`rgba(255,${230+b*25|0},${220+b*35|0},${.3+b*.7})`;const t=b>.97?2:1;x.fillRect(rnd()*2048|0,rnd()*1024|0,t,t);}}
-const fondEsp=new THREE.Mesh(new THREE.SphereGeometry(5000,32,16),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(fondCv),side:THREE.BackSide,fog:false,depthWrite:false}));fondEsp.renderOrder=-1;ESPACE.add(fondEsp);
+const fondEsp=new THREE.Mesh(new THREE.SphereGeometry(10000,32,16),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(fondCv),side:THREE.BackSide,fog:false,depthWrite:false}));fondEsp.renderOrder=-1;ESPACE.add(fondEsp);
+// planètes : gisements riches ; une station en orbite les prend ; trois styles à comparer
+const PLANETES=[{t:'terre',nom:'GAIA',camp:0},{t:'lave',nom:'BRASIER',camp:1},{t:'glace',nom:'BOREA',camp:-1,riche:1},{t:'gaz',nom:'TITAN',camp:-1},{t:'desert',nom:'DUNE',camp:-1,riche:1},{t:'roche',nom:'ECHO',camp:-1}];
+PLANETES.forEach((P,i)=>{[P.x,P.z,P.r]=PLAN0[i];P.y=-P.r*.75;});
+let STYLE='astro';const geoPla={},texPla={};
+for(const k of['astro','heck']){const M=window.SC_PLANETES[k].mesh,g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(M.p,3));g.setAttribute('uv',new THREE.Float32BufferAttribute(M.uv,2));g.computeVertexNormals();geoPla[k]=g;}
+function texP(k,t){const c=k+t;if(!texPla[c]){const im=new Image(),tx=new THREE.Texture(im);im.onload=()=>{tx.needsUpdate=true;};im.src=window.SC_PLANETES[k].tex[t];if(k==='astro'){tx.magFilter=tx.minFilter=THREE.NearestFilter;tx.generateMipmaps=false;}texPla[c]=tx;}return texPla[c];}
+const MINEUR_T={terre:'terre',lave:'mars',glace:'lune',gaz:'mars',desert:'mars',roche:'lune'},COUL_PLA={terre:'#3a7ab8',lave:'#c84a2a',glace:'#d8e8f0',gaz:'#c89a60',desert:'#c8a060',roche:'#8a8a90'};
+function station(camp){const g=new THREE.Group(),gris=new THREE.MeshPhongMaterial({color:'#a8a4b8',flatShading:true}),coul=new THREE.MeshPhongMaterial({color:COUL_CAMP[camp],emissive:COUL_CAMP[camp],emissiveIntensity:.6,flatShading:true});
+  g.add(new THREE.Mesh(new THREE.CylinderGeometry(10,14,60,8),gris));const a=new THREE.Mesh(new THREE.TorusGeometry(48,5,6,20),gris);a.rotation.x=Math.PI/2;g.add(a);
+  for(let i=0;i<4;i++){const b=new THREE.Mesh(new THREE.BoxGeometry(5,4,48),gris);b.rotation.y=i*Math.PI/2;b.position.set(Math.sin(i*Math.PI/2)*24,0,Math.cos(i*Math.PI/2)*24);g.add(b);}
+  for(let i=0;i<2;i++){const q=new THREE.Mesh(new THREE.BoxGeometry(64,2,24),new THREE.MeshPhongMaterial({color:'#2a3a6a',emissive:'#14204a',flatShading:true}));q.position.set(i?82:-82,22,0);g.add(q);const b=new THREE.Mesh(new THREE.BoxGeometry(40,3,3),gris);b.position.set(i?42:-42,22,0);g.add(b);}
+  const t=new THREE.Mesh(new THREE.ConeGeometry(10,16,8),coul);t.position.y=38;g.add(t);for(let i=0;i<6;i++){const l=new THREE.Mesh(new THREE.SphereGeometry(3.5,6,4),coul);l.position.set(Math.cos(i*Math.PI/3)*48,0,Math.sin(i*Math.PI/3)*48);g.add(l);}
+  g.scale.setScalar(1.4);return g;}
+for(const P of PLANETES){P.g=new THREE.Group();P.g.position.set(P.x,P.y,P.z);ESPACE.add(P.g);
+  P.m=new THREE.Mesh(geoPla.astro,new THREE.MeshPhongMaterial({shininess:0}));P.m.scale.setScalar(P.r);P.m.rotation.z=.25;P.g.add(P.m);
+  const ct=new THREE.CanvasTexture(GRANDES[MINEUR_T[P.t]][0]);ct.magFilter=ct.minFilter=THREE.NearestFilter;ct.generateMipmaps=false;P.ct=ct;
+  P.sp=new THREE.Sprite(new THREE.SpriteMaterial({map:ct,transparent:true}));P.sp.scale.setScalar(P.r*2);P.sp.visible=false;P.g.add(P.sp);
+  if(P.t==='gaz'){const a=new THREE.Mesh(new THREE.RingGeometry(P.r*1.35,P.r*1.95,72),new THREE.MeshBasicMaterial({color:'#c8a070',transparent:true,opacity:.28,side:THREE.DoubleSide,depthWrite:false}));a.rotation.x=-Math.PI/2+.35;P.g.add(a);}
+  const rr=P.r+90,an=new THREE.Mesh(new THREE.RingGeometry(rr-8,rr,96).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({color:COUL_CAMP[P.camp<0?2:P.camp],transparent:true,opacity:P.camp<0?.35:.75,depthTest:false,fog:false}));an.position.set(P.x,2,P.z);an.renderOrder=2;ESPACE.add(an);
+  if(P.camp>=0){P.st=station(P.camp);ESPACE.add(P.st);}}
+function stylePla(k){STYLE=k;for(const P of PLANETES){const m=k!=='mineur';P.m.visible=m;P.sp.visible=!m;if(m){P.m.geometry=geoPla[k];P.m.material.map=texP(k,P.t);P.m.material.flatShading=k==='heck';P.m.material.needsUpdate=true;}}}
+stylePla('astro');let tMin=0;
+function majPlanetes3D(t,dt){if(!AMB.espace)return;for(const P of PLANETES){P.m.rotation.y+=dt*.03;if(P.st){const a=t*.025+P.x;P.st.position.set(P.x+Math.cos(a)*(P.r+70),45,P.z+Math.sin(a)*(P.r+70));P.st.rotation.y=t*.2;}}
+  if(STYLE==='mineur'){tPlan+=dt;tMin-=dt;if(tMin<0){tMin=.1;for(const k of['terre','lune','mars'])rendrePlanete(k,RP[k],GRANDES[k][1]);PLANETES.forEach(P=>P.ct.needsUpdate=true);}}}
 // ---------- modèles (comme Ciel de guerre : quantifiés, repeints pour les chasseurs) ----------
 const b64=s=>{const b=atob(s);const u=new Uint8Array(b.length);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return u.buffer;};
 function dequantifie(sc0){sc0.updateMatrixWorld(true);sc0.traverse(o=>{if(!o.isMesh)return;const a=o.geometry.attributes.position;if(!a||a.array instanceof Float32Array)return;
@@ -178,7 +206,7 @@ const E1=escadrille('py7',0,5,'ESC. 1',()=>F1.pos.clone().add(new THREE.Vector3(
   R1=escadrille('py13',1,5,'',()=>D1.pos.clone().add(new THREE.Vector3(0,25,0)),55,{vie:.7}),
   R2=escadrille('py13',1,4,'',()=>new THREE.Vector3(30,80,-30),70,{vie:.5});
 // collecteurs : du porte-vaisseaux au gisement, ils minent, puis reviennent
-const COLL=[];for(let i=0;i<3;i++){const g=importe('py5_b',Math.PI,20);sc.add(g);const rayon=new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(),new THREE.Vector3()]),new THREE.LineBasicMaterial({color:'#9ff0ff',transparent:true,fog:false}));rayon.frustumCulled=false;sc.add(rayon);COLL.push({g,rayon,I:i<2?ILES[1]:ILES[0],ph:i*8.3,pos:new THREE.Vector3(),pre:new THREE.Vector3()});}
+const COLL=[];for(let i=0;i<3;i++){const g=importe('py5_b',Math.PI,20);sc.add(g);const rayon=new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(),new THREE.Vector3()]),new THREE.LineBasicMaterial({color:'#9ff0ff',transparent:true,fog:false}));rayon.frustumCulled=false;sc.add(rayon);COLL.push({g,rayon,cible:i<2?()=>ILES[1].cristal.position:()=>AMB.espace?new THREE.Vector3(PLANETES[0].x+PLANETES[0].r*.45,PLANETES[0].y+PLANETES[0].r*.9,PLANETES[0].z+PLANETES[0].r*.3):ILES[0].cristal.position,ph:i*8.3,pos:new THREE.Vector3(),pre:new THREE.Vector3()});}
 const DUELS=[[E1,()=>F1],[E2,R2],[R2,E2],[R1,()=>D1]];
 // ---------- traçantes et éclairs ----------
 const NT=260,tp=new Float32Array(NT*6),tc=new Float32Array(NT*6),TR=[];const tg=new THREE.BufferGeometry();tg.setAttribute('position',new THREE.BufferAttribute(tp,3));tg.setAttribute('color',new THREE.BufferAttribute(tc,3));
@@ -203,11 +231,11 @@ function ambiance(k){AMB=AMBS[k];AMBK=k;const x=cielCv.getContext('2d'),g=x.crea
   for(const I of ILES){const P=esp?I.espSommet:I.sommet;if(!P)continue;if(I.cristal)I.cristal.position.copy(P);if(I.poste)I.poste.position.copy(P).add(new THREE.Vector3(34,-6,18));}}
 // ---------- caméras des trois directions ----------
 const CA={c:new THREE.Vector3(-40,0,40),yaw:0,dist:1500,tilt:0},clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
-const CAMS={A:{fov:32,libre:1},
+const CAMS={A:{fov:32,libre:1},T:{fov:32,libre:1},
   B:{fov:42,pitch:40,dist:900,cible:()=>new THREE.Vector3(-60,40,20),yaw:t=>-.35+Math.sin(t*.05)*.12},
   C:{fov:52,basse:1}};
 function placeCam(t){const C=CAMS[DIR];cam.fov=C.fov;
-  if(C.libre){const k=clamp((CA.dist-420)/1980,0,1),p=clamp(36+30*k+CA.tilt,20,80)*Math.PI/180,y=CA.yaw,d=CA.dist,c=CA.c;cam.position.set(c.x+Math.sin(y)*Math.cos(p)*d,c.y+Math.sin(p)*d,c.z+Math.cos(y)*Math.cos(p)*d);cam.lookAt(c);sc.fog.near=d*.95;sc.fog.far=d*(AMB.espace?3.5:2.6);}
+  if(C.libre){const k=clamp((CA.dist-420)/1980,0,1.4),p=clamp(36+30*k+CA.tilt,20,80)*Math.PI/180,y=CA.yaw,d=CA.dist,c=CA.c;cam.position.set(c.x+Math.sin(y)*Math.cos(p)*d,c.y+Math.sin(p)*d,c.z+Math.cos(y)*Math.cos(p)*d);cam.lookAt(c);sc.fog.near=d*(AMB.espace?1.4:.95);sc.fog.far=d*(AMB.espace?4.5:2.6);}
   else if(C.basse){const arr=new THREE.Vector3(-Math.sin(PV.yaw),0,-Math.cos(PV.yaw));const p=PV.pos.clone().addScaledVector(arr,-260).add(new THREE.Vector3(-20,70+Math.sin(t*.2)*4,-210));cam.position.copy(p);cam.lookAt(new THREE.Vector3(60,40,-20));sc.fog.near=500;sc.fog.far=2200;}
   else{const c=C.cible(),p=C.pitch*Math.PI/180,y=C.yaw(t);cam.position.set(c.x+Math.sin(y)*Math.cos(p)*C.dist,c.y+Math.sin(p)*C.dist,c.z+Math.cos(y)*Math.cos(p)*C.dist);cam.lookAt(c);sc.fog.near=C.dist*.95;sc.fog.far=C.dist*2.6;}
   cam.updateProjectionMatrix();}
@@ -228,10 +256,10 @@ function majBataille(t,dt){
   if(Math.random()<dt*.5){const m=R2.m[Math.random()*R2.m.length|0];eclat(m.pos,40);}
   for(const I of ILES)if(I.cristal)I.cristal.rotation.y=t*.3;
   nuages.forEach((g,i)=>g.position.x+=dt*(4+i%3));
-  for(const c of COLL){const u=(t+c.ph)%25,A=PV.pos.clone().add(new THREE.Vector3(60,-12,0)),B=c.I.cristal.position.clone().add(new THREE.Vector3(0,45,0));let k=0,mine=false;
+  for(const c of COLL){const u=(t+c.ph)%25,A=PV.pos.clone().add(new THREE.Vector3(60,-12,0)),B=c.cible().clone().add(new THREE.Vector3(0,45,0));let k=0,mine=false;
     if(u<8)k=u/8;else if(u<14){k=1;mine=true;}else if(u<22)k=1-(u-14)/8;const s=k*k*(3-2*k);c.pre.copy(c.pos);c.pos.lerpVectors(A,B,s);c.pos.y+=Math.sin(s*Math.PI)*60;
     if(mine){c.pos.x+=Math.cos(t*1.2+c.ph)*22;c.pos.z+=Math.sin(t*1.2+c.ph)*22;}const v=c.pos.clone().sub(c.pre);if(v.lengthSq()>1e-4)c.g.rotation.y=yawVers(v.x,v.z);c.g.position.copy(c.pos);
-    c.rayon.visible=mine;if(mine){const p=c.rayon.geometry.attributes.position,q=c.I.cristal.position;p.setXYZ(0,c.pos.x,c.pos.y-4,c.pos.z);p.setXYZ(1,q.x,q.y+14,q.z);p.needsUpdate=true;c.rayon.material.opacity=.55+.45*Math.sin(t*18);}}}
+    c.rayon.visible=mine;if(mine){const p=c.rayon.geometry.attributes.position,q=c.cible();p.setXYZ(0,c.pos.x,c.pos.y-4,c.pos.z);p.setXYZ(1,q.x,q.y+14,q.z);p.needsUpdate=true;c.rayon.material.opacity=.55+.45*Math.sin(t*18);}}}
 // ---------- interface (coordonnées virtuelles, mise à l'échelle du cadre) ----------
 let VW=1280,VH=720,echelle=1;
 const proj=(v)=>{const p=v.clone().project(cam);return{x:(p.x+1)/2*VW,y:(1-p.y)/2*VH,ok:p.z<1&&Math.abs(p.x)<1.1&&Math.abs(p.y)<1.1};};
@@ -240,11 +268,12 @@ const barre=(v,c='')=>`<div class="barre ${c}"><i style="width:${Math.round(v*10
 const svgChasseur=(c,n)=>`<svg width="${n*18}" height="22" viewBox="0 0 ${n*18} 22">${Array.from({length:n},(_,i)=>`<path d="M${i*18+9} 2 L${i*18+16} 18 L${i*18+9} 14 L${i*18+2} 18Z" fill="${c}"/>`).join('')}</svg>`;
 const svgNavire=c=>`<svg width="70" height="22" viewBox="0 0 70 22"><path d="M2 11 L14 4 L58 5 L68 11 L58 17 L14 18Z" fill="${c}"/><rect x="28" y="8" width="12" height="6" fill="#fff" opacity=".5"/></svg>`;
 let miniFond=null;
-function mini(cv){const x=cv.getContext('2d'),w=cv.width,h=cv.height,E=1150,X=v=>(v/E*.5+.5)*w,Z=v=>(v/E*.5+.5)*h;
+function mini(cv){const x=cv.getContext('2d'),w=cv.width,h=cv.height,E=AMB.espace?2500:1150,X=v=>(v/E*.5+.5)*w,Z=v=>(v/E*.5+.5)*h;
   if(!miniFond||miniFond.width!==w){miniFond=document.createElement('canvas');miniFond.width=w;miniFond.height=h;const y=miniFond.getContext('2d'),d=y.createImageData(w,h),S=new THREE.Color(AMB.sol[1]),A2=new THREE.Color('#7d6c7a'),M=new THREE.Color(AMB.fond);
     for(let j=0;j<h;j++)for(let i=0;i<w;i++){const k=(j*w+i)*4,wx=(i/w-.5)*2*E,wz=(j/h-.5)*2*E,hh=AMB.espace?(ILES.some(I=>Math.hypot(wx-I.x,wz-I.z)<I.r*.48)?1:-1):H(wx,wz),c=hh>0?(AMB.espace?A2:S):M;d.data[k]=c.r*255;d.data[k+1]=c.g*255;d.data[k+2]=c.b*255;d.data[k+3]=255;}y.putImageData(d,0,0);}
   x.drawImage(miniFond,0,0);
-  for(const I of ILES)if(I.nom){x.strokeStyle=COUL_CAMP[I.prise?0:I.camp<0?2:I.camp];x.lineWidth=1.5;x.beginPath();x.arc(X(I.x),Z(I.z),I.r*.82/E*.5*w,0,6.283);x.stroke();}
+  if(AMB.espace)for(const P of PLANETES){x.fillStyle=COUL_PLA[P.t];x.beginPath();x.arc(X(P.x),Z(P.z),Math.max(3,P.r/E*.5*w),0,6.283);x.fill();if(P.camp>=0||P.riche){x.strokeStyle=P.camp>=0?COUL_CAMP[P.camp]:'#9ff0ff';x.lineWidth=1.5;x.beginPath();x.arc(X(P.x),Z(P.z),(P.r+90)/E*.5*w,0,6.283);x.stroke();}}
+  for(const I of ILES)if(I.nom&&!AMB.espace||I.nom&&I.gis){x.strokeStyle=COUL_CAMP[I.prise?0:I.camp<0?2:I.camp];x.lineWidth=1.5;x.beginPath();x.arc(X(I.x),Z(I.z),I.r*.82/E*.5*w,0,6.283);x.stroke();}
   for(const n of U){x.fillStyle=n.camp?'#ff6a4a':'#7fd0ff';const s=n.pv?6:4;x.fillRect(X(n.pos.x)-s/2,Z(n.pos.z)-s/2,s,s);}
   for(const e of ESC)for(const m of e.m){x.fillStyle=e.camp?'#ffb0a0':'#d8f2ff';x.fillRect(X(m.pos.x)-1,Z(m.pos.z)-1,2,2);}
   for(const c of COLL){x.fillStyle='#9ff0ff';x.fillRect(X(c.pos.x)-1.5,Z(c.pos.z)-1.5,3,3);}
@@ -252,20 +281,28 @@ function mini(cv){const x=cv.getContext('2d'),w=cv.width,h=cv.height,E=1150,X=v=
   const rc=new THREE.Raycaster(),pl=new THREE.Plane(new THREE.Vector3(0,1,0),0),pts=[];for(const[a,b]of[[-1,-1],[1,-1],[1,1],[-1,1]]){rc.setFromCamera({x:a,y:b},cam);const q=new THREE.Vector3();if(rc.ray.intersectPlane(pl,q))pts.push(q);}
   if(pts.length===4){x.strokeStyle='rgba(255,255,255,.8)';x.lineWidth=1;x.beginPath();pts.forEach((q,i)=>i?x.lineTo(X(q.x),Z(q.z)):x.moveTo(X(q.x),Z(q.z)));x.closePath();x.stroke();}}
 // gabarits de chaque direction : statique (une fois) et dynamique (chaque image)
-function hautRessources(tel){return `<div class="pan" style="left:12px;top:10px"><div class="l"><b class="cr">◆ 340</b><span>+18/MIN</span></div>${tel?'':'<div class="l"><span>ILES</span><b>1 / 5</b></div>'}<div class="l"><span>TEMPS</span><b>08:42</b></div></div>`;}
+function hautRessources(tel){return `<div class="pan" style="left:12px;top:10px"><div class="l"><b class="cr">◆ 340</b><span>+18/MIN</span></div><div class="l"><span>AGE</span><b style="color:#ffd2a0">${tel?'I':'I · AVANT-POSTE'}</b></div>${tel?'':'<div class="l"><span>ILES</span><b>1 / 5</b></div>'}<div class="l"><span>TEMPS</span><b>08:42</b></div></div>`;}
 function objectif(x,w){return `<div class="pan" style="left:${x}px;top:10px;width:${w}px;text-align:center"><span style="color:#ffd2a0">ESCARMOUCHE 2 · ★★☆</span><div>TENIR L'ILE CENTRALE</div>${barre(.45,'cap')}</div>`;}
 const boutonsCam=pos=>`<div style="position:absolute;${pos};display:flex;gap:5px">${[['+','+'],['−','-'],['⟲','r'],['N','n']].map(([t,v])=>`<span class="bt clic" data-cam="${v}" style="pointer-events:auto;cursor:pointer;min-width:34px">${t}</span>`).join('')}</div>`;
-const GAB={
+const noeud=(cat,nom,txt)=>`<div style="background:rgba(40,30,64,.75);border:1px solid var(--bord);border-radius:7px;padding:5px 7px;margin-top:5px"><span style="color:${{V:'#9fe0ff',S:'#ffd2a0',A:'#b8f080'}[cat]}">${{V:'VAISSEAU',S:'STATION',A:'AMELIORATION'}[cat]}</span> <b>${nom}</b><div class="mut">${txt}</div></div>`;
+const AGES=[['I · AVANT-POSTE','AU DEPART',[['V','COLLECTEUR','mine asteroides et planetes'],['V','CHASSEUR','famille polyvalente'],['S','RAFFINERIE','depot pres d un gisement'],['S','TOURELLE','defend une station'],['A','COLLECTE +20 %',''],['A','BLINDAGE I','chasseurs']]],
+  ['II · FLOTTE','500◆ + 1 RAFFINERIE',[['V','BOMBARDIER','corvette, contre les gros'],['V','FREGATE','escorte, tourelles'],['S','STATION ORBITALE','prend une planete riche'],['S','CHANTIER NAVAL','deuxieme file'],['A','MISSILES',''],['A','BOUCLIERS I','']]],
+  ['III · ARMADA','1 200◆ + 1 STATION ORBITALE',[['V','DESTROYER','ligne de bataille'],['V','CROISEUR','tourelles lourdes'],['S','FORTERESSE','bouclier de zone'],['S','CANON ORBITAL','tire de tres loin'],['A','BOUCLIERS II',''],['A','SAUT','le porte-vaisseaux bondit une fois']]]];
+const arbre=tel=>`<div class="pan" style="left:${tel?8:24}px;top:${tel?8:20}px;right:${tel?8:24}px;bottom:${tel?8:20}px;background:rgba(14,10,28,.9);padding:${tel?8:16}px;font-size:${tel?9:12}px">
+  <div class="l"><b style="color:#ffd2a0;font-size:1.25em">ARBRE DES AGES</b><span>ESCARMOUCHE : CE QU ON DEBLOQUE PENDANT LA PARTIE</span></div>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:${tel?6:14}px;margin-top:${tel?4:10}px">${AGES.map(([n,c,l],i)=>`<div style="${i?'':'border-color:#9fd8ff'}"><div style="display:flex;justify-content:space-between;border-bottom:1px solid var(--bord);padding-bottom:3px"><b style="color:${i?'#fff':'#9fe0ff'}">AGE ${n}</b><span class="mut">${c}</span></div>${l.filter((_,j)=>!tel||j%2===0||j<4).map(x=>noeud(...x)).join('')}</div>`).join('')}</div>
+  <div class="mut" style="position:absolute;left:${tel?8:16}px;right:${tel?8:16}px;bottom:${tel?6:12}px">ENTRE LES MISSIONS : LES ETOILES DEBLOQUENT LES MODELES (35 CHASSEURS, CORVETTES, FREGATES...) ET DES BONUS DE DEPART.</div></div>`;
+const GAB={T:{pc:()=>arbre(0),tel:()=>arbre(1)},
 A:{pc:()=>`${hautRessources()}${objectif(470,340)}<canvas class="mini" width="190" height="190" style="left:12px;bottom:12px;width:190px;height:190px"></canvas>
   <div class="pan" style="left:216px;bottom:118px;display:flex;gap:6px;padding:5px"><span class="bt on"><span class="k">1</span>ESC. 1</span><span class="bt"><span class="k">2</span>ESC. 2</span><span class="bt"><span class="k">3</span>ESC. 3</span><span class="bt"><span class="k">4</span>DESTROYERS</span></div>
   <div class="pan" style="left:216px;bottom:12px;width:520px;height:98px"><div class="l"><b>ESCADRILLE 1 · 5 CHASSEURS</b><span>ATTAQUE FREGATE</span></div><div style="display:flex;gap:14px;align-items:center;margin-top:4px">${svgChasseur('#7fd0ff',5)}<div style="flex:1">${barre(.8)}</div></div>
    <div style="display:flex;gap:6px;margin-top:8px"><span class="bt"><span class="k">A</span>ATTAQUER</span><span class="bt"><span class="k">D</span>DEFENDRE</span><span class="bt"><span class="k">P</span>PATROUILLE</span><span class="bt"><span class="k">R</span>RETOUR</span></div></div>
   <div class="pan" style="right:12px;bottom:12px;width:300px"><div class="l"><b>PORTE-VAISSEAUX AURORE</b></div>${barre(.86)}<div class="mut" style="margin:8px 0 4px">CHANTIER</div>
-   <div style="display:grid;gap:5px"><span class="bt" style="justify-content:space-between"><span><span class="k">Q</span>CHASSEUR</span><b class="cr">40◆</b></span><span class="bt" style="justify-content:space-between"><span><span class="k">W</span>BOMBARDIER</span><b class="cr">70◆</b></span><span class="bt" style="justify-content:space-between"><span><span class="k">E</span>FREGATE</span><b class="cr">150◆</b></span><span class="bt" style="justify-content:space-between"><span><span class="k">T</span>COLLECTEUR</span><b class="cr">30◆</b></span></div><div style="display:flex;justify-content:space-between;margin-top:6px"><span class="mut">COLLECTEURS 3</span><span class="bt"><span class="k">U</span>ARSENAL</span></div>
+   <div style="display:grid;gap:5px"><span class="bt" style="justify-content:space-between"><span><span class="k">Q</span>CHASSEUR</span><b class="cr">40◆</b></span><span class="bt" style="justify-content:space-between;opacity:.45"><span><span class="k">W</span>BOMBARDIER</span><b>AGE II</b></span><span class="bt" style="justify-content:space-between;opacity:.45"><span><span class="k">E</span>FREGATE</span><b>AGE II</b></span><span class="bt" style="justify-content:space-between"><span><span class="k">T</span>COLLECTEUR</span><b class="cr">30◆</b></span></div><span class="bt" style="justify-content:space-between;margin-top:6px;background:#4a3a1a;border-color:#ffd2a0"><span><span class="k">U</span>AGE II · FLOTTE</span><b class="cr">500◆</b></span><div class="mut" style="margin-top:3px">+ 1 RAFFINERIE · COLLECTEURS 3</div>
    <div class="mut" style="margin-top:6px">EN COURS : CHASSEUR</div>${barre(.6,'cap')}</div>
-  <svg class="ov" width="1280" height="720"></svg><div class="astuce" style="right:12px;top:12px">MOLETTE : ZOOM · CLIC DROIT GLISSE : PIVOTER · CLIC DROIT : ORDRE</div>${boutonsCam('left:12px;bottom:210px')}`,
+  <div id="tags"></div><svg class="ov" width="1280" height="720"></svg><div class="astuce" style="right:12px;top:12px">MOLETTE : ZOOM · CLIC DROIT GLISSE : PIVOTER · CLIC DROIT : ORDRE</div>${boutonsCam('left:12px;bottom:210px')}`,
  tel:()=>`${hautRessources(1)}${objectif(300,280)}<canvas class="mini" width="110" height="110" style="right:10px;top:10px;width:110px;height:110px"></canvas>
-  <div style="position:absolute;left:10px;top:96px;display:grid;gap:7px"><span class="bt gros on">ESC. 1</span><span class="bt gros">ESC. 2</span><span class="bt gros">ESC. 3</span><span class="bt gros">FLOTTE</span></div>
+  <div id="tags"></div><div style="position:absolute;left:10px;top:112px;display:grid;gap:7px"><span class="bt gros on">ESC. 1</span><span class="bt gros">ESC. 2</span><span class="bt gros">ESC. 3</span><span class="bt gros">FLOTTE</span></div>
   <div style="position:absolute;right:10px;bottom:10px;display:grid;gap:7px"><span class="bt gros">ATTAQUER</span><span class="bt gros">DEFENDRE</span><span class="bt gros">RETOUR</span><span class="bt gros" style="background:#4a3a1a">◆ CHANTIER</span></div>
   <svg class="ov" width="880" height="400"></svg><div class="astuce" style="left:50%;bottom:10px;transform:translateX(-50%)">PINCER : ZOOM · DEUX DOIGTS : PIVOTER</div>${boutonsCam('right:10px;top:126px')}`},
 B:{pc:()=>`<div class="pan" style="left:12px;top:10px;display:flex;gap:16px"><b class="cr">◆ 340</b><span>08:42</span><span>★★☆</span></div><div id="tags"></div><svg class="ov" width="1280" height="720"></svg>
@@ -289,6 +326,8 @@ function majUI(t){const ov=ui.querySelector('svg.ov'),mc=ui.querySelector('canva
       else if(ph<2.6){const k=(ph-1.4)/1.2,x=b.x1+(cF1.x-b.x1)*k,y=b.y1+(cF1.y-b.y1)*k;s+=curseur(x,y);}else if(ph<3.6)s+=ping(cF1,ph-2.6,'ATTAQUER')+curseur(cF1.x,cF1.y);}
     else if(ph>2&&ph<3.2)s+=ping(cF1,ph-2,'',1);
     poseMarqueur(MQ[0],E1.centre(),true);poseMarqueur(MQ[1],PV.pos,false);}
+  if(DIR==='A'){const tg=ui.querySelector('#tags');if(tg){let h='';if(AMB.espace)for(const P of PLANETES){const q=proj(new THREE.Vector3(P.x,P.y+P.r+30,P.z));if(!q.ok)continue;h+=`<div class="tag ${P.camp===0?'b':P.camp===1?'r':'n'}" style="left:${q.x}px;top:${q.y}px">${P.nom}${P.riche?' <span class="cr">◆◆ RICHE</span>':''}${P.camp>=0?'<br>STATION':''}</div>`;}tg.innerHTML=h;}}
+  if(DIR==='T'){poseMarqueur(MQ[0],E1.centre(),false);}
   if(DIR==='B'){poseMarqueur(MQ[0],E1.centre(),true);poseMarqueur(MQ[1],PV.pos,false);
     s+=`<path d="M${cE1.x} ${cE1.y} Q${(cE1.x+cF1.x)/2} ${Math.min(cE1.y,cF1.y)-60} ${cF1.x} ${cF1.y}" fill="none" stroke="#9fe0ff" stroke-width="2" stroke-dasharray="7 6" stroke-dashoffset="${-t*30}"/>`+ping(cF1,(t%1.6)/1.6,'',1);
     const tg=ui.querySelector('#tags');let h='';const p=(v,dy)=>{const q=proj(v.clone().add(new THREE.Vector3(0,dy,0)));return q;};
@@ -305,7 +344,8 @@ function majUI(t){const ov=ui.querySelector('svg.ov'),mc=ui.querySelector('canva
 const curseur=(x,y)=>`<path d="M${x} ${y} l0 16 l4 -4 l3 7 l3 -1 l-3 -7 l6 0Z" fill="#fff" stroke="#000" stroke-width="1"/>`;
 const ping=(c,k,txt,doigt)=>`<circle cx="${c.x}" cy="${c.y}" r="${8+k*30}" fill="none" stroke="${doigt?'#fff':'#ff8a5a'}" stroke-width="2" opacity="${1-k}"/>${doigt?`<circle cx="${c.x}" cy="${c.y}" r="11" fill="rgba(255,255,255,.35)"/>`:''}${txt?`<text x="${c.x+18}" y="${c.y-12}" fill="#ffb8a0" font-family="Silkscreen" font-size="13" paint-order="stroke" stroke="#000" stroke-width="3">${txt}</text>`:''}`;
 // ---------- descriptions ----------
-const DESC={A:[['CAMERA (CHOISIE)','Caméra libre : zoom à la molette ou au pincement, pivoter au clic droit glissé ou à deux doigts, déplacer en glissant (dans le jeu, glisser au clic gauche fera le cadre de sélection ; on déplacera aux bords de l\'écran et aux flèches). Plus on zoome, plus la vue s\'incline : de près, on retrouve l\'allure de B. Boutons + − ⟲ N pour qui n\'a pas de molette.'],['INTERFACE','Classique : ressources en haut, mini-carte, barre des groupes (1 à 4), panneau de la sélection avec ses ordres, et le chantier du porte-vaisseaux à droite.'],['PC','Cadre à la souris, clic droit pour l\'ordre, raccourcis A D P R et Q W E.'],['TELEPHONE','Gros boutons des groupes à gauche, ordres à droite : on touche un groupe, puis la cible.'],['+ / −','+ le plus lisible pour commander beaucoup d\'unités. − les vaisseaux sont petits, on voit moins le beau rendu.']],
+const DESC={T:[['TROIS AGES','Comme Age of Empires : on part avec le porte-vaisseaux, des collecteurs et des chasseurs ; chaque âge coûte du cristal et demande une construction (raffinerie, puis station orbitale).'],['CE QU ON DEBLOQUE','Par âge : de nouveaux vaisseaux, des stations à poser (par un collecteur, comme les villageois) et des améliorations à acheter au porte-vaisseaux.'],['DEUX ETAGES','En partie : l\'arbre des âges, perdu à la fin. Entre les missions : les étoiles débloquent les modèles et quelques bonus de départ, gardés.'],['PLANETES','Gisements riches : on y pose une station orbitale (âge II), qui rapporte bien plus qu\'un astéroïde. Les astéroïdes restent les gisements de départ.']],
+  A:[['CAMERA (CHOISIE)','Caméra libre : zoom à la molette ou au pincement, pivoter au clic droit glissé ou à deux doigts, déplacer en glissant (dans le jeu, glisser au clic gauche fera le cadre de sélection ; on déplacera aux bords de l\'écran et aux flèches). Plus on zoome, plus la vue s\'incline : de près, on retrouve l\'allure de B. Boutons + − ⟲ N pour qui n\'a pas de molette.'],['INTERFACE','Classique : ressources en haut, mini-carte, barre des groupes (1 à 4), panneau de la sélection avec ses ordres, et le chantier du porte-vaisseaux à droite.'],['PC','Cadre à la souris, clic droit pour l\'ordre, raccourcis A D P R et Q W E.'],['TELEPHONE','Gros boutons des groupes à gauche, ordres à droite : on touche un groupe, puis la cible.'],['+ / −','+ le plus lisible pour commander beaucoup d\'unités. − les vaisseaux sont petits, on voit moins le beau rendu.']],
  B:[['CAMERA','Vue de biais, plus proche : on voit le relief des îles, les coques et les combats tournoyants.'],['INTERFACE','Tout sur la carte : étiquettes et points de vie au-dessus des groupes, anneaux des îles avec leur prise, ordre en pointillés, chantier en menu autour du porte-vaisseaux.'],['PC','Clic sur une étiquette ou un anneau pour choisir, clic droit pour l\'ordre.'],['TELEPHONE','Les étiquettes sont les boutons ; une petite barre de groupes en bas.'],['+ / −','+ beau et immersif, peu de panneaux (dans l\'esprit de Bastion B). − les étiquettes s\'empilent quand la bataille grossit.']],
  C:[['CAMERA','Vue basse, derrière le porte-vaisseaux : la plus cinématique, le ciel et les nuages comptent.'],['INTERFACE','Chaque escadrille est une carte en bas de l\'écran (état, ordre en cours) ; la carte tactique en haut à droite sert à donner les ordres.'],['PC','Touches 1 à 4 ou clic sur une carte, puis glisser sur la carte tactique.'],['TELEPHONE','Les cartes au pouce, la carte tactique qu\'on touche pour l\'agrandir.'],['+ / −','+ très beau, peu d\'unités à suivre : chaque escadrille compte. − on commande surtout depuis la petite carte, moins « RTS ».']]};
 function majDesc(){$('#desc').innerHTML=DESC[DIR].map(([h,p])=>`<div class="carte"><h3>${h}</h3><p>${p}</p></div>`).join('');}
@@ -317,15 +357,16 @@ function groupe(id,f){$(id).addEventListener('click',e=>{const b=e.target.closes
 groupe('#gDir',v=>{DIR=v;construireUI();majDesc();});
 groupe('#gApp',v=>{APP=v;cadre.classList.toggle('tel',v==='tel');construireUI();});
 groupe('#gAmb',v=>ambiance(v));
+groupe('#gPla',v=>stylePla(v));
 groupe('#gNet',v=>{NET=v==='net';cv.style.imageRendering=NET?'auto':'pixelated';redim();});
 $('#bPlein').onclick=async()=>{try{await cadre.requestFullscreen();if(APP==='tel'&&screen.orientation&&screen.orientation.lock)screen.orientation.lock('landscape').catch(()=>{});}catch(e){}};
 addEventListener('resize',()=>{redim();});document.addEventListener('fullscreenchange',()=>setTimeout(redim,60));
 // ---------- boucle ----------
-ambiance('crepuscule');construireUI();majDesc();$('#chg').remove();
+ambiance('espace');CA.dist=1900;construireUI();majDesc();$('#chg').remove();
 // commandes de la caméra libre (direction A) : souris et doigts
 const PTR=new Map();
-function deplacer(dx,dy){const r=cadre.getBoundingClientRect(),k=2*CA.dist*Math.tan(16*Math.PI/180)/r.height*1.15,y=CA.yaw;CA.c.x+=(-Math.cos(y)*dx-Math.sin(y)*dy)*k;CA.c.z+=(Math.sin(y)*dx-Math.cos(y)*dy)*k;CA.c.x=clamp(CA.c.x,-1000,1000);CA.c.z=clamp(CA.c.z,-1000,1000);}
-const zoom=f=>{CA.dist=clamp(CA.dist*f,420,2400);};
+function deplacer(dx,dy){const r=cadre.getBoundingClientRect(),k=2*CA.dist*Math.tan(16*Math.PI/180)/r.height*1.15,y=CA.yaw;CA.c.x+=(-Math.cos(y)*dx-Math.sin(y)*dy)*k;CA.c.z+=(Math.sin(y)*dx-Math.cos(y)*dy)*k;const L=AMB.espace?2300:1000;CA.c.x=clamp(CA.c.x,-L,L);CA.c.z=clamp(CA.c.z,-L,L);}
+const zoom=f=>{CA.dist=clamp(CA.dist*f,420,AMB.espace?4200:2400);};
 cadre.addEventListener('contextmenu',e=>e.preventDefault());
 cadre.addEventListener('wheel',e=>{if(DIR!=='A')return;e.preventDefault();zoom(Math.exp(e.deltaY*.0012));},{passive:false});
 cadre.addEventListener('pointerdown',e=>{if(DIR!=='A'||e.target.closest('.clic'))return;try{cadre.setPointerCapture(e.pointerId);}catch(x){}PTR.set(e.pointerId,{x:e.clientX,y:e.clientY,b:e.button});});
@@ -335,9 +376,9 @@ cadre.addEventListener('pointermove',e=>{const p=PTR.get(e.pointerId);if(!p)retu
     if(d1>10)zoom(d0/d1);let da=a1-a0;if(da>Math.PI)da-=6.283;if(da<-Math.PI)da+=6.283;CA.yaw+=da;deplacer(dx/2,dy/2);}
   p.x=e.clientX;p.y=e.clientY;});
 const lacher=e=>PTR.delete(e.pointerId);cadre.addEventListener('pointerup',lacher);cadre.addEventListener('pointercancel',lacher);
-ui.addEventListener('click',e=>{const b=e.target.closest('[data-cam]');if(!b)return;const v=b.dataset.cam;if(v==='+')zoom(.8);if(v==='-')zoom(1.25);if(v==='r')CA.yaw+=Math.PI/4;if(v==='n'){CA.yaw=0;CA.tilt=0;CA.dist=1500;CA.c.set(-40,0,40);}});
+ui.addEventListener('click',e=>{const b=e.target.closest('[data-cam]');if(!b)return;const v=b.dataset.cam;if(v==='+')zoom(.8);if(v==='-')zoom(1.25);if(v==='r')CA.yaw+=Math.PI/4;if(v==='n'){CA.yaw=0;CA.tilt=0;CA.dist=AMB.espace?1900:1500;CA.c.set(-40,0,40);}});
 let der=performance.now(),tt=0;
-function boucle(now){const dt=Math.min(.05,(now-der)/1000);der=now;tt+=dt;majBataille(tt,dt);placeCam(tt);majUI(tt);fondEsp.position.copy(cam.position);R.render(sc,cam);requestAnimationFrame(boucle);}
+function boucle(now){const dt=Math.min(.05,(now-der)/1000);der=now;tt+=dt;majBataille(tt,dt);placeCam(tt);majPlanetes3D(tt,dt);majUI(tt);fondEsp.position.copy(cam.position);R.render(sc,cam);requestAnimationFrame(boucle);}
 requestAnimationFrame(boucle);
 window.Maquette={set:(d,a,k)=>{if(d){DIR=d;construireUI();majDesc();}if(a){APP=a;cadre.classList.toggle('tel',a==='tel');construireUI();}if(k)ambiance(k);}};
 })();
