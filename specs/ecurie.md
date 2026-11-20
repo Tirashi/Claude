@@ -12,7 +12,7 @@ Idée de l'utilisateur (18/11) : un petit jeu de **gestion d'écurie de course**
 | 5 | 18/11 | **low poly** : 36 voitures CC0 (Cosmo, Kenney, rgsdev) repeintes, course 3D, parking — https://claude.ai/artifact/SXBFDEnm7sVJ7aittf9Y1X | projet abandonné, puis « dernier essai » |
 | 6 | 20/11 | **circuit urbain** en tuiles Modular Roads (Atomic Realm), course simulée avec stats, trois caméras — https://claude.ai/artifact/M1ouMVo2x8qT2NvRc7UUeN | « ça rend pas mal » : **projet relancé** ; les trois caméras deviennent trois points de vue au choix du joueur |
 | 7 | 20/11 | **gestion** : garage (notes, pièces, peinture), concession (neuves, occasion), pilote (et pilotes libres), sponsors (2 places), semaine (5 jours) ; A paddock 16 bits, B atelier et fiches papier, C tablette du directeur — https://claude.ai/artifact/Va7ZuMoUQb6M7YqzgrugWy | en attente du choix |
-| 8 | 20/11 | **gestion, style A** : six onglets (écurie, garage, achat, sponsors, semaine, fans) ; pilotes et voiture attribuée, réserve (voiture en réparation), 3ᵉ place verrouillée (niveau 2), garage voiture par voiture, revente, fans et revenus à débloquer (boutique 1 000 fans, convention 5 000, fan club 10 000) — https://claude.ai/artifact/Ti3b1zMar7cQizKQvQ4cKL | en attente de validation |
+| 8 | 20/11 | **gestion, style A** : six onglets (écurie, garage, achat, sponsors, semaine, fans) ; pilotes et voiture attribuée, réserve (voiture en réparation), 3ᵉ place verrouillée (niveau 2), garage voiture par voiture, revente, fans et revenus à débloquer (boutique 1 000 fans, convention 5 000, fan club 10 000) — https://claude.ai/artifact/Ti3b1zMar7cQizKQvQ4cKL | **validée** le 20/11 (choix de la voiture dans une liste) |
 
 ## Décisions (20/11)
 - **3D low poly** avec Three.js (`lib/three.min.js`, r128) ; pas de voxel ni de sprite stacking.
@@ -39,7 +39,7 @@ Idée de l'utilisateur (18/11) : un petit jeu de **gestion d'écurie de course**
 - **Style A retenu** (paddock 16 bits : Press Start 2P, fond violet rayé, blocs à double bordure, barres de notes, voiture 3D sur un plateau qui tourne). La course en 3D reste celle de la maquette 6.
 - Onglets de départ : garage, concession, pilotes, sponsors, semaine ; on verra plus tard s'il en faut d'autres (usine, saison, classement).
 - **Plusieurs pilotes** : 2 au début, puis davantage de places à mesure que l'écurie grandit (réputation, niveau de l'écurie).
-- **Plusieurs voitures** : l'écurie possède un parc de voitures ; on **attribue une voiture à chaque pilote** engagé ; les autres restent **en réserve** (remplaçantes en cas d'accident ou de panne, voitures d'une autre catégorie).
+- **Plusieurs voitures** : l'écurie possède un parc de voitures ; on **attribue une voiture à chaque pilote** engagé (toucher la voiture du pilote ouvre la liste du parc : disponibles à prendre, celles des autres pilotes et celles en réparation grisées avec la raison) ; les autres restent **en réserve** (remplaçantes en cas d'accident ou de panne, voitures d'une autre catégorie).
 - **Fans** : le nombre de fans monte avec les résultats (et les médias) ; au bout d'un moment on **débloque** des sources de revenus simplifiées (boutique de goodies, convention…) qui rapportent selon le nombre de fans.
 
 ## Boucle de jeu (à préciser)
@@ -51,4 +51,4 @@ Idée de l'utilisateur (18/11) : un petit jeu de **gestion d'écurie de course**
 ## Questions ouvertes
 - Durée d'une partie (une saison, une carrière ?), classement ou non.
 - Comment l'écurie grandit (niveaux ? réputation ?) et ce que ça débloque (places de pilotes, garage plus grand, goodies, convention).
-- Prochaine étape : valider la maquette 8, puis session 1 du jeu (boucle semaine → course → résultats → argent et fans), Opus.
+- Prochaine étape : session 1 du jeu (boucle semaine → course → résultats → argent et fans), Opus.

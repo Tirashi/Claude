@@ -67,6 +67,7 @@ ul{margin:0;padding-left:22px;display:grid;gap:6px;max-width:76ch}
 .A .etat{color:#ff8a6a}.A .ok{color:#7be08a}
 .A .jauge{height:3cqi;background:#120e1e;padding:2px;position:relative}.A .jauge i{display:block;height:100%;background:linear-gradient(90deg,#f08a24,#ffd166)}
 .A .jauge span{position:absolute;inset:0;display:grid;place-items:center;font-size:1.6cqi;color:#fff;text-shadow:1px 1px 0 #000}
+.A .liste-choix{display:grid;gap:1.2cqi;padding:1.6cqi;background:#120e1e;border:2px solid #f08a24;margin-top:-1cqi}
 .A .gros{font-size:4.4cqi;color:#ffd166}
 </style>
 <main>
@@ -76,7 +77,7 @@ ul{margin:0;padding-left:22px;display:grid;gap:6px;max-width:76ch}
 </header>
 <section class="tels">
 <figure><div class="boite"><div class="tel A" id="t1"></div></div>
-<figcaption><b>1 · L'ECURIE</b><span>Les pilotes avec leur voiture : touche la voiture d'un pilote pour lui en donner une autre du parc. En dessous, la réserve (une voiture en réparation), la troisième place verrouillée et les pilotes libres.</span></figcaption></figure>
+<figcaption><b>1 · L'ECURIE</b><span>Les pilotes avec leur voiture : touche la voiture d'un pilote, la liste du parc s'ouvre (disponibles, déjà prises par un autre pilote, en réparation) et tu choisis celle que tu veux. En dessous, la réserve (dont une voiture en réparation), la troisième place verrouillée et les pilotes libres.</span></figcaption></figure>
 <figure><div class="boite"><div class="tel A" id="t2"></div></div>
 <figcaption><b>2 · LE GARAGE</b><span>Les flèches passent d'une voiture du parc à l'autre ; pièces et peinture se règlent voiture par voiture. Une voiture en réserve peut être revendue.</span></figcaption></figure>
 <figure><div class="boite"><div class="tel A" id="t3"></div></div>
@@ -168,7 +169,8 @@ function appli(id,onglet,M){
   const E={argent:184000,onglet,niveau:1,places:2,fans:3420,parc:[
       {id:1,v:3,c:'#f08a24',pieces:{pneus:true},usure:[0,0,0,0],etat:100},
       {id:2,v:2,c:'#f08a24',pieces:{},usure:[0,0,0,0],etat:100},
-      {id:3,v:0,c:'#7a8a96',pieces:{},usure:[0,-1,0,-2],etat:35,repar:2}],
+      {id:3,v:0,c:'#7a8a96',pieces:{},usure:[0,-1,0,-2],etat:35,repar:2},
+      {id:4,v:5,c:'#2456c8',pieces:{},usure:[0,0,0,-1],etat:88}],
     pilotes:[{nom:'L. MARCHAL',age:24,n:[7,8,6],forme:72,salaire:11000,voiture:1,c:'#f08a24'},{nom:'P. BELLINI',age:29,n:[6,7,5],forme:80,salaire:8000,voiture:2,c:'#c8262c'}],
     choix:0,vue:0,occ:false,signes:[0],semaine:[0,1,2,3,4],revenus:{boutique:true}};
   const corps=el.querySelector('.corps'),vit=el.querySelector('.vitrine');
@@ -198,7 +200,10 @@ function appli(id,onglet,M){
     ecurie(){const libres=E.places-E.pilotes.length;const reserve=E.parc.filter(x=>!pilote(x.id));
       return `<div class="bloc"><h3>PILOTES · ${E.pilotes.length}/${E.places} PLACES</h3>${E.pilotes.map((p,i)=>{const x=voitureDe(p.voiture);
           return `<div class="carte"><div class="tete" style="background:${p.c}">${initiales(p.nom)}</div><b>${p.nom}</b><small>TAL ${p.n[0]} · CST ${p.n[1]} · AGR ${p.n[2]} · FORME ${p.forme} %</small>
-          <button class="vt" data-donner="${i}"><i style="background:${x?x.c:'#120e1e'}"></i>${x?VOITURES[x.v].nom:'AUCUNE'}<span style="font-size:1.4cqi;color:#c9c0e8">CHANGER</span></button></div>`;}).join('')}
+          <button class="vt" data-donner="${i}"><i style="background:${x?x.c:'#120e1e'}"></i>${x?VOITURES[x.v].nom:'AUCUNE'}<span style="font-size:1.4cqi;color:#c9c0e8">${E.ouvert===i?'FERMER':'CHANGER'}</span></button></div>
+          ${E.ouvert===i?`<div class="liste-choix">${E.parc.map(v=>{const autre=pilote(v.id);const moi=v.id===p.voiture;const n=notes(v);
+            const raison=moi?'SA VOITURE':v.repar?'EN REPARATION':autre?'PILOTE : '+autre.nom:'';
+            return `<button class="ligne ${moi?'on':raison?'non':''}" ${raison?'':`data-prendre="${v.id}"`}><span><i style="display:inline-block;width:2.4cqi;height:2.4cqi;background:${v.c};margin-right:1.4cqi"></i>${VOITURES[v.v].nom}</span><em>${raison?'':'PRENDRE'}</em><small>${raison||'DISPONIBLE'} · VIT ${n[0]} · ACC ${n[1]} · ADH ${n[2]} · FIA ${n[3]}</small></button>`;}).join('')}</div>`:''}`;}).join('')}
         ${libres>0?`<div class="carte verrou"><div class="tete">?</div><b>PLACE LIBRE</b><small>RECRUTE UN PILOTE CI-DESSOUS</small></div>`:''}
         <div class="carte verrou"><div class="tete">🔒</div><b>PLACE ${E.places+1}</b><small>NIVEAU ${E.niveau+1} DE L'ECURIE · REPUTATION 40</small></div></div>
         <div class="bloc"><h3>RESERVE · ${reserve.length} VOITURE${reserve.length>1?'S':''}</h3>${reserve.length?reserve.map(x=>`<button class="ligne" data-voir="${E.parc.indexOf(x)}"><span><i style="display:inline-block;width:2.4cqi;height:2.4cqi;background:${x.c};margin-right:1.4cqi"></i>${VOITURES[x.v].nom}</span><em>VOIR</em><small>${etatTxt(x)} · CATEGORIE ${VOITURES[x.v].cat}</small></button>`).join(''):'<div style="opacity:.7">AUCUNE VOITURE DE RESERVE</div>'}
@@ -236,10 +241,11 @@ function appli(id,onglet,M){
   function maj(){el.querySelector('.arg').textContent=argent(E.argent);vit.hidden=!['ecurie','garage','achat'].includes(E.onglet);if(!vit.hidden)vitrine();
     corps.innerHTML=vues[E.onglet]();el.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.o===E.onglet));}
   el.addEventListener('click',ev=>{const b=ev.target.closest('button');if(!b)return;const d=b.dataset;const x=E.parc[E.choix];
-    if(d.o){E.onglet=d.o;corps.scrollTop=0;}
-    else if(d.donner){// donne au pilote la voiture suivante qui n'est ni à un autre pilote ni en réparation
-      const p=E.pilotes[Number(d.donner)];const dispo=E.parc.filter(v=>!v.repar&&(!pilote(v.id)||v.id===p.voiture));const i=dispo.findIndex(v=>v.id===p.voiture);
-      if(dispo.length<2){toast('AUCUNE AUTRE VOITURE DISPONIBLE');return;}p.voiture=dispo[(i+1)%dispo.length].id;toast(p.nom+' : '+VOITURES[voitureDe(p.voiture).v].nom);}
+    if(d.o){E.onglet=d.o;E.ouvert=null;corps.scrollTop=0;}
+    else if(d.donner){// ouvre (ou ferme) la liste des voitures du parc sous ce pilote
+      const i=Number(d.donner),p=E.pilotes[i];const dispo=E.parc.filter(v=>!v.repar&&!pilote(v.id));
+      if(E.ouvert===i)E.ouvert=null;else if(!dispo.length){toast('AUCUNE VOITURE DISPONIBLE');return;}else E.ouvert=i;}
+    else if(d.prendre){const p=E.pilotes[E.ouvert];p.voiture=Number(d.prendre);E.ouvert=null;toast(p.nom+' : '+VOITURES[voitureDe(p.voiture).v].nom);}
     else if(d.voir){E.choix=Number(d.voir);E.onglet='garage';}
     else if(d.recrue){if(E.pilotes.length>=E.places){toast('PLUS DE PLACE');return;}const l=LIBRES2[Number(d.recrue)];if(E.pilotes.some(p=>p.nom===l.nom))return;
       E.pilotes.push({nom:l.nom,age:l.age,n:l.n,forme:80,salaire:l.salaire,voiture:null,c:l.c});toast(l.nom+' SIGNE !');}
