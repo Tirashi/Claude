@@ -1,0 +1,244 @@
+<meta charset="utf-8">
+<title>Sprite stacking Nebula</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Michroma&family=Rajdhani:wght@500;600;700&family=Share+Tech+Mono&display=swap">
+<style>
+/* Essai de sprite stacking : les vrais sprites de Nebula (cartes de hauteurs de commun/vaisseaux.js) découpés en tranches empilées. Thème sombre voulu (celui de Nebula). */
+:root { --night: #04060c; --panel: #0a0f19; --line: #1c2738; --text: #d8dee8; --dim: #7d8a9e; --amber: #f2b24a; --foe: #ff6a52;
+  --f-title: "Michroma", "Arial Narrow", sans-serif; --f-ui: "Rajdhani", "Arial Narrow", sans-serif; --f-mono: "Share Tech Mono", Consolas, monospace; color-scheme: dark; }
+html { background: var(--night); }
+body { margin: 0; background: radial-gradient(ellipse at 20% -10%, #142034 0%, var(--night) 50%) fixed, var(--night); color: var(--text);
+  font-family: var(--f-ui); font-weight: 500; font-size: 17px; line-height: 1.4; padding: 20px 16px 48px; }
+.wrap { max-width: 400px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
+.eyebrow { font-family: var(--f-mono); font-size: 12px; letter-spacing: 3px; color: var(--amber); }
+h1 { font-family: var(--f-title); font-weight: 400; font-size: 21px; letter-spacing: .2em; margin: 0; line-height: 1.25; }
+.lead { color: var(--dim); margin: 0; font-size: 16px; }
+.tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.tabs button { font: 600 15px var(--f-ui); letter-spacing: 1px; color: var(--dim); background: var(--panel); border: 1px solid var(--line); padding: 8px 4px; cursor: pointer; line-height: 1.15; }
+.tabs button b { display: block; font-family: var(--f-mono); font-weight: 400; color: var(--amber); font-size: 13px; }
+.tabs button.on { color: var(--text); border-color: var(--amber); background: #151c28; }
+.phone { background: #05080e; border: 1px solid var(--line); display: flex; flex-direction: column; }
+.phone canvas { display: block; width: 100%; height: auto; touch-action: none; image-rendering: pixelated; }
+#zoom { cursor: grab; }
+.bar { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 10px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); background: var(--panel); }
+.bar button { font: 700 20px var(--f-ui); color: var(--amber); background: none; border: 1px solid var(--line); width: 40px; height: 36px; cursor: pointer; }
+.bar .name { font: 700 19px var(--f-ui); letter-spacing: 2px; text-align: center; flex: 1; text-transform: uppercase; }
+.bar .name small { display: block; font: 400 12px var(--f-mono); color: var(--dim); letter-spacing: 1px; text-transform: none; }
+.bar .name.foe { color: var(--foe); }
+.desc { margin: 0; font-size: 16px; color: var(--dim); }
+.desc b { color: var(--text); font-weight: 600; }
+.ctrl { display: flex; flex-direction: column; gap: 6px; font: 13px var(--f-mono); color: var(--dim); }
+.ctrl label { display: grid; grid-template-columns: 110px 1fr 44px; align-items: center; gap: 8px; }
+.ctrl input { width: 100%; accent-color: var(--amber); }
+.note { border-top: 1px solid var(--line); padding-top: 12px; color: var(--dim); font-size: 16px; margin: 0; }
+.note b { color: var(--text); font-weight: 600; }
+</style>
+
+<div class="wrap">
+  <div class="eyebrow">NEBULA · ESSAI</div>
+  <h1>SPRITE STACKING</h1>
+  <p class="lead">Les vrais vaisseaux du jeu : chaque sprite est déjà une carte de hauteurs. On la découpe en tranches d'un pixel, empilées avec une caméra inclinée. Glisser sur le vaisseau pour le tourner.</p>
+  <div class="tabs" id="tabs"></div>
+  <div class="phone">
+    <canvas id="zoom" width="360" height="300"></canvas>
+    <div class="bar"><button id="prev">‹</button><div class="name" id="nm"></div><button id="next">›</button></div>
+    <canvas id="scene" width="360" height="300"></canvas>
+  </div>
+  <p class="desc" id="desc"></p>
+  <div class="ctrl">
+    <label>INCLINAISON <input type="range" id="tilt" min="0" max="70" step="1"><span id="tiltv"></span></label>
+    <label>RELIEF ×<input type="range" id="ex" min="50" max="250" step="10"><span id="exv"></span></label>
+  </div>
+  <p class="note"><b>À choisir</b> : une direction (ou aucune : on garde la vue de dessus actuelle). Le sprite stacking demande que la caméra soit inclinée, donc la grille de combat de Nebula serait vue un peu de biais ; il irait aussi bien à un jeu où l'on pilote un vaisseau (Empire des étoiles, Mineur de l'espace).</p>
+</div>
+
+<script src="../commun/vaisseaux.js"></script>
+<script>
+'use strict';
+const V = window.NebulaVaisseaux;
+V.keepHeights(true);
+const DIRS = [
+  { k: 'A', nom: 'TRANCHES', tilt: 30, ex: 1, relight: false, pix: false,
+    d: '<b>Tranches simples</b> : la lumière peinte dans le sprite tourne avec lui (les ombres restent collées au vaisseau). Le plus simple et le plus léger ; le relief se voit surtout sur les flancs.' },
+  { k: 'B', nom: 'LUMIERE FIXE', tilt: 34, ex: 1.3, relight: true, pix: false,
+    d: '<b>Lumière fixe</b> : le soleil reste en haut à gauche et le vaisseau est rééclairé à chaque angle ; les flancs tournés vers la lumière s\'allument, ceux à l\'ombre prennent le bleu de la nébuleuse.' },
+  { k: 'C', nom: 'PIXEL RASANT', tilt: 52, ex: 1.6, relight: true, pix: true,
+    d: '<b>Pixel rasant</b> : caméra plus basse, relief accentué, image deux fois plus grossière agrandie sans lissage : un vrai rendu « voxel » 16 bits, façon jeux de sprite stacking.' },
+];
+let dir = DIRS[1];
+const IDS = Object.keys(V.SHIPS).filter(id => !/^mine/.test(id));
+const NOMS = { mere: 'vaisseau-mère', fregate: 'frégate', eclaireur: 'éclaireur', egide: 'égide', cuirasse: 'cuirassé', brulot: 'brûlot', reine: 'reine' };
+let cur = 0;
+const LIGHT = (() => { const v = [-.5, -.62, .6], n = Math.hypot(...v); return v.map(x => x / n); })();
+const LH = (() => { const n = Math.hypot(LIGHT[0], LIGHT[1]); return [LIGHT[0] / n, LIGHT[1] / n]; })();
+
+/* ---------- préparation d'un vaisseau : tranches, normales, albédo ---------- */
+const PREP = {};
+function prep(id) {
+  if (PREP[id]) return PREP[id];
+  const s = V.get(id), { w, h, H, glow } = s.hm, N = w * h;
+  const D = s.img.getContext('2d').getImageData(0, 0, w, h).data;
+  const top = new Int16Array(N).fill(-1); let zmax = 1;
+  for (let i = 0; i < N; i++) if (H[i] > -50) { top[i] = Math.max(0, Math.floor(H[i])); zmax = Math.max(zmax, top[i]); }
+  const at = (x, y, z) => (x < 0 || y < 0 || x >= w || y >= h || H[y * w + x] < -50) ? z - 3 : Math.max(H[y * w + x], z - 3);
+  const nx = new Float32Array(N), ny = new Float32Array(N), nz = new Float32Array(N), Lb = new Float32Array(N), lit = new Uint8Array(N);
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    const i = y * w + x; if (top[i] < 0) continue; const z = H[i];
+    let a = (at(x - 1, y, z) - at(x + 1, y, z)) * .55, b = (at(x, y - 1, z) - at(x, y + 1, z)) * .55, n = Math.hypot(a, b, 1);
+    nx[i] = a / n; ny[i] = b / n; nz[i] = 1 / n;
+    Lb[i] = .22 + .95 * Math.max(0, nx[i] * LIGHT[0] + ny[i] * LIGHT[1] + nz[i] * LIGHT[2]);
+  }
+  for (const [x, y] of glow) { const i = Math.round(y) * w + Math.round(x); if (i >= 0 && i < N) lit[i] = 1; }
+  return PREP[id] = { id, s, w, h, H, D, top, zmax, nl: zmax + 1, nx, ny, nz, Lb, lit, cache: new Map() };
+}
+/* atlas des tranches (côte à côte) pour un angle donné (lumière fixe) ou pour tous les angles (lumière cuite) */
+function atlas(P, relight, ang) {
+  const B = relight ? 48 : 1, bk = relight ? ((Math.round(ang / (Math.PI * 2) * B) % B) + B) % B : 0;
+  if (P.cache.has(bk)) return P.cache.get(bk);
+  const { w, h, nl, top, D, H, zmax } = P, a = bk / B * Math.PI * 2, ca = Math.cos(a), sa = Math.sin(a);
+  // la lumière vue depuis le repère du vaisseau (on tourne la lumière à l'envers)
+  const lx = LIGHT[0] * ca + LIGHT[1] * sa, ly = -LIGHT[0] * sa + LIGHT[1] * ca, hx = LH[0] * ca + LH[1] * sa, hy = -LH[0] * sa + LH[1] * ca;
+  const c = document.createElement('canvas'); c.width = w * nl; c.height = h;
+  const g = c.getContext('2d'), img = g.createImageData(w * nl, h), O = img.data, W2 = w * nl;
+  const low = (x, y, k) => (x < 0 || y < 0 || x >= w || y >= h || top[y * w + x] < k) ? 1 : 0;
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    const i = y * w + x, t = top[i]; if (t < 0) continue;
+    const r0 = D[i * 4], g0 = D[i * 4 + 1], b0 = D[i * 4 + 2];
+    for (let k = 0; k <= t; k++) {
+      let r, gg, b;
+      if (k === t) {   // dessus de la colonne
+        if (!relight || P.lit[i]) { r = r0; gg = g0; b = b0; }
+        else {
+          const dif = Math.max(0, P.nx[i] * lx + P.ny[i] * ly + P.nz[i] * LIGHT[2]), f = Math.min(3, Math.max(.3, (.22 + .95 * dif) / P.Lb[i]));
+          r = r0 * f; gg = g0 * f; b = b0 * f;
+        }
+      } else {         // flanc : normale = vers les voisins plus bas que la tranche
+        const hv = k / zmax;
+        let ex = low(x + 1, y, k + 1) - low(x - 1, y, k + 1), ey = low(x, y + 1, k + 1) - low(x, y - 1, k + 1);
+        ex += (low(x + 1, y + 1, k + 1) - low(x - 1, y - 1, k + 1) + low(x + 1, y - 1, k + 1) - low(x - 1, y + 1, k + 1)) * .5;
+        ey += (low(x + 1, y + 1, k + 1) - low(x - 1, y - 1, k + 1) - low(x + 1, y - 1, k + 1) + low(x - 1, y + 1, k + 1)) * .5;
+        const al = 1 / Math.max(.35, P.Lb[i]);
+        if (!relight) { const f = .38 + .42 * hv; r = r0 * f; gg = g0 * f; b = b0 * f; }
+        else {
+          const n = Math.hypot(ex, ey) || 1, d = (ex * hx + ey * hy) / n, f = (.18 + .62 * Math.max(0, d)) * (.6 + .4 * hv) * al, rim = Math.max(0, -d);
+          r = r0 * f + rim * 10; gg = g0 * f + rim * 26; b = b0 * f + rim * 48;
+        }
+        if (P.lit[i] && k === t - 1) { r = r0 * .8; gg = g0 * .8; b = b0 * .8; }
+      }
+      const o = (y * W2 + k * w + x) * 4; O[o] = r; O[o + 1] = gg; O[o + 2] = b; O[o + 3] = 255;
+    }
+  }
+  g.putImageData(img, 0, 0);
+  if (P.cache.size > 60) P.cache.delete(P.cache.keys().next().value);
+  P.cache.set(bk, c); return c;
+}
+/* lueur des réacteurs */
+const GL = {};
+function glowImg(foe) {
+  if (GL[foe]) return GL[foe];
+  const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d'), gr = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+  gr.addColorStop(0, foe ? 'rgba(255,170,110,.95)' : 'rgba(170,220,255,.95)'); gr.addColorStop(.3, foe ? 'rgba(255,90,40,.45)' : 'rgba(80,150,255,.45)'); gr.addColorStop(1, 'rgba(0,0,0,0)');
+  g.fillStyle = gr; g.fillRect(0, 0, 64, 64); return GL[foe] = c;
+}
+/* dessin d'une pile : (x, y) = centre au sol, ang = cap (0 = nez en haut pour la flotte), sc = échelle */
+function drawStack(g, P, x, y, ang, sc, tilt, ex, relight, t) {
+  const A = atlas(P, relight, ang), { w, h, nl } = P, ct = Math.cos(tilt), lift = Math.sin(tilt) * sc * ex;
+  const ca = Math.cos(ang), sa = Math.sin(ang), m = Math.max(1, Math.ceil(lift * 1.2));
+  const a = sc * ca, b = sc * ct * sa, c = -sc * sa, d = sc * ct * ca;
+  for (let k = 0; k < nl; k++) for (let j = 0; j < (k === nl - 1 ? 1 : m); j++) {
+    const z = k + j / m;
+    g.setTransform(a, b, c, d, x, y - z * lift);
+    g.drawImage(A, k * w, 0, w, h, -w / 2, -h / 2, w, h);
+  }
+  // réacteurs, à mi-hauteur, vers l'arrière
+  const foe = P.s.flip, rear = foe ? -1 : 1, G = glowImg(foe ? 1 : 0);
+  g.globalCompositeOperation = 'lighter';
+  for (const [exx, eyy, er] of P.s.engines) {
+    const H = P.H[Math.min(P.h - 1, Math.max(0, Math.round(eyy - rear * 2))) * w + Math.round(exx)] || P.zmax * .4;
+    const L = er * 5 * (1 + Math.sin(t * 23 + exx) * .12);
+    g.setTransform(a, b, c, d, x, y - Math.max(1, H * .7) * lift);
+    g.drawImage(G, exx - w / 2 - L, eyy - h / 2 + rear * er * .6 - L, L * 2, L * 2);
+  }
+  g.globalCompositeOperation = 'source-over';
+  g.setTransform(1, 0, 0, 1, 0, 0);
+}
+
+/* ---------- fond ---------- */
+const BG = V.space(12, [50, 40, 70, 80, 40, 60], null, 3);
+function bg(g, W, H, off) {
+  g.imageSmoothingEnabled = true;
+  // la nébuleuse défile en boucle (largeur ramenée à celle de la vue)
+  const k = W / BG.width, bh = BG.height * k, y = ((off % bh) + bh) % bh;
+  g.drawImage(BG, 0, y - bh, W, bh); g.drawImage(BG, 0, y, W, bh);
+}
+
+/* ---------- vue agrandie ---------- */
+const zc = document.getElementById('zoom'), zg = zc.getContext('2d');
+const LO = document.createElement('canvas'), lg = LO.getContext('2d');
+let ang = 0.6, spin = true, drag = null, tiltDeg, exag;
+function frameZoom(t) {
+  const P = prep(IDS[cur]), pix = dir.pix, R = pix ? 2 : 1, W = zc.width / R, H = zc.height / R;
+  const g = pix ? lg : zg; if (pix) { LO.width = W; LO.height = H; }
+  bg(g, W, H, 0);
+  const tilt = tiltDeg * Math.PI / 180, sc = Math.min((W * .7) / P.w, (H * .62) / (P.h * Math.cos(tilt) + P.nl * Math.sin(tilt) * exag));
+  g.imageSmoothingEnabled = !pix;
+  const fl = P.s.flip ? Math.PI : 0;
+  drawStack(g, P, W / 2, H / 2 + P.nl * Math.sin(tilt) * exag * sc * .45, ang + fl, sc, tilt, exag, dir.relight, t);
+  if (pix) { zg.imageSmoothingEnabled = false; zg.drawImage(LO, 0, 0, zc.width, zc.height); }
+  zg.font = '12px "Share Tech Mono", monospace'; zg.fillStyle = '#7d8a9e';
+  zg.fillText(`${P.nl} TRANCHES · ${P.w}×${P.h}`, 10, zc.height - 10);
+}
+zc.addEventListener('pointerdown', e => { drag = { x: e.clientX, a: ang, moved: false }; zc.setPointerCapture(e.pointerId); });
+zc.addEventListener('pointermove', e => { if (!drag) return; const dx = e.clientX - drag.x; if (Math.abs(dx) > 3) drag.moved = true; if (drag.moved) { spin = false; ang = drag.a + dx * .015; } });
+zc.addEventListener('pointerup', () => { if (drag && !drag.moved) spin = !spin; drag = null; });
+
+/* ---------- scène à la taille du jeu ---------- */
+const sc2 = document.getElementById('scene'), sg = sc2.getContext('2d');
+const LO2 = document.createElement('canvas'), lg2 = LO2.getContext('2d');
+const FLEET = [
+  { id: 'fregate', cx: .3, cy: .58, r: 54, sp: .35, ph: 0 },
+  { id: 'chasseur', cx: .3, cy: .58, r: 92, sp: .6, ph: 2 },
+  { id: 'intercepteur', cx: .3, cy: .58, r: 92, sp: .6, ph: 2.5 },
+  { id: 'convoyeur', cx: .74, cy: .4, r: 48, sp: -.3, ph: 1 },
+  { id: 'brulot', cx: .74, cy: .4, r: 86, sp: -.55, ph: 4 },
+];
+function frameScene(t) {
+  const pix = dir.pix, R = pix ? 2 : 1, W = sc2.width / R, H = sc2.height / R, g = pix ? lg2 : sg;
+  if (pix) { LO2.width = W; LO2.height = H; }
+  bg(g, W, H, -t * 8 / R);
+  const tilt = tiltDeg * Math.PI / 180, ct = Math.cos(tilt);
+  g.imageSmoothingEnabled = !pix;
+  const L = FLEET.map(f => { const a = f.ph + t * f.sp; return { f, x: (f.cx * W + Math.cos(a) * f.r / R), y: (f.cy * H + Math.sin(a) * f.r / R * ct), a }; }).sort((p, q) => p.y - q.y);
+  for (const { f, x, y, a } of L) {
+    const P = prep(f.id), head = a + (f.sp > 0 ? Math.PI : 0) + (P.s.flip ? Math.PI : 0);   // le nez suit la trajectoire
+    drawStack(g, P, x, y, head, .62 / R, tilt, exag, dir.relight, t);
+  }
+  if (pix) { sg.imageSmoothingEnabled = false; sg.drawImage(LO2, 0, 0, sc2.width, sc2.height); }
+  sg.font = '12px "Share Tech Mono", monospace'; sg.fillStyle = '#7d8a9e'; sg.fillText('À LA TAILLE DU JEU', 10, 18);
+}
+
+/* ---------- interface ---------- */
+const tabs = document.getElementById('tabs');
+DIRS.forEach(D => { const b = document.createElement('button'); b.innerHTML = `<b>${D.k}</b>${D.nom}`; b.onclick = () => setDir(D); D.btn = b; tabs.appendChild(b); });
+const tiltI = document.getElementById('tilt'), exI = document.getElementById('ex');
+function setDir(D) {
+  dir = D; DIRS.forEach(x => x.btn.classList.toggle('on', x === D));
+  document.getElementById('desc').innerHTML = D.d;
+  tiltI.value = tiltDeg = D.tilt; exI.value = (exag = D.ex) * 100; showV();
+}
+function showV() { document.getElementById('tiltv').textContent = tiltDeg + '°'; document.getElementById('exv').textContent = exag.toFixed(1); }
+tiltI.oninput = () => { tiltDeg = +tiltI.value; showV(); };
+exI.oninput = () => { exag = exI.value / 100; showV(); };
+function setShip(i) {
+  cur = (i + IDS.length) % IDS.length; const id = IDS[cur], P = prep(id), el = document.getElementById('nm');
+  el.className = 'name' + (P.s.flip ? ' foe' : ''); el.innerHTML = `${NOMS[id] || id}<small>${P.s.flip ? 'pirates' : 'flotte'} · ${cur + 1} / ${IDS.length}</small>`;
+}
+document.getElementById('prev').onclick = () => setShip(cur - 1);
+document.getElementById('next').onclick = () => setShip(cur + 1);
+setDir(DIRS[1]); setShip(0);
+let last = performance.now();
+function loop(now) {
+  const dt = Math.min(.05, (now - last) / 1000); last = now; if (spin) ang += dt * .9;
+  const t = now / 1000; frameZoom(t); frameScene(t); requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+</script>

@@ -101,6 +101,9 @@ function rawBuilder(w, h, S) {
 // définition des sprites : 1 = un pixel par pixel logique, 2 = deux fois plus fins (écrans d'ordinateur)
 let SS = 1;
 const setScale = s => { SS = s; };
+// garder la carte de hauteurs dans chaque sprite (maquette de sprite stacking)
+let KEEP = false;
+const keepHeights = v => { KEEP = !!v; };
 function builder(w, h) {
   const S = SS, B0 = rawBuilder(w * S, h * S, S), sc = pts => pts.map(p => [p[0] * S, p[1] * S]);
   const B = {
@@ -166,7 +169,8 @@ function render(B, opt = {}) {
   }
   for (const [x, y, col] of glow) { const k = (Math.round(y) * w + Math.round(x)) * 4; if (D[k + 3]) { D[k] = col[0]; D[k + 1] = col[1]; D[k + 2] = col[2]; } }
   g.putImageData(img, 0, 0);
-  return { img: c, w: w / S, h: h / S, S, engines: eng.map(([x, y, r]) => [x / S, y / S, r / S]), flip: !!opt.flip, glows: glow, gcol: opt.flip ? 'rgba(255,90,60,' : 'rgba(255,190,110,' };
+  const hm = KEEP ? { w, h, H, M, glow } : undefined;   // carte de hauteurs gardée pour le sprite stacking (keepHeights)
+  return { hm, img: c, w: w / S, h: h / S, S, engines: eng.map(([x, y, r]) => [x / S, y / S, r / S]), flip: !!opt.flip, glows: glow, gcol: opt.flip ? 'rgba(255,90,60,' : 'rgba(255,190,110,' };
 }
 const WARM = [255, 206, 140], REDL = [255, 90, 70];
 const SHIPS = {
@@ -565,5 +569,5 @@ function drawShip(g, s, x, y, sc = 1, t = 0, alpha = 1) {
   g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'high'; g.drawImage(s.img, -s.w / 2, -s.h / 2, s.w, s.h);
   g.restore();
 }
-window.NebulaVaisseaux = { setScale, W, H, TAU, mk, rnd, hash, vnoise, fbm, mix, clamp, hex, grad, MAT, builder, render, half, SHIPS, get, TIMES, cellsOf, drawShip, rock, space, drawPlanet, WARM, REDL, CYAN };
+window.NebulaVaisseaux = { setScale, keepHeights, W, H, TAU, mk, rnd, hash, vnoise, fbm, mix, clamp, hex, grad, MAT, builder, render, half, SHIPS, get, TIMES, cellsOf, drawShip, rock, space, drawPlanet, WARM, REDL, CYAN };
 })();
