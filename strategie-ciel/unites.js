@@ -9,9 +9,9 @@ const PI = Math.PI;
 const TYPES = {
   pv:         { nom: 'PORTE-VAISSEAUX', mod: 'fga_croiseur1', rot: -PI / 2, L: 470, vie: 3000, v: 6, portee: 380, deg: 12, cad: .5, alt: 110, gros: 1 },
   collecteur: { nom: 'COLLECTEUR', mod: 'py16', rot: PI, L: 26, vie: 60, v: 48, alt: 60, prix: 30, temps: 8, cap: 20, mine: 5, cle: 'KeyZ' },
-  chasseur:   { nom: 'CHASSEUR', mod: 'py2', rot: PI, L: 14, vie: 45, v: 90, portee: 150, deg: 4, cad: .35, alt: 80, prix: 40, temps: 10, vole: 1, cle: 'KeyX' },
+  chasseur:   { nom: 'CHASSEUR', mod: 'py2', rot: PI, L: 14, vie: 60, v: 90, portee: 150, deg: 4, cad: .35, alt: 80, prix: 40, temps: 10, vole: 1, cle: 'KeyX' },
   bombardier: { nom: 'BOMBARDIER', mod: 'py35', rot: PI, L: 34, vie: 120, v: 58, portee: 210, deg: 20, cad: 1.6, alt: 72, prix: 80, temps: 16, antigros: 1, vole: 1, cle: 'KeyC' },
-  destroyer:  { nom: 'DESTROYER', mod: 'fga_destroyer2', rot: -PI / 2, L: 110, vie: 900, v: 15, portee: 340, deg: 15, cad: .6, alt: 92, prix: 220, temps: 32, gros: 1, cle: 'KeyV' },
+  destroyer:  { nom: 'DESTROYER', mod: 'fga_destroyer2', rot: -PI / 2, L: 110, vie: 900, v: 22, portee: 340, deg: 15, cad: .6, alt: 92, prix: 220, temps: 32, gros: 1, cle: 'KeyV' },
   r_chasseur: { nom: 'CHASSEUR ROUGE', mod: 'py13', rot: PI, L: 16, vie: 40, v: 85, portee: 150, deg: 4, cad: .35, alt: 82, vole: 1, camp: 1 },
   r_corvette: { nom: 'CORVETTE', mod: 'fga_corvette1_r', rot: -PI / 2, L: 40, vie: 170, v: 42, portee: 210, deg: 14, cad: 1, alt: 70, antigros: 1, camp: 1 },
   r_fregate:  { nom: 'FREGATE', mod: 'fga_fregate1_r', rot: -PI / 2, L: 60, vie: 420, v: 24, portee: 300, deg: 13, cad: .6, alt: 88, camp: 1 },
@@ -127,7 +127,7 @@ function majProduction(dt){ const pv = PV(); if (!pv || !S.file.length){ if (HOL
     const u = cree(t, p0); u.pos.copy(p0); u.yaw = pv.yaw; eclat(p0, T.L * 2.2); eclat(p0, T.L * 1.2);
     const avant = V3(-Math.sin(pv.yaw), 0, -Math.cos(pv.yaw));
     if (t === 'collecteur'){ u.ordre = { k: 'miner', gis: gisementProche(u.pos) }; }
-    else { const p = S.ralliement || pv.pos.clone().addScaledVector(avant, pv.T.L * .5 + 160).add(V3((Math.random() - .5) * 120, 0, (Math.random() - .5) * 120)); u.ordre = { k: 'aller', p }; }
+    else { const p = (S.ralliement ? S.ralliement.clone() : pv.pos.clone().addScaledVector(avant, pv.T.L * .5 + 160)).add(V3((Math.random() - .5) * 120, 0, (Math.random() - .5) * 120)); u.ordre = { k: 'aller', p }; }
     annonceProd(u); } }
 
 // ---------- vagues ennemies ----------

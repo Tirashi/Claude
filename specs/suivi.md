@@ -151,3 +151,4 @@ Maquettes de la carte 2 à 4 (isométrique, puis papier à l'encre validée), é
 - **20/11 — Stratégie spatiale** : tourelles des grands vaisseaux qui pivotent vers leur cible (découpe du catalogue de Ciel de guerre) et flammes lumineuses des réacteurs.
 - **20/11 — Stratégie spatiale** : touches des groupes lues sur la touche physique (AZERTY), double appui pour centrer la vue.
 - **20/11 — Stratégie spatiale** : groupes personnels sur la première ligne de lettres (Maj pour garder), production sur W X C V, AURORE plus grosse avec l'hologramme du vaisseau en construction à l'avant.
+- **20/11 — Stratégie spatiale** : 7 réacteurs sur AURORE, point de ralliement, destroyers plus rapides et chasseurs plus résistants, station de Viktor Hahn (CC BY 4.0) autour de GAIA ; `sw.js` v118.

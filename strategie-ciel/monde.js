@@ -58,7 +58,12 @@ const PLN = {}, DF_T = { terre: 'LandMasses', lave: 'LavaWorld', glace: 'IceWorl
 const COUL_PLA = { terre: '#3a7ab8', lave: '#c84a2a', glace: '#d8e8f0', gaz: '#c89a60', desert: '#c8a060', roche: '#8a8a90' }, COUL_CAMP = ['#5ab0ff', '#ff5a4a', '#f0e4d0'];
 const orbite = r => { const p = []; for (let i = 0; i <= 160; i++){ const a = i / 160 * 6.283; p.push(V3(Math.cos(a) * r, 0, Math.sin(a) * r)); }
   return new THREE.Line(new THREE.BufferGeometry().setFromPoints(p), new THREE.LineBasicMaterial({ color: '#9aa0d8', transparent: true, opacity: .2, depthWrite: false, fog: false })); };
-function station(camp){ const g = new THREE.Group(), gris = new THREE.MeshPhongMaterial({ color: '#a8a4b8', flatShading: true }), coul = new THREE.MeshPhongMaterial({ color: COUL_CAMP[camp], emissive: COUL_CAMP[camp], emissiveIntensity: .6, flatShading: true });
+function station(camp){ if (window.SC_STATIONS && SC_STATIONS.station06) return stationModele(SC_STATIONS.station06, 270); return stationCode(camp); }
+function stationModele(pcs, taille){ const g = new THREE.Group(), tex = src => { if (!src) return null; const im = new Image(), t = new THREE.Texture(im); im.onload = () => { t.needsUpdate = true; }; im.src = src; return t; };
+  for (const pc of pcs){ const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(pc.p, 3)); geo.setAttribute('uv', new THREE.Float32BufferAttribute(pc.uv, 2)); geo.computeVertexNormals();
+    g.add(new THREE.Mesh(geo, new THREE.MeshPhongMaterial({ map: tex(pc.couleur), emissive: '#ffffff', emissiveMap: tex(pc.lumiere), emissiveIntensity: pc.lumiere ? 1 : 0, shininess: 10 }))); }
+  const s = new THREE.Box3().setFromObject(g).getSize(V3()); g.scale.setScalar(taille / Math.max(s.x, s.y, s.z)); return g; }
+function stationCode(camp){ const g = new THREE.Group(), gris = new THREE.MeshPhongMaterial({ color: '#a8a4b8', flatShading: true }), coul = new THREE.MeshPhongMaterial({ color: COUL_CAMP[camp], emissive: COUL_CAMP[camp], emissiveIntensity: .6, flatShading: true });
   g.add(new THREE.Mesh(new THREE.CylinderGeometry(10, 14, 60, 8), gris)); const a = new THREE.Mesh(new THREE.TorusGeometry(48, 5, 6, 20), gris); a.rotation.x = Math.PI / 2; g.add(a);
   for (let i = 0; i < 4; i++){ const b = new THREE.Mesh(new THREE.BoxGeometry(5, 4, 48), gris); b.rotation.y = i * Math.PI / 2; b.position.set(Math.sin(i * Math.PI / 2) * 24, 0, Math.cos(i * Math.PI / 2) * 24); g.add(b); }
   for (let i = 0; i < 2; i++){ const q = new THREE.Mesh(new THREE.BoxGeometry(64, 2, 24), new THREE.MeshPhongMaterial({ color: '#2a3a6a', emissive: '#14204a', flatShading: true })); q.position.set(i ? 82 : -82, 22, 0); g.add(q); }
@@ -107,7 +112,7 @@ for (const G of PORTES){ G.p = V3(Math.cos(G.ang) * 5000, 60, Math.sin(G.ang) * 
 const PERF = { df: 0 };
 function majDecor(dt, dtr, enPause){
   for (const P of PLANETES) P.ang += dt * P.w; placerPlanetes();
-  for (const P of PLANETES) if (P.st){ const a = TEMPS.t * .05; P.st.position.set(P.x + Math.cos(a) * (P.r + 90), 60, P.z + Math.sin(a) * (P.r + 90)); P.st.rotation.y = TEMPS.t * .2; }
+  for (const P of PLANETES) if (P.st){ const a = TEMPS.t * .05; P.st.position.set(P.x + Math.cos(a) * (P.r + 170), 60, P.z + Math.sin(a) * (P.r + 170)); P.st.rotation.y = TEMPS.t * .1; }
   for (const G of PORTES){ G.g.rotation.y += dtr * .4; G.s.material.opacity = .6 + .4 * Math.sin(TEMPS.r * 3); }
   for (const G of GIS) G.cr.rotation.y += dt * .3;
   fondEsp.position.copy(cam.position);
@@ -170,10 +175,13 @@ function flamme(s, camp){ const T = TEINTES[camp], f = new THREE.Group();
   const p = new THREE.Mesh(GEO_PT, matFl(T[3], .9)); p.scale.setScalar(.6 * s); p.renderOrder = 5; f.add(p);
   const l = new THREE.Sprite(MAT_LUEUR[camp]); l.scale.setScalar(s * 7); l.renderOrder = 5; f.add(l); return f; }
 const TUY = {};
+// tuyères relevées à la main (en fractions de la longueur du modèle, et taille de la flamme) : AURORE a trois tuyères de chaque côté et une au centre (20/11)
+const TUY_MAIN = { fga_croiseur1: [[0, .006, .5, 1.25], [-.089, .013, .477, 1], [-.102, -.019, .477, 1], [-.064, -.013, .477, 1], [.089, .013, .477, 1], [.102, -.019, .477, 1], [.064, -.013, .477, 1]] };
 // un vaisseau équipé : ses tourelles (pièces qui pivotent) et ses flammes, placées sur les tuyères (calculées une fois par modèle et par taille)
 function equipe(g, k, L, camp){ const tours = []; g.traverse(o => { if (/^tourelle/.test(o.name)) tours.push({ o, cd: Math.random() * 2, c: null, tc: 0 }); });
-  const cle = k + '@' + L; if (!TUY[cle]) TUY[cle] = tuyeres(g); const s = L > 100 ? L * .022 : L * .05, fl = [];
-  for (const t of TUY[cle]){ const f = flamme(s, camp ? 'r' : 'b'); f.position.set(t[0], t[1], t[2] - s * .2); g.add(f); fl.push(f); }
+  const cle = k + '@' + L; if (!TUY[cle]) TUY[cle] = TUY_MAIN[k] ? TUY_MAIN[k].map(t => [t[0] * L, t[1] * L, t[2] * L, t[3]]) : tuyeres(g);
+  const s = L > 300 ? L * .016 : L > 100 ? L * .022 : L * .05, fl = [];
+  for (const t of TUY[cle]){ const f = flamme(s * (t[3] || 1), camp ? 'r' : 'b'); f.position.set(t[0], t[1], t[2] - s * .2); g.add(f); fl.push(f); }
   return { tours, fl }; }
 function prepare(k, s){ dequantifie(s); s.traverse(o => { if (!o.isMesh) return; const mm = Array.isArray(o.material) ? o.material : [o.material];
   const n = mm.map(m => { if (m.map){ m.map.encoding = THREE.LinearEncoding; if (m.map.image && m.map.image.height <= 4) texNet(m.map); } return new THREE.MeshPhongMaterial({ color: m.color, map: m.map || null, vertexColors: !!m.vertexColors, flatShading: true, shininess: 0, specular: 0, side: THREE.DoubleSide }); });
@@ -228,3 +236,11 @@ function majHolo(H, f){ H.g.updateMatrixWorld(true); const zc = H.z1 - (H.z1 - H
   H.plan.setFromNormalAndCoplanarPoint(n, p); H.ligne.position.set(0, 0, zc); H.ligne.visible = f < 1;
   const sc = .9 + .1 * Math.sin(TEMPS.r * 9); H.mats[0].opacity = .22 + .08 * sc; H.mats[1].opacity = .35 + .12 * Math.sin(TEMPS.r * 13); }
 function retireHolo(H){ if (!H) return; H.g.parent && H.g.parent.remove(H.g); H.mats.forEach(m => m.dispose()); }
+
+// ---------- point de ralliement : un mât et un fanion, et un anneau ----------
+const DRAPEAU = new THREE.Group(); { const m = new THREE.MeshBasicMaterial({ color: '#9ff0ff', transparent: true, opacity: .9, fog: false });
+  const mat = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.5, 90, 6), m); mat.position.y = 45; DRAPEAU.add(mat);
+  const f = new THREE.Mesh(new THREE.PlaneGeometry(40, 22), new THREE.MeshBasicMaterial({ color: '#5ab0ff', transparent: true, opacity: .85, side: THREE.DoubleSide, fog: false })); f.position.set(20, 78, 0); DRAPEAU.add(f); DRAPEAU.fanion = f;
+  const a = new THREE.Mesh(geoAnneau, new THREE.MeshBasicMaterial({ color: '#9ff0ff', transparent: true, opacity: .7, depthTest: false, fog: false })); a.scale.setScalar(40); a.renderOrder = 4; DRAPEAU.add(a);
+  DRAPEAU.visible = false; sc.add(DRAPEAU); }
+function majDrapeau(p){ DRAPEAU.visible = !!p; if (p){ DRAPEAU.position.set(p.x, 40, p.z); DRAPEAU.fanion.rotation.y = Math.sin(TEMPS.r * 2) * .4; } }

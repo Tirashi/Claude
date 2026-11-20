@@ -10,7 +10,7 @@ function ecran(id){ for (const e of document.querySelectorAll('.ecran')) e.hidde
 function lireRecord(){ try { return JSON.parse(localStorage.getItem('strategieciel.record')) || {}; } catch (e){ return {}; } }
 function ecrireRecord(r){ try { localStorage.setItem('strategieciel.record', JSON.stringify(r)); } catch (e){} }
 function majTitre(){ const r = lireRecord(); $('#tRecord').textContent = r.parties ? `MEILLEUR : ${r.vagues || 0} VAGUE${(r.vagues || 0) > 1 ? 'S' : ''} TENUE${(r.vagues || 0) > 1 ? 'S' : ''}${r.victoires ? ' · ' + r.victoires + ' VICTOIRE' + (r.victoires > 1 ? 'S' : '') : ''}` : ''; }
-function jouer(tuto){ if (tuto === undefined) tuto = !lireTuto(); nouvellePartie(); for (const c in PERSO) delete PERSO[c]; TEMPS.t = 0; const pv = PV(); centrer(pv.pos.clone().add(V3(260, 0, 40))); CA.dist = 1500; CA.yaw = 0; CA.tilt = 0; vitesse(1); sigSel = sigProd = ''; selModif = true;
+function jouer(tuto){ if (tuto === undefined) tuto = !lireTuto(); nouvellePartie(); for (const c in PERSO) delete PERSO[c]; modeRallier = false; TEMPS.t = 0; const pv = PV(); centrer(pv.pos.clone().add(V3(260, 0, 40))); CA.dist = 1500; CA.yaw = 0; CA.tilt = 0; vitesse(1); sigSel = sigProd = ''; selModif = true;
   ETAT = 'jeu'; ecran(null); if (tuto) tutoDebut(); else { tutoFin(false); annonce(`DEFENDS SOL-7<b>${VAGUES.length} VAGUES</b>LA PREMIERE ARRIVE DANS 2 MINUTES`, 1); } }
 // ---------- tutoriel guidé : une étape à la fois, les vagues attendent qu'il soit fini ----------
 const lireTuto = () => { try { return localStorage.getItem('strategieciel.tuto') === '1'; } catch (e){ return false; } };
@@ -64,7 +64,7 @@ function boucle(now){ requestAnimationFrame(boucle); const dtr = Math.min(.05, (
   else if (ETAT === 'titre'){ CA.yaw += dtr * .03; TEMPS.t += dt; }
   if (ETAT === 'finale') TEMPS.t += dtr;
   placeCam(); soleil.target.position.copy(CA.c); soleil.target.updateMatrixWorld(); soleil.position.copy(CA.c).add(V3(-CA.c.x * .3, 800, -CA.c.z * .3));
-  majDecor(dt, dtr, dt === 0); majTirs(dt || (ETAT === 'finale' ? dtr : 0)); majPings(dtr);
+  majDecor(dt, dtr, dt === 0); majDrapeau(ETAT !== 'titre' && S.ralliement); majTirs(dt || (ETAT === 'finale' ? dtr : 0)); majPings(dtr);
   if (ETAT !== 'titre'){ tHud -= dtr; if (tHud <= 0){ tHud = .15; majPanneaux(); majTuto(); } majMarques(); tMini -= dtr; if (tMini <= 0){ tMini = .12; dessineMini(); } }
   R.render(sc, cam); }
 

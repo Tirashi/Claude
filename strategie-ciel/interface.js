@@ -42,7 +42,9 @@ function clicSur(x, y, ajouter){ const u = viseUnite(x, y), now = performance.no
   return false; }
 
 // ---------- pointeur : souris (gauche : choisir et cadre ; droit : ordre, glisser = pivoter) et doigts (un : déplacer la carte ; deux : zoom et rotation) ----------
-const PTR = new Map(); let boite = null, modeCadre = false, souris = null;
+const PTR = new Map(); let boite = null, modeCadre = false, souris = null, modeRallier = false;
+function poserRalliement(x, y){ const p = pointSol(x, y); modeRallier = false; sigProd = ''; ECRAN.classList.remove('vise'); if (!p) return; S.ralliement = p.setY(0); ping(V3(p.x, 40, p.z), 0); annonce('POINT DE RALLIEMENT<b>POSE</b>LES NOUVEAUX VAISSEAUX S\'Y RENDRONT'); }
+function rallier(){ modeRallier = !modeRallier; sigProd = ''; ECRAN.classList.toggle('vise', modeRallier); if (modeRallier) annonce(TACTILE ? 'TOUCHE L\'ENDROIT DU RALLIEMENT' : 'CLIQUE L\'ENDROIT DU RALLIEMENT'); }
 const cadreDiv = $('#cadreSel');
 function majBoite(){ if (!boite){ cadreDiv.hidden = true; return; } cadreDiv.hidden = false; Object.assign(cadreDiv.style, { left: Math.min(boite.x0, boite.x1) + 'px', top: Math.min(boite.y0, boite.y1) + 'px', width: Math.abs(boite.x1 - boite.x0) + 'px', height: Math.abs(boite.y1 - boite.y0) + 'px' }); }
 const cv = R.domElement;
@@ -64,6 +66,7 @@ cv.addEventListener('pointermove', e => { const r = ECRAN.getBoundingClientRect(
 function lacher(e){ const p = PTR.get(e.pointerId); PTR.delete(e.pointerId); if (!p || e.type !== 'pointerup' || S.fin) return; const r = ECRAN.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
   if (boite){ dansBoite(boite, e.shiftKey); boite = null; majBoite(); if (!p.souris){ modeCadre = false; majCadreBtn(); } return; }
   if (p.bouge || PTR.size) return;
+  if (modeRallier && (!p.souris || p.b === 0)){ poserRalliement(x, y); return; }
   if (p.souris){ if (p.b === 0){ if (!clicSur(x, y, e.shiftKey) && !e.shiftKey) choisir([], false); } else if (p.b === 2) ordre(x, y); return; }
   // au doigt : toucher un de ses vaisseaux le choisit ; sinon, avec une sélection, c'est un ordre
   if (!clicSur(x, y, false)) ordre(x, y); }
@@ -89,6 +92,7 @@ addEventListener('keydown', e => { if (!enJeu()) return; const k = e.key.toLower
     const n = +e.code.slice(-1), now = performance.now(); groupe(['tout', 'chasseur', 'bombardier', 'destroyer', 'collecteur'][n - 1], dernierGroupe.n === n && now - dernierGroupe.t < 400); dernierGroupe = { n, t: now }; }
   else if (LIGNE.includes(e.code) && !e.ctrlKey && !e.metaKey){ if (e.shiftKey) garderGroupe(e.code); else { const now = performance.now(); rappelGroupe(e.code, dernierGroupe.n === e.code && now - dernierGroupe.t < 400); dernierGroupe = { n: e.code, t: now }; } }
   else if (e.code === 'KeyH'){ groupe('pv', true); }
+  else if (e.code === 'KeyB'){ rallier(); }
   else if (e.code === 'KeyS'){ for (const u of SEL()){ u.ordre = { k: 'rien' }; u.cible = null; } }
   else { const t = PRODUITS.find(t => TYPES[t].cle === e.code); if (t) produire(t) || annonce('PAS ASSEZ DE CRISTAL'); }
   if (e.key.startsWith('Arrow')) e.preventDefault(); });
@@ -112,6 +116,8 @@ $('#hud').addEventListener('click', e => { const b = e.target.closest('[data-vit
   else if (b.dataset.act === 'miner'){ for (const u of SEL()) if (u.type === 'collecteur') u.ordre = { k: 'miner', gis: gisementProche(u.pos) }; }
   else if (b.dataset.act === 'aucun') choisir([], false);
   else if (b.dataset.act === 'menu') menuPause(true);
+  else if (b.dataset.act === 'rallier') rallier();
+  else if (b.dataset.act === 'sansrallier'){ S.ralliement = null; sigProd = ''; }
   else if (b.id === 'bCadre'){ modeCadre = !modeCadre; majCadreBtn(); } });
 // mini-carte : toucher ou cliquer = y amener la caméra ; clic droit = ordre de déplacement
 const mini = $('#mini'), EM = 5600;
@@ -154,10 +160,10 @@ function majPanneaux(){ majGroupesPerso();
         <div class="acts"><span class="bt" data-act="stop">${TACTILE ? '' : '<span class="k">S</span>'}ARRET</span>${parT.collecteur ? `<span class="bt" data-act="miner">MINER</span>` : ''}<span class="mut">${TACTILE ? 'TOUCHE UNE CIBLE, UN GISEMENT OU L\'ESPACE' : 'CLIC DROIT : ALLER, ATTAQUER, MINER'}</span></div>`; }
   const b = $('#hSelB'); if (b){ const v = sel.reduce((a, u) => a + u.vie, 0) / Math.max(1, sel.reduce((a, u) => a + u.T.vie, 0)); b.innerHTML = barre(v, 'vie'); }
   // production
-  const sp = PRODUITS.map(t => S.cristal >= TYPES[t].prix ? 1 : 0).join('') + S.file.join(',') + (pv ? 1 : 0);
+  const sp = PRODUITS.map(t => S.cristal >= TYPES[t].prix ? 1 : 0).join('') + S.file.join(',') + (pv ? 1 : 0) + (S.ralliement ? 'R' : '') + (modeRallier ? 'M' : '');
   if (sp !== sigProd){ sigProd = sp;
     $('#hProd').innerHTML = `<div class="l"><b>AURORE · CHANTIER</b>${pv ? '' : '<span class="rouge">DETRUIT</span>'}</div><div class="prods">${PRODUITS.map(t => `<span class="bt${S.cristal < TYPES[t].prix ? ' cher' : ''}" data-prod="${t}">${TACTILE ? '' : `<span class="k">${LAB(TYPES[t].cle)}</span>`}${TYPES[t].nom}<b class="cr">${TYPES[t].prix}◆</b></span>`).join('')}</div>
-      <div class="file">${S.file.map((t, i) => `<span class="bt" data-file="${i}" title="ANNULER">${TYPES[t].nom.slice(0, 4)}</span>`).join('') || '<span class="mut">FILE VIDE</span>'}</div><div id="hProdB"></div>`; }
+      <div class="file">${S.file.map((t, i) => `<span class="bt" data-file="${i}" title="ANNULER">${TYPES[t].nom.slice(0, 4)}</span>`).join('') || '<span class="mut">FILE VIDE</span>'}<span class="bt${modeRallier ? ' on' : ''}" data-act="rallier" style="margin-left:auto">${TACTILE ? '' : '<span class="k">B</span>'}⚑ RALLIEMENT</span>${S.ralliement ? '<span class="bt" data-act="sansrallier" title="Retirer le point de ralliement">✕</span>' : ''}</div><div id="hProdB"></div>`; }
   const pb = $('#hProdB'); if (pb) pb.innerHTML = S.file.length ? barre(S.fileT / TYPES[S.file[0]].temps, 'cap') : '';
   if (pv){ $('#hPv').innerHTML = barre(pv.vie / pv.T.vie, 'vie'); } }
 // anneaux de sélection (couleur selon la vie), étiquettes des planètes et des portes
