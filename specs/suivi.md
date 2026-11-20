@@ -149,3 +149,4 @@ Maquettes de la carte 2 à 4 (isométrique, puis papier à l'encre validée), é
 - **20/11 — Stratégie spatiale, session 1** (`strategie-ciel/`, nom provisoire, démo) : le système SOL-7 jouable (porte-vaisseaux Aurore, collecteurs, chasseurs, bombardiers, destroyers, 8 gisements, 8 vagues par la porte d'Altair), pause et 3 vitesses, souris et doigts ; accueil, `sw.js` v117, crédits, test de fumée ; l'artefact remplace la maquette.
 - **20/11 — Stratégie spatiale, retours de la session 1** : défilement au bord et aux flèches remis dans le bon sens, tutoriel guidé en 9 étapes, collecteur / chasseur / bombardier aux silhouettes et tailles bien différentes.
 - **20/11 — Stratégie spatiale** : tourelles des grands vaisseaux qui pivotent vers leur cible (découpe du catalogue de Ciel de guerre) et flammes lumineuses des réacteurs.
+- **20/11 — Stratégie spatiale** : touches des groupes lues sur la touche physique (AZERTY), double appui pour centrer la vue.

@@ -71,11 +71,12 @@ cv.addEventListener('pointerup', lacher); cv.addEventListener('pointercancel', l
 cv.addEventListener('pointerleave', e => { if (e.pointerType === 'mouse') souris = null; });
 
 // ---------- clavier ----------
-const TOUCHES = new Set();
+const TOUCHES = new Set(); let dernierGroupe = { n: 0, t: 0 };
 addEventListener('keydown', e => { if (!enJeu()) return; const k = e.key.toLowerCase(); TOUCHES.add(e.key);
   if (k === ' '){ e.preventDefault(); vitesse(VIT ? 0 : 1); }
   else if (k === 'escape'){ if (SEL().length) choisir([], false); else menuPause(true); }
-  else if (/^[1-5]$/.test(k)) groupe(['tout', 'chasseur', 'bombardier', 'destroyer', 'collecteur'][+k - 1], e.shiftKey);
+  else if (/^(Digit|Numpad)[1-5]$/.test(e.code)){ /* la touche physique (en AZERTY, « 2 » sans Maj donne « é ») ; un double appui centre la vue sur le groupe */
+    const n = +e.code.slice(-1), now = performance.now(); groupe(['tout', 'chasseur', 'bombardier', 'destroyer', 'collecteur'][n - 1], dernierGroupe.n === n && now - dernierGroupe.t < 400); dernierGroupe = { n, t: now }; }
   else if (k === 'h'){ groupe('pv', true); }
   else if (k === 's'){ for (const u of SEL()){ u.ordre = { k: 'rien' }; u.cible = null; } }
   else { const t = PRODUITS.find(t => TYPES[t].cle && TYPES[t].cle.toLowerCase() === k); if (t) produire(t) || annonce('PAS ASSEZ DE CRISTAL'); }
