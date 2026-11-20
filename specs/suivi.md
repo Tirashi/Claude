@@ -150,3 +150,4 @@ Maquettes de la carte 2 à 4 (isométrique, puis papier à l'encre validée), é
 - **20/11 — Stratégie spatiale, retours de la session 1** : défilement au bord et aux flèches remis dans le bon sens, tutoriel guidé en 9 étapes, collecteur / chasseur / bombardier aux silhouettes et tailles bien différentes.
 - **20/11 — Stratégie spatiale** : tourelles des grands vaisseaux qui pivotent vers leur cible (découpe du catalogue de Ciel de guerre) et flammes lumineuses des réacteurs.
 - **20/11 — Stratégie spatiale** : touches des groupes lues sur la touche physique (AZERTY), double appui pour centrer la vue.
+- **20/11 — Stratégie spatiale** : groupes personnels sur la première ligne de lettres (Maj pour garder), production sur W X C V, AURORE plus grosse avec l'hologramme du vaisseau en construction à l'avant.

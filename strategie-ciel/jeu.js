@@ -10,7 +10,7 @@ function ecran(id){ for (const e of document.querySelectorAll('.ecran')) e.hidde
 function lireRecord(){ try { return JSON.parse(localStorage.getItem('strategieciel.record')) || {}; } catch (e){ return {}; } }
 function ecrireRecord(r){ try { localStorage.setItem('strategieciel.record', JSON.stringify(r)); } catch (e){} }
 function majTitre(){ const r = lireRecord(); $('#tRecord').textContent = r.parties ? `MEILLEUR : ${r.vagues || 0} VAGUE${(r.vagues || 0) > 1 ? 'S' : ''} TENUE${(r.vagues || 0) > 1 ? 'S' : ''}${r.victoires ? ' · ' + r.victoires + ' VICTOIRE' + (r.victoires > 1 ? 'S' : '') : ''}` : ''; }
-function jouer(tuto){ if (tuto === undefined) tuto = !lireTuto(); nouvellePartie(); TEMPS.t = 0; const pv = PV(); centrer(pv.pos.clone().add(V3(260, 0, 40))); CA.dist = 1500; CA.yaw = 0; CA.tilt = 0; vitesse(1); sigSel = sigProd = ''; selModif = true;
+function jouer(tuto){ if (tuto === undefined) tuto = !lireTuto(); nouvellePartie(); for (const c in PERSO) delete PERSO[c]; TEMPS.t = 0; const pv = PV(); centrer(pv.pos.clone().add(V3(260, 0, 40))); CA.dist = 1500; CA.yaw = 0; CA.tilt = 0; vitesse(1); sigSel = sigProd = ''; selModif = true;
   ETAT = 'jeu'; ecran(null); if (tuto) tutoDebut(); else { tutoFin(false); annonce(`DEFENDS SOL-7<b>${VAGUES.length} VAGUES</b>LA PREMIERE ARRIVE DANS 2 MINUTES`, 1); } }
 // ---------- tutoriel guidé : une étape à la fois, les vagues attendent qu'il soit fini ----------
 const lireTuto = () => { try { return localStorage.getItem('strategieciel.tuto') === '1'; } catch (e){ return false; } };
@@ -22,7 +22,7 @@ const TUTO = [
     fait: () => SEL().some(u => u.type === 'chasseur') },
   { t: 'DONNER UN ORDRE', pc: "ENVOIE-LES PLUS LOIN : CLIC DROIT DANS L'ESPACE. UN CLIC DROIT SUR UN ENNEMI L'ATTAQUE.", tel: "ENVOIE-LES PLUS LOIN : TOUCHE L'ESPACE. TOUCHER UN ENNEMI L'ATTAQUE.",
     fait: () => U.some(u => u.type === 'chasseur' && u.ordre.k === 'aller') },
-  { t: 'LE CHANTIER', pc: "PRODUIS UN COLLECTEUR AU CHANTIER D'AURORE (TOUCHE T, OU LE BOUTON). IL COUTE 30 CRISTAUX.", tel: "PRODUIS UN COLLECTEUR AU CHANTIER D'AURORE (EN BAS A DROITE). IL COUTE 30 CRISTAUX.", guide: '[data-prod="collecteur"]',
+  { t: 'LE CHANTIER', pc: "PRODUIS UN COLLECTEUR AU CHANTIER D'AURORE (TOUCHE %C, OU LE BOUTON). IL APPARAIT EN HOLOGRAMME A L'AVANT D'AURORE ET SORT QUAND IL EST FINI. IL COUTE 30 CRISTAUX.", tel: "PRODUIS UN COLLECTEUR AU CHANTIER D'AURORE (EN BAS A DROITE). IL COUTE 30 CRISTAUX.", guide: '[data-prod="collecteur"]',
     fait: () => S.file.includes('collecteur') || U.filter(u => u.type === 'collecteur').length > 2 },
   { t: 'LE CRISTAL', pc: "LES COLLECTEURS MINENT SEULS LE CRISTAL DES ASTEROIDES (LES CHIFFRES BLEUS) ET LE RAPPORTENT A AURORE. ATTENDS QU'ILS EN RAPPORTENT 60.", guide: '#hRes',
     debut: st => { st.m = S.mine; }, fait: st => S.mine - st.m >= 60 },
@@ -34,7 +34,7 @@ const TU = { i: -1, st: {} };
 function tutoDebut(){ S.tuto = true; TU.i = -1; tutoEtape(0); }
 function tutoEtape(i){ document.querySelectorAll('.guide').forEach(e => e.classList.remove('guide')); TU.i = i; TU.st = {}; const E = TUTO[i];
   if (!E){ tutoFin(true); return; } if (E.debut) E.debut(TU.st);
-  $('#tuto').hidden = false; $('#tuto').innerHTML = `<div class="l"><b>${E.t}</b><span>${i + 1} / ${TUTO.length}</span></div><p>${(TACTILE && E.tel) || E.pc}</p><div class="l">${E.suivant || E.fin ? `<span class="bt on" data-tuto="suivant">${E.fin ? 'COMMENCER' : 'SUIVANT'}</span>` : '<span class="mut">A TOI !</span>'}<span class="bt" data-tuto="passer">PASSER LE TUTO</span></div>`;
+  $('#tuto').hidden = false; $('#tuto').innerHTML = `<div class="l"><b>${E.t}</b><span>${i + 1} / ${TUTO.length}</span></div><p>${((TACTILE && E.tel) || E.pc).replace('%C', LAB('KeyZ'))}</p><div class="l">${E.suivant || E.fin ? `<span class="bt on" data-tuto="suivant">${E.fin ? 'COMMENCER' : 'SUIVANT'}</span>` : '<span class="mut">A TOI !</span>'}<span class="bt" data-tuto="passer">PASSER LE TUTO</span></div>`;
   if (E.guide) document.querySelectorAll(E.guide).forEach(e => e.classList.add('guide')); }
 function tutoFin(annoncer){ S.tuto = false; TU.i = -1; $('#tuto').hidden = true; document.querySelectorAll('.guide').forEach(e => e.classList.remove('guide'));
   try { localStorage.setItem('strategieciel.tuto', '1'); } catch (e){}

@@ -72,14 +72,25 @@ cv.addEventListener('pointerleave', e => { if (e.pointerType === 'mouse') souris
 
 // ---------- clavier ----------
 const TOUCHES = new Set(); let dernierGroupe = { n: 0, t: 0 };
+// noms des touches selon la disposition du clavier (AZERTY par défaut si le navigateur ne la donne pas)
+const NOMS_TOUCHES = { KeyQ: 'A', KeyW: 'Z', KeyE: 'E', KeyR: 'R', KeyT: 'T', KeyY: 'Y', KeyU: 'U', KeyI: 'I', KeyO: 'O', KeyP: 'P', KeyZ: 'W', KeyX: 'X', KeyC: 'C', KeyV: 'V', KeyS: 'S', KeyH: 'H' };
+const LAB = code => NOMS_TOUCHES[code] || code.replace('Key', '');
+try { navigator.keyboard && navigator.keyboard.getLayoutMap && navigator.keyboard.getLayoutMap().then(m => { for (const c in NOMS_TOUCHES){ const v = m.get(c); if (v && /^[a-z]$/i.test(v)) NOMS_TOUCHES[c] = v.toUpperCase(); } sigProd = ''; majGroupesPerso(); }).catch(() => {}); } catch (e){}
+// groupes personnels sur la première ligne de lettres : Maj + lettre = garder la sélection, lettre = la rappeler (deux fois : y aller)
+const LIGNE = ['KeyQ', 'KeyW', 'KeyE', 'KeyR', 'KeyT', 'KeyY', 'KeyU', 'KeyI', 'KeyO', 'KeyP'], PERSO = {};
+function garderGroupe(code){ const l = SEL(); if (!l.length){ annonce('CHOISIS D\'ABORD DES VAISSEAUX'); return; } PERSO[code] = new Set(l.map(u => u.id)); majGroupesPerso(); annonce(`GROUPE ${LAB(code)} : ${l.length} VAISSEAU${l.length > 1 ? 'X' : ''}`); }
+function rappelGroupe(code, centre){ const ids = PERSO[code]; if (!ids) return; const l = U.filter(u => ids.has(u.id) && u.vie > 0); choisir(l, false); if (centre && l.length){ const m = V3(); l.forEach(u => m.add(u.pos)); centrer(m.divideScalar(l.length)); } }
+function majGroupesPerso(){ const b = $('#hPerso'); if (!b) return; const l = LIGNE.filter(c => PERSO[c] && [...PERSO[c]].some(id => U.some(u => u.id === id && u.vie > 0)));
+  b.innerHTML = l.map(c => `<span class="bt" data-perso="${c}"><span class="k">${LAB(c)}</span>${U.filter(u => PERSO[c].has(u.id) && u.vie > 0).length}</span>`).join('') + `<span class="bt" data-act="garder" title="Garder la sélection dans un groupe">+ GROUPE</span>`; }
 addEventListener('keydown', e => { if (!enJeu()) return; const k = e.key.toLowerCase(); TOUCHES.add(e.key);
   if (k === ' '){ e.preventDefault(); vitesse(VIT ? 0 : 1); }
   else if (k === 'escape'){ if (SEL().length) choisir([], false); else menuPause(true); }
   else if (/^(Digit|Numpad)[1-5]$/.test(e.code)){ /* la touche physique (en AZERTY, « 2 » sans Maj donne « é ») ; un double appui centre la vue sur le groupe */
     const n = +e.code.slice(-1), now = performance.now(); groupe(['tout', 'chasseur', 'bombardier', 'destroyer', 'collecteur'][n - 1], dernierGroupe.n === n && now - dernierGroupe.t < 400); dernierGroupe = { n, t: now }; }
-  else if (k === 'h'){ groupe('pv', true); }
-  else if (k === 's'){ for (const u of SEL()){ u.ordre = { k: 'rien' }; u.cible = null; } }
-  else { const t = PRODUITS.find(t => TYPES[t].cle && TYPES[t].cle.toLowerCase() === k); if (t) produire(t) || annonce('PAS ASSEZ DE CRISTAL'); }
+  else if (LIGNE.includes(e.code) && !e.ctrlKey && !e.metaKey){ if (e.shiftKey) garderGroupe(e.code); else { const now = performance.now(); rappelGroupe(e.code, dernierGroupe.n === e.code && now - dernierGroupe.t < 400); dernierGroupe = { n: e.code, t: now }; } }
+  else if (e.code === 'KeyH'){ groupe('pv', true); }
+  else if (e.code === 'KeyS'){ for (const u of SEL()){ u.ordre = { k: 'rien' }; u.cible = null; } }
+  else { const t = PRODUITS.find(t => TYPES[t].cle === e.code); if (t) produire(t) || annonce('PAS ASSEZ DE CRISTAL'); }
   if (e.key.startsWith('Arrow')) e.preventDefault(); });
 addEventListener('keyup', e => TOUCHES.delete(e.key));
 function majClavier(dtr){ const v = -900 * dtr; /* deplacer() suit un doigt qui tire la carte (la vue part du côté opposé) : ici on veut aller du côté de la flèche ou du bord */ if (TOUCHES.has('ArrowLeft')) deplacer(-v, 0); if (TOUCHES.has('ArrowRight')) deplacer(v, 0); if (TOUCHES.has('ArrowUp')) deplacer(0, -v); if (TOUCHES.has('ArrowDown')) deplacer(0, v);
@@ -89,7 +100,9 @@ function majClavier(dtr){ const v = -900 * dtr; /* deplacer() suit un doigt qui 
 // ---------- boutons du tableau de bord ----------
 function vitesse(v){ VIT = v; document.querySelectorAll('[data-vit]').forEach(b => b.classList.toggle('on', +b.dataset.vit === VIT)); }
 function majCadreBtn(){ const b = $('#bCadre'); if (b) b.classList.toggle('on', modeCadre); }
-$('#hud').addEventListener('click', e => { const b = e.target.closest('[data-vit],[data-cam],[data-gr],[data-prod],[data-file],[data-act],#bCadre'); if (!b) return;
+$('#hud').addEventListener('click', e => { const b = e.target.closest('[data-vit],[data-cam],[data-gr],[data-prod],[data-file],[data-act],[data-perso],#bCadre'); if (!b) return;
+  if (b.dataset.perso){ rappelGroupe(b.dataset.perso, false); return; }
+  if (b.dataset.act === 'garder'){ const c = LIGNE.find(c => !PERSO[c] || ![...PERSO[c]].some(id => U.some(u => u.id === id && u.vie > 0))) || LIGNE[0]; garderGroupe(c); return; }
   if (b.dataset.vit) vitesse(+b.dataset.vit);
   else if (b.dataset.cam){ const v = b.dataset.cam; if (v === '+') zoom(.75); if (v === '-') zoom(1.33); if (v === 'r') CA.yaw += PI / 4; if (v === 'n'){ CA.yaw = 0; CA.tilt = 0; const pv = PV(); if (pv) centrer(pv.pos); } }
   else if (b.dataset.gr) groupe(b.dataset.gr, true);
@@ -125,7 +138,7 @@ function annonce(t, long){ const b = $('#bandeau'); b.innerHTML = t; b.style.opa
 function annonceVague(n){ annonce(`VAGUE ${n} / ${VAGUES.length}<b>FLOTTE ROUGE</b>ELLE ENTRE PAR LA PORTE D'ALTAIR`, 1); }
 function annonceProd(){}
 let sigSel = '', sigProd = '';
-function majPanneaux(){
+function majPanneaux(){ majGroupesPerso();
   const pv = PV(), bleus = U.filter(u => u.camp === 0 && u.vie > 0);
   $('#hCr').textContent = '◆ ' + Math.floor(S.cristal); $('#hNb').textContent = bleus.length; $('#hVg').textContent = S.vague + ' / ' + VAGUES.length;
   $('#hDate').textContent = 'J ' + (1 + Math.floor(TEMPS.t / 2));
@@ -143,7 +156,7 @@ function majPanneaux(){
   // production
   const sp = PRODUITS.map(t => S.cristal >= TYPES[t].prix ? 1 : 0).join('') + S.file.join(',') + (pv ? 1 : 0);
   if (sp !== sigProd){ sigProd = sp;
-    $('#hProd').innerHTML = `<div class="l"><b>AURORE · CHANTIER</b>${pv ? '' : '<span class="rouge">DETRUIT</span>'}</div><div class="prods">${PRODUITS.map(t => `<span class="bt${S.cristal < TYPES[t].prix ? ' cher' : ''}" data-prod="${t}">${TACTILE ? '' : `<span class="k">${TYPES[t].cle}</span>`}${TYPES[t].nom}<b class="cr">${TYPES[t].prix}◆</b></span>`).join('')}</div>
+    $('#hProd').innerHTML = `<div class="l"><b>AURORE · CHANTIER</b>${pv ? '' : '<span class="rouge">DETRUIT</span>'}</div><div class="prods">${PRODUITS.map(t => `<span class="bt${S.cristal < TYPES[t].prix ? ' cher' : ''}" data-prod="${t}">${TACTILE ? '' : `<span class="k">${LAB(TYPES[t].cle)}</span>`}${TYPES[t].nom}<b class="cr">${TYPES[t].prix}◆</b></span>`).join('')}</div>
       <div class="file">${S.file.map((t, i) => `<span class="bt" data-file="${i}" title="ANNULER">${TYPES[t].nom.slice(0, 4)}</span>`).join('') || '<span class="mut">FILE VIDE</span>'}</div><div id="hProdB"></div>`; }
   const pb = $('#hProdB'); if (pb) pb.innerHTML = S.file.length ? barre(S.fileT / TYPES[S.file[0]].temps, 'cap') : '';
   if (pv){ $('#hPv').innerHTML = barre(pv.vie / pv.T.vie, 'vie'); } }

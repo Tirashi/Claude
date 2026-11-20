@@ -18,7 +18,7 @@ const V3 = (x = 0, y = 0, z = 0) => new THREE.Vector3(x, y, z);
 const ECRAN = document.getElementById('t');
 const R = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
 const TACTILE = !!(window.matchMedia && matchMedia('(pointer:coarse)').matches);
-R.setPixelRatio(Math.min(window.devicePixelRatio || 1, TACTILE ? 1.5 : 2));
+R.setPixelRatio(Math.min(window.devicePixelRatio || 1, TACTILE ? 1.5 : 2)); R.localClippingEnabled = true; // plans de coupe : l'hologramme du chantier se dessine peu à peu
 ECRAN.insertBefore(R.domElement, ECRAN.firstChild);
 const sc = new THREE.Scene(); sc.fog = new THREE.Fog('#0b0a1e', 2000, 9000);
 const cam = new THREE.PerspectiveCamera(32, 1, 5, 16000);
@@ -80,12 +80,12 @@ function caillou(det, amp, seed){ const g = new THREE.IcosahedronGeometry(1, det
   g.computeVertexNormals(); return g; }
 // les gisements : gros astéroïdes avec des cristaux, dans la ceinture, autour de l'endroit où commence le porte-vaisseaux
 const GIS = [[.62, 2000], [.70, 2350], [.78, 1900], [.86, 2300], [.55, 2380], [.95, 2050], [1.06, 2250], [.42, 2100]].map(([a, d], i) => ({ i, p: V3(Math.cos(a) * d, 0, Math.sin(a) * d), r: 70 + (i * 37) % 40, reste: 1500, max: 1500 }));
-const BASE = V3(Math.cos(.95) * 1550, 105, Math.sin(.95) * 1550); // départ du porte-vaisseaux : à l'intérieur de la ceinture, près de GAIA (gisements à 400 m et plus)
+const BASE = V3(Math.cos(1.1) * 1700, 105, Math.sin(1.1) * 1700); // départ du porte-vaisseaux : à l'intérieur de la ceinture, près de GAIA (gisements à 400 m et plus)
 { const N = TACTILE ? 900 : 1400, champ = new THREE.InstancedMesh(caillou(1, .35, 1), new THREE.MeshPhongMaterial({ flatShading: true, shininess: 0 }), N), m = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler(), c = new THREE.Color(); graine = 41; let n = 0;
   for (let k = 0; k < 6000 && n < N; k++){ const s = 3 + Math.pow(rnd(), 3) * 34; let P;
     if (n < N * .85){ const a = rnd() * 6.283, d = SYS.ceinture[0] + (rnd() + rnd() + rnd()) / 3 * (SYS.ceinture[1] - SYS.ceinture[0]); P = V3(Math.cos(a) * d, -160 + rnd() * 320, Math.sin(a) * d); }
     else P = V3((rnd() - .5) * 10000, -200 + rnd() * 400, (rnd() - .5) * 10000);
-    if (GIS.some(G => G.p.distanceTo(P) < G.r * 2.2) || P.distanceTo(BASE) < 380) continue;
+    if (GIS.some(G => G.p.distanceTo(P) < G.r * 2.2) || P.distanceTo(BASE) < 480) continue;
     const i = n++; e.set(rnd() * 6, rnd() * 6, rnd() * 6); q.setFromEuler(e); m.compose(P, q, V3(s, s * (.7 + rnd() * .5), s)); champ.setMatrixAt(i, m); c.set(['#5e5258', '#4e4552', '#6a5c58', '#45404e'][rnd() * 4 | 0]); champ.setColorAt(i, c); }
   champ.count = n; sc.add(champ); }
 const matCristal = new THREE.MeshPhongMaterial({ color: '#aef4ff', emissive: '#3ac8ff', emissiveIntensity: .8, flatShading: true });
@@ -211,3 +211,20 @@ const geoAnneau = new THREE.RingGeometry(.86, 1, 32).rotateX(-Math.PI / 2);
 const PINGS = []; for (let i = 0; i < 6; i++){ const m = new THREE.Mesh(geoAnneau, new THREE.MeshBasicMaterial({ color: '#9fe0ff', transparent: true, depthTest: false, fog: false })); m.renderOrder = 4; m.visible = false; sc.add(m); PINGS.push({ m, t: 9 }); }
 function ping(p, rouge){ const q = PINGS.find(x => x.t >= 1) || PINGS[0]; q.t = 0; q.m.position.copy(p); q.m.material.color.set(rouge ? '#ff7a5a' : rouge === 0 ? '#9ff0ff' : '#7fe08a'); q.m.visible = true; }
 function majPings(dt){ for (const q of PINGS){ if (q.t >= 1){ q.m.visible = false; continue; } q.t += dt * 1.6; q.m.scale.setScalar(20 + q.t * 50); q.m.material.opacity = 1 - q.t; } }
+
+// ---------- hologramme du chantier : le vaisseau en construction se dessine de l'arrière vers l'avant entre les fourches d'AURORE, puis apparaît ----------
+const MAT_HOLO = () => ({ plan: new THREE.Plane(V3(0, 0, 1), 0) });
+function holo(k, rot, L){ const g = importe(k, rot, L), h = MAT_HOLO();
+  const plein = new THREE.MeshBasicMaterial({ color: '#2a9fff', transparent: true, opacity: .3, blending: THREE.AdditiveBlending, depthWrite: false, fog: false, side: THREE.DoubleSide, clippingPlanes: [h.plan] });
+  const fil = new THREE.MeshBasicMaterial({ color: '#4ac8ff', transparent: true, opacity: .45, wireframe: true, blending: THREE.AdditiveBlending, depthWrite: false, fog: false, clippingPlanes: [h.plan] });
+  const maillages = []; g.traverse(o => { if (o.isMesh) maillages.push(o); });
+  for (const o of maillages){ o.material = plein; const w = new THREE.Mesh(o.geometry, fil); o.add(w); o.renderOrder = 6; w.renderOrder = 6; }
+  // la ligne du « laser » qui construit, à la limite de la coupe
+  const lg = new THREE.Mesh(new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: '#dff8ff', transparent: true, opacity: .9, blending: THREE.AdditiveBlending, depthWrite: false, fog: false, side: THREE.DoubleSide }));
+  lg.renderOrder = 7; const b = new THREE.Box3().setFromObject(g), t = b.getSize(V3()); lg.scale.set(t.x * 1.15, 1, 2.2); g.add(lg);
+  return { g, plan: h.plan, ligne: lg, L, mats: [plein, fil], z0: b.min.z, z1: b.max.z }; }
+// progression f (0 à 1) : la partie arrière (z grand) apparaît en premier
+function majHolo(H, f){ H.g.updateMatrixWorld(true); const zc = H.z1 - (H.z1 - H.z0) * f, p = H.g.localToWorld(V3(0, 0, zc)), n = H.g.localToWorld(V3(0, 0, zc + 1)).sub(p).normalize();
+  H.plan.setFromNormalAndCoplanarPoint(n, p); H.ligne.position.set(0, 0, zc); H.ligne.visible = f < 1;
+  const sc = .9 + .1 * Math.sin(TEMPS.r * 9); H.mats[0].opacity = .22 + .08 * sc; H.mats[1].opacity = .35 + .12 * Math.sin(TEMPS.r * 13); }
+function retireHolo(H){ if (!H) return; H.g.parent && H.g.parent.remove(H.g); H.mats.forEach(m => m.dispose()); }

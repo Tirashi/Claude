@@ -30,6 +30,7 @@ html,body{margin:0;height:100%;background:#0b0a1e;overflow:hidden;overscroll-beh
 #hCam{position:absolute;left:10px;bottom:198px;display:flex;gap:4px;pointer-events:auto}#hCam .bt{min-width:34px;font-size:var(--hs)}
 #hGr{left:200px;bottom:116px;display:flex;gap:4px;padding:4px;flex-wrap:wrap;max-width:calc(100vw - 560px)}
 #hGr .bt{padding:5px 7px}#bCadre{display:none}
+#hPerso{left:200px;bottom:158px;display:flex;gap:4px;padding:4px;flex-wrap:wrap}#hPerso .bt{padding:4px 7px}
 #hSel{left:200px;bottom:10px;width:min(460px,calc(100vw - 560px));min-height:96px}
 #hSel .acts{display:flex;gap:6px;align-items:center;margin-top:8px;flex-wrap:wrap}
 #hProd{right:10px;bottom:10px;width:390px}
@@ -66,11 +67,13 @@ html,body{margin:0;height:100%;background:#0b0a1e;overflow:hidden;overscroll-beh
   #hGr{left:8px;top:120px;bottom:auto;flex-direction:column;max-width:none;flex-wrap:nowrap}
   #hGr .bt{padding:9px 8px;min-width:74px}#bCadre{display:inline-flex}
   #hSel{left:96px;bottom:8px;width:calc(100vw - 96px - 290px);min-height:70px;padding:5px 7px}
-  #hProd{right:8px;bottom:8px;width:280px;padding:5px 7px}#hProd .prods .bt{padding:8px 6px}
+  #hProd{right:8px;bottom:8px;width:280px;padding:5px 7px}
+  #hPerso{left:96px;bottom:86px;padding:3px}#hPerso .bt{padding:7px 8px}#hProd .prods .bt{padding:8px 6px}
 }
 @media (pointer:coarse) and (orientation:portrait){
   #hSel{left:8px;right:8px;width:auto;bottom:150px}
   #tuto{top:auto;bottom:250px}
+  #hPerso{left:8px;bottom:282px}
   #hProd{left:8px;right:8px;width:auto}
   #hGr{top:104px}#mini{top:56px}#hCam{top:182px}
   #hAl{top:auto;bottom:250px}

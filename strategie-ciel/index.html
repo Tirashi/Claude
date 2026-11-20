@@ -21,6 +21,7 @@
   <canvas id="mini" width="180" height="180"></canvas>
   <div id="hCam"><span class="bt" data-cam="+">+</span><span class="bt" data-cam="-">−</span><span class="bt" data-cam="r">⟲</span><span class="bt" data-cam="n">N</span></div>
   <div class="pan" id="hGr"><span class="bt" data-gr="tout"><span class="k">1</span>FLOTTE</span><span class="bt" data-gr="chasseur"><span class="k">2</span>CHASS.</span><span class="bt" data-gr="bombardier"><span class="k">3</span>BOMB.</span><span class="bt" data-gr="destroyer"><span class="k">4</span>DESTR.</span><span class="bt" data-gr="collecteur"><span class="k">5</span>COLL.</span><span class="bt" data-gr="pv"><span class="k">H</span>AURORE</span><span class="bt" id="bCadre">CADRE</span></div>
+  <div class="pan" id="hPerso"></div>
   <div class="pan" id="hSel"></div>
   <div class="pan" id="hProd"></div>
   <div class="pan" id="tuto" hidden></div>
@@ -35,7 +36,7 @@
     <button id="aTuto">TUTORIEL</button>
     <button id="aCommandes">COMMANDES</button>
     <div id="tCommandes" class="aide" hidden><b>SOURIS</b> clic : choisir · glisser : cadre · double clic : tous ceux du même type · clic droit : aller, attaquer, miner · clic droit glissé : pivoter · molette : zoom · bords de l'écran ou flèches : déplacer<br>
-      <b>CLAVIER</b> espace : pause · 1 à 5 : groupes (deux fois : y aller) · H : Aurore · Q W E T : produire · S : arrêt · Échap : rien choisir, puis menu<br>
+      <b>CLAVIER</b> espace : pause · 1 à 5 : groupes (deux fois : y aller) · Maj + une lettre de la première ligne (A Z E R T Y U I O P) : garder la sélection dans un groupe, la lettre seule le rappelle · H : Aurore · W X C V : produire · S : arrêt · Échap : rien choisir, puis menu<br>
       <b>DOIGTS</b> toucher un vaisseau : le choisir · puis toucher une cible, un gisement ou l'espace : l'ordre · un doigt : déplacer la carte · deux doigts : zoom et rotation · CADRE : choisir plusieurs vaisseaux</div>
     <p class="record" id="tRecord"></p>
     <button class="ludo-retour" onclick="location.href='../index.html'">LUDOTHEQUE</button>
