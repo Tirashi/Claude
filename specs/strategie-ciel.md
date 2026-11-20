@@ -99,3 +99,11 @@ Décisions avant la session : **nom provisoire** (dossier `strategie-ciel/`), **
 - **Point de ralliement** (demande du 20/11) : bouton ⚑ RALLIEMENT du chantier (ou touche B), puis un clic ou un toucher pose un fanion ; les nouveaux vaisseaux s'y rendent (les collecteurs vont miner), ✕ le retire.
 - **Équilibrage** (demande du 20/11) : destroyers plus rapides (22 m/s au lieu de 15), chasseurs plus résistants (60 PV au lieu de 45). Joueur automatique : 2 victoires sur 2 ; joueur passif : défaite.
 - **Nouvelle station** (« elle dénote avec le reste ») : modèle de « Space Stations » de Viktor Hahn (CC BY 4.0, station06 : roue grise aux lumières bleues), converti par `outils/strategie-ciel/stations.py` dans `strategie-ciel/stations.js` (349 Ko, textures 512 px) ; l'ancienne, faite dans le code, reste en secours. Le kit de Kenney (intérieurs) et le pack de whynomakethings (sans station, sans licence) ont été écartés.
+
+## Interface : maquette du 20/11 (https://claude.ai/artifact/3qGuYnokCt3hUXBzH9J6vz)
+Retour de l'utilisateur : interface mobile trop chargée, boutons à moitié cachés (AURORE) ; s'inspirer de l'existant, polices et interface plus fines pour rétrécir ; l'interface PC peut changer aussi.
+Maquette `maquettes/strategie-ciel-ui.html` (source `-source.html`, captures du jeu `-fond-tel.jpg` et `-fond-pc.jpg`) : polices Rajdhani (texte), Share Tech Mono (chiffres), Michroma (titres), icônes de vaisseaux au lieu des mots, barre du haut fine (cristal, flotte, vague, vitesses, jour, menu). Trois directions, bascule téléphone / PC et sélection (chasseurs ou AURORE) :
+- **A · barre de commande** (StarCraft, Command & Conquer) : mini-carte en bas à gauche, onglets des groupes, sélection au centre, grille de commandes 3 × 2 à droite qui devient le chantier quand AURORE est choisie.
+- **B · tiroirs** (Rusted Warfare, Mindustry) : groupes en boutons ronds à gauche, bulle d'ordres sous la sélection, chantier dans un tiroir à droite (bouton AURORE), mini-carte derrière un bouton.
+- **C · liste de flotte** (Sins of a Solar Empire, Stellaris) : liste à droite (groupes avec nombre, vie, ordre ; AURORE se déplie en chantier), repliable en colonne d'icônes ; ordres en bas.
+En attente du choix de l'utilisateur.
