@@ -11,6 +11,7 @@ Des jeux jouables dans le navigateur, sans build ni dépendance. La page [`index
 - [`pont-stellaire/index.html`](pont-stellaire/index.html) : **Pont stellaire**, un puzzle de logique en 32 bits (les règles du Hashi) : relier les étoiles par des faisceaux de lumière pour dessiner une constellation, avec un Ciel du jour.
 - [`mot-d-or/index.html`](mot-d-or/index.html) : **Le Mot d'or**, un mot de 6 lettres par jour à trouver en 6 essais, sur un bureau à la lueur de la lampe, en pixel art 32 bits.
 - [`capitaine-du-port/index.html`](capitaine-du-port/index.html) : **Capitaine du port**, un casse-tête de bateaux en pixel art 32 bits : déplacer les bateaux du bassin pour ouvrir la passe au navire doré.
+- [`bannis/index.html`](bannis/index.html) : **Les Bannis** (démo), un autobattler rogue-lite : le Mage instable et trois condamnés tiennent la Muraille contre les hordes de la Gueule.
 - [`tank-arena/index.html`](tank-arena/index.html) : **Tank Arena**, une petite arène de tanks en 3D : toi contre trois tanks de l'ordinateur, en manches de 90 secondes.
 - [`magasinier/index.html`](magasinier/index.html) : **Le Magasinier**, un Sokoban en HD-2D façon Octopath Traveler : pousser les caisses sur les marques dans un entrepôt baigné de soleil.
 - [`lune-rover/index.html`](lune-rover/index.html) : **Lune-Rover**, un puzzle de programmation en 32 bits : écrire à l'avance le programme d'un petit robot lunaire pour ramasser tous les cristaux, en 30 niveaux.
@@ -173,6 +174,15 @@ Un casse-tête façon « Rush Hour » dans un port vu du dessus, en pixel art 32
 - **Étoiles** : 3 étoiles jusqu'à 10 % de coups de plus que le minimum (toujours au moins un coup de marge), 2 jusqu'à 50 % de plus, sinon 1 (180 en tout). Chaque bassin a été vérifié par un solveur, qui connaît le minimum.
 - **Bassin du jour** : le même pour toute la famille, tiré de la date. **Une seule tentative classée** : le moins de coups gagne, et chaque coup compte, même ceux qu'on annule ou d'avant un recommencement. La tentative est sauvegardée ; une fois réussi, le bassin se rejoue hors classement. Lien direct : `capitaine-du-port/index.html#jour`.
 - **Sons** : moteur du remorqueur, clapotis, mouettes, corne de brume et cloche du port, et une musique d'ambiance discrète ; bruitages et musique réglables au titre et dans la pause.
+
+## Les Bannis (démo)
+Un autobattler rogue-lite : le Mage instable, banni pour ses sorts imprévisibles, tient la Muraille de l'Île des Bannis avec trois condamnés tirés au sort.
+
+- **Une nuit** : douze vagues de monstres sortent de la Gueule, avec un boss toutes les quatre vagues. Si la Muraille tombe, ou si toute l'escouade tombe, la nuit est perdue.
+- **Avant chaque vague** : on place les héros devant la Muraille. Pendant le combat, ils se déplacent et se battent tout seuls.
+- **Les dés du Mage** : quand sa jauge est pleine, on lance un d6, un d8 et un d20 (combos, une relance) pour déclencher un sort instable.
+- **Entre les vagues** : expérience et bonus de niveau au choix, butin à équiper, marchand ; au niveau 5, un héros évolue en classe légendaire.
+- Six classes (guerrière, mercenaire, illusionniste, magicienne, prêtresse, barde), chacune avec un trait qui change son comportement.
 
 ## Tank Arena
 Une petite arène de tanks en 3D (pack Low Poly Tank Assets de dani567) : un damier entouré de rochers et de sapins, une plateforme au centre.
