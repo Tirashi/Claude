@@ -11,6 +11,7 @@ Idée de l'utilisateur (18/11) : un petit jeu de **gestion d'écurie de course**
 | 4 | 18/11 | packs voxel gratuits (Kytric, theodd1in, pixcatt, voxelempire) — https://claude.ai/artifact/GKQ1oqZtvikU1StSosGWrR | on laisse tomber le voxel |
 | 5 | 18/11 | **low poly** : 36 voitures CC0 (Cosmo, Kenney, rgsdev) repeintes, course 3D, parking — https://claude.ai/artifact/SXBFDEnm7sVJ7aittf9Y1X | projet abandonné, puis « dernier essai » |
 | 6 | 20/11 | **circuit urbain** en tuiles Modular Roads (Atomic Realm), course simulée avec stats, trois caméras — https://claude.ai/artifact/M1ouMVo2x8qT2NvRc7UUeN | « ça rend pas mal » : **projet relancé** ; les trois caméras deviennent trois points de vue au choix du joueur |
+| 7 | 20/11 | **gestion** : garage (notes, pièces, peinture), concession (neuves, occasion), pilote (et pilotes libres), sponsors (2 places), semaine (5 jours) ; A paddock 16 bits, B atelier et fiches papier, C tablette du directeur — https://claude.ai/artifact/Va7ZuMoUQb6M7YqzgrugWy | en attente du choix |
 
 ## Décisions (20/11)
 - **3D low poly** avec Three.js (`lib/three.min.js`, r128) ; pas de voxel ni de sprite stacking.
