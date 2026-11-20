@@ -50,13 +50,11 @@ svg.ov{position:absolute;left:0;top:0;overflow:visible}
 .astuce{position:absolute;font-size:calc(var(--hs)*.8);color:#e8dcf8;background:rgba(0,0,0,.35);border-radius:6px;padding:3px 8px;letter-spacing:.05em}
 </style></head><body><main>
 <h1>STRATEGIE DANS LE CIEL</h1>
-<p class="sous">Maquette 3 du 20/11 : tout dans l'espace, sur une carte deux fois plus grande, avec des planètes (gisements riches, à prendre avec une station en orbite) et l'escarmouche « à la Age of Empires » en trois âges (onglet ARBRE DES AGES). Trois styles de planètes à comparer. Caméra : molette ou pincement pour zoomer, clic droit glissé ou deux doigts pour pivoter, glisser pour déplacer.</p>
+<p class="sous">Maquette 4 du 20/11, « façon Stellaris » : la <b>galaxie</b> (systèmes reliés par des routes spatiales, territoires, flotte rouge en route) et la vue d'un <b>système</b> (étoile au centre, planètes en orbite, ceinture d'astéroïdes où se joue la bataille, portes des routes). Temps réel avec pause et trois vitesses. Planètes animées : les shaders de Deep-Fold (12 sortes) ou les sphères d'AstroJar avec nuages et halo. Molette ou pincement : zoom ; glisser : déplacer ; clic droit glissé ou deux doigts : pivoter (système).</p>
 <div class="barreop">
- <div class="grp" id="gDir"><button data-v="A" class="on">LA BATAILLE</button><button data-v="T">ARBRE DES AGES</button></div>
+ <div class="grp" id="gDir"><button data-v="G" class="on">GALAXIE</button><button data-v="A">SYSTEME</button><button data-v="T">ARBRE DES AGES</button></div>
  <div class="grp" id="gApp"><button data-v="pc" class="on">PC</button><button data-v="tel">TELEPHONE</button></div>
- <div class="grp" id="gAmb"><button data-v="espace" class="on">ESPACE</button><button data-v="crepuscule">ARCHIPEL</button><button data-v="nuit">NUIT</button><button data-v="desert">DESERT</button></div>
- <div class="grp" id="gPla"><button data-v="astro" class="on">PLANETES PIXEL 3D</button><button data-v="heck">LOW POLY</button><button data-v="mineur">MINEUR</button></div>
- <div class="grp" id="gNet"><button data-v="net" class="on">NET</button><button data-v="pixel">PIXEL</button></div>
+ <div class="grp" id="gPla"><button data-v="df" class="on">PLANETES DEEP-FOLD</button><button data-v="astro">PIXEL 3D</button></div>
  <div class="grp"><button id="bPlein">PLEIN ECRAN</button></div>
 </div>
 <div id="cadre"><canvas id="c"></canvas><div id="ui"></div><div id="chg">CHARGEMENT DES VAISSEAUX…</div></div>
@@ -66,13 +64,14 @@ svg.ov{position:absolute;left:0;top:0;overflow:visible}
 <script src="../lib/three.min.js"></script>
 <script src="../lib/GLTFLoader.js"></script>
 <script src="strategie-ciel-planetes.js"></script>
-<script src="../mineur-de-l-espace/planetes.js"></script>
+<script src="strategie-ciel-shaders.js"></script>
+<script src="strategie-ciel-df.js"></script>
 <script>/*MODELES*/</script>
 <script>
 (async function(){
 const $=s=>document.querySelector(s);
 const cadre=$('#cadre'),cv=$('#c'),ui=$('#ui');
-let DIR='A',APP='pc',AMBK='crepuscule';
+let DIR='G',APP='pc',AMBK='crepuscule',VIT=1,JOUR=134;
 const VIRT={pc:[1280,720],tel:[880,400]};
 // ---------- bruit (repris de Ciel de guerre) ----------
 function bruit(seed){const P=new Uint8Array(512);let s=seed;for(let i=0;i<256;i++)P[i]=i;for(let i=255;i>0;i--){s=(s*16807)%2147483647;const j=s%(i+1);[P[i],P[j]]=[P[j],P[i]];}for(let i=0;i<256;i++)P[i+256]=P[i];
@@ -121,42 +120,74 @@ for(const I of ILES){if(!I.nom)continue;let hx=I.x,hz=I.z,hy=-99;for(let e=0;e<6
   const rr=I.r*.82,mk=(c,a0,len,op)=>{const m=new THREE.Mesh(new THREE.RingGeometry(rr-7,rr,64,1,a0,len).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({color:c,transparent:true,opacity:op,depthTest:false}));m.position.set(I.x,2,I.z);m.renderOrder=2;sc.add(m);};
   if(I.prise){mk(COUL_CAMP[0],Math.PI/2,I.prise*6.283,.9);mk(COUL_CAMP[2],Math.PI/2+I.prise*6.283,(1-I.prise)*6.283,.45);}else mk(COUL_CAMP[I.camp<0?2:I.camp],0,6.283,I.camp<0?.45:.8);
   if(I.camp>=0){const t=new THREE.Group(),gr=new THREE.MeshPhongMaterial({color:'#9a94a8',flatShading:true});const b=new THREE.Mesh(new THREE.CylinderGeometry(7,10,34,6),gr);b.position.y=17;const c=new THREE.Mesh(new THREE.ConeGeometry(11,12,6),new THREE.MeshPhongMaterial({color:COUL_CAMP[I.camp],flatShading:true}));c.position.y=40;t.add(b,c);t.position.copy(I.sommet).add(new THREE.Vector3(34,-6,18));sc.add(t);I.poste=t;}}
-// ---------- niveau dans l'espace : champ d'astéroïdes, gros astéroïdes à la place des îles ----------
-const PLAN0=[[-1250,-560,360],[1320,560,400],[220,-1300,290],[1250,-1250,480],[-420,1250,270],[-1350,820,150]];
+// ---------- le système (vue SYSTEME) : étoile au centre, planètes en orbite, ceinture d'astéroïdes (où se joue la bataille), portes ----------
+const C_SYS=new THREE.Vector3(-1500,0,-1300);
 const ESPACE=new THREE.Group();ESPACE.visible=false;sc.add(ESPACE);
 function caillou(det,amp,seed){const g=new THREE.IcosahedronGeometry(1,det),p=g.attributes.position,v=new THREE.Vector3();for(let i=0;i<p.count;i++){v.fromBufferAttribute(p,i);const k=Math.round(v.x*97)*7+Math.round(v.y*97)*131+Math.round(v.z*97)*1009+seed;v.multiplyScalar(1+amp*((Math.sin(k*12.9898)*43758.5453)%1));p.setXYZ(i,v.x,v.y*.8,v.z);}g.computeVertexNormals();return g;}
-{const champ=new THREE.InstancedMesh(caillou(1,.35,1),new THREE.MeshPhongMaterial({flatShading:true,shininess:0}),1100),m=new THREE.Matrix4(),q=new THREE.Quaternion(),e=new THREE.Euler(),c=new THREE.Color();graine=41;
-  let n=0;for(let e2=0;e2<4000&&n<1100;e2++){const s=3+Math.pow(rnd(),3)*34,P=new THREE.Vector3((rnd()-.5)*5000,-220+rnd()*480,(rnd()-.5)*5000);if(PLAN0.some(Q=>Math.hypot(P.x-Q[0],P.z-Q[1])<Q[2]*1.1))continue;if(Math.hypot(P.x+60,P.z-40)<420&&s>8)continue;const i=n++;e.set(rnd()*6,rnd()*6,rnd()*6);q.setFromEuler(e);m.compose(P,q,new THREE.Vector3(s,s*(.7+rnd()*.5),s));champ.setMatrixAt(i,m);c.set(['#5e5258','#4e4552','#6a5c58','#45404e'][rnd()*4|0]);champ.setColorAt(i,c);}champ.count=n;
-  ESPACE.add(champ);}
+{const N=1500,champ=new THREE.InstancedMesh(caillou(1,.35,1),new THREE.MeshPhongMaterial({flatShading:true,shininess:0}),N),m=new THREE.Matrix4(),q=new THREE.Quaternion(),e=new THREE.Euler(),c=new THREE.Color();graine=41;let n=0;
+  for(let e2=0;e2<6000&&n<N;e2++){const s=3+Math.pow(rnd(),3)*34;let P;if(n<1250){const a=rnd()*6.283,d=1750+(rnd()+rnd()+rnd())/3*800;P=new THREE.Vector3(C_SYS.x+Math.cos(a)*d,-160+rnd()*320,C_SYS.z+Math.sin(a)*d);}else P=new THREE.Vector3(C_SYS.x+(rnd()-.5)*10000,-200+rnd()*400,C_SYS.z+(rnd()-.5)*10000);
+    if(Math.hypot(P.x+60,P.z-40)<420&&s>8)continue;const i=n++;e.set(rnd()*6,rnd()*6,rnd()*6);q.setFromEuler(e);m.compose(P,q,new THREE.Vector3(s,s*(.7+rnd()*.5),s));champ.setMatrixAt(i,m);c.set(['#5e5258','#4e4552','#6a5c58','#45404e'][rnd()*4|0]);champ.setColorAt(i,c);}
+  champ.count=n;ESPACE.add(champ);}
 for(const I of ILES){const g=new THREE.Mesh(caillou(2,.22,I.r|0),new THREE.MeshPhongMaterial({color:'#6a5c60',flatShading:true,shininess:0}));g.scale.set(I.r*.5,I.r*.36,I.r*.45);g.position.set(I.x,-25,I.z);g.rotation.y=I.x*.01;ESPACE.add(g);I.espSommet=new THREE.Vector3(I.x,-25+I.r*.3,I.z);}
 const fondCv=document.createElement('canvas');fondCv.width=2048;fondCv.height=1024;{const x=fondCv.getContext('2d');x.fillStyle='#07061a';x.fillRect(0,0,2048,1024);
   for(const[cx,cy,r,c]of[[600,420,520,'rgba(120,60,170,.38)'],[1300,560,600,'rgba(40,90,170,.32)'],[1700,300,380,'rgba(190,70,110,.24)'],[300,700,400,'rgba(60,120,160,.22)']]){const g=x.createRadialGradient(cx,cy,0,cx,cy,r);g.addColorStop(0,c);g.addColorStop(1,'rgba(0,0,0,0)');x.fillStyle=g;x.fillRect(0,0,2048,1024);}
   graine=99;for(let i=0;i<3000;i++){const b=rnd();x.fillStyle=`rgba(255,${230+b*25|0},${220+b*35|0},${.3+b*.7})`;const t=b>.97?2:1;x.fillRect(rnd()*2048|0,rnd()*1024|0,t,t);}}
 const fondEsp=new THREE.Mesh(new THREE.SphereGeometry(10000,32,16),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(fondCv),side:THREE.BackSide,fog:false,depthWrite:false}));fondEsp.renderOrder=-1;ESPACE.add(fondEsp);
-// planètes : gisements riches ; une station en orbite les prend ; trois styles à comparer
-const PLANETES=[{t:'terre',nom:'GAIA',camp:0},{t:'lave',nom:'BRASIER',camp:1},{t:'glace',nom:'BOREA',camp:-1,riche:1},{t:'gaz',nom:'TITAN',camp:-1},{t:'desert',nom:'DUNE',camp:-1,riche:1},{t:'roche',nom:'ECHO',camp:-1}];
-PLANETES.forEach((P,i)=>{[P.x,P.z,P.r]=PLAN0[i];P.y=-P.r*.75;});
-let STYLE='astro';const geoPla={},texPla={};
+// textures utiles : halo (atmosphère, lueur de l'étoile) et nuages
+const tex2d=(w,h,f)=>{const c=document.createElement('canvas');c.width=w;c.height=h;f(c.getContext('2d'),w,h);return new THREE.CanvasTexture(c);};
+const haloTex=tex2d(128,128,(x)=>{const g=x.createRadialGradient(64,64,0,64,64,64);g.addColorStop(0,'rgba(255,255,255,0)');g.addColorStop(.72,'rgba(255,255,255,0)');g.addColorStop(.78,'rgba(255,255,255,.75)');g.addColorStop(1,'rgba(255,255,255,0)');x.fillStyle=g;x.fillRect(0,0,128,128);});
+const lueurTex=tex2d(128,128,(x)=>{const g=x.createRadialGradient(64,64,0,64,64,64);g.addColorStop(0,'rgba(255,240,200,1)');g.addColorStop(.3,'rgba(255,200,120,.5)');g.addColorStop(1,'rgba(255,150,60,0)');x.fillStyle=g;x.fillRect(0,0,128,128);});
+const nuagesTex=tex2d(256,128,(x,w,h)=>{const d=x.createImageData(w,h);for(let j=0;j<h;j++)for(let i=0;i<w;i++){const v=fbm(N2,i/22,j/14,4),a=Math.max(0,Math.min(1,(v-.52)*5)),k=(j*w+i)*4;d.data[k]=d.data[k+1]=d.data[k+2]=255;d.data[k+3]=a*200;}x.putImageData(d,0,0);});
+nuagesTex.magFilter=nuagesTex.minFilter=THREE.NearestFilter;nuagesTex.generateMipmaps=false;
+// étoile
+const ETOILE={r:380,g:new THREE.Group()};ETOILE.g.position.copy(C_SYS).setY(-150);ESPACE.add(ETOILE.g);
+ETOILE.m=new THREE.Mesh(new THREE.IcosahedronGeometry(1,3),new THREE.MeshBasicMaterial({color:'#ffd27a'}));ETOILE.m.scale.setScalar(ETOILE.r);ETOILE.g.add(ETOILE.m);
+{const l=new THREE.Sprite(new THREE.SpriteMaterial({map:lueurTex,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,fog:false}));l.scale.setScalar(ETOILE.r*5);ETOILE.g.add(l);}
+{const l=new THREE.PointLight('#ffe6c0',1.1,0);l.position.copy(C_SYS);ESPACE.add(l);}
+const DFOK=!!window.PlanetesDF;
+const teinteDF=(h)=>k=>({colors:(k.p.colors||[]).map(c=>{const t=new THREE.Color(c[0],c[1],c[2]),o={};t.getHSL(o);t.setHSL(h,Math.min(1,o.s*1.1+.15),o.l);return[t.r,t.g,t.b,c[3]];})});
+if(DFOK){ETOILE.df=new PlanetesDF.Planete('Star',100,{couleurs:teinteDF(.1)});ETOILE.ct=new THREE.CanvasTexture(ETOILE.df.canvas);ETOILE.ct.magFilter=ETOILE.ct.minFilter=THREE.NearestFilter;ETOILE.ct.generateMipmaps=false;
+  ETOILE.sp=new THREE.Sprite(new THREE.SpriteMaterial({map:ETOILE.ct,transparent:true,fog:false}));ETOILE.sp.scale.setScalar(2*ETOILE.r*ETOILE.df.taille/100);ETOILE.g.add(ETOILE.sp);}
+// planètes (GAIA en premier : la colonie du joueur ; ECHO, lune de TITAN, en dernier)
+const PL_SYS=[{t:'terre',nom:'GAIA',r:210,orb:1300,ang:.55,camp:0},{t:'lave',nom:'BRASIER',r:130,orb:780,ang:2.1},{t:'desert',nom:'DUNE',r:170,orb:3000,ang:.25,riche:1},{t:'gaz',nom:'TITAN',r:360,orb:3700,ang:1.15},{t:'glace',nom:'BOREA',r:160,orb:4400,ang:.78,riche:1},{t:'roche',nom:'ECHO',r:80,orb:640,ang:0,autour:'TITAN'}];
+const PLANETES=PL_SYS,PLN={};let STYLE='df';const geoPla={},texPla={};
 for(const k of['astro','heck']){const M=window.SC_PLANETES[k].mesh,g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(M.p,3));g.setAttribute('uv',new THREE.Float32BufferAttribute(M.uv,2));g.computeVertexNormals();geoPla[k]=g;}
 function texP(k,t){const c=k+t;if(!texPla[c]){const im=new Image(),tx=new THREE.Texture(im);im.onload=()=>{tx.needsUpdate=true;};im.src=window.SC_PLANETES[k].tex[t];if(k==='astro'){tx.magFilter=tx.minFilter=THREE.NearestFilter;tx.generateMipmaps=false;}texPla[c]=tx;}return texPla[c];}
-const MINEUR_T={terre:'terre',lave:'mars',glace:'lune',gaz:'mars',desert:'mars',roche:'lune'},COUL_PLA={terre:'#3a7ab8',lave:'#c84a2a',glace:'#d8e8f0',gaz:'#c89a60',desert:'#c8a060',roche:'#8a8a90'};
+const DF_T={terre:'LandMasses',lave:'LavaWorld',glace:'IceWorld',gaz:'GasPlanetLayers',desert:'DryTerran',roche:'NoAtmosphere'},COUL_PLA={terre:'#3a7ab8',lave:'#c84a2a',glace:'#d8e8f0',gaz:'#c89a60',desert:'#c8a060',roche:'#8a8a90'},HALO={terre:'#7fc8ff',lave:'#ff7a40',glace:'#cfefff',gaz:'#ffd8a0',desert:'#ffc890'};
 function station(camp){const g=new THREE.Group(),gris=new THREE.MeshPhongMaterial({color:'#a8a4b8',flatShading:true}),coul=new THREE.MeshPhongMaterial({color:COUL_CAMP[camp],emissive:COUL_CAMP[camp],emissiveIntensity:.6,flatShading:true});
   g.add(new THREE.Mesh(new THREE.CylinderGeometry(10,14,60,8),gris));const a=new THREE.Mesh(new THREE.TorusGeometry(48,5,6,20),gris);a.rotation.x=Math.PI/2;g.add(a);
   for(let i=0;i<4;i++){const b=new THREE.Mesh(new THREE.BoxGeometry(5,4,48),gris);b.rotation.y=i*Math.PI/2;b.position.set(Math.sin(i*Math.PI/2)*24,0,Math.cos(i*Math.PI/2)*24);g.add(b);}
   for(let i=0;i<2;i++){const q=new THREE.Mesh(new THREE.BoxGeometry(64,2,24),new THREE.MeshPhongMaterial({color:'#2a3a6a',emissive:'#14204a',flatShading:true}));q.position.set(i?82:-82,22,0);g.add(q);const b=new THREE.Mesh(new THREE.BoxGeometry(40,3,3),gris);b.position.set(i?42:-42,22,0);g.add(b);}
   const t=new THREE.Mesh(new THREE.ConeGeometry(10,16,8),coul);t.position.y=38;g.add(t);for(let i=0;i<6;i++){const l=new THREE.Mesh(new THREE.SphereGeometry(3.5,6,4),coul);l.position.set(Math.cos(i*Math.PI/3)*48,0,Math.sin(i*Math.PI/3)*48);g.add(l);}
   g.scale.setScalar(1.4);return g;}
-for(const P of PLANETES){P.g=new THREE.Group();P.g.position.set(P.x,P.y,P.z);ESPACE.add(P.g);
-  P.m=new THREE.Mesh(geoPla.astro,new THREE.MeshPhongMaterial({shininess:0}));P.m.scale.setScalar(P.r);P.m.rotation.z=.25;P.g.add(P.m);
-  const ct=new THREE.CanvasTexture(GRANDES[MINEUR_T[P.t]][0]);ct.magFilter=ct.minFilter=THREE.NearestFilter;ct.generateMipmaps=false;P.ct=ct;
-  P.sp=new THREE.Sprite(new THREE.SpriteMaterial({map:ct,transparent:true}));P.sp.scale.setScalar(P.r*2);P.sp.visible=false;P.g.add(P.sp);
-  if(P.t==='gaz'){const a=new THREE.Mesh(new THREE.RingGeometry(P.r*1.35,P.r*1.95,72),new THREE.MeshBasicMaterial({color:'#c8a070',transparent:true,opacity:.28,side:THREE.DoubleSide,depthWrite:false}));a.rotation.x=-Math.PI/2+.35;P.g.add(a);}
-  const rr=P.r+90,an=new THREE.Mesh(new THREE.RingGeometry(rr-8,rr,96).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({color:COUL_CAMP[P.camp<0?2:P.camp],transparent:true,opacity:P.camp<0?.35:.75,depthTest:false,fog:false}));an.position.set(P.x,2,P.z);an.renderOrder=2;ESPACE.add(an);
-  if(P.camp>=0){P.st=station(P.camp);ESPACE.add(P.st);}}
-function stylePla(k){STYLE=k;for(const P of PLANETES){const m=k!=='mineur';P.m.visible=m;P.sp.visible=!m;if(m){P.m.geometry=geoPla[k];P.m.material.map=texP(k,P.t);P.m.material.flatShading=k==='heck';P.m.material.needsUpdate=true;}}}
-stylePla('astro');let tMin=0;
-function majPlanetes3D(t,dt){if(!AMB.espace)return;for(const P of PLANETES){P.m.rotation.y+=dt*.03;if(P.st){const a=t*.025+P.x;P.st.position.set(P.x+Math.cos(a)*(P.r+70),45,P.z+Math.sin(a)*(P.r+70));P.st.rotation.y=t*.2;}}
-  if(STYLE==='mineur'){tPlan+=dt;tMin-=dt;if(tMin<0){tMin=.1;for(const k of['terre','lune','mars'])rendrePlanete(k,RP[k],GRANDES[k][1]);PLANETES.forEach(P=>P.ct.needsUpdate=true);}}}
+const orbite=r=>{const p=[];for(let i=0;i<=160;i++){const a=i/160*6.283;p.push(new THREE.Vector3(Math.cos(a)*r,0,Math.sin(a)*r));}const l=new THREE.Line(new THREE.BufferGeometry().setFromPoints(p),new THREE.LineBasicMaterial({color:'#9aa0d8',transparent:true,opacity:.22,depthWrite:false,fog:false}));return l;};
+PL_SYS.forEach((P,i)=>{PLN[P.nom]=P;P.w=.004*Math.pow(1300/P.orb,1.5)*(P.autour?6:1);P.g=new THREE.Group();ESPACE.add(P.g);
+  P.m=new THREE.Mesh(geoPla.astro,new THREE.MeshPhongMaterial({map:texP('astro',P.t),shininess:0}));P.m.scale.setScalar(P.r);P.m.rotation.z=.3;P.g.add(P.m);P.v3=[P.m];
+  if(P.t!=='roche'&&P.t!=='lave'&&P.t!=='gaz'){P.nu=new THREE.Mesh(new THREE.SphereGeometry(1.035,28,18),new THREE.MeshLambertMaterial({map:nuagesTex,transparent:true,depthWrite:false}));P.nu.scale.setScalar(P.r);P.g.add(P.nu);P.v3.push(P.nu);}
+  if(HALO[P.t]){const h=new THREE.Sprite(new THREE.SpriteMaterial({map:haloTex,color:HALO[P.t],transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,opacity:.7}));h.scale.setScalar(P.r*2.75);P.g.add(h);P.v3.push(h);}
+  if(P.t==='gaz'){const a=new THREE.Mesh(new THREE.RingGeometry(P.r*1.35,P.r*1.95,72),new THREE.MeshBasicMaterial({color:'#c8a070',transparent:true,opacity:.3,side:THREE.DoubleSide,depthWrite:false}));a.rotation.x=-Math.PI/2+.35;P.g.add(a);P.v3.push(a);}
+  if(DFOK){P.df=new PlanetesDF.Planete(DF_T[P.t],100,{decalage:i*37});const ct=new THREE.CanvasTexture(P.df.canvas);ct.magFilter=ct.minFilter=THREE.NearestFilter;ct.generateMipmaps=false;P.ct=ct;
+    P.sp=new THREE.Sprite(new THREE.SpriteMaterial({map:ct,transparent:true}));P.sp.scale.setScalar(2*P.r*P.df.taille/100);P.g.add(P.sp);}
+  P.orbL=orbite(P.orb);P.orbL.position.copy(C_SYS);ESPACE.add(P.orbL);
+  if(P.camp>=0||P.riche){const rr=P.r+90;P.an=new THREE.Mesh(new THREE.RingGeometry(rr-8,rr,96).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({color:P.camp>=0?COUL_CAMP[P.camp]:'#9ff0ff',transparent:true,opacity:.6,depthTest:false,fog:false}));P.an.renderOrder=2;ESPACE.add(P.an);}
+  if(P.camp>=0){P.st=station(P.camp);ESPACE.add(P.st);}});
+// portes des routes spatiales, au bord du système
+const PORTES=[{nom:'ALTAIR',ang:.95,alerte:1},{nom:'CASTOR',ang:3.6}];
+for(const G of PORTES){G.p=new THREE.Vector3(C_SYS.x+Math.cos(G.ang)*5000,40,C_SYS.z+Math.sin(G.ang)*5000);G.g=new THREE.Group();G.g.position.copy(G.p);ESPACE.add(G.g);
+  const t=new THREE.Mesh(new THREE.TorusGeometry(120,12,8,32),new THREE.MeshPhongMaterial({color:'#8a84a8',emissive:G.alerte?'#802030':'#302870',flatShading:true}));t.rotation.x=Math.PI/2;G.g.add(t);
+  const s=new THREE.Sprite(new THREE.SpriteMaterial({map:lueurTex,color:G.alerte?'#ff6a6a':'#a890ff',transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,fog:false}));s.scale.setScalar(260);G.g.add(s);G.s=s;}
+function stylePla(k){STYLE=k;const df=k==='df'&&DFOK;for(const P of PL_SYS){P.v3.forEach(o=>o.visible=!df);if(P.sp)P.sp.visible=df;}ETOILE.m.visible=!df;if(ETOILE.sp)ETOILE.sp.visible=df;}
+stylePla('df');let tMin=0;
+function majPlanetes3D(t,dt,dtr){if(!AMB.espace)return;
+  for(const P of PL_SYS){P.ang+=dt*P.w;const c=P.autour?PLN[P.autour].g.position:C_SYS;P.x=c.x+Math.cos(P.ang)*P.orb;P.z=c.z+Math.sin(P.ang)*P.orb;P.y=-P.r*.6;P.g.position.set(P.x,P.y,P.z);
+    P.m.rotation.y+=dt*.05;if(P.nu)P.nu.rotation.y+=dt*.08;if(P.autour)P.orbL.position.set(c.x,0,c.z);if(P.an)P.an.position.set(P.x,2,P.z);
+    if(P.st){const a=t*.05;P.st.position.set(P.x+Math.cos(a)*(P.r+90),60,P.z+Math.sin(a)*(P.r+90));P.st.rotation.y=t*.2;}}
+  for(const G of PORTES){G.g.rotation.y+=dtr*.4;G.s.material.opacity=.6+.4*Math.sin(t*3);}
+  if(STYLE==='df'&&DFOK){tMin-=dtr;if(tMin<0){tMin=.08;const b=ETOILE.g.position.clone().project(cam);
+    for(const P of PL_SYS){const a=P.g.position.clone().project(cam);let dx=b.x-a.x,dy=-(b.y-a.y);const n=Math.hypot(dx,dy)||1;const lo=[.5+dx/n*.28,.5+dy/n*.28];P.df.couches.forEach(k=>{k.p.light_origin=lo;});P.df.maj(.08*VIT);P.ct.needsUpdate=true;}
+    if(ETOILE.df){ETOILE.df.maj(.08*Math.max(VIT,.3));ETOILE.ct.needsUpdate=true;}}}}
+
+PL_SYS.forEach(P=>{const c=P.autour?PLN[P.autour]:{x:C_SYS.x,z:C_SYS.z};P.x=c.x+Math.cos(P.ang)*P.orb;P.z=c.z+Math.sin(P.ang)*P.orb;P.y=-P.r*.6;});
 // ---------- modèles (comme Ciel de guerre : quantifiés, repeints pour les chasseurs) ----------
 const b64=s=>{const b=atob(s);const u=new Uint8Array(b.length);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return u.buffer;};
 function dequantifie(sc0){sc0.updateMatrixWorld(true);sc0.traverse(o=>{if(!o.isMesh)return;const a=o.geometry.attributes.position;if(!a||a.array instanceof Float32Array)return;
@@ -228,10 +259,11 @@ function ambiance(k){AMB=AMBS[k];AMBK=k;const x=cielCv.getContext('2d'),g=x.crea
   sc.fog.color.set(AMB.brume);hemi.color.set(AMB.hemi[0]);hemi.groundColor.set(AMB.hemi[1]);hemi.intensity=AMB.hemi[2];sol.color.set(AMB.soleil[0]);sol.intensity=AMB.soleil[1];sol.position.set(...AMB.dir).multiplyScalar(-1);
   mer.material.color.set(AMB.mer);couleursSol();couleursArbres();nuages.forEach(n=>n.children.forEach((m,i)=>m.material.color.set(k==='nuit'?['#4a4e6e','#363a58','#262844'][i%3]:k==='desert'?['#fffaf0','#f0e4d4','#d8c8b8'][i%3]:['#fff2ea','#f4c8cc','#c8a8c8'][i%3])));miniFond=null;
   const esp=!!AMB.espace;ESPACE.visible=esp;terrain.visible=mer.visible=!esp;if(esp)arbres.visible=false;nuages.forEach(n=>n.visible=!esp);U.forEach(n=>n.om.visible=!esp);sc.background=esp?null:cielTex;
+  if(esp)sol.position.set(C_SYS.x,700,C_SYS.z);
   for(const I of ILES){const P=esp?I.espSommet:I.sommet;if(!P)continue;if(I.cristal)I.cristal.position.copy(P);if(I.poste)I.poste.position.copy(P).add(new THREE.Vector3(34,-6,18));}}
 // ---------- caméras des trois directions ----------
 const CA={c:new THREE.Vector3(-40,0,40),yaw:0,dist:1500,tilt:0},clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
-const CAMS={A:{fov:32,libre:1},T:{fov:32,libre:1},
+const CAMS={A:{fov:32,libre:1},T:{fov:32,libre:1},G:{fov:32,libre:1},
   B:{fov:42,pitch:40,dist:900,cible:()=>new THREE.Vector3(-60,40,20),yaw:t=>-.35+Math.sin(t*.05)*.12},
   C:{fov:52,basse:1}};
 function placeCam(t){const C=CAMS[DIR];cam.fov=C.fov;
@@ -268,10 +300,11 @@ const barre=(v,c='')=>`<div class="barre ${c}"><i style="width:${Math.round(v*10
 const svgChasseur=(c,n)=>`<svg width="${n*18}" height="22" viewBox="0 0 ${n*18} 22">${Array.from({length:n},(_,i)=>`<path d="M${i*18+9} 2 L${i*18+16} 18 L${i*18+9} 14 L${i*18+2} 18Z" fill="${c}"/>`).join('')}</svg>`;
 const svgNavire=c=>`<svg width="70" height="22" viewBox="0 0 70 22"><path d="M2 11 L14 4 L58 5 L68 11 L58 17 L14 18Z" fill="${c}"/><rect x="28" y="8" width="12" height="6" fill="#fff" opacity=".5"/></svg>`;
 let miniFond=null;
-function mini(cv){const x=cv.getContext('2d'),w=cv.width,h=cv.height,E=AMB.espace?2500:1150,X=v=>(v/E*.5+.5)*w,Z=v=>(v/E*.5+.5)*h;
-  if(!miniFond||miniFond.width!==w){miniFond=document.createElement('canvas');miniFond.width=w;miniFond.height=h;const y=miniFond.getContext('2d'),d=y.createImageData(w,h),S=new THREE.Color(AMB.sol[1]),A2=new THREE.Color('#7d6c7a'),M=new THREE.Color(AMB.fond);
-    for(let j=0;j<h;j++)for(let i=0;i<w;i++){const k=(j*w+i)*4,wx=(i/w-.5)*2*E,wz=(j/h-.5)*2*E,hh=AMB.espace?(ILES.some(I=>Math.hypot(wx-I.x,wz-I.z)<I.r*.48)?1:-1):H(wx,wz),c=hh>0?(AMB.espace?A2:S):M;d.data[k]=c.r*255;d.data[k+1]=c.g*255;d.data[k+2]=c.b*255;d.data[k+3]=255;}y.putImageData(d,0,0);}
+function mini(cv){const x=cv.getContext('2d'),w=cv.width,h=cv.height,E=AMB.espace?5400:1150,OX=AMB.espace?C_SYS.x:0,OZ=AMB.espace?C_SYS.z:0,X=v=>((v-OX)/E*.5+.5)*w,Z=v=>((v-OZ)/E*.5+.5)*h;
+  if(!miniFond||miniFond.width!==w){miniFond=document.createElement('canvas');miniFond.width=w;miniFond.height=h;const y=miniFond.getContext('2d'),d=y.createImageData(w,h),S=new THREE.Color(AMB.sol[1]),A2=new THREE.Color('#2a2438'),M=new THREE.Color(AMB.fond);
+    for(let j=0;j<h;j++)for(let i=0;i<w;i++){const k=(j*w+i)*4,wx=(i/w-.5)*2*E+OX,wz=(j/h-.5)*2*E+OZ,hh=AMB.espace?(Math.abs(Math.hypot(wx-C_SYS.x,wz-C_SYS.z)-2150)<330?1:-1):H(wx,wz),c=hh>0?(AMB.espace?A2:S):M;d.data[k]=c.r*255;d.data[k+1]=c.g*255;d.data[k+2]=c.b*255;d.data[k+3]=255;}y.putImageData(d,0,0);}
   x.drawImage(miniFond,0,0);
+  if(AMB.espace){x.strokeStyle='rgba(154,160,216,.3)';x.lineWidth=1;for(const P of PL_SYS){const c=P.autour?PLN[P.autour]:C_SYS;x.beginPath();x.arc(X(c.x),Z(c.z),P.orb/E*.5*w,0,6.283);x.stroke();}x.fillStyle='#ffd27a';x.beginPath();x.arc(X(C_SYS.x),Z(C_SYS.z),5,0,6.283);x.fill();for(const G of PORTES){x.strokeStyle=G.alerte?'#ff6a6a':'#a890ff';x.lineWidth=2;x.beginPath();x.arc(X(G.p.x),Z(G.p.z),4,0,6.283);x.stroke();}}
   if(AMB.espace)for(const P of PLANETES){x.fillStyle=COUL_PLA[P.t];x.beginPath();x.arc(X(P.x),Z(P.z),Math.max(3,P.r/E*.5*w),0,6.283);x.fill();if(P.camp>=0||P.riche){x.strokeStyle=P.camp>=0?COUL_CAMP[P.camp]:'#9ff0ff';x.lineWidth=1.5;x.beginPath();x.arc(X(P.x),Z(P.z),(P.r+90)/E*.5*w,0,6.283);x.stroke();}}
   for(const I of ILES)if(I.nom&&!AMB.espace||I.nom&&I.gis){x.strokeStyle=COUL_CAMP[I.prise?0:I.camp<0?2:I.camp];x.lineWidth=1.5;x.beginPath();x.arc(X(I.x),Z(I.z),I.r*.82/E*.5*w,0,6.283);x.stroke();}
   for(const n of U){x.fillStyle=n.camp?'#ff6a4a':'#7fd0ff';const s=n.pv?6:4;x.fillRect(X(n.pos.x)-s/2,Z(n.pos.z)-s/2,s,s);}
@@ -281,7 +314,9 @@ function mini(cv){const x=cv.getContext('2d'),w=cv.width,h=cv.height,E=AMB.espac
   const rc=new THREE.Raycaster(),pl=new THREE.Plane(new THREE.Vector3(0,1,0),0),pts=[];for(const[a,b]of[[-1,-1],[1,-1],[1,1],[-1,1]]){rc.setFromCamera({x:a,y:b},cam);const q=new THREE.Vector3();if(rc.ray.intersectPlane(pl,q))pts.push(q);}
   if(pts.length===4){x.strokeStyle='rgba(255,255,255,.8)';x.lineWidth=1;x.beginPath();pts.forEach((q,i)=>i?x.lineTo(X(q.x),Z(q.z)):x.moveTo(X(q.x),Z(q.z)));x.closePath();x.stroke();}}
 // gabarits de chaque direction : statique (une fois) et dynamique (chaque image)
-function hautRessources(tel){return `<div class="pan" style="left:12px;top:10px"><div class="l"><b class="cr">◆ 340</b><span>+18/MIN</span></div><div class="l"><span>AGE</span><b style="color:#ffd2a0">${tel?'I':'I · AVANT-POSTE'}</b></div>${tel?'':'<div class="l"><span>ILES</span><b>1 / 5</b></div>'}<div class="l"><span>TEMPS</span><b>08:42</b></div></div>`;}
+function hautRessources(tel){return `<div class="pan" style="left:12px;top:10px"><div class="l"><b class="cr">◆ 340</b><span>+18/MIN</span></div><div class="l"><span>AGE</span><b style="color:#ffd2a0">${tel?'I':'I · AVANT-POSTE'}</b></div>${tel?'':'<div class="l"><span>SYSTEMES</span><b>4</b></div><div class="l"><span>COLONIES</span><b>3</b></div>'}</div>`;}
+function alerte(x,w,tel){return `<div class="pan" style="left:${x}px;top:10px;width:${w}px;text-align:center;border-color:#ff8a7a"><span style="color:#ff9a7a">! ALERTE</span><div>FLOTTE ROUGE (14) PAR LA PORTE D'ALTAIR</div>${tel?'':'<div class="mut">DEFENDS LA CEINTURE</div>'}</div>`;}
+function vitesses(pos){return `<div class="pan" style="${pos};display:flex;gap:4px;padding:4px;pointer-events:auto">${[['❚❚',0],['▶',1],['▶▶',2],['▶▶▶',3]].map(([t,v])=>`<span class="bt clic" data-vit="${v}" style="cursor:pointer;min-width:34px;${VIT===v?'background:#2d5c8a;border-color:#9fd8ff':''}">${t}</span>`).join('')}<span class="mut" id="date" style="align-self:center;padding:0 6px">AN 2 · J ${JOUR|0}</span></div>`;}
 function objectif(x,w){return `<div class="pan" style="left:${x}px;top:10px;width:${w}px;text-align:center"><span style="color:#ffd2a0">ESCARMOUCHE 2 · ★★☆</span><div>TENIR L'ILE CENTRALE</div>${barre(.45,'cap')}</div>`;}
 const boutonsCam=pos=>`<div style="position:absolute;${pos};display:flex;gap:5px">${[['+','+'],['−','-'],['⟲','r'],['N','n']].map(([t,v])=>`<span class="bt clic" data-cam="${v}" style="pointer-events:auto;cursor:pointer;min-width:34px">${t}</span>`).join('')}</div>`;
 const noeud=(cat,nom,txt)=>`<div style="background:rgba(40,30,64,.75);border:1px solid var(--bord);border-radius:7px;padding:5px 7px;margin-top:5px"><span style="color:${{V:'#9fe0ff',S:'#ffd2a0',A:'#b8f080'}[cat]}">${{V:'VAISSEAU',S:'STATION',A:'AMELIORATION'}[cat]}</span> <b>${nom}</b><div class="mut">${txt}</div></div>`;
@@ -292,16 +327,20 @@ const arbre=tel=>`<div class="pan" style="left:${tel?8:24}px;top:${tel?8:20}px;r
   <div class="l"><b style="color:#ffd2a0;font-size:1.25em">ARBRE DES AGES</b><span>ESCARMOUCHE : CE QU ON DEBLOQUE PENDANT LA PARTIE</span></div>
   <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:${tel?6:14}px;margin-top:${tel?4:10}px">${AGES.map(([n,c,l],i)=>`<div style="${i?'':'border-color:#9fd8ff'}"><div style="display:flex;justify-content:space-between;border-bottom:1px solid var(--bord);padding-bottom:3px"><b style="color:${i?'#fff':'#9fe0ff'}">AGE ${n}</b><span class="mut">${c}</span></div>${l.filter((_,j)=>!tel||j%2===0||j<4).map(x=>noeud(...x)).join('')}</div>`).join('')}</div>
   <div class="mut" style="position:absolute;left:${tel?8:16}px;right:${tel?8:16}px;bottom:${tel?6:12}px">ENTRE LES MISSIONS : LES ETOILES DEBLOQUENT LES MODELES (35 CHASSEURS, CORVETTES, FREGATES...) ET DES BONUS DE DEPART.</div></div>`;
-const GAB={T:{pc:()=>arbre(0),tel:()=>arbre(1)},
-A:{pc:()=>`${hautRessources()}${objectif(470,340)}<canvas class="mini" width="190" height="190" style="left:12px;bottom:12px;width:190px;height:190px"></canvas>
+const GAB={G:{pc:()=>`${hautRessources()}${vitesses('right:12px;top:10px')}<div class="pan" style="left:50%;top:10px;transform:translateX(-50%);text-align:center;border-color:#ff8a7a"><span style="color:#ff9a7a">! FLOTTE ROUGE (14)</span><div>EN ROUTE VERS ALTAIR</div></div>
+   <div class="pan" style="left:12px;top:140px;width:220px"><b style="color:#ffd2a0">FLOTTES</b><div class="l"><span>AURORE</span><b>SOL-7</b></div><div class="l"><span>FLOTTE 2</span><b>EN GARDE</b></div><div class="l"><span>ECLAIREUR</span><b>VERS LYRA</b></div></div>
+   <div class="pan" id="selsys" style="right:12px;bottom:12px;width:330px"></div><div class="astuce" style="left:12px;bottom:12px">MOLETTE : ZOOM · GLISSER : DEPLACER · CLIC : CHOISIR · DOUBLE CLIC : ENTRER</div>`,
+  tel:()=>`${hautRessources(1)}${vitesses('left:50%;top:10px;transform:translateX(-50%)')}<div class="pan" id="selsys" style="right:8px;bottom:8px;width:300px"></div><div class="astuce" style="left:8px;bottom:8px">PINCER : ZOOM · TOUCHER : CHOISIR</div>`},
+ T:{pc:()=>arbre(0),tel:()=>arbre(1)},
+A:{pc:()=>`${hautRessources()}${alerte(440,400)}${vitesses('right:12px;top:10px')}<div class="pan" style="left:50%;top:92px;transform:translateX(-50%);padding:3px 10px;color:#ffd2a0">SYSTEME SOL-7</div><canvas class="mini" width="190" height="190" style="left:12px;bottom:12px;width:190px;height:190px"></canvas>
   <div class="pan" style="left:216px;bottom:118px;display:flex;gap:6px;padding:5px"><span class="bt on"><span class="k">1</span>ESC. 1</span><span class="bt"><span class="k">2</span>ESC. 2</span><span class="bt"><span class="k">3</span>ESC. 3</span><span class="bt"><span class="k">4</span>DESTROYERS</span></div>
   <div class="pan" style="left:216px;bottom:12px;width:520px;height:98px"><div class="l"><b>ESCADRILLE 1 · 5 CHASSEURS</b><span>ATTAQUE FREGATE</span></div><div style="display:flex;gap:14px;align-items:center;margin-top:4px">${svgChasseur('#7fd0ff',5)}<div style="flex:1">${barre(.8)}</div></div>
    <div style="display:flex;gap:6px;margin-top:8px"><span class="bt"><span class="k">A</span>ATTAQUER</span><span class="bt"><span class="k">D</span>DEFENDRE</span><span class="bt"><span class="k">P</span>PATROUILLE</span><span class="bt"><span class="k">R</span>RETOUR</span></div></div>
-  <div class="pan" style="right:12px;bottom:12px;width:300px"><div class="l"><b>PORTE-VAISSEAUX AURORE</b></div>${barre(.86)}<div class="mut" style="margin:8px 0 4px">CHANTIER</div>
+  <div class="pan" style="right:12px;bottom:12px;width:300px"><div class="l"><b>GAIA · COLONIE</b><span>TERRESTRE</span></div><div class="mut">HABITANTS 12 · +12◆/MIN</div><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin:6px 0">${['MINE','CHANTIER','HABITAT','BOUCLIER','+','+'].map(n=>`<span class="bt" style="justify-content:center;padding:6px 2px;${n==='+'?'border-style:dashed;opacity:.6':''}">${n}</span>`).join('')}</div><div class="l" style="margin-top:4px"><b>PORTE-VAISSEAUX AURORE</b></div>${barre(.86)}<div class="mut" style="margin:8px 0 4px">CHANTIER</div>
    <div style="display:grid;gap:5px"><span class="bt" style="justify-content:space-between"><span><span class="k">Q</span>CHASSEUR</span><b class="cr">40◆</b></span><span class="bt" style="justify-content:space-between;opacity:.45"><span><span class="k">W</span>BOMBARDIER</span><b>AGE II</b></span><span class="bt" style="justify-content:space-between;opacity:.45"><span><span class="k">E</span>FREGATE</span><b>AGE II</b></span><span class="bt" style="justify-content:space-between"><span><span class="k">T</span>COLLECTEUR</span><b class="cr">30◆</b></span></div><span class="bt" style="justify-content:space-between;margin-top:6px;background:#4a3a1a;border-color:#ffd2a0"><span><span class="k">U</span>AGE II · FLOTTE</span><b class="cr">500◆</b></span><div class="mut" style="margin-top:3px">+ 1 RAFFINERIE · COLLECTEURS 3</div>
    <div class="mut" style="margin-top:6px">EN COURS : CHASSEUR</div>${barre(.6,'cap')}</div>
-  <div id="tags"></div><svg class="ov" width="1280" height="720"></svg><div class="astuce" style="right:12px;top:12px">MOLETTE : ZOOM · CLIC DROIT GLISSE : PIVOTER · CLIC DROIT : ORDRE</div>${boutonsCam('left:12px;bottom:210px')}`,
- tel:()=>`${hautRessources(1)}${objectif(300,280)}<canvas class="mini" width="110" height="110" style="right:10px;top:10px;width:110px;height:110px"></canvas>
+  <div id="tags"></div><svg class="ov" width="1280" height="720"></svg><div class="astuce" style="right:12px;top:62px">MOLETTE : ZOOM · CLIC DROIT GLISSE : PIVOTER · CLIC DROIT : ORDRE</div>${boutonsCam('left:12px;bottom:210px')}`,
+ tel:()=>`${hautRessources(1)}${alerte(250,330,1)}${vitesses('left:50%;top:68px;transform:translateX(-50%)')}<canvas class="mini" width="110" height="110" style="right:10px;top:10px;width:110px;height:110px"></canvas>
   <div id="tags"></div><div style="position:absolute;left:10px;top:112px;display:grid;gap:7px"><span class="bt gros on">ESC. 1</span><span class="bt gros">ESC. 2</span><span class="bt gros">ESC. 3</span><span class="bt gros">FLOTTE</span></div>
   <div style="position:absolute;right:10px;bottom:10px;display:grid;gap:7px"><span class="bt gros">ATTAQUER</span><span class="bt gros">DEFENDRE</span><span class="bt gros">RETOUR</span><span class="bt gros" style="background:#4a3a1a">◆ CHANTIER</span></div>
   <svg class="ov" width="880" height="400"></svg><div class="astuce" style="left:50%;bottom:10px;transform:translateX(-50%)">PINCER : ZOOM · DEUX DOIGTS : PIVOTER</div>${boutonsCam('right:10px;top:126px')}`},
@@ -316,17 +355,66 @@ C:{pc:()=>`${hautRessources()}<canvas class="mini" width="230" height="230" styl
 function cartes(tel){const l=[[E1,5,.8,'ATTAQUE FREGATE',1],[E2,5,.6,'TIENT L ILE',0],[E3,4,1,'ESCORTE AURORE',0]].map(([e,n,v,o,on],i)=>`<div class="cartej ${on?'on':''}" style="${tel?'width:128px':''}"><div class="l"><b>${tel?'':`<span class="k">${i+1}</span>`}${e.nom}</b><span>${Math.round(n*v)}/${n}</span></div>${svgChasseur('#7fd0ff',n)}${barre(v)}<div class="et">${o}</div></div>`);
   l.push(`<div class="cartej" style="${tel?'width:128px':''}"><div class="l"><b>${tel?'':'<span class="k">4</span>'}FLOTTE</b><span>2</span></div>${svgNavire('#7fd0ff')}${barre(.8)}<div class="et">EN LIGNE</div></div>`);
   l.push(`<div class="cartej" style="${tel?'width:110px':'width:120px'};border-style:dashed;text-align:center"><b>+ LANCER</b><div class="mut" style="margin:6px 0">CHASSEUR</div><b class="cr">40◆</b>${barre(.6,'cap')}</div>`);return l.join('');}
-function construireUI(){const[w,h]=VIRT[APP];VW=w;VH=h;ui.style.width=w+'px';ui.style.height=h+'px';ui.style.setProperty('--hs',APP==='pc'?'13px':'11px');ui.innerHTML=GAB[DIR][APP]();redim();}
+function construireUI(){gal.style.display=DIR==='G'?'block':'none';cv.style.display=DIR==='G'?'none':'block';const[w,h]=VIRT[APP];VW=w;VH=h;ui.style.width=w+'px';ui.style.height=h+'px';ui.style.setProperty('--hs',APP==='pc'?'13px':'11px');ui.innerHTML=GAB[DIR][APP]();redim();}
+// ---------- vue GALAXIE (dessin 2D) : systèmes reliés par des routes spatiales, territoires, flottes ----------
+const gal=document.createElement('canvas');gal.style.cssText='position:absolute;inset:0;width:100%;height:100%;display:none;touch-action:none';cadre.insertBefore(gal,ui);
+const NOMS_SYS=['ALTAIR','VEGA','DENEB','RIGEL','SIRIUS','CASTOR','POLLUX','ANTARES','MIRA','LYRA','ORION','CYGNE','HYDRE','PERSEE','ELARA','NOVA','KEPLER','TAU','ZETA','OMEGA','ATLAS'];
+const SYS=[];graine=77;
+for(let i=0;i<22;i++){let x,y,e=0;do{const bras=i%2,r=.12+rnd()*.88,a=bras*Math.PI+r*2.7+(rnd()-.5)*.8;x=Math.cos(a)*r*920;y=Math.sin(a)*r*560;e++;}while(e<200&&!SYS.every(s=>Math.hypot(s.x-x,s.y-y)>140));
+  SYS.push({x,y,camp:-1,lien:[],hue:[0,0,0,-25,25,170,200,-40][rnd()*8|0],planetes:3+(rnd()*5|0),i});}
+{const dans=[0],arcs=[];while(dans.length<SYS.length){let m=null;for(const a of dans)for(let b=0;b<SYS.length;b++){if(dans.includes(b))continue;const d=Math.hypot(SYS[a].x-SYS[b].x,SYS[a].y-SYS[b].y);if(!m||d<m[2])m=[a,b,d];}dans.push(m[1]);arcs.push(m);}
+  for(let a=0;a<SYS.length;a++)for(let b=a+1;b<SYS.length;b++){const d=Math.hypot(SYS[a].x-SYS[b].x,SYS[a].y-SYS[b].y);if(d<300&&!arcs.some(r=>(r[0]===a&&r[1]===b)||(r[0]===b&&r[1]===a))&&rnd()<.75)arcs.push([a,b,d]);}
+  for(const[a,b]of arcs){SYS[a].lien.push(b);SYS[b].lien.push(a);}var ROUTES=arcs;}
+function bfs(de){const d=SYS.map(()=>1e9),pr=SYS.map(()=>-1);d[de]=0;const f=[de];while(f.length){const a=f.shift();for(const b of SYS[a].lien)if(d[b]>d[a]+1){d[b]=d[a]+1;pr[b]=a;f.push(b);}}return{d,pr};}
+const MOI=SYS.reduce((m,s)=>s.x<m.x?s:m,SYS[0]).i,LUI=SYS.reduce((m,s)=>s.x>m.x?s:m,SYS[0]).i;
+const dMoi=bfs(MOI).d,dLui=bfs(LUI);
+const CHEMIN=[];{let k=MOI;while(k!==-1){CHEMIN.push(k);k=dLui.pr[k];}}// de chez moi jusqu'au rouge
+const ALT=CHEMIN[1];let ni=0;SYS.forEach(s=>{s.nom=s.i===MOI?'SOL-7':s.i===ALT?'ALTAIR':s.i===LUI?'OMEGA':NOMS_SYS.filter(n=>!['ALTAIR','OMEGA'].includes(n))[ni++];});
+SYS.forEach(s=>{if(dMoi[s.i]<=1&&dLui.d[s.i]>1)s.camp=0;else if(dLui.d[s.i]<=1)s.camp=1;s.inconnu=s.camp<0&&dMoi[s.i]>=4;});
+SYS[MOI].capitale=1;SYS[LUI].capitale=1;SYS[MOI].planetes=6;SYS[MOI].hue=0;
+const VOIE_ROUGE=CHEMIN.slice(1).reverse();// d'OMEGA jusqu'à ALTAIR
+const GC={x:(SYS[MOI].x+SYS[LUI].x)/2,y:(SYS[MOI].y+SYS[LUI].y)/2,z:.95};let SEL=MOI,selVu=-1;
+const starDF=DFOK?new PlanetesDF.Planete('Star',26,{couleurs:teinteDF(.1)}):null,galDF=DFOK?new PlanetesDF.Planete('Galaxy',140,{couleurs:teinteDF(.72)}):null;
+function galVers(px,py){const k=GC.z*Math.min(gal.width/2100,gal.height/1250);return[(px-GC.x)*k+gal.width/2,(py-GC.y)*k+gal.height/2,k];}
+function galDepuis(sx,sy){const k=GC.z*Math.min(gal.width/2100,gal.height/1250);return[(sx-gal.width/2)/k+GC.x,(sy-gal.height/2)/k+GC.y];}
+function posFlotte(u){const L=[];let T=0;for(let i=0;i<VOIE_ROUGE.length-1;i++){const a=SYS[VOIE_ROUGE[i]],b=SYS[VOIE_ROUGE[i+1]],d=Math.hypot(b.x-a.x,b.y-a.y);L.push([a,b,d]);T+=d;}let s=u*T;for(const[a,b,d]of L){if(s<=d)return[a.x+(b.x-a.x)*s/d,a.y+(b.y-a.y)*s/d];s-=d;}const z=SYS[VOIE_ROUGE[VOIE_ROUGE.length-1]];return[z.x,z.y];}
+function galDessine(t,dt){const r=cadre.getBoundingClientRect(),dpr=Math.min(2,window.devicePixelRatio||1),W=Math.round(r.width*dpr),Hh=Math.round(r.height*dpr);if(gal.width!==W||gal.height!==Hh){gal.width=W;gal.height=Hh;}
+  const x=gal.getContext('2d'),E=echelle*dpr;x.imageSmoothingEnabled=false;x.fillStyle='#07061a';x.fillRect(0,0,W,Hh);
+  const[ox,oy,k]=galVers(0,0);x.globalAlpha=1;const fw=Math.max(W,Hh*2)*1.3;x.drawImage(fondCv,(ox-W/2)*.15+W/2-fw/2,(oy-Hh/2)*.15+Hh/2-fw/4,fw,fw/2);
+  if(galDF){galDF.maj(dt*.3);x.globalAlpha=.16;x.imageSmoothingEnabled=true;const s=1900*k;x.drawImage(galDF.canvas,ox-s/2,oy-s/2,s,s);x.globalAlpha=1;x.imageSmoothingEnabled=false;}
+  for(const s of SYS)if(s.camp>=0){const[a,b]=galVers(s.x,s.y),R=165*k,g=x.createRadialGradient(a,b,0,a,b,R);g.addColorStop(0,s.camp?'rgba(255,90,74,.3)':'rgba(90,176,255,.3)');g.addColorStop(1,'rgba(0,0,0,0)');x.fillStyle=g;x.fillRect(a-R,b-R,2*R,2*R);}
+  x.lineWidth=2*dpr;for(const[a0,b0]of ROUTES){const a=SYS[a0],b=SYS[b0],p=galVers(a.x,a.y),q=galVers(b.x,b.y);x.setLineDash(a.inconnu||b.inconnu?[4*dpr,6*dpr]:[]);x.strokeStyle=a.inconnu||b.inconnu?'rgba(150,150,190,.18)':'rgba(170,180,235,.38)';x.beginPath();x.moveTo(p[0],p[1]);x.lineTo(q[0],q[1]);x.stroke();}x.setLineDash([]);
+  // voie de la flotte rouge
+  const u=(t*.012)%1,fp=posFlotte(u);x.strokeStyle='rgba(255,110,90,.85)';x.setLineDash([6*dpr,5*dpr]);x.lineDashOffset=-t*20*dpr;x.beginPath();let pp=galVers(fp[0],fp[1]);x.moveTo(pp[0],pp[1]);const fin=SYS[ALT];
+  {let pass=false,Ttot=0;const L=[];for(let i=0;i<VOIE_ROUGE.length-1;i++){const a=SYS[VOIE_ROUGE[i]],b=SYS[VOIE_ROUGE[i+1]];L.push([a,b,Math.hypot(b.x-a.x,b.y-a.y)]);Ttot+=L[i][2];}let s=u*Ttot;for(const[a,b,d]of L){if(s>d){s-=d;continue;}const q=galVers(b.x,b.y);x.lineTo(q[0],q[1]);s=-1e9;}}x.stroke();x.setLineDash([]);
+  if(starDF)starDF.maj(dt);
+  x.textAlign='center';x.font=`${Math.round(10*E)}px Silkscreen, monospace`;
+  for(const s of SYS){const[a,b]=galVers(s.x,s.y),R=(s.capitale?30:22)*k*1.6;x.filter=s.inconnu?'grayscale(1) brightness(.45)':`hue-rotate(${s.hue}deg)`;if(starDF)x.drawImage(starDF.canvas,a-R,b-R,2*R,2*R);x.filter='none';
+    if(s.i===SEL){x.strokeStyle='#9fe0ff';x.lineWidth=2*dpr;x.beginPath();x.arc(a,b,R*.75+4*dpr*(1+Math.sin(t*4)*.3),0,6.283);x.stroke();}
+    x.fillStyle=s.inconnu?'rgba(200,200,220,.45)':s.camp===0?'#bfe8ff':s.camp===1?'#ffb8a0':'#f0e4d0';x.strokeStyle='#000';x.lineWidth=3*dpr;const n=(s.capitale?'★ ':'')+(s.inconnu?'?':s.nom);x.strokeText(n,a,b+R*.7+12*E);x.fillText(n,a,b+R*.7+12*E);}
+  const ico=(px,py,c,txt)=>{const[a,b]=galVers(px,py),z=9*E;x.fillStyle=c;x.strokeStyle='#000';x.lineWidth=2*dpr;x.beginPath();x.moveTo(a,b-z);x.lineTo(a+z*.8,b+z*.7);x.lineTo(a,b+z*.3);x.lineTo(a-z*.8,b+z*.7);x.closePath();x.stroke();x.fill();if(txt){x.font=`${Math.round(9*E)}px Silkscreen, monospace`;x.textAlign='left';x.lineWidth=3*dpr;x.strokeText(txt,a+z*1.2,b+z*.3);x.fillText(txt,a+z*1.2,b+z*.3);x.textAlign='center';}};
+  ico(SYS[MOI].x-38,SYS[MOI].y-38,'#7fd0ff','AURORE');const c2=SYS.find(s=>s.camp===0&&s.i!==MOI&&s.i!==ALT);if(c2)ico(c2.x-30,c2.y-34,'#7fd0ff','FLOTTE 2');ico(fp[0],fp[1]-28,'#ff7a5a','FLOTTE ROUGE · 14');}
+// ce que montre le volet du système choisi
+function voletSys(s,tel){const P=s.i===MOI?PL_SYS.map(p=>p.nom):[];const etat=s.inconnu?'INCONNU':s.camp===0?'TON EMPIRE':s.camp===1?'EMPIRE ROUGE':'NEUTRE';
+  return `<div class="l"><b style="color:#ffd2a0">${s.inconnu?'SYSTEME INCONNU':s.nom}</b><span>${etat}</span></div>`+(s.inconnu?'<div class="mut" style="margin-top:6px">ENVOIE UN ECLAIREUR</div>':
+  `<div class="mut" style="margin:4px 0">ETOILE ${['JAUNE','JAUNE','JAUNE','ORANGE','VERTE','BLEUE','BLEUE','ROUGE'][[0,0,0,-25,25,170,200,-40].indexOf(s.hue)]} · ${s.planetes} PLANETES</div>`+
+  (s.i===MOI?`<div style="display:flex;flex-wrap:wrap;gap:4px">${PL_SYS.map(p=>`<span style="display:inline-flex;align-items:center;gap:4px"><i style="width:9px;height:9px;border-radius:50%;background:${COUL_PLA[p.t]};display:inline-block"></i>${p.nom}${p.camp===0?' ●':''}</span>`).join('')}</div><div class="mut" style="margin-top:4px">1 COLONIE · 1 STATION · BATAILLE DANS LA CEINTURE</div>`:
+   s.i===ALT?'<div class="mut">2 COLONIES · <span style="color:#ff9a7a">LA FLOTTE ROUGE ARRIVE</span></div>':s.camp===1?'<div class="mut">FLOTTE ENNEMIE · STATIONS</div>':'<div class="mut">2 PLANETES RICHES A COLONISER</div>')+
+  `<span class="bt clic" data-entrer="${s.i}" style="pointer-events:auto;cursor:pointer;margin-top:8px;background:#2d5c8a;border-color:#9fd8ff">ENTRER DANS LE SYSTEME</span>`);}
+
 // éléments qui suivent les vaisseaux
 function bbox(pts){let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;for(const p of pts){x0=Math.min(x0,p.x);y0=Math.min(y0,p.y);x1=Math.max(x1,p.x);y1=Math.max(y1,p.y);}return{x0,y0,x1,y1};}
-function majUI(t){const ov=ui.querySelector('svg.ov'),mc=ui.querySelector('canvas.mini');if(mc)mini(mc);
+function majUI(t){const de=ui.querySelector('#date');if(de)de.textContent='AN 2 · J '+(JOUR|0);
+  if(DIR==='G'){if(selVu!==SEL||!ui.querySelector('#selsys').innerHTML){selVu=SEL;ui.querySelector('#selsys').innerHTML=voletSys(SYS[SEL],APP==='tel');}return;}
+  const ov=ui.querySelector('svg.ov'),mc=ui.querySelector('canvas.mini');if(mc)mini(mc);
   const cE1=proj(E1.centre()),cF1=proj(F1.pos);let s='';
   if(DIR==='A'){const ph=t%7;if(APP==='pc'){const b=bbox(E1.m.map(m=>proj(m.pos)));const m=14;
       if(ph<1.4){const k=Math.min(1,ph/1.1),x1=b.x0-m+(b.x1-b.x0+2*m)*k,y1=b.y0-m+(b.y1-b.y0+2*m)*k;s+=`<rect x="${b.x0-m}" y="${b.y0-m}" width="${Math.max(0,x1-b.x0+m)}" height="${Math.max(0,y1-b.y0+m)}" fill="rgba(127,208,255,.12)" stroke="#9fe0ff" stroke-dasharray="4 3"/>`+curseur(x1,y1);}
       else if(ph<2.6){const k=(ph-1.4)/1.2,x=b.x1+(cF1.x-b.x1)*k,y=b.y1+(cF1.y-b.y1)*k;s+=curseur(x,y);}else if(ph<3.6)s+=ping(cF1,ph-2.6,'ATTAQUER')+curseur(cF1.x,cF1.y);}
     else if(ph>2&&ph<3.2)s+=ping(cF1,ph-2,'',1);
     poseMarqueur(MQ[0],E1.centre(),true);poseMarqueur(MQ[1],PV.pos,false);}
-  if(DIR==='A'){const tg=ui.querySelector('#tags');if(tg){let h='';if(AMB.espace)for(const P of PLANETES){const q=proj(new THREE.Vector3(P.x,P.y+P.r+30,P.z));if(!q.ok)continue;h+=`<div class="tag ${P.camp===0?'b':P.camp===1?'r':'n'}" style="left:${q.x}px;top:${q.y}px">${P.nom}${P.riche?' <span class="cr">◆◆ RICHE</span>':''}${P.camp>=0?'<br>STATION':''}</div>`;}tg.innerHTML=h;}}
+  if(DIR==='A'){const tg=ui.querySelector('#tags');if(tg){let h='';if(AMB.espace)for(const P of PLANETES){const q=proj(new THREE.Vector3(P.x,P.y+P.r+30,P.z));if(!q.ok)continue;h+=`<div class="tag ${P.camp===0?'b':P.camp===1?'r':'n'}" style="left:${q.x}px;top:${q.y}px">${P.nom}${P.riche?' <span class="cr">◆◆ RICHE</span>':''}${P.camp>=0?'<br>COLONIE':''}</div>`;}
+    if(AMB.espace){for(const G of PORTES){const q=proj(G.p.clone().add(new THREE.Vector3(0,150,0)));if(q.ok)h+=`<div class="tag ${G.alerte?'r':'n'}" style="left:${q.x}px;top:${q.y}px">PORTE · ${G.nom}${G.alerte?'<br>FLOTTE ROUGE (14)':''}</div>`;}const q=proj(ETOILE.g.position.clone().add(new THREE.Vector3(0,ETOILE.r+80,0)));if(q.ok)h+=`<div class="tag n" style="left:${q.x}px;top:${q.y}px">SOL-7</div>`;}tg.innerHTML=h;}}
   if(DIR==='T'){poseMarqueur(MQ[0],E1.centre(),false);}
   if(DIR==='B'){poseMarqueur(MQ[0],E1.centre(),true);poseMarqueur(MQ[1],PV.pos,false);
     s+=`<path d="M${cE1.x} ${cE1.y} Q${(cE1.x+cF1.x)/2} ${Math.min(cE1.y,cF1.y)-60} ${cF1.x} ${cF1.y}" fill="none" stroke="#9fe0ff" stroke-width="2" stroke-dasharray="7 6" stroke-dashoffset="${-t*30}"/>`+ping(cF1,(t%1.6)/1.6,'',1);
@@ -344,8 +432,9 @@ function majUI(t){const ov=ui.querySelector('svg.ov'),mc=ui.querySelector('canva
 const curseur=(x,y)=>`<path d="M${x} ${y} l0 16 l4 -4 l3 7 l3 -1 l-3 -7 l6 0Z" fill="#fff" stroke="#000" stroke-width="1"/>`;
 const ping=(c,k,txt,doigt)=>`<circle cx="${c.x}" cy="${c.y}" r="${8+k*30}" fill="none" stroke="${doigt?'#fff':'#ff8a5a'}" stroke-width="2" opacity="${1-k}"/>${doigt?`<circle cx="${c.x}" cy="${c.y}" r="11" fill="rgba(255,255,255,.35)"/>`:''}${txt?`<text x="${c.x+18}" y="${c.y-12}" fill="#ffb8a0" font-family="Silkscreen" font-size="13" paint-order="stroke" stroke="#000" stroke-width="3">${txt}</text>`:''}`;
 // ---------- descriptions ----------
-const DESC={T:[['TROIS AGES','Comme Age of Empires : on part avec le porte-vaisseaux, des collecteurs et des chasseurs ; chaque âge coûte du cristal et demande une construction (raffinerie, puis station orbitale).'],['CE QU ON DEBLOQUE','Par âge : de nouveaux vaisseaux, des stations à poser (par un collecteur, comme les villageois) et des améliorations à acheter au porte-vaisseaux.'],['DEUX ETAGES','En partie : l\'arbre des âges, perdu à la fin. Entre les missions : les étoiles débloquent les modèles et quelques bonus de départ, gardés.'],['PLANETES','Gisements riches : on y pose une station orbitale (âge II), qui rapporte bien plus qu\'un astéroïde. Les astéroïdes restent les gisements de départ.']],
-  A:[['CAMERA (CHOISIE)','Caméra libre : zoom à la molette ou au pincement, pivoter au clic droit glissé ou à deux doigts, déplacer en glissant (dans le jeu, glisser au clic gauche fera le cadre de sélection ; on déplacera aux bords de l\'écran et aux flèches). Plus on zoome, plus la vue s\'incline : de près, on retrouve l\'allure de B. Boutons + − ⟲ N pour qui n\'a pas de molette.'],['INTERFACE','Classique : ressources en haut, mini-carte, barre des groupes (1 à 4), panneau de la sélection avec ses ordres, et le chantier du porte-vaisseaux à droite.'],['PC','Cadre à la souris, clic droit pour l\'ordre, raccourcis A D P R et Q W E.'],['TELEPHONE','Gros boutons des groupes à gauche, ordres à droite : on touche un groupe, puis la cible.'],['+ / −','+ le plus lisible pour commander beaucoup d\'unités. − les vaisseaux sont petits, on voit moins le beau rendu.']],
+const DESC={G:[['GALAXIE','Des systèmes reliés par des routes spatiales. Ton empire (bleu) autour de SOL-7, l\'empire rouge à l\'autre bout ; les systèmes lointains restent inconnus tant qu\'un éclaireur n\'y est pas allé.'],['TEMPS REEL AVEC PAUSE','Comme Stellaris : tout avance en même temps (flottes, colonies, recherche), on met en pause pour donner les ordres ; trois vitesses.'],['LA MENACE','La flotte rouge suit les routes : on la voit venir, et l\'alerte prévient quand elle entre dans un de tes systèmes.'],['DANS LA MAQUETTE','Clic sur un système pour le volet, double clic ou ENTRER pour la vue du système (la même pour tous ici).']],
+ T:[['TROIS AGES','Comme Age of Empires : on part avec le porte-vaisseaux, des collecteurs et des chasseurs ; chaque âge coûte du cristal et demande une construction (raffinerie, puis station orbitale).'],['CE QU ON DEBLOQUE','Par âge : de nouveaux vaisseaux, des stations à poser (par un collecteur, comme les villageois) et des améliorations à acheter au porte-vaisseaux.'],['DEUX ETAGES','En partie : l\'arbre des âges, perdu à la fin. Entre les missions : les étoiles débloquent les modèles et quelques bonus de départ, gardés.'],['PLANETES','Gisements riches : on y pose une station orbitale (âge II), qui rapporte bien plus qu\'un astéroïde. Les astéroïdes restent les gisements de départ.']],
+  A:[['LE SYSTEME','L\'étoile au centre, les planètes en orbite (elles tournent lentement), une ceinture d\'astéroïdes (gisements de départ, c\'est là que se joue la bataille), et les portes des routes au bord. On colonise les planètes et on y construit (volet de GAIA : 6 emplacements).'],['CAMERA (CHOISIE)','Caméra libre : zoom à la molette ou au pincement, pivoter au clic droit glissé ou à deux doigts, déplacer en glissant (dans le jeu, glisser au clic gauche fera le cadre de sélection ; on déplacera aux bords de l\'écran et aux flèches). Plus on zoome, plus la vue s\'incline : de près, on retrouve l\'allure de B. Boutons + − ⟲ N pour qui n\'a pas de molette.'],['INTERFACE','Classique : ressources en haut, mini-carte, barre des groupes (1 à 4), panneau de la sélection avec ses ordres, et le chantier du porte-vaisseaux à droite.'],['PC','Cadre à la souris, clic droit pour l\'ordre, raccourcis A D P R et Q W E.'],['TELEPHONE','Gros boutons des groupes à gauche, ordres à droite : on touche un groupe, puis la cible.'],['+ / −','+ le plus lisible pour commander beaucoup d\'unités. − les vaisseaux sont petits, on voit moins le beau rendu.']],
  B:[['CAMERA','Vue de biais, plus proche : on voit le relief des îles, les coques et les combats tournoyants.'],['INTERFACE','Tout sur la carte : étiquettes et points de vie au-dessus des groupes, anneaux des îles avec leur prise, ordre en pointillés, chantier en menu autour du porte-vaisseaux.'],['PC','Clic sur une étiquette ou un anneau pour choisir, clic droit pour l\'ordre.'],['TELEPHONE','Les étiquettes sont les boutons ; une petite barre de groupes en bas.'],['+ / −','+ beau et immersif, peu de panneaux (dans l\'esprit de Bastion B). − les étiquettes s\'empilent quand la bataille grossit.']],
  C:[['CAMERA','Vue basse, derrière le porte-vaisseaux : la plus cinématique, le ciel et les nuages comptent.'],['INTERFACE','Chaque escadrille est une carte en bas de l\'écran (état, ordre en cours) ; la carte tactique en haut à droite sert à donner les ordres.'],['PC','Touches 1 à 4 ou clic sur une carte, puis glisser sur la carte tactique.'],['TELEPHONE','Les cartes au pouce, la carte tactique qu\'on touche pour l\'agrandir.'],['+ / −','+ très beau, peu d\'unités à suivre : chaque escadrille compte. − on commande surtout depuis la petite carte, moins « RTS ».']]};
 function majDesc(){$('#desc').innerHTML=DESC[DIR].map(([h,p])=>`<div class="carte"><h3>${h}</h3><p>${p}</p></div>`).join('');}
@@ -353,11 +442,12 @@ function majDesc(){$('#desc').innerHTML=DESC[DIR].map(([h,p])=>`<div class="cart
 function redim(){const r=cadre.getBoundingClientRect(),dpr=Math.min(2,window.devicePixelRatio||1);const w=Math.max(320,Math.round(r.width*dpr/(NET?1:2.5))),h=Math.round(w*r.height/r.width);
   R.setSize(w,h,false);cam.aspect=r.width/r.height;cam.updateProjectionMatrix();echelle=Math.min(r.width/VW,r.height/VH);ui.style.transform=`translate(${(r.width-VW*echelle)/2}px,${(r.height-VH*echelle)/2}px) scale(${echelle})`;
   if(APP==='pc'||document.fullscreenElement){VW=Math.round(VH*r.width/r.height);ui.style.width=VW+'px';echelle=r.height/VH;ui.style.transform=`scale(${echelle})`;const o=ui.querySelector('svg.ov');if(o)o.setAttribute('width',VW);}}
-function groupe(id,f){$(id).addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;$(id).querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));f(b.dataset.v);});}
+function groupe(id,f){if(!$(id))return;$(id).addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;$(id).querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));f(b.dataset.v);});}
 groupe('#gDir',v=>{DIR=v;construireUI();majDesc();});
 groupe('#gApp',v=>{APP=v;cadre.classList.toggle('tel',v==='tel');construireUI();});
 groupe('#gAmb',v=>ambiance(v));
 groupe('#gPla',v=>stylePla(v));
+const ongletDir=v=>{DIR=v;$('#gDir').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x.dataset.v===v));construireUI();majDesc();};
 groupe('#gNet',v=>{NET=v==='net';cv.style.imageRendering=NET?'auto':'pixelated';redim();});
 $('#bPlein').onclick=async()=>{try{await cadre.requestFullscreen();if(APP==='tel'&&screen.orientation&&screen.orientation.lock)screen.orientation.lock('landscape').catch(()=>{});}catch(e){}};
 addEventListener('resize',()=>{redim();});document.addEventListener('fullscreenchange',()=>setTimeout(redim,60));
@@ -368,18 +458,24 @@ const PTR=new Map();
 function deplacer(dx,dy){const r=cadre.getBoundingClientRect(),k=2*CA.dist*Math.tan(16*Math.PI/180)/r.height*1.15,y=CA.yaw;CA.c.x+=(-Math.cos(y)*dx-Math.sin(y)*dy)*k;CA.c.z+=(Math.sin(y)*dx-Math.cos(y)*dy)*k;const L=AMB.espace?2300:1000;CA.c.x=clamp(CA.c.x,-L,L);CA.c.z=clamp(CA.c.z,-L,L);}
 const zoom=f=>{CA.dist=clamp(CA.dist*f,420,AMB.espace?4200:2400);};
 cadre.addEventListener('contextmenu',e=>e.preventDefault());
-cadre.addEventListener('wheel',e=>{if(DIR!=='A')return;e.preventDefault();zoom(Math.exp(e.deltaY*.0012));},{passive:false});
-cadre.addEventListener('pointerdown',e=>{if(DIR!=='A'||e.target.closest('.clic'))return;try{cadre.setPointerCapture(e.pointerId);}catch(x){}PTR.set(e.pointerId,{x:e.clientX,y:e.clientY,b:e.button});});
+cadre.addEventListener('wheel',e=>{if(DIR==='T')return;e.preventDefault();if(DIR==='G')GC.z=clamp(GC.z*Math.exp(-e.deltaY*.0012),.5,4);else zoom(Math.exp(e.deltaY*.0012));},{passive:false});
+cadre.addEventListener('pointerdown',e=>{if(DIR==='T'||e.target.closest('.clic'))return;try{cadre.setPointerCapture(e.pointerId);}catch(x){}PTR.set(e.pointerId,{x:e.clientX,y:e.clientY,b:e.button,x0:e.clientX,y0:e.clientY});});
 cadre.addEventListener('pointermove',e=>{const p=PTR.get(e.pointerId);if(!p)return;const dx=e.clientX-p.x,dy=e.clientY-p.y;
+  if(DIR==='G'){const dpr=Math.min(2,window.devicePixelRatio||1),k=GC.z*Math.min(gal.width/2100,gal.height/1250)/dpr;if(PTR.size===1){GC.x-=dx/k;GC.y-=dy/k;}else if(PTR.size===2){const[a,b]=[...PTR.values()],d0=Math.hypot(a.x-b.x,a.y-b.y);p.x=e.clientX;p.y=e.clientY;const d1=Math.hypot(a.x-b.x,a.y-b.y);if(d0>10)GC.z=clamp(GC.z*d1/d0,.5,4);}p.x=e.clientX;p.y=e.clientY;return;}
   if(PTR.size===1){if(p.b===0)deplacer(dx,dy);else{CA.yaw-=dx*.006;CA.tilt=clamp(CA.tilt-dy*.15,-16,18);}}
   else if(PTR.size===2){const[a,b]=[...PTR.values()],d0=Math.hypot(a.x-b.x,a.y-b.y),a0=Math.atan2(b.y-a.y,b.x-a.x);p.x=e.clientX;p.y=e.clientY;const d1=Math.hypot(a.x-b.x,a.y-b.y),a1=Math.atan2(b.y-a.y,b.x-a.x);
     if(d1>10)zoom(d0/d1);let da=a1-a0;if(da>Math.PI)da-=6.283;if(da<-Math.PI)da+=6.283;CA.yaw+=da;deplacer(dx/2,dy/2);}
   p.x=e.clientX;p.y=e.clientY;});
-const lacher=e=>PTR.delete(e.pointerId);cadre.addEventListener('pointerup',lacher);cadre.addEventListener('pointercancel',lacher);
-ui.addEventListener('click',e=>{const b=e.target.closest('[data-cam]');if(!b)return;const v=b.dataset.cam;if(v==='+')zoom(.8);if(v==='-')zoom(1.25);if(v==='r')CA.yaw+=Math.PI/4;if(v==='n'){CA.yaw=0;CA.tilt=0;CA.dist=AMB.espace?1900:1500;CA.c.set(-40,0,40);}});
-let der=performance.now(),tt=0;
-function boucle(now){const dt=Math.min(.05,(now-der)/1000);der=now;tt+=dt;majBataille(tt,dt);placeCam(tt);majPlanetes3D(tt,dt);majUI(tt);fondEsp.position.copy(cam.position);R.render(sc,cam);requestAnimationFrame(boucle);}
+let dernierClic=0;const lacher=e=>{const p=PTR.get(e.pointerId);PTR.delete(e.pointerId);if(!p||DIR!=='G'||e.type!=='pointerup'||Math.hypot(e.clientX-p.x0,e.clientY-p.y0)>6)return;
+  const r=cadre.getBoundingClientRect(),dpr=Math.min(2,window.devicePixelRatio||1),sx=(e.clientX-r.left)*dpr,sy=(e.clientY-r.top)*dpr;let m=null;for(const s of SYS){const[a,b]=galVers(s.x,s.y),d=Math.hypot(a-sx,b-sy);if(d<40*dpr&&(!m||d<m[1]))m=[s.i,d];}
+  if(m){const dbl=m[0]===SEL&&performance.now()-dernierClic<400;SEL=m[0];dernierClic=performance.now();if(dbl)ongletDir('A');}};cadre.addEventListener('pointerup',lacher);cadre.addEventListener('pointercancel',lacher);
+ui.addEventListener('click',e=>{const vb=e.target.closest('[data-vit]');if(vb){VIT=+vb.dataset.vit;ui.querySelectorAll('[data-vit]').forEach(x=>{const on=+x.dataset.vit===VIT;x.style.background=on?'#2d5c8a':'';x.style.borderColor=on?'#9fd8ff':'';});return;}
+  if(e.target.closest('[data-entrer]')){ongletDir('A');return;}const b=e.target.closest('[data-cam]');if(!b)return;const v=b.dataset.cam;if(v==='+')zoom(.8);if(v==='-')zoom(1.25);if(v==='r')CA.yaw+=Math.PI/4;if(v==='n'){CA.yaw=0;CA.tilt=0;CA.dist=AMB.espace?1900:1500;CA.c.set(-40,0,40);}});
+let der=performance.now(),tt=0,tb=0;
+function boucle(now){const dt=Math.min(.05,(now-der)/1000),dv=dt*VIT;der=now;tt+=dt;tb+=dv;JOUR+=dv*1.5;
+  if(DIR==='G'){galDessine(tb,dv);majUI(tt);requestAnimationFrame(boucle);return;}
+  majBataille(tb,dv);placeCam(tt);majPlanetes3D(tb,dv,dt);majUI(tb);fondEsp.position.copy(cam.position);R.render(sc,cam);requestAnimationFrame(boucle);}
 requestAnimationFrame(boucle);
-window.Maquette={set:(d,a,k)=>{if(d){DIR=d;construireUI();majDesc();}if(a){APP=a;cadre.classList.toggle('tel',a==='tel');construireUI();}if(k)ambiance(k);}};
+window.Maquette={set:(d,a,k)=>{if(d){ongletDir(d);}if(a){APP=a;cadre.classList.toggle('tel',a==='tel');construireUI();}if(k)ambiance(k);}};
 })();
 </script></body></html>

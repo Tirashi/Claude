@@ -51,3 +51,16 @@ Chasseurs grossis (15 m au lieu de 4) pour rester lisibles.
   - **LOW POLY** : « Low Poly Planets Pack » de Heck (CC0, système solaire en photo) ;
   - **MINEUR** : les shaders de Deep-Fold de `mineur-de-l-espace/planetes.js` (seulement terre, lune et mars), en image plate face à la caméra.
   - Conversion : `python3 -I outils/strategie-ciel/planetes.py <PixelPlanet1_TOON> <LowPolyPlanetsPack/OBJ>` → `maquettes/strategie-ciel-planetes.js` (761 Ko ; un maillage par pack, 6 textures chacun). Crédits ajoutés.
+
+## Retours du 20/11 : façon Stellaris, maquette 4 (même lien, version 4)
+- La carte restait trop petite. **Décision : façon Stellaris** (choix de l'utilisateur) : une seule grande partie **en temps réel avec pause**, deux vues :
+  - **galaxie** : des systèmes solaires reliés par des **routes spatiales** ; territoires ; on voit arriver l'adversaire le long des routes ;
+  - **système** : la vue de la maquette 3, agrandie : étoile au centre, planètes en orbite, on **colonise les planètes avec des bâtiments**, on surveille l'arrivée de l'ennemi par les **portes** des routes.
+  - Ce qui reste des décisions d'avant : porte-vaisseaux géant et lent qui fabrique tout, collecteurs, une ressource (porte ouverte), 3 âges (à revoir dans une partie longue : âges ou recherche ?), caméra libre.
+- **Planètes animées** : l'utilisateur hésite ; comparer les deux styles animés.
+- Maquette 4 :
+  - onglet **GALAXIE** (dessin 2D) : 22 systèmes en spirale, routes (arbre couvrant + liens proches), empire bleu autour de SOL-7, empire rouge autour d'OMEGA, systèmes lointains inconnus, flotte rouge qui suit les routes vers ALTAIR, fond de galaxie (shader Galaxy), étoiles animées teintées ; clic = volet du système, double clic ou ENTRER = vue du système ;
+  - onglet **SYSTEME** : étoile SOL-7 au centre (lumière depuis l'étoile), 6 planètes en orbite lente (GAIA colonie, BRASIER, DUNE et BOREA riches, TITAN géante à anneaux et sa lune ECHO), orbites tracées, ceinture d'astéroïdes où se joue la bataille, deux portes (ALTAIR en alerte, CASTOR) ; volet de GAIA à 6 emplacements de bâtiments ; mini-carte du système ;
+  - **pause et trois vitesses** (❚❚ ▶ ▶▶ ▶▶▶), date qui avance ; alerte de la flotte rouge ;
+  - styles de planètes : **DEEP-FOLD** (les 12 sortes du Pixel Planet Generator, converties en WebGL 2 par `outils/strategie-ciel/shaders.py` → `maquettes/strategie-ciel-shaders.js`, dessinées par `maquettes/strategie-ciel-df.js` ; lumière tournée vers l'étoile) ou **PIXEL 3D** (sphères d'AstroJar qui tournent, couche de nuages, halo d'atmosphère) ;
+  - archipel, LOW POLY et MINEUR retirés des boutons (le code de l'archipel reste).
