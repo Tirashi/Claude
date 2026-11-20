@@ -139,7 +139,13 @@ const shots = process.argv[2];
         const wait = ms => new Promise(r => setTimeout(r, ms));
         for (let i = 0; i < 80 && !(window.StrategieCiel && StrategieCiel.etat() === 'titre'); i++) await wait(250);
         const J = window.StrategieCiel; if (!J || J.etat() !== 'titre') return "pas d'écran titre";
-        J.jouer(); if (J.etat() !== 'jeu') return 'la partie ne démarre pas';
+        // tutoriel : il s'affiche, chaque étape se valide par l'action demandée, puis les vagues reprennent leur compte
+        J.jouer(true); if (document.getElementById('tuto').hidden || !J.S.tuto) return 'pas de tutoriel';
+        const clic = () => document.querySelector('#tuto [data-tuto="suivant"]').click(), att = async () => { await wait(400); };
+        clic(); J.CA.c.x += 600; await att(); J.groupe('chasseur'); await att(); J.ordonner(J.U().filter(u => u.type === 'chasseur'), 'aller', null, J.CA.c.clone()); await att();
+        J.produire('collecteur'); await att(); J.avance(60); await att(); J.vitesse(0); await att(); J.vitesse(1); await att();
+        if (J.TU.i !== 8) return "le tutoriel n'avance pas (étape " + (J.TU.i + 1) + ')'; clic(); if (J.S.tuto || !document.getElementById('tuto').hidden) return 'le tutoriel ne finit pas';
+        J.jouer(false); if (J.etat() !== 'jeu') return 'la partie ne démarre pas';
         J.produire('chasseur'); const n0 = J.U().length; J.avance(40);
         if (!(J.S.mine > 0)) return 'les collecteurs ne minent pas'; if (J.U().length <= n0) return 'le chantier ne produit pas';
         J.lancerVague(); if (!J.U().some(u => u.camp === 1)) return 'pas de vague ennemie';

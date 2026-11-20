@@ -149,7 +149,7 @@ function prepare(k, s){ dequantifie(s); s.traverse(o => { if (!o.isMesh) return;
   MOD[k] = s; if (k.startsWith('py')){ MOD[k + '_b'] = repeint(s, .6); MOD[k + '_r'] = repeint(s, 0); } }
 function charger(k){ return new Promise(ok => { const L = new THREE.GLTFLoader(), fin = g => { try { prepare(k, g.scene); } catch (e){ console.warn(k, e); } ok(); }, err = e => { console.warn(k, e); ok(); };
   if (window.SC_B64 && window.SC_B64[k]) L.parse(b64(window.SC_B64[k]), '', fin, err); else L.load('../ciel-de-guerre/modeles/' + k + '.glb', fin, undefined, err); }); }
-const MODELES = ['fga_croiseur1', 'fga_destroyer2', 'fga_destroyer1', 'fga_fregate1_r', 'fga_corvette1_r', 'py7', 'py13', 'py5', 'py20'];
+const MODELES = ['fga_croiseur1', 'fga_destroyer2', 'fga_destroyer1', 'fga_fregate1_r', 'fga_corvette1_r', 'py2', 'py13', 'py16', 'py35']; // chasseur, chasseur rouge, collecteur, bombardier : silhouettes et tailles bien différentes (planche du 20/11)
 // un vaisseau : groupe dont l'avant regarde vers -z, de longueur L
 function importe(k, rot, L){ const g = new THREE.Group(), piv = new THREE.Group(); g.add(piv);
   const m = MOD[k] ? MOD[k].clone() : new THREE.Mesh(new THREE.ConeGeometry(.3, 1, 5).rotateX(-Math.PI / 2), new THREE.MeshPhongMaterial({ color: k.endsWith('_r') ? '#c84a3a' : '#5a8ac8' })); piv.add(m); piv.rotation.y = rot;

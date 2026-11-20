@@ -7,9 +7,9 @@ const PI = Math.PI;
 // L : longueur affichée (m) ; v : vitesse (m/s) ; portee, deg (dégâts par tir), cad (secondes entre deux tirs) ; alt : altitude de vol
 const TYPES = {
   pv:         { nom: 'PORTE-VAISSEAUX', mod: 'fga_croiseur1', rot: -PI / 2, L: 330, vie: 3000, v: 6, portee: 380, deg: 12, cad: .5, alt: 110, gros: 1 },
-  collecteur: { nom: 'COLLECTEUR', mod: 'py5', rot: PI, L: 22, vie: 60, v: 48, alt: 60, prix: 30, temps: 8, cap: 20, mine: 5, cle: 'T' },
-  chasseur:   { nom: 'CHASSEUR', mod: 'py7', rot: PI, L: 16, vie: 45, v: 90, portee: 150, deg: 4, cad: .35, alt: 80, prix: 40, temps: 10, vole: 1, cle: 'Q' },
-  bombardier: { nom: 'BOMBARDIER', mod: 'py20', rot: PI, L: 26, vie: 120, v: 58, portee: 210, deg: 20, cad: 1.6, alt: 72, prix: 80, temps: 16, antigros: 1, vole: 1, cle: 'W' },
+  collecteur: { nom: 'COLLECTEUR', mod: 'py16', rot: PI, L: 26, vie: 60, v: 48, alt: 60, prix: 30, temps: 8, cap: 20, mine: 5, cle: 'T' },
+  chasseur:   { nom: 'CHASSEUR', mod: 'py2', rot: PI, L: 14, vie: 45, v: 90, portee: 150, deg: 4, cad: .35, alt: 80, prix: 40, temps: 10, vole: 1, cle: 'Q' },
+  bombardier: { nom: 'BOMBARDIER', mod: 'py35', rot: PI, L: 34, vie: 120, v: 58, portee: 210, deg: 20, cad: 1.6, alt: 72, prix: 80, temps: 16, antigros: 1, vole: 1, cle: 'W' },
   destroyer:  { nom: 'DESTROYER', mod: 'fga_destroyer2', rot: -PI / 2, L: 110, vie: 900, v: 15, portee: 340, deg: 15, cad: .6, alt: 92, prix: 220, temps: 32, gros: 1, cle: 'E' },
   r_chasseur: { nom: 'CHASSEUR ROUGE', mod: 'py13', rot: PI, L: 16, vie: 40, v: 85, portee: 150, deg: 4, cad: .35, alt: 82, vole: 1, camp: 1 },
   r_corvette: { nom: 'CORVETTE', mod: 'fga_corvette1_r', rot: -PI / 2, L: 40, vie: 170, v: 42, portee: 210, deg: 14, cad: 1, alt: 70, antigros: 1, camp: 1 },
@@ -110,7 +110,7 @@ function lancerVague(){ const n = S.vague, comp = VAGUES[n], porte = PORTES[0]; 
   let i = 0; for (const t in comp) for (let k = 0; k < comp[t]; k++){ const a = i * 2.4, r = 30 + Math.sqrt(i) * 40; i++;
     const u = cree(t, porte.p.clone().add(V3(Math.cos(a) * r, 0, Math.sin(a) * r))); u.vague = n + 1; u.ordre = { k: 'assaut', p: V3() }; }
   S.prochaine = n + 1 < VAGUES.length ? ENTRE_VAGUES : null; annonceVague(n + 1); }
-function majVagues(dt){ if (S.fin) return; if (S.prochaine !== null){ S.prochaine -= dt; if (S.prochaine <= 0) lancerVague(); }
+function majVagues(dt){ if (S.fin || S.tuto) return; if (S.prochaine !== null){ S.prochaine -= dt; if (S.prochaine <= 0) lancerVague(); }
   else if (!U.some(u => u.camp === 1 && u.vie > 0)) S.fin = { gagne: true, raison: 'SOL-7 A TENU : LES ' + VAGUES.length + ' VAGUES SONT REPOUSSEES' };
   // l'assaut vise le porte-vaisseaux (là où il est), sinon ce qui reste
   const pv = PV(); for (const u of U) if (u.camp === 1 && u.ordre.k === 'assaut'){ const c = pv || U.find(v => v.camp === 0 && v.vie > 0); if (c) u.ordre.p = c.pos; } }

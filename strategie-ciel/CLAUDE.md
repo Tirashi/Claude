@@ -4,4 +4,5 @@ Stratégie en temps réel avec pause, façon Stellaris, dans l'univers de Ciel d
 - **Modèles** : lus dans `../ciel-de-guerre/modeles/` (pas dans `FILES` de `sw.js`) ; artefact : `window.SC_B64` (`python3 outils/strategie-ciel/artefact.py <sortie>`).
 - **Perf** : planètes redessinées selon leur taille à l'écran (`majDecor`), 64 px au doigt (`DF_PX`) ; combat en pas fixes de 0,034 s (vitesse ×3 juste).
 - **Tests** : `window.StrategieCiel` (`S`, `U()`, `jouer`, `produire`, `lancerVague`, `avance(s)`, `meurt`, `etat()`). `ETAT` vaut `charge` jusqu'à la fin du chargement des modèles. Test de fumée dans `outils/fumee.js`. Les `.glb` demandent `http://`.
+- **Tuto** : `TUTO` dans `jeu.js` (étapes `fait()`, `S.tuto` gèle les vagues, `strategieciel.tuto`).
 - **Pièges** : clic droit = ordre, clic droit glissé = pivoter ; au doigt, toucher un de ses vaisseaux le choisit, sinon c'est un ordre ; record `strategieciel.record` (transfert dans la fiche).

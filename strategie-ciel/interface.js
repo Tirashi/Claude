@@ -81,7 +81,7 @@ addEventListener('keydown', e => { if (!enJeu()) return; const k = e.key.toLower
   else { const t = PRODUITS.find(t => TYPES[t].cle && TYPES[t].cle.toLowerCase() === k); if (t) produire(t) || annonce('PAS ASSEZ DE CRISTAL'); }
   if (e.key.startsWith('Arrow')) e.preventDefault(); });
 addEventListener('keyup', e => TOUCHES.delete(e.key));
-function majClavier(dtr){ const v = 900 * dtr; if (TOUCHES.has('ArrowLeft')) deplacer(-v, 0); if (TOUCHES.has('ArrowRight')) deplacer(v, 0); if (TOUCHES.has('ArrowUp')) deplacer(0, -v); if (TOUCHES.has('ArrowDown')) deplacer(0, v);
+function majClavier(dtr){ const v = -900 * dtr; /* deplacer() suit un doigt qui tire la carte (la vue part du côté opposé) : ici on veut aller du côté de la flèche ou du bord */ if (TOUCHES.has('ArrowLeft')) deplacer(-v, 0); if (TOUCHES.has('ArrowRight')) deplacer(v, 0); if (TOUCHES.has('ArrowUp')) deplacer(0, -v); if (TOUCHES.has('ArrowDown')) deplacer(0, v);
   // bords de l'écran (souris)
   if (souris && !PTR.size && document.hasFocus()){ const w = ECRAN.clientWidth, h = ECRAN.clientHeight, m = 6; if (souris.x < m) deplacer(-v, 0); else if (souris.x > w - m) deplacer(v, 0); if (souris.y < m) deplacer(0, -v); else if (souris.y > h - m) deplacer(0, v); } }
 
