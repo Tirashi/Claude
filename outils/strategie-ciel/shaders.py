@@ -1,5 +1,5 @@
 # Convertit les planètes du « Pixel Planet Generator » de Deep-Fold (licence MIT, https://github.com/Deep-Fold/PixelPlanets)
-# en maquettes/strategie-ciel-shaders.js : shaders Godot passés en GLSL ES 3.0 (WebGL 2) + réglages de chaque couche,
+# en strategie-ciel/shaders.js : shaders Godot passés en GLSL ES 3.0 (WebGL 2) + réglages de chaque couche,
 # lus dans les .tscn (paramètres) et les .gd (taille en pixels et vitesse du temps de chaque couche).
 # Usage : python3 -I outils/strategie-ciel/shaders.py <dossier du dépôt PixelPlanets cloné>
 import json, pathlib, re, sys
@@ -70,5 +70,5 @@ for nom in PLANETES:
 s = ('/* Planètes du Pixel Planet Generator de Deep-Fold (MIT, https://github.com/Deep-Fold/PixelPlanets), shaders passés en WebGL 2 ;\n'
      '   fabriqué par outils/strategie-ciel/shaders.py */\nwindow.SC_SHADERS=' +
      json.dumps({'sh': {k: v for k, v in SH.items() if not k.endswith('#d')}, 'planetes': OUT}, separators=(',', ':')) + ';\n')
-(R / 'maquettes/strategie-ciel-shaders.js').write_text(s)
+(R / 'strategie-ciel/shaders.js').write_text(s)
 print(len(s) // 1024, 'Ko'); [print(k, [(pathlib.Path(c['sh']).stem, c['px'], round(c['tf'], 3)) for c in v]) for k, v in OUT.items()]

@@ -11,6 +11,7 @@ Des jeux jouables dans le navigateur, sans build ni dépendance. La page [`index
 - [`pont-stellaire/index.html`](pont-stellaire/index.html) : **Pont stellaire**, un puzzle de logique en 32 bits (les règles du Hashi) : relier les étoiles par des faisceaux de lumière pour dessiner une constellation, avec un Ciel du jour.
 - [`mot-d-or/index.html`](mot-d-or/index.html) : **Le Mot d'or**, un mot de 6 lettres par jour à trouver en 6 essais, sur un bureau à la lueur de la lampe, en pixel art 32 bits.
 - [`capitaine-du-port/index.html`](capitaine-du-port/index.html) : **Capitaine du port**, un casse-tête de bateaux en pixel art 32 bits : déplacer les bateaux du bassin pour ouvrir la passe au navire doré.
+- [`strategie-ciel/index.html`](strategie-ciel/index.html) : **Stratégie spatiale** (démo, nom provisoire), stratégie en temps réel avec pause dans l'univers de Ciel de guerre : défends le système SOL-7 avec ton porte-vaisseaux, tes collecteurs et tes escadrilles.
 - [`bannis/index.html`](bannis/index.html) : **Les Bannis** (démo), un autobattler rogue-lite : le Mage instable et trois condamnés tiennent la Muraille contre les hordes de la Gueule.
 - [`tank-arena/index.html`](tank-arena/index.html) : **Tank Arena**, une petite arène de tanks en 3D : toi contre trois tanks de l'ordinateur, en manches de 90 secondes.
 - [`magasinier/index.html`](magasinier/index.html) : **Le Magasinier**, un Sokoban en HD-2D façon Octopath Traveler : pousser les caisses sur les marques dans un entrepôt baigné de soleil.

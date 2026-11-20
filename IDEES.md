@@ -172,7 +172,7 @@ Ordre conseillé : coloriage, puis musique, puis le dungeon crawler et son besti
 - 🟡 **Politique** (« Victoria 3 minimaliste », documents de l'utilisateur du 13/11) — chantier : moteur de règles testé puis simulateur, dans [`specs/politique.md`](specs/politique.md).
 - **Grande stratégie commerciale victorienne** 🔴 à ⚫ — façon Victoria 3 en simple : **carte aux territoires dessinés** (formes et frontières, pas d'hexagones), quelques aménagements par territoire, surtout du **commerce** : acheter et vendre des ressources entre États, prix qui bougent avec l'offre et la demande, chaînes de production et industrialisation ; batailles à résolution simple, peu d'animations. Époque **victorienne** choisie le 07/11 (le Moyen Âge serait trop proche de Duché). Voisins à ne pas répéter : Duché, Bannières, La Caravane, Le Port de commerce.
 
-## 🟡 Stratégie en temps réel dans l'univers de Ciel de guerre (idée de l'utilisateur du 20/11)
+## 🟡 Stratégie spatiale (ex-« stratégie en temps réel dans l'univers de Ciel de guerre », idée de l'utilisateur du 20/11) : jeu en cours dans `strategie-ciel/`
 Chantier ouvert le 20/11 (porte-vaisseaux mobile, escarmouches à étoiles d'abord, une ressource) : tout dans [`specs/strategie-ciel.md`](specs/strategie-ciel.md).
 
 ## ✅ Tank Arena (ex-« Petits tanks », idée de l'utilisateur du 17/11)

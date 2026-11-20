@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Strategie spatiale</title>
+<meta name="description" content="Stratégie spatiale (nom provisoire) : défends le système SOL-7 avec ton porte-vaisseaux, tes collecteurs et tes escadrilles. En temps réel avec pause.">
+<link rel="manifest" href="../manifest.webmanifest">
+<meta name="theme-color" content="#0b0a1e">
+<link rel="icon" href="../icons/icon-192.png">
+<link rel="apple-touch-icon" href="../icons/apple-touch-icon.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="tel menu" id="t"><div class="charge" id="charge">CHARGEMENT DES VAISSEAUX…</div>
+<div class="hud" id="hud">
+  <div id="tags"></div><div id="cadreSel" hidden></div>
+  <div class="pan" id="hRes"><div class="l"><b class="cr" id="hCr">◆ 300</b><span>CRISTAL</span></div><div class="l"><span>AURORE</span></div><div id="hPv"></div><div class="l"><span>FLOTTE</span><b id="hNb"></b></div><div class="l"><span>VAGUES</span><b id="hVg"></b></div></div>
+  <div class="pan" id="hAl"></div>
+  <div class="pan" id="hVit"><span class="bt" data-vit="0">❚❚</span><span class="bt on" data-vit="1">▶</span><span class="bt" data-vit="2">▶▶</span><span class="bt" data-vit="3">▶▶▶</span><span class="mut" id="hDate">J 1</span><span class="bt" data-act="menu">☰</span></div>
+  <canvas id="mini" width="180" height="180"></canvas>
+  <div id="hCam"><span class="bt" data-cam="+">+</span><span class="bt" data-cam="-">−</span><span class="bt" data-cam="r">⟲</span><span class="bt" data-cam="n">N</span></div>
+  <div class="pan" id="hGr"><span class="bt" data-gr="tout"><span class="k">1</span>FLOTTE</span><span class="bt" data-gr="chasseur"><span class="k">2</span>CHASS.</span><span class="bt" data-gr="bombardier"><span class="k">3</span>BOMB.</span><span class="bt" data-gr="destroyer"><span class="k">4</span>DESTR.</span><span class="bt" data-gr="collecteur"><span class="k">5</span>COLL.</span><span class="bt" data-gr="pv"><span class="k">H</span>AURORE</span><span class="bt" id="bCadre">CADRE</span></div>
+  <div class="pan" id="hSel"></div>
+  <div class="pan" id="hProd"></div>
+  <div class="bandeau" id="bandeau"></div>
+  <div id="ips"></div>
+</div>
+<div class="ecran" id="eTitre" hidden>
+  <div class="carte">
+    <h1>STRATEGIE<br>SPATIALE</h1>
+    <p class="sous">Nom provisoire · session 1 : défends le système SOL-7 contre 8 vagues de la flotte rouge.</p>
+    <button id="aJouer" class="grand">JOUER</button>
+    <button id="aCommandes">COMMANDES</button>
+    <div id="tCommandes" class="aide" hidden><b>SOURIS</b> clic : choisir · glisser : cadre · double clic : tous ceux du même type · clic droit : aller, attaquer, miner · clic droit glissé : pivoter · molette : zoom · bords de l'écran ou flèches : déplacer<br>
+      <b>CLAVIER</b> espace : pause · 1 à 5 : groupes (Maj : y aller) · H : Aurore · Q W E T : produire · S : arrêt · Échap : rien choisir, puis menu<br>
+      <b>DOIGTS</b> toucher un vaisseau : le choisir · puis toucher une cible, un gisement ou l'espace : l'ordre · un doigt : déplacer la carte · deux doigts : zoom et rotation · CADRE : choisir plusieurs vaisseaux</div>
+    <p class="record" id="tRecord"></p>
+    <button class="ludo-retour" onclick="location.href='../index.html'">LUDOTHEQUE</button>
+  </div>
+</div>
+<div class="ecran" id="ePause" hidden>
+  <div class="carte"><h2>PAUSE</h2><button id="pReprendre" class="grand">REPRENDRE</button><button id="pRecommencer">RECOMMENCER</button><button class="ludo-retour" onclick="location.href='../index.html'">LUDOTHEQUE</button></div>
+</div>
+<div class="ecran" id="eFin" hidden>
+  <div class="carte"><h1 id="fTitre"></h1><p class="sous" id="fRaison"></p><p class="record" id="fStats"></p><button id="fRejouer" class="grand">REJOUER</button><button class="ludo-retour" onclick="location.href='../index.html'">LUDOTHEQUE</button></div>
+</div>
+</div>
+<script src="../lib/three.min.js"></script>
+<script src="../lib/GLTFLoader.js"></script>
+<script src="shaders.js"></script>
+<script src="planetes.js"></script>
+<script src="monde.js"></script>
+<script src="unites.js"></script>
+<script src="interface.js"></script>
+<script src="jeu.js"></script>
+<script>
+/* Ludothèque : mode hors connexion. Pas de bouton « ◀ MENU » ajouté par-dessus le jeu :
+   le retour à la Ludothèque est dans les menus du jeu (écran titre, pause, fin). */
+(function () {
+  try {
+    if ("serviceWorker" in navigator && (location.protocol === "https:" || /^(localhost|127\.0\.0\.1)$/.test(location.hostname)))
+      navigator.serviceWorker.register("../sw.js").catch(function () {});
+  } catch (e) {}
+})();
+</script>
+</body>
+</html>

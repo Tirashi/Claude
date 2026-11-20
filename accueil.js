@@ -48,6 +48,7 @@ const ORDRE = [
   "nebula/index.html",
   "ciel-de-guerre/index.html",
   "bannis/index.html",
+  "strategie-ciel/index.html",
   "tetris/index.html",
   "snake/index.html",
   "asteroids/index.html",
@@ -68,6 +69,7 @@ const META = {};   // rempli par les fiches (meta)
 // genre "neuf" (nouveau jeu ou démo), "maj" (mise à jour d'un jeu) ou "acc" (accueil, classements : dossier vide).
 // Un numéro du journal par mois ; la plus récente nouveauté du mois fait la couverture.
 const NEWS = [
+  ["2026-11-20", "neuf", "strategie-ciel", "Nouveau : une stratégie spatiale en temps réel avec pause, dans l'univers de Ciel de guerre (nom provisoire). Ton porte-vaisseaux Aurore fabrique collecteurs, chasseurs, bombardiers et destroyers ; mine le cristal de la ceinture d'astéroïdes et défends le système SOL-7 contre huit vagues de la flotte rouge. Première session, en démo."],
   ["2026-11-19", "neuf", "bannis", "Nouveau : Les Bannis, un autobattler rogue-lite. Le Mage instable, banni pour ses sorts imprévisibles, tient la Muraille avec trois condamnés tirés au sort : place ton escouade, regarde-la se battre contre les hordes de la Gueule, lance les dés du Mage, équipe le butin, et fais évoluer tes héros en classes légendaires. Douze vagues jusqu'au matin. Première version, en démo."],
   ["2026-11-18", "maj", "ciel-de-guerre", "Ciel de guerre a ses missions : défendre un port contre les bombardiers, escorter le destroyer Albatros, tenir trois minutes seul contre l'escadre rouge, abattre le croiseur amiral Tempête, puis affronter la forteresse volante Léviathan, ses boucliers et ses chasseurs. Jusqu'à trois étoiles par mission. Et sur ordinateur, le curseur est maintenant ton viseur."],
   ["2026-11-18", "neuf", "ciel-de-guerre", "Nouveau : Ciel de guerre, du combat aérien en 3D au-dessus d'un archipel, au milieu d'une bataille de grands vaisseaux bleus et rouges. Loopings, tonneaux, missiles à verrouiller, tourelles à abattre, et 35 chasseurs en 4 familles au hangar. Au doigt sur téléphone, à la souris sur ordinateur. Première version : des vagues sans fin, les missions viendront."],

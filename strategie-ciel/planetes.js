@@ -1,4 +1,4 @@
-/* Dessine les planètes de Deep-Fold (window.SC_SHADERS, fabriqué par outils/strategie-ciel/shaders.py) en WebGL 2 :
+/* Dessine les planètes de Deep-Fold (window.SC_SHADERS, fabriqué par outils/strategie-ciel/shaders.py ; fichier strategie-ciel/shaders.js) en WebGL 2 :
    chaque couche est rendue à sa taille en pixels puis recopiée, centrée, dans le canvas 2D de la planète.
    new PlanetesDF.Planete('GasPlanetLayers', 100, {seed:3}) ; p.maj(dt) à chaque image ; p.canvas. */
 'use strict';
