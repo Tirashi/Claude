@@ -29,5 +29,5 @@ async function cuire(url,rotY,ignorer,tex){const o=await charger(url);let TEX=nu
   for(const t of tris){const key=t[3].join(',');if(!(key in palI)){palI[key]=pal.length;pal.push(t[3]);}const ci=palI[key];
     for(let k=0;k<3;k++){const q=[Math.round(((t[k][0]-(mn[0]+mx[0])/2)/L)*32000),Math.round(((t[k][1]-mn[1])/L)*32000),Math.round(((t[k][2]-(mn[2]+mx[2])/2)/L)*32000)];const kk=q.join(',')+'|'+ci;
       if(!(kk in vI)){vI[kk]=pos.length/3;pos.push(...q);col.push(ci);}idx.push(vI[kk]);}}
-  return{pos,col,idx,pal,dims:[1,(mx[1]-mn[1])/L,(mx[2]-mn[2])/L],tris:tris.length};}
+  return{pos,col,idx,pal,dims:[1,(mx[1]-mn[1])/L,(mx[2]-mn[2])/L],L,tris:tris.length};}
 </script>
