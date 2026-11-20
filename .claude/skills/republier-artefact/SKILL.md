@@ -38,6 +38,7 @@ Un jeu sans lien ci-dessous : demander le lien à l'utilisateur avant d'en crée
 | Le Thé des Jarls | https://claude.ai/artifact/PLQNi8AmqLteaTQg7eFcFs |
 | La Boutique de cartes (le jeu a remplacé la maquette 2 le 23/10 ; Three.js depuis cdnjs) | https://claude.ai/artifact/CfcT2Wzc9QEsbNUouQD5Y6 |
 | Ciel de guerre (le jeu a remplacé la maquette « Escadrille crépuscule » le 18/11 ; copie fabriquée par `python3 outils/escadrille-pixel/artefact_cdg.py <sortie>` : modèles en base64, Three.js depuis cdnjs) | https://claude.ai/artifact/PDk84xmucTtuHMLcsZhVDT |
+| Écurie miniature (créé le 20/11 ; après `artefact.py`, remplacer le bloc `<script>` de Three.js par `<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>`) | https://claude.ai/artifact/6sN4o6Ygus6bqVng2wiqtP |
 | Doggy Saga | https://claude.ai/artifact/6BHJa8xeXP91zKLkf1GiN6 |
 | Mineur de l'espace (banc d'essai depuis la session 2, 31/10) | https://claude.ai/artifact/JuLojAXG94xkZTHEXY2k2g |
 | Dragon Simulator (le jeu a remplacé la maquette 3D le 02/11 ; après `artefact.py`, insérer `<script>window.DS_MODELES_B64="…"</script>` (base64 de `modeles.glb`) juste avant le script de `monde3d.js`) | https://claude.ai/artifact/93nrGTRHG1G1qbt9GCg97q |
