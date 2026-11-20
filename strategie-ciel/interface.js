@@ -83,8 +83,7 @@ try { navigator.keyboard && navigator.keyboard.getLayoutMap && navigator.keyboar
 const LIGNE = ['KeyQ', 'KeyW', 'KeyE', 'KeyR', 'KeyT', 'KeyY', 'KeyU', 'KeyI', 'KeyO', 'KeyP'], PERSO = {};
 function garderGroupe(code){ const l = SEL(); if (!l.length){ annonce('CHOISIS D\'ABORD DES VAISSEAUX'); return; } PERSO[code] = new Set(l.map(u => u.id)); majGroupesPerso(); annonce(`GROUPE ${LAB(code)} : ${l.length} VAISSEAU${l.length > 1 ? 'X' : ''}`); }
 function rappelGroupe(code, centre){ const ids = PERSO[code]; if (!ids) return; const l = U.filter(u => ids.has(u.id) && u.vie > 0); choisir(l, false); if (centre && l.length){ const m = V3(); l.forEach(u => m.add(u.pos)); centrer(m.divideScalar(l.length)); } }
-function majGroupesPerso(){ const b = $('#hPerso'); if (!b) return; const l = LIGNE.filter(c => PERSO[c] && [...PERSO[c]].some(id => U.some(u => u.id === id && u.vie > 0)));
-  b.innerHTML = l.map(c => `<span class="bt" data-perso="${c}"><span class="k">${LAB(c)}</span>${U.filter(u => PERSO[c].has(u.id) && u.vie > 0).length}</span>`).join('') + `<span class="bt" data-act="garder" title="Garder la sélection dans un groupe">+ GROUPE</span>`; }
+/* groupes personnels : affichés dans la liste de la flotte (majListe) */
 addEventListener('keydown', e => { if (!enJeu()) return; const k = e.key.toLowerCase(); TOUCHES.add(e.key);
   if (k === ' '){ e.preventDefault(); vitesse(VIT ? 0 : 1); }
   else if (k === 'escape'){ if (SEL().length) choisir([], false); else menuPause(true); }
@@ -103,13 +102,14 @@ function majClavier(dtr){ const v = -900 * dtr; /* deplacer() suit un doigt qui 
 
 // ---------- boutons du tableau de bord ----------
 function vitesse(v){ VIT = v; document.querySelectorAll('[data-vit]').forEach(b => b.classList.toggle('on', +b.dataset.vit === VIT)); }
-function majCadreBtn(){ const b = $('#bCadre'); if (b) b.classList.toggle('on', modeCadre); }
+function majCadreBtn(){ sigOrdres = ''; }
 $('#hud').addEventListener('click', e => { const b = e.target.closest('[data-vit],[data-cam],[data-gr],[data-prod],[data-file],[data-act],[data-perso],#bCadre'); if (!b) return;
-  if (b.dataset.perso){ rappelGroupe(b.dataset.perso, false); return; }
+  if (b.dataset.act === 'liste'){ LISTE_REPLIE = !LISTE_REPLIE; sigListe = ''; try { localStorage.setItem('strategieciel.liste', LISTE_REPLIE ? '1' : '0'); } catch (x){} majListe(); return; }
+  if (b.dataset.perso){ const now = performance.now(); rappelGroupe(b.dataset.perso, dernierGroupe.n === b.dataset.perso && now - dernierGroupe.t < 400); dernierGroupe = { n: b.dataset.perso, t: now }; return; }
   if (b.dataset.act === 'garder'){ const c = LIGNE.find(c => !PERSO[c] || ![...PERSO[c]].some(id => U.some(u => u.id === id && u.vie > 0))) || LIGNE[0]; garderGroupe(c); return; }
   if (b.dataset.vit) vitesse(+b.dataset.vit);
   else if (b.dataset.cam){ const v = b.dataset.cam; if (v === '+') zoom(.75); if (v === '-') zoom(1.33); if (v === 'r') CA.yaw += PI / 4; if (v === 'n'){ CA.yaw = 0; CA.tilt = 0; const pv = PV(); if (pv) centrer(pv.pos); } }
-  else if (b.dataset.gr) groupe(b.dataset.gr, true);
+  else if (b.dataset.gr){ const now = performance.now(); groupe(b.dataset.gr, dernierGroupe.n === b.dataset.gr && now - dernierGroupe.t < 400); dernierGroupe = { n: b.dataset.gr, t: now }; sigListe = ''; }
   else if (b.dataset.prod){ if (!produire(b.dataset.prod)) annonce(S.file.length >= 6 ? 'LA FILE EST PLEINE' : 'PAS ASSEZ DE CRISTAL'); }
   else if (b.dataset.file) annuler(+b.dataset.file);
   else if (b.dataset.act === 'stop'){ for (const u of SEL()){ u.ordre = { k: 'rien' }; u.cible = null; } }
@@ -138,34 +138,56 @@ function dessineMini(){ const x = mini.getContext('2d'), w = mini.width, h = min
   for (const [a, b] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]){ rc.setFromCamera({ x: a, y: b }, cam); const q = V3(); if (rc.ray.intersectPlane(pl, q)) pts.push(q); }
   if (pts.length === 4){ x.strokeStyle = 'rgba(255,255,255,.8)'; x.lineWidth = 1; x.beginPath(); pts.forEach((q, i) => i ? x.lineTo(X(q.x), Z(q.z)) : x.moveTo(X(q.x), Z(q.z))); x.closePath(); x.stroke(); } }
 
-// ---------- panneaux ----------
-const barre = (v, c = '') => `<div class="barre ${c}"><i style="width:${Math.round(clamp(v, 0, 1) * 100)}%"></i></div>`;
+// ---------- panneaux (interface « liste de flotte », maquette d'interface du 20/11, direction C) ----------
+const ic = (n, s = 18) => `<svg width="${s}" height="${s}" class="ico"><use href="#i-${n}"/></svg>`;
+const pvb = (v, c = '') => `<div class="pv ${c || (v < .3 ? 'f' : v < .6 ? 'm' : '')}"><i style="width:${Math.round(clamp(v, 0, 1) * 100)}%"></i></div>`;
 function annonce(t, long){ const b = $('#bandeau'); b.innerHTML = t; b.style.opacity = 1; clearTimeout(annonce.t); annonce.t = setTimeout(() => { b.style.opacity = 0; }, long ? 4200 : 2200); }
 function annonceVague(n){ annonce(`VAGUE ${n} / ${VAGUES.length}<b>FLOTTE ROUGE</b>ELLE ENTRE PAR LA PORTE D'ALTAIR`, 1); }
 function annonceProd(){}
-let sigSel = '', sigProd = '';
-function majPanneaux(){ majGroupesPerso();
-  const pv = PV(), bleus = U.filter(u => u.camp === 0 && u.vie > 0);
-  $('#hCr').textContent = '◆ ' + Math.floor(S.cristal); $('#hNb').textContent = bleus.length; $('#hVg').textContent = S.vague + ' / ' + VAGUES.length;
-  $('#hDate').textContent = 'J ' + (1 + Math.floor(TEMPS.t / 2));
-  const rouges = U.filter(u => u.camp === 1 && u.vie > 0).length;
-  $('#hAl').innerHTML = S.prochaine !== null ? `<span>VAGUE ${S.vague + 1} DANS</span><b>${Math.floor(S.prochaine / 60)}:${String(Math.floor(S.prochaine % 60)).padStart(2, '0')}</b>${rouges ? `<span class="rouge">${rouges} ENNEMIS DANS LE SYSTEME</span>` : ''}` : `<span class="rouge">DERNIERE VAGUE</span><b>${rouges} ENNEMIS</b>`;
-  $('#hAl').classList.toggle('alerte', rouges > 0);
-  // sélection
-  const sel = SEL(), parT = {}; sel.forEach(u => { parT[u.type] = (parT[u.type] || 0) + 1; });
-  const sig = Object.entries(parT).map(e => e.join(':')).join(',');
-  if (sig !== sigSel || selModif){ sigSel = sig; selModif = false;
-    $('#hSel').innerHTML = !sel.length ? `<span class="mut">${TACTILE ? 'TOUCHE UN VAISSEAU, OU UN GROUPE CI-DESSUS' : 'CLIC : CHOISIR · GLISSER : CADRE · CLIC DROIT : ORDRE'}</span>`
-      : `<div class="l"><b>${Object.entries(parT).map(([t, n]) => (n > 1 ? n + ' ' : '') + TYPES[t].nom + (n > 1 && !TYPES[t].nom.endsWith('S') ? 'S' : '')).join(' · ')}</b><span class="bt" data-act="aucun">✕</span></div><div id="hSelB"></div>
-        <div class="acts"><span class="bt" data-act="stop">${TACTILE ? '' : '<span class="k">S</span>'}ARRET</span>${parT.collecteur ? `<span class="bt" data-act="miner">MINER</span>` : ''}<span class="mut">${TACTILE ? 'TOUCHE UNE CIBLE, UN GISEMENT OU L\'ESPACE' : 'CLIC DROIT : ALLER, ATTAQUER, MINER'}</span></div>`; }
-  const b = $('#hSelB'); if (b){ const v = sel.reduce((a, u) => a + u.vie, 0) / Math.max(1, sel.reduce((a, u) => a + u.T.vie, 0)); b.innerHTML = barre(v, 'vie'); }
-  // production
-  const sp = PRODUITS.map(t => S.cristal >= TYPES[t].prix ? 1 : 0).join('') + S.file.join(',') + (pv ? 1 : 0) + (S.ralliement ? 'R' : '') + (modeRallier ? 'M' : '');
-  if (sp !== sigProd){ sigProd = sp;
-    $('#hProd').innerHTML = `<div class="l"><b>AURORE · CHANTIER</b>${pv ? '' : '<span class="rouge">DETRUIT</span>'}</div><div class="prods">${PRODUITS.map(t => `<span class="bt${S.cristal < TYPES[t].prix ? ' cher' : ''}" data-prod="${t}">${TACTILE ? '' : `<span class="k">${LAB(TYPES[t].cle)}</span>`}${TYPES[t].nom}<b class="cr">${TYPES[t].prix}◆</b></span>`).join('')}</div>
-      <div class="file">${S.file.map((t, i) => `<span class="bt" data-file="${i}" title="ANNULER">${TYPES[t].nom.slice(0, 4)}</span>`).join('') || '<span class="mut">FILE VIDE</span>'}<span class="bt${modeRallier ? ' on' : ''}" data-act="rallier" style="margin-left:auto">${TACTILE ? '' : '<span class="k">B</span>'}⚑ RALLIEMENT</span>${S.ralliement ? '<span class="bt" data-act="sansrallier" title="Retirer le point de ralliement">✕</span>' : ''}</div><div id="hProdB"></div>`; }
-  const pb = $('#hProdB'); if (pb) pb.innerHTML = S.file.length ? barre(S.fileT / TYPES[S.file[0]].temps, 'cap') : '';
-  if (pv){ $('#hPv').innerHTML = barre(pv.vie / pv.T.vie, 'vie'); } }
+let sigSel = '', sigProd = '', sigListe = '', sigOrdres = '', LISTE_REPLIE = false; const REV = [];
+try { LISTE_REPLIE = localStorage.getItem('strategieciel.liste') === '1'; } catch (e){}
+const NOMS_PL = { chasseur: 'CHASSEURS', bombardier: 'BOMBARDIERS', destroyer: 'DESTROYERS', collecteur: 'COLLECTEURS' }, TOUCHE_GR = { chasseur: '2', bombardier: '3', destroyer: '4', collecteur: '5' };
+const ORDRE_TXT = u => u.type === 'collecteur' ? (u.ordre.k === 'miner' ? (u.charge >= u.T.cap ? 'RAPPORTENT' : 'MINENT') : 'EN ATTENTE') : u.cible ? 'ATTAQUE' : u.ordre.k === 'aller' ? 'EN ROUTE' : 'EN GARDE';
+function resume(l){ const c = {}; l.forEach(u => { const o = ORDRE_TXT(u); c[o] = (c[o] || 0) + 1; }); const t = Object.entries(c).sort((a, b) => b[1] - a[1])[0]; return t ? t[0] : ''; }
+const vieM = l => l.reduce((a, u) => a + u.vie, 0) / Math.max(1, l.reduce((a, u) => a + u.T.vie, 0));
+function majGroupesPerso(){ sigListe = ''; }
+function majListe(){ const L = $('#liste'), pv = PV(), sel = SEL(), seul = t => sel.length > 0 && sel.every(u => u.type === t);
+  const groupes = ['chasseur', 'bombardier', 'destroyer', 'collecteur'].map(t => [t, U.filter(u => u.camp === 0 && u.vie > 0 && u.type === t)]).filter(([, l]) => l.length);
+  const persos = LIGNE.filter(c => PERSO[c]).map(c => [c, U.filter(u => PERSO[c].has(u.id) && u.vie > 0)]).filter(([, l]) => l.length);
+  const sig = [LISTE_REPLIE, pv ? Math.round(pv.vie / pv.T.vie * 20) : -1, seul('pv'), groupes.map(([t, l]) => t + l.length + Math.round(vieM(l) * 10) + resume(l) + seul(t)).join(), persos.map(([c, l]) => c + l.length).join(),
+    PRODUITS.map(t => S.cristal >= TYPES[t].prix ? 1 : 0).join(''), S.file.join(), !!S.ralliement, modeRallier, sigProd].join('|');
+  if (sig !== sigListe){ sigListe = sig; sigProd = sigProd || 'x'; L.classList.toggle('replie', LISTE_REPLIE);
+    if (LISTE_REPLIE){ L.innerHTML = `<div class="tete"><span class="b" data-act="liste" title="Déplier la liste">◂</span></div>` + (pv ? `<span class="b ligne${seul('pv') ? ' on' : ''}" data-gr="pv">${ic('pv', 20)}${pvb(pv.vie / pv.T.vie)}</span>` : '')
+      + groupes.map(([t, l]) => `<span class="b ligne${seul(t) ? ' on' : ''}" data-gr="${t}">${ic(t, 18)}<span class="n" style="font-size:11px">${l.length}</span></span>`).join('')
+      + persos.map(([c, l]) => `<span class="b ligne" data-perso="${c}"><span class="or">${LAB(c)}</span><span class="n" style="font-size:11px">${l.length}</span></span>`).join(''); }
+    else { let h = `<div class="tete"><span>FLOTTE DE SOL-7</span><span class="b" data-act="liste" title="Replier la liste">▸</span></div>`;
+      if (pv){ h += `<div class="b ligne${seul('pv') ? ' on' : ''}" data-gr="pv"><div class="h">${ic('pv', 20)}<span>AURORE</span>${TACTILE ? '' : '<span class="k">H</span>'}</div>${pvb(pv.vie / pv.T.vie)}<div class="o"><span>${S.file.length ? 'CHANTIER · ' + TYPES[S.file[0]].nom : 'CHANTIER LIBRE'}</span><span class="n" id="lProdT"></span></div></div>`;
+        h += `<div class="prods">${PRODUITS.map(t => `<span class="b${S.cristal < TYPES[t].prix ? ' cher' : ''}" data-prod="${t}" title="${TYPES[t].nom} · ${TYPES[t].prix} cristaux">${ic(t, 18)}<span class="n">${TYPES[t].prix}</span>${TACTILE ? '' : `<span class="k">${LAB(TYPES[t].cle)}</span>`}</span>`).join('')}</div>`;
+        h += `<div id="lProdB"></div>`;
+        if (S.file.length > 1) h += `<div class="file">${S.file.slice(1).map((t, i) => `<span class="b" data-file="${i + 1}" title="Annuler">${ic(t, 14)}</span>`).join('')}<span class="dx" style="font-size:11px">ENSUITE</span></div>`;
+        h += `<div class="ralli"><span class="b${modeRallier ? ' on' : ''}" data-act="rallier" title="Point de ralliement des nouveaux vaisseaux">${ic('drapeau', 14)} RALLIEMENT${TACTILE ? '' : ' <span class="k">B</span>'}</span>${S.ralliement ? '<span class="b" data-act="sansrallier" style="flex:0 0 28px" title="Retirer le point de ralliement">✕</span>' : ''}</div>`; }
+      else h += `<div class="b ligne" style="opacity:.6"><div class="h">${ic('pv', 20)}<span class="rg">AURORE DETRUITE</span></div></div>`;
+      for (const [t, l] of groupes) h += `<div class="b ligne${seul(t) ? ' on' : ''}" data-gr="${t}"><div class="h">${ic(t, 18)}<span>${NOMS_PL[t]}</span>${TACTILE ? '' : `<span class="k">${TOUCHE_GR[t]}</span>`}<span class="n">${l.length}</span></div>${pvb(vieM(l))}<div class="o"><span>${resume(l)}</span></div></div>`;
+      for (const [c, l] of persos){ const ty = [...new Set(l.map(u => u.type))]; h += `<div class="b ligne" data-perso="${c}"><div class="h"><span class="or">GROUPE ${LAB(c)}</span>${ty.map(t => ic(t, 13)).join('')}<span class="n">${l.length}</span></div>${pvb(vieM(l))}</div>`; }
+      h += `<span class="b" data-act="garder" style="height:28px;flex:none;color:var(--or)" title="Garder la sélection dans un groupe${TACTILE ? '' : ' (Maj + une lettre de la première ligne)'}">${ic('groupe', 14)} NOUVEAU GROUPE</span>`;
+      L.innerHTML = h; } }
+  const pb = $('#lProdB'); if (pb){ if (S.file.length){ const T = TYPES[S.file[0]]; pb.innerHTML = pvb(S.fileT / T.temps, 'c'); $('#lProdT').textContent = Math.ceil(T.temps - S.fileT) + ' S'; } else pb.innerHTML = ''; } }
+function majOrdres(){ const sel = SEL(), o = $('#ordres'), parT = {}; sel.forEach(u => { parT[u.type] = (parT[u.type] || 0) + 1; });
+  if (!sel.length && !TACTILE){ o.hidden = true; sigOrdres = ''; return; } o.hidden = false;
+  const sig = Object.entries(parT).join() + modeCadre;
+  if (sig !== sigOrdres){ sigOrdres = sig;
+    o.innerHTML = (sel.length ? `<div class="sel"><div style="display:flex;gap:7px;align-items:center;flex-wrap:wrap">${Object.entries(parT).map(([t, n]) => `<span>${ic(t, 14)} <span class="n">${n}</span></span>`).join('')}</div><div id="oVie"></div></div>`
+      + `<span class="b" data-act="stop" title="Arrêt">${ic('stop', 20)}${TACTILE ? '' : '<span class="k">S</span>'}</span>` + (parT.collecteur ? `<span class="b" data-act="miner" title="Miner">${ic('miner', 20)}</span>` : '')
+      + `<span class="b" data-act="aucun" title="Ne rien choisir">✕</span>` : '')
+      + (TACTILE ? `<span class="b${modeCadre ? ' on' : ''}" id="bCadre" title="Choisir plusieurs vaisseaux d'un cadre">${ic('cadre', 20)}</span>` : ''); }
+  const v = $('#oVie'); if (v) v.innerHTML = pvb(vieM(sel)); }
+function majPanneaux(){ const bleus = U.filter(u => u.camp === 0 && u.vie > 0), rouges = U.filter(u => u.camp === 1 && u.vie > 0).length;
+  REV.push([TEMPS.t, S.mine]); while (REV.length > 2 && TEMPS.t - REV[0][0] > 60) REV.shift(); const d = TEMPS.t - REV[0][0];
+  $('#hCr').textContent = '◆ ' + Math.floor(S.cristal); $('#hRev').textContent = (d > 5 ? '+' + Math.round((S.mine - REV[0][1]) / d * 60) : '+0') + '/MIN';
+  $('#hNb').innerHTML = `${ic('chasseur', 13)} <span class="n">${bleus.length}</span>`; $('#hDate').textContent = 'J ' + (1 + Math.floor(TEMPS.t / 2));
+  const al = $('#hAl'); al.classList.toggle('alerte', rouges > 0);
+  al.innerHTML = S.prochaine !== null ? `VAGUE ${S.vague + 1}/${VAGUES.length} DANS <span class="n">${Math.floor(S.prochaine / 60)}:${String(Math.floor(S.prochaine % 60)).padStart(2, '0')}</span>${rouges ? ` · <span class="n">${rouges}</span> ENNEMIS` : ''}` : `DERNIERE VAGUE · <span class="n">${rouges}</span> ENNEMIS`;
+  majListe(); majOrdres(); }
 // anneaux de sélection (couleur selon la vie), étiquettes des planètes et des portes
 function majMarques(){ for (const u of U){ if (u.vie <= 0) continue; const on = u.sel || (u.camp === 0 && u.type === 'pv'); u.anneau.visible = u.sel;
     if (u.sel){ const f = u.vie / u.T.vie; u.anneau.material = matSel[f > .6 ? 0 : f > .3 ? 1 : 2]; u.anneau.position.copy(u.pos); } }

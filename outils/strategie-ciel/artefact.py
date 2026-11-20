@@ -3,7 +3,7 @@
 - outils/artefact.py fait la copie de base (scripts et style intégrés, retour à la Ludothèque masqué) ;
 - Three.js depuis cdnjs (même version r128) au lieu de sa copie intégrée ;
 - les 9 modèles de vaisseaux (lus dans ciel-de-guerre/modeles/) en base64 dans window.SC_B64 ;
-- la police Silkscreen depuis Google Fonts (la page du jeu la lit dans polices/)."""
+- les polices Rajdhani, Share Tech Mono et Michroma depuis Google Fonts (la page du jeu les lit dans polices/)."""
 import base64, json, os, re, subprocess, sys
 R = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 out = sys.argv[1]
@@ -17,6 +17,6 @@ cles = re.findall(r"'([^']+)'", re.search(r"const MODELES = \[(.*?)\]", monde).g
 b64 = {k: base64.b64encode(open(os.path.join(R, 'ciel-de-guerre/modeles', k + '.glb'), 'rb').read()).decode() for k in cles}
 i = s.index(monde); a = s.rindex('<script>', 0, i)
 s = s[:a] + '<script>window.SC_B64=' + json.dumps(b64) + ';</script>\n' + s[a:]
-s = s.replace('<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap">', '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Silkscreen&display=swap">')
+s = s.replace('<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap">', '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Share+Tech+Mono&family=Michroma&display=swap">')
 open(out, 'w', encoding='utf-8').write(s)
 print(out, len(s) // 1024, 'Ko,', len(cles), 'modèles')

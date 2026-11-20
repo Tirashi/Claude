@@ -10,7 +10,7 @@ function ecran(id){ for (const e of document.querySelectorAll('.ecran')) e.hidde
 function lireRecord(){ try { return JSON.parse(localStorage.getItem('strategieciel.record')) || {}; } catch (e){ return {}; } }
 function ecrireRecord(r){ try { localStorage.setItem('strategieciel.record', JSON.stringify(r)); } catch (e){} }
 function majTitre(){ const r = lireRecord(); $('#tRecord').textContent = r.parties ? `MEILLEUR : ${r.vagues || 0} VAGUE${(r.vagues || 0) > 1 ? 'S' : ''} TENUE${(r.vagues || 0) > 1 ? 'S' : ''}${r.victoires ? ' · ' + r.victoires + ' VICTOIRE' + (r.victoires > 1 ? 'S' : '') : ''}` : ''; }
-function jouer(tuto){ if (tuto === undefined) tuto = !lireTuto(); nouvellePartie(); for (const c in PERSO) delete PERSO[c]; modeRallier = false; TEMPS.t = 0; const pv = PV(); centrer(pv.pos.clone().add(V3(260, 0, 40))); CA.dist = 1500; CA.yaw = 0; CA.tilt = 0; vitesse(1); sigSel = sigProd = ''; selModif = true;
+function jouer(tuto){ if (tuto === undefined) tuto = !lireTuto(); nouvellePartie(); for (const c in PERSO) delete PERSO[c]; modeRallier = false; TEMPS.t = 0; const pv = PV(); centrer(pv.pos.clone().add(V3(260, 0, 40))); CA.dist = 1500; CA.yaw = 0; CA.tilt = 0; vitesse(1); sigSel = sigProd = sigListe = sigOrdres = ''; REV.length = 0; selModif = true;
   ETAT = 'jeu'; ecran(null); if (tuto) tutoDebut(); else { tutoFin(false); annonce(`DEFENDS SOL-7<b>${VAGUES.length} VAGUES</b>LA PREMIERE ARRIVE DANS 2 MINUTES`, 1); } }
 // ---------- tutoriel guidé : une étape à la fois, les vagues attendent qu'il soit fini ----------
 const lireTuto = () => { try { return localStorage.getItem('strategieciel.tuto') === '1'; } catch (e){ return false; } };
@@ -18,23 +18,24 @@ const TUTO = [
   { t: 'BIENVENUE', pc: "VOICI AURORE, TON PORTE-VAISSEAUX : GEANT ET LENT, IL FABRIQUE TOUS TES VAISSEAUX ET RECOIT LE CRISTAL. S'IL EST DETRUIT, LA PARTIE EST PERDUE.", suivant: 1 },
   { t: 'LA VUE', pc: "DEPLACE LA VUE AVEC LES FLECHES OU EN AMENANT LA SOURIS AU BORD DE L'ECRAN, ZOOME A LA MOLETTE, PIVOTE EN GLISSANT AVEC LE CLIC DROIT.", tel: "DEPLACE LA VUE AVEC UN DOIGT ; ZOOME ET PIVOTE AVEC DEUX DOIGTS.",
     debut: st => { st.c = CA.c.clone(); st.d = CA.dist; st.y = CA.yaw; }, fait: st => CA.c.distanceTo(st.c) > 250 || Math.abs(CA.dist / st.d - 1) > .25 || Math.abs(CA.yaw - st.y) > .4 },
-  { t: 'CHOISIR', pc: "CHOISIS TES CHASSEURS : TOUCHE 2, OU LE BOUTON CHASS. (TU PEUX AUSSI CLIQUER SUR UN VAISSEAU, OU GLISSER UN CADRE AUTOUR).", tel: "CHOISIS TES CHASSEURS : BOUTON CHASS. A GAUCHE (OU TOUCHE UN VAISSEAU).", guide: '[data-gr="chasseur"]',
+  { t: 'CHOISIR', pc: "CHOISIS TES CHASSEURS : TOUCHE 2, OU LA LIGNE CHASSEURS DE LA LISTE A DROITE (TU PEUX AUSSI CLIQUER SUR UN VAISSEAU, OU GLISSER UN CADRE AUTOUR).", tel: "CHOISIS TES CHASSEURS : LIGNE CHASSEURS DE LA LISTE A DROITE (OU TOUCHE UN VAISSEAU).", guide: '[data-gr="chasseur"]',
     fait: () => SEL().some(u => u.type === 'chasseur') },
   { t: 'DONNER UN ORDRE', pc: "ENVOIE-LES PLUS LOIN : CLIC DROIT DANS L'ESPACE. UN CLIC DROIT SUR UN ENNEMI L'ATTAQUE.", tel: "ENVOIE-LES PLUS LOIN : TOUCHE L'ESPACE. TOUCHER UN ENNEMI L'ATTAQUE.",
     fait: () => U.some(u => u.type === 'chasseur' && u.ordre.k === 'aller') },
-  { t: 'LE CHANTIER', pc: "PRODUIS UN COLLECTEUR AU CHANTIER D'AURORE (TOUCHE %C, OU LE BOUTON). IL APPARAIT EN HOLOGRAMME A L'AVANT D'AURORE ET SORT QUAND IL EST FINI. IL COUTE 30 CRISTAUX.", tel: "PRODUIS UN COLLECTEUR AU CHANTIER D'AURORE (EN BAS A DROITE). IL COUTE 30 CRISTAUX.", guide: '[data-prod="collecteur"]',
+  { t: 'LE CHANTIER', pc: "PRODUIS UN COLLECTEUR AU CHANTIER D'AURORE (TOUCHE %C, OU SON BOUTON SOUS AURORE DANS LA LISTE). IL APPARAIT EN HOLOGRAMME A L'AVANT D'AURORE ET SORT QUAND IL EST FINI. IL COUTE 30 CRISTAUX.", tel: "PRODUIS UN COLLECTEUR AU CHANTIER D'AURORE (SON BOUTON SOUS AURORE, DANS LA LISTE A DROITE). IL APPARAIT EN HOLOGRAMME A L'AVANT D'AURORE. IL COUTE 30 CRISTAUX.", guide: '[data-prod="collecteur"]',
     fait: () => S.file.includes('collecteur') || U.filter(u => u.type === 'collecteur').length > 2 },
-  { t: 'LE CRISTAL', pc: "LES COLLECTEURS MINENT SEULS LE CRISTAL DES ASTEROIDES (LES CHIFFRES BLEUS) ET LE RAPPORTENT A AURORE. ATTENDS QU'ILS EN RAPPORTENT 60.", guide: '#hRes',
+  { t: 'LE CRISTAL', pc: "LES COLLECTEURS MINENT SEULS LE CRISTAL DES ASTEROIDES (LES CHIFFRES BLEUS) ET LE RAPPORTENT A AURORE. ATTENDS QU'ILS EN RAPPORTENT 60.", guide: '#hCr',
     debut: st => { st.m = S.mine; }, fait: st => S.mine - st.m >= 60 },
   { t: 'LA PAUSE', pc: "METS LE JEU EN PAUSE (ESPACE, OU ❚❚ EN HAUT A DROITE). EN PAUSE, TU PEUX TOUJOURS CHOISIR ET DONNER DES ORDRES.", tel: "METS LE JEU EN PAUSE (❚❚ EN HAUT A DROITE). EN PAUSE, TU PEUX TOUJOURS CHOISIR ET DONNER DES ORDRES.", guide: '[data-vit="0"]',
     fait: () => VIT === 0 },
-  { t: 'LES VITESSES', pc: "RELANCE LE TEMPS : ▶, OU ▶▶ ET ▶▶▶ POUR ALLER PLUS VITE QUAND TOUT EST CALME.", guide: '#hVit', fait: () => VIT > 0 },
+  { t: 'LES VITESSES', pc: "RELANCE LE TEMPS : ▶, OU ▶▶ ET ▶▶▶ POUR ALLER PLUS VITE QUAND TOUT EST CALME.", guide: '#barre .vits', fait: () => VIT > 0 },
   { t: 'LA FLOTTE ROUGE', pc: "ELLE ARRIVERA PAR LA PORTE D'ALTAIR (LE ROND ROUGE DE LA MINI-CARTE), EN 8 VAGUES. PRODUIS DES CHASSEURS, DES BOMBARDIERS (CONTRE LES GROS VAISSEAUX) ET DES DESTROYERS, ET GARDE-LES PRES D'AURORE. BONNE CHANCE !", fin: 1 }];
 const TU = { i: -1, st: {} };
 function tutoDebut(){ S.tuto = true; TU.i = -1; tutoEtape(0); }
 function tutoEtape(i){ document.querySelectorAll('.guide').forEach(e => e.classList.remove('guide')); TU.i = i; TU.st = {}; const E = TUTO[i];
   if (!E){ tutoFin(true); return; } if (E.debut) E.debut(TU.st);
-  $('#tuto').hidden = false; $('#tuto').innerHTML = `<div class="l"><b>${E.t}</b><span>${i + 1} / ${TUTO.length}</span></div><p>${((TACTILE && E.tel) || E.pc).replace('%C', LAB('KeyZ'))}</p><div class="l">${E.suivant || E.fin ? `<span class="bt on" data-tuto="suivant">${E.fin ? 'COMMENCER' : 'SUIVANT'}</span>` : '<span class="mut">A TOI !</span>'}<span class="bt" data-tuto="passer">PASSER LE TUTO</span></div>`;
+  if (LISTE_REPLIE && /data-(gr|prod)/.test(E.guide || '')){ LISTE_REPLIE = false; sigListe = ''; majListe(); }
+  $('#tuto').hidden = false; $('#tuto').innerHTML = `<div class="l"><b>${E.t}</b><span class="dx n">${i + 1} / ${TUTO.length}</span></div><p>${((TACTILE && E.tel) || E.pc).replace('%C', LAB('KeyZ'))}</p><div class="l">${E.suivant || E.fin ? `<span class="b on" data-tuto="suivant">${E.fin ? 'COMMENCER' : 'SUIVANT'}</span>` : '<span class="dx">A TOI !</span>'}<span class="b" data-tuto="passer">PASSER LE TUTO</span></div>`;
   if (E.guide) document.querySelectorAll(E.guide).forEach(e => e.classList.add('guide')); }
 function tutoFin(annoncer){ S.tuto = false; TU.i = -1; $('#tuto').hidden = true; document.querySelectorAll('.guide').forEach(e => e.classList.remove('guide'));
   try { localStorage.setItem('strategieciel.tuto', '1'); } catch (e){}

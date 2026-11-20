@@ -15,19 +15,30 @@
 <div class="tel menu" id="t"><div class="charge" id="charge">CHARGEMENT DES VAISSEAUX…</div>
 <div class="hud" id="hud">
   <div id="tags"></div><div id="cadreSel" hidden></div>
-  <div class="pan" id="hRes"><div class="l"><b class="cr" id="hCr">◆ 300</b><span>CRISTAL</span></div><div class="l"><span>AURORE</span></div><div id="hPv"></div><div class="l"><span>FLOTTE</span><b id="hNb"></b></div><div class="l"><span>VAGUES</span><b id="hVg"></b></div></div>
-  <div class="pan" id="hAl"></div>
-  <div class="pan" id="hVit"><span class="bt" data-vit="0">❚❚</span><span class="bt on" data-vit="1">▶</span><span class="bt" data-vit="2">▶▶</span><span class="bt" data-vit="3">▶▶▶</span><span class="mut" id="hDate">J 1</span><span class="bt" data-act="menu">☰</span></div>
+  <div class="v" id="barre"><span class="n cr" id="hCr">◆ 300</span><span class="dx rev n" id="hRev">+0/MIN</span><span id="hNb"></span><span id="hAl"></span>
+    <span class="vits"><span class="b" data-vit="0">❚❚</span><span class="b on" data-vit="1">▶</span><span class="b" data-vit="2">▶▶</span><span class="b" data-vit="3">▶▶▶</span></span>
+    <span class="n dx" id="hDate">J 1</span><span class="b menu" data-act="menu"><svg width="16" height="16" class="ico"><use href="#i-menu"/></svg></span></div>
+  <div class="v" id="liste"></div>
   <canvas id="mini" width="180" height="180"></canvas>
-  <div id="hCam"><span class="bt" data-cam="+">+</span><span class="bt" data-cam="-">−</span><span class="bt" data-cam="r">⟲</span><span class="bt" data-cam="n">N</span></div>
-  <div class="pan" id="hGr"><span class="bt" data-gr="tout"><span class="k">1</span>FLOTTE</span><span class="bt" data-gr="chasseur"><span class="k">2</span>CHASS.</span><span class="bt" data-gr="bombardier"><span class="k">3</span>BOMB.</span><span class="bt" data-gr="destroyer"><span class="k">4</span>DESTR.</span><span class="bt" data-gr="collecteur"><span class="k">5</span>COLL.</span><span class="bt" data-gr="pv"><span class="k">H</span>AURORE</span><span class="bt" id="bCadre">CADRE</span></div>
-  <div class="pan" id="hPerso"></div>
-  <div class="pan" id="hSel"></div>
-  <div class="pan" id="hProd"></div>
-  <div class="pan" id="tuto" hidden></div>
+  <div id="hCam"><span class="b" data-cam="+">+</span><span class="b" data-cam="-">−</span><span class="b" data-cam="r">⟲</span><span class="b" data-cam="n">N</span></div>
+  <div class="v" id="ordres" hidden></div>
+  <div class="v" id="tuto" hidden></div>
   <div class="bandeau" id="bandeau"></div>
   <div id="ips"></div>
 </div>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-chasseur" viewBox="0 0 24 24"><path d="M12 2l4 13-4-2-4 2zM6 17l6-3 6 3-6 5z"/></symbol>
+  <symbol id="i-bombardier" viewBox="0 0 24 24"><path d="M12 3l9 14-5 1-4-3-4 3-5-1z"/><rect x="10" y="17" width="4" height="4" rx="1"/></symbol>
+  <symbol id="i-destroyer" viewBox="0 0 24 24"><path d="M12 1l3 5v14l-3 3-3-3V6z"/><rect x="7" y="9" width="10" height="3" rx="1"/></symbol>
+  <symbol id="i-collecteur" viewBox="0 0 24 24"><rect x="8" y="5" width="8" height="14" rx="1.5"/><rect x="3" y="8" width="4" height="9" rx="1"/><rect x="17" y="8" width="4" height="9" rx="1"/></symbol>
+  <symbol id="i-pv" viewBox="0 0 24 24"><path d="M5 2h4v9h6V2h4v13l-3 7H8l-3-7z"/></symbol>
+  <symbol id="i-stop" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/></symbol>
+  <symbol id="i-miner" viewBox="0 0 24 24"><path d="M12 2l5 8-5 12-5-12z"/></symbol>
+  <symbol id="i-drapeau" viewBox="0 0 24 24"><path d="M5 2h2v20H5zM8 3h11l-3 4 3 4H8z"/></symbol>
+  <symbol id="i-cadre" viewBox="0 0 24 24"><path d="M3 3h6v2H5v4H3zM15 3h6v6h-2V5h-4zM3 15h2v4h4v2H3zM19 15h2v6h-6v-2h4z"/></symbol>
+  <symbol id="i-groupe" viewBox="0 0 24 24"><path d="M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6z"/></symbol>
+  <symbol id="i-menu" viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="2.4" rx="1"/><rect x="4" y="11" width="16" height="2.4" rx="1"/><rect x="4" y="17" width="16" height="2.4" rx="1"/></symbol>
+</svg>
 <div class="ecran" id="eTitre" hidden>
   <div class="carte">
     <h1>STRATEGIE<br>SPATIALE</h1>
