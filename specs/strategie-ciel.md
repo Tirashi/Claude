@@ -64,3 +64,13 @@ Chasseurs grossis (15 m au lieu de 4) pour rester lisibles.
   - **pause et trois vitesses** (❚❚ ▶ ▶▶ ▶▶▶), date qui avance ; alerte de la flotte rouge ;
   - styles de planètes : **DEEP-FOLD** (les 12 sortes du Pixel Planet Generator, converties en WebGL 2 par `outils/strategie-ciel/shaders.py` → `maquettes/strategie-ciel-shaders.js`, dessinées par `maquettes/strategie-ciel-df.js` ; lumière tournée vers l'étoile) ou **PIXEL 3D** (sphères d'AstroJar qui tournent, couche de nuages, halo d'atmosphère) ;
   - archipel, LOW POLY et MINEUR retirés des boutons (le code de l'archipel reste).
+
+## Décisions du 20/11 et maquette 5 (même lien, version 5)
+- **Planètes : Deep-Fold** (choix de l'utilisateur). Le style PIXEL 3D est retiré des boutons (les données d'AstroJar et de Heck restent dans `maquettes/strategie-ciel-planetes.js`, plus utilisées par défaut).
+- **Performances sur téléphone à améliorer** (demande de l'utilisateur). Maquette 5 :
+  - chaque planète n'est redessinée que selon sa taille à l'écran (grande : toutes les 0,08 s ; moyenne : 0,2 s ; petite : 0,5 s ; hors de l'écran : jamais) ; en pause, seulement si la lumière change (caméra qui bouge) ;
+  - 64 pixels par planète au lieu de 100 sur écran tactile (`DF_PX`) ;
+  - galaxie : fond et étoiles redessinés toutes les 0,15 s au lieu de chaque image ;
+  - compteur en bas du cadre : IPS (images par seconde), planètes redessinées par seconde, pixels par planète. **À essayer sur le téléphone** (le rendu logiciel de l'environnement de Claude ne donne pas de vrai chiffre).
+  - Pistes suivantes si ça ne suffit pas : rendre les couches directement dans une texture WebGL (sans passer par un canvas 2D), un seul contexte WebGL pour tout, moins d'astéroïdes, image interne réduite.
+- **Recherche continue à la place des âges** (choix de l'utilisateur). Proposition dans l'onglet RECHERCHE : trois domaines (VAISSEAUX, COLONIES, ARMEMENT) qui avancent en même temps, chacun avec un projet en cours ; les points viennent des laboratoires des colonies et des stations (+34 par mois dans la maquette) ; quand un projet finit, on choisit le suivant parmi **trois cartes tirées au hasard** (comme Stellaris) ; les anomalies et épaves de la galaxie en ajoutent. Le chantier montre « RECHERCHE » sur les vaisseaux pas encore trouvés ; le volet de GAIA a un emplacement LABO. À valider.
