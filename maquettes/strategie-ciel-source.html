@@ -18,7 +18,7 @@ h1{font:400 22px/1.2 var(--titre);letter-spacing:.06em;margin:4px 0 4px;color:va
 #cadre{position:relative;width:100%;aspect-ratio:16/9;background:#000;overflow:hidden;border-radius:10px;border:1px solid var(--bord);margin:0 auto}
 #cadre.tel{aspect-ratio:880/400;border-radius:22px;border:6px solid #2a2238;max-width:920px}
 #cadre:fullscreen{border:0;border-radius:0;aspect-ratio:auto;width:100vw;height:100vh;max-width:none}
-#c{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated;display:block}
+#c{position:absolute;inset:0;width:100%;height:100%;display:block}
 #ui{position:absolute;left:0;top:0;transform-origin:0 0;font-family:var(--titre);color:#fff;pointer-events:none}
 #chg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font:400 14px var(--titre);color:var(--accent);background:#171225}
 .desc{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px;margin-top:14px}
@@ -50,11 +50,12 @@ svg.ov{position:absolute;left:0;top:0;overflow:visible}
 .astuce{position:absolute;font-size:calc(var(--hs)*.8);color:#e8dcf8;background:rgba(0,0,0,.35);border-radius:6px;padding:3px 8px;letter-spacing:.05em}
 </style></head><body><main>
 <h1>STRATEGIE DANS LE CIEL</h1>
-<p class="sous">Maquette du 20/11 : la même bataille vue de trois façons (caméra et interface). Bascule PC / téléphone, et l'ambiance. Rien n'est jouable : on regarde.</p>
+<p class="sous">Maquette 2 du 20/11 : la caméra A devient la caméra libre du jeu (molette ou pincement : zoom ; clic droit glissé ou deux doigts : pivoter ; glisser : déplacer). Rendu net par défaut, niveau dans l'espace, collecteurs qui vont chercher le cristal. B et C restent pour comparer.</p>
 <div class="barreop">
  <div class="grp" id="gDir"><button data-v="A" class="on">A · ETAT-MAJOR</button><button data-v="B">B · CARTE VIVANTE</button><button data-v="C">C · PASSERELLE</button></div>
  <div class="grp" id="gApp"><button data-v="pc" class="on">PC</button><button data-v="tel">TELEPHONE</button></div>
- <div class="grp" id="gAmb"><button data-v="crepuscule" class="on">CREPUSCULE</button><button data-v="nuit">NUIT</button><button data-v="desert">DESERT</button></div>
+ <div class="grp" id="gAmb"><button data-v="crepuscule" class="on">CREPUSCULE</button><button data-v="nuit">NUIT</button><button data-v="desert">DESERT</button><button data-v="espace">ESPACE</button></div>
+ <div class="grp" id="gNet"><button data-v="net" class="on">NET</button><button data-v="pixel">PIXEL</button></div>
  <div class="grp"><button id="bPlein">PLEIN ECRAN</button></div>
 </div>
 <div id="cadre"><canvas id="c"></canvas><div id="ui"></div><div id="chg">CHARGEMENT DES VAISSEAUX…</div></div>
@@ -84,12 +85,13 @@ function H(x,z){const wx=x+(fbm(N2,x/260+9,z/260,3)-.5)*260,wz=z+(fbm(N2,x/260,z
 const AMBS={
  crepuscule:{ciel:['#8f75b3','#eb99a3','#fac299','#ffe09e'],brume:'#f1c6aa',hemi:['#ffe6d6','#5a4a70',.85],soleil:['#ffd6b0',.85],mer:'#2a4f86',fond:'#1d3a6a',sol:['#ecc79c','#cf9a5c','#a5563e','#8c7a88','#e8d6dc'],arbres:['#c8643a','#e09040','#a84a3a','#d8a050'],dir:[-.45,.5,-1]},
  nuit:{ciel:['#08091c','#0f122b','#1a1a38','#262647'],brume:'#1a1c36',hemi:['#6a7ab0','#14142a',.65],soleil:['#a8bcff',.5],mer:'#0e1a36',fond:'#0a1226',sol:['#55587a','#3e4766','#33395a','#4a4a66','#7a809e'],arbres:['#2c3858','#34406a','#28304e','#3a4670'],dir:[.35,.6,-1]},
+ espace:{ciel:['#07061a','#07061a','#07061a','#07061a'],brume:'#0b0a1e',hemi:['#b8c0ff','#1a1428',.7],soleil:['#fff0e0',1.1],mer:'#000',fond:'#0b0a1e',sol:['#888','#888','#888','#888','#888'],arbres:null,dir:[-.5,.6,-1],espace:1},
  desert:{ciel:['#528ddb','#8cb8e6','#dbd6c7','#ffebbd'],brume:'#f2dcb4',hemi:['#fff2dc','#8a6a4a',.9],soleil:['#fff0d0',.9],mer:'#2a6a96',fond:'#1c4a6e',sol:['#f0d8a0','#e2b878','#c89458','#b0805e','#ecd2a8'],arbres:null,dir:[.2,.7,-1]}};
 let AMB=AMBS.crepuscule;
 // ---------- rendu ----------
-const R=new THREE.WebGLRenderer({canvas:cv,antialias:false});R.setPixelRatio(1);
+const R=new THREE.WebGLRenderer({canvas:cv,antialias:true});R.setPixelRatio(1);let NET=true;
 const sc=new THREE.Scene();const cam=new THREE.PerspectiveCamera(36,16/9,5,7000);
-const hemi=new THREE.HemisphereLight('#fff','#444',.8),sol=new THREE.DirectionalLight('#fff',.8);sc.add(hemi,sol);
+const hemi=new THREE.HemisphereLight('#fff','#444',.8),sol=new THREE.DirectionalLight('#fff',.8);sc.add(hemi,sol,new THREE.AmbientLight('#ffffff',.22));
 const cielCv=document.createElement('canvas');cielCv.width=2;cielCv.height=256;const cielTex=new THREE.CanvasTexture(cielCv);sc.background=cielTex;
 sc.fog=new THREE.Fog('#f1c6aa',1000,3000);
 // terrain : une face = une couleur, d'après sa hauteur
@@ -115,7 +117,18 @@ for(const I of ILES){if(!I.nom)continue;let hx=I.x,hz=I.z,hy=-99;for(let e=0;e<6
   if(I.gis){const g=new THREE.Group();for(let j=0;j<6;j++){const m=new THREE.Mesh(new THREE.OctahedronGeometry(6+j%3*4,0),new THREE.MeshPhongMaterial({color:'#aef4ff',emissive:'#3ac8ff',emissiveIntensity:.8,flatShading:true}));m.position.set((j%3-1)*9,4+j*2,(j>2?1:-1)*7);m.scale.y=1.8;m.rotation.z=(j-2)*.2;g.add(m);}g.position.copy(I.sommet);sc.add(g);I.cristal=g;}
   const rr=I.r*.82,mk=(c,a0,len,op)=>{const m=new THREE.Mesh(new THREE.RingGeometry(rr-7,rr,64,1,a0,len).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({color:c,transparent:true,opacity:op,depthTest:false}));m.position.set(I.x,2,I.z);m.renderOrder=2;sc.add(m);};
   if(I.prise){mk(COUL_CAMP[0],Math.PI/2,I.prise*6.283,.9);mk(COUL_CAMP[2],Math.PI/2+I.prise*6.283,(1-I.prise)*6.283,.45);}else mk(COUL_CAMP[I.camp<0?2:I.camp],0,6.283,I.camp<0?.45:.8);
-  if(I.camp>=0){const t=new THREE.Group(),gr=new THREE.MeshPhongMaterial({color:'#9a94a8',flatShading:true});const b=new THREE.Mesh(new THREE.CylinderGeometry(7,10,34,6),gr);b.position.y=17;const c=new THREE.Mesh(new THREE.ConeGeometry(11,12,6),new THREE.MeshPhongMaterial({color:COUL_CAMP[I.camp],flatShading:true}));c.position.y=40;t.add(b,c);t.position.copy(I.sommet).add(new THREE.Vector3(34,-6,18));sc.add(t);}}
+  if(I.camp>=0){const t=new THREE.Group(),gr=new THREE.MeshPhongMaterial({color:'#9a94a8',flatShading:true});const b=new THREE.Mesh(new THREE.CylinderGeometry(7,10,34,6),gr);b.position.y=17;const c=new THREE.Mesh(new THREE.ConeGeometry(11,12,6),new THREE.MeshPhongMaterial({color:COUL_CAMP[I.camp],flatShading:true}));c.position.y=40;t.add(b,c);t.position.copy(I.sommet).add(new THREE.Vector3(34,-6,18));sc.add(t);I.poste=t;}}
+// ---------- niveau dans l'espace : champ d'astéroïdes, gros astéroïdes à la place des îles ----------
+const ESPACE=new THREE.Group();ESPACE.visible=false;sc.add(ESPACE);
+function caillou(det,amp,seed){const g=new THREE.IcosahedronGeometry(1,det),p=g.attributes.position,v=new THREE.Vector3();for(let i=0;i<p.count;i++){v.fromBufferAttribute(p,i);const k=Math.round(v.x*97)*7+Math.round(v.y*97)*131+Math.round(v.z*97)*1009+seed;v.multiplyScalar(1+amp*((Math.sin(k*12.9898)*43758.5453)%1));p.setXYZ(i,v.x,v.y*.8,v.z);}g.computeVertexNormals();return g;}
+{const champ=new THREE.InstancedMesh(caillou(1,.35,1),new THREE.MeshPhongMaterial({flatShading:true,shininess:0}),700),m=new THREE.Matrix4(),q=new THREE.Quaternion(),e=new THREE.Euler(),c=new THREE.Color();graine=41;
+  let n=0;for(let e2=0;e2<2000&&n<520;e2++){const s=3+Math.pow(rnd(),3)*34,P=new THREE.Vector3((rnd()-.5)*2600,-220+rnd()*480,(rnd()-.5)*2600);if(Math.hypot(P.x+60,P.z-40)<420&&s>8)continue;const i=n++;e.set(rnd()*6,rnd()*6,rnd()*6);q.setFromEuler(e);m.compose(P,q,new THREE.Vector3(s,s*(.7+rnd()*.5),s));champ.setMatrixAt(i,m);c.set(['#5e5258','#4e4552','#6a5c58','#45404e'][rnd()*4|0]);champ.setColorAt(i,c);}champ.count=n;
+  ESPACE.add(champ);}
+for(const I of ILES){const g=new THREE.Mesh(caillou(2,.22,I.r|0),new THREE.MeshPhongMaterial({color:'#6a5c60',flatShading:true,shininess:0}));g.scale.set(I.r*.5,I.r*.36,I.r*.45);g.position.set(I.x,-25,I.z);g.rotation.y=I.x*.01;ESPACE.add(g);I.espSommet=new THREE.Vector3(I.x,-25+I.r*.3,I.z);}
+const fondCv=document.createElement('canvas');fondCv.width=2048;fondCv.height=1024;{const x=fondCv.getContext('2d');x.fillStyle='#07061a';x.fillRect(0,0,2048,1024);
+  for(const[cx,cy,r,c]of[[600,420,520,'rgba(120,60,170,.38)'],[1300,560,600,'rgba(40,90,170,.32)'],[1700,300,380,'rgba(190,70,110,.24)'],[300,700,400,'rgba(60,120,160,.22)']]){const g=x.createRadialGradient(cx,cy,0,cx,cy,r);g.addColorStop(0,c);g.addColorStop(1,'rgba(0,0,0,0)');x.fillStyle=g;x.fillRect(0,0,2048,1024);}
+  graine=99;for(let i=0;i<3000;i++){const b=rnd();x.fillStyle=`rgba(255,${230+b*25|0},${220+b*35|0},${.3+b*.7})`;const t=b>.97?2:1;x.fillRect(rnd()*2048|0,rnd()*1024|0,t,t);}}
+const fondEsp=new THREE.Mesh(new THREE.SphereGeometry(5000,32,16),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(fondCv),side:THREE.BackSide,fog:false,depthWrite:false}));fondEsp.renderOrder=-1;ESPACE.add(fondEsp);
 // ---------- modèles (comme Ciel de guerre : quantifiés, repeints pour les chasseurs) ----------
 const b64=s=>{const b=atob(s);const u=new Uint8Array(b.length);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return u.buffer;};
 function dequantifie(sc0){sc0.updateMatrixWorld(true);sc0.traverse(o=>{if(!o.isMesh)return;const a=o.geometry.attributes.position;if(!a||a.array instanceof Float32Array)return;
@@ -143,7 +156,7 @@ function prepare(k,s){dequantifie(s);s.traverse(o=>{if(!o.isMesh)return;const mm
   MOD[k]=s;if(k.startsWith('py')){MOD[k+'_b']=repeint(s,'b');MOD[k+'_r']=repeint(s,'r');}}
 function charge(k){return new Promise(ok=>{const L=new THREE.GLTFLoader(),fin=g=>{try{prepare(k,g.scene);}catch(e){console.warn(k,e);}ok();},err=e=>{console.warn(k,e);ok();};
   if(window.SC_B64&&window.SC_B64[k])L.parse(b64(window.SC_B64[k]),'',fin,err);else L.load('../ciel-de-guerre/modeles/'+k+'.glb',fin,undefined,err);});}
-await Promise.all(['fga_croiseur1','fga_destroyer2','fga_destroyer1','fga_fregate1_r','fga_corvette1_r','py7','py13'].map(charge));
+await Promise.all(['fga_croiseur1','fga_destroyer2','fga_destroyer1','fga_fregate1_r','fga_corvette1_r','py7','py13','py5'].map(charge));
 function importe(k,rot,L){const g=new THREE.Group(),piv=new THREE.Group();g.add(piv);
   const m=MOD[k]?MOD[k].clone():new THREE.Mesh(new THREE.BoxGeometry(1,.3,2),new THREE.MeshPhongMaterial({color:'#888'}));piv.add(m);piv.rotation.y=rot;
   const s=new THREE.Box3().setFromObject(piv).getSize(new THREE.Vector3());piv.scale.setScalar(L/Math.max(s.x,s.z));const c=new THREE.Box3().setFromObject(piv).getCenter(new THREE.Vector3());piv.position.sub(c);g.rotation.order='YXZ';return g;}
@@ -152,8 +165,8 @@ const U=[],ombreMat=new THREE.MeshBasicMaterial({color:'#2a1e40',transparent:tru
 const yawVers=(dx,dz)=>Math.atan2(-dx,-dz);
 function navire(k,rot,camp,L,x,y,z,nom,o={}){const g=importe(k,rot,L);sc.add(g);const om=new THREE.Mesh(new THREE.CircleGeometry(L*.35,10).rotateX(-Math.PI/2),ombreMat);om.scale.z=2.2;sc.add(om);
   const n=Object.assign({g,om,camp,L,nom,base:new THREE.Vector3(x,y,z),pos:new THREE.Vector3(x,y,z),ph:Math.random()*6,yaw:yawVers(camp?-1:1,camp?.25:-.25),gros:1},o);U.push(n);return n;}
-const PV=navire('fga_croiseur1',-Math.PI/2,0,190,-340,78,160,'AURORE',{pv:1,vie:.86});
-const D1=navire('fga_destroyer2',-Math.PI/2,0,105,-170,88,30,'DESTROYER 1',{vie:.62}),D2=navire('fga_destroyer2',-Math.PI/2,0,105,-210,82,250,'DESTROYER 2',{vie:1});
+const PV=navire('fga_croiseur1',-Math.PI/2,0,330,-380,105,170,'AURORE',{pv:1,vie:.86});
+const D1=navire('fga_destroyer2',-Math.PI/2,0,105,-170,88,30,'DESTROYER 1',{vie:.62}),D2=navire('fga_destroyer2',-Math.PI/2,0,105,-200,82,340,'DESTROYER 2',{vie:1});
 const RD=navire('fga_destroyer1',-Math.PI/2,1,110,340,90,-130,'DESTROYER ROUGE',{vie:.7}),F1=navire('fga_fregate1_r',-Math.PI/2,1,55,200,70,-20,'FREGATE',{vie:.4}),F2=navire('fga_fregate1_r',-Math.PI/2,1,55,270,66,-250,'FREGATE',{vie:.9});
 const C1=navire('fga_corvette1_r',-Math.PI/2,1,38,120,55,90,'CORVETTE',{vie:1,avance:1}),C2=navire('fga_corvette1_r',-Math.PI/2,1,38,150,60,-110,'CORVETTE',{vie:.8,avance:1});
 const ESC=[];
@@ -164,6 +177,8 @@ const E1=escadrille('py7',0,5,'ESC. 1',()=>F1.pos.clone().add(new THREE.Vector3(
   E3=escadrille('py7',0,4,'ESC. 3',()=>PV.pos.clone().add(new THREE.Vector3(0,45,0)),120,{ordre:'ESCORTE AURORE',vie:1}),
   R1=escadrille('py13',1,5,'',()=>D1.pos.clone().add(new THREE.Vector3(0,25,0)),55,{vie:.7}),
   R2=escadrille('py13',1,4,'',()=>new THREE.Vector3(30,80,-30),70,{vie:.5});
+// collecteurs : du porte-vaisseaux au gisement, ils minent, puis reviennent
+const COLL=[];for(let i=0;i<3;i++){const g=importe('py5_b',Math.PI,20);sc.add(g);const rayon=new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(),new THREE.Vector3()]),new THREE.LineBasicMaterial({color:'#9ff0ff',transparent:true,fog:false}));rayon.frustumCulled=false;sc.add(rayon);COLL.push({g,rayon,I:i<2?ILES[1]:ILES[0],ph:i*8.3,pos:new THREE.Vector3(),pre:new THREE.Vector3()});}
 const DUELS=[[E1,()=>F1],[E2,R2],[R2,E2],[R1,()=>D1]];
 // ---------- traçantes et éclairs ----------
 const NT=260,tp=new Float32Array(NT*6),tc=new Float32Array(NT*6),TR=[];const tg=new THREE.BufferGeometry();tg.setAttribute('position',new THREE.BufferAttribute(tp,3));tg.setAttribute('color',new THREE.BufferAttribute(tc,3));
@@ -179,23 +194,27 @@ function marqueur(r){const g=new THREE.Group(),m=new THREE.MeshBasicMaterial({co
   const tg=new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(),new THREE.Vector3(0,-1,0)]);const t=new THREE.Line(tg,new THREE.LineBasicMaterial({color:'#9fe0ff',transparent:true,opacity:.5,depthTest:false,fog:false}));t.renderOrder=3;
   const s=new THREE.Mesh(new THREE.RingGeometry(r*.3-2,r*.3,24).rotateX(-Math.PI/2),m);s.renderOrder=3;g.add(a,t,s);g.userData={t,s};sc.add(g);return g;}
 const MQ=[marqueur(70),marqueur(115)];
-function poseMarqueur(m,p,on){m.visible=on;if(!on)return;m.position.copy(p);const y=Math.max(0,H(p.x,p.z))+1;m.userData.t.scale.y=p.y-y;m.userData.s.position.y=y-p.y;}
+function poseMarqueur(m,p,on){m.visible=on;if(!on)return;m.userData.t.visible=m.userData.s.visible=!AMB.espace;m.position.copy(p);const y=Math.max(0,H(p.x,p.z))+1;m.userData.t.scale.y=p.y-y;m.userData.s.position.y=y-p.y;}
 // ---------- ambiance ----------
 function ambiance(k){AMB=AMBS[k];AMBK=k;const x=cielCv.getContext('2d'),g=x.createLinearGradient(0,0,0,256);AMB.ciel.forEach((c,i)=>g.addColorStop(i/3,c));x.fillStyle=g;x.fillRect(0,0,2,256);cielTex.needsUpdate=true;
   sc.fog.color.set(AMB.brume);hemi.color.set(AMB.hemi[0]);hemi.groundColor.set(AMB.hemi[1]);hemi.intensity=AMB.hemi[2];sol.color.set(AMB.soleil[0]);sol.intensity=AMB.soleil[1];sol.position.set(...AMB.dir).multiplyScalar(-1);
-  mer.material.color.set(AMB.mer);couleursSol();couleursArbres();nuages.forEach(n=>n.children.forEach((m,i)=>m.material.color.set(k==='nuit'?['#4a4e6e','#363a58','#262844'][i%3]:k==='desert'?['#fffaf0','#f0e4d4','#d8c8b8'][i%3]:['#fff2ea','#f4c8cc','#c8a8c8'][i%3])));miniFond=null;}
+  mer.material.color.set(AMB.mer);couleursSol();couleursArbres();nuages.forEach(n=>n.children.forEach((m,i)=>m.material.color.set(k==='nuit'?['#4a4e6e','#363a58','#262844'][i%3]:k==='desert'?['#fffaf0','#f0e4d4','#d8c8b8'][i%3]:['#fff2ea','#f4c8cc','#c8a8c8'][i%3])));miniFond=null;
+  const esp=!!AMB.espace;ESPACE.visible=esp;terrain.visible=mer.visible=!esp;if(esp)arbres.visible=false;nuages.forEach(n=>n.visible=!esp);U.forEach(n=>n.om.visible=!esp);sc.background=esp?null:cielTex;
+  for(const I of ILES){const P=esp?I.espSommet:I.sommet;if(!P)continue;if(I.cristal)I.cristal.position.copy(P);if(I.poste)I.poste.position.copy(P).add(new THREE.Vector3(34,-6,18));}}
 // ---------- caméras des trois directions ----------
-const CAMS={A:{fov:32,pitch:62,dist:1500,cible:()=>new THREE.Vector3(-20,0,0),yaw:t=>Math.sin(t*.03)*.06},
+const CA={c:new THREE.Vector3(-40,0,40),yaw:0,dist:1500,tilt:0},clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const CAMS={A:{fov:32,libre:1},
   B:{fov:42,pitch:40,dist:900,cible:()=>new THREE.Vector3(-60,40,20),yaw:t=>-.35+Math.sin(t*.05)*.12},
   C:{fov:52,basse:1}};
 function placeCam(t){const C=CAMS[DIR];cam.fov=C.fov;
-  if(C.basse){const arr=new THREE.Vector3(-Math.sin(PV.yaw),0,-Math.cos(PV.yaw));const p=PV.pos.clone().addScaledVector(arr,-260).add(new THREE.Vector3(-20,70+Math.sin(t*.2)*4,-210));cam.position.copy(p);cam.lookAt(new THREE.Vector3(60,40,-20));sc.fog.near=500;sc.fog.far=2200;}
+  if(C.libre){const k=clamp((CA.dist-420)/1980,0,1),p=clamp(36+30*k+CA.tilt,20,80)*Math.PI/180,y=CA.yaw,d=CA.dist,c=CA.c;cam.position.set(c.x+Math.sin(y)*Math.cos(p)*d,c.y+Math.sin(p)*d,c.z+Math.cos(y)*Math.cos(p)*d);cam.lookAt(c);sc.fog.near=d*.95;sc.fog.far=d*(AMB.espace?3.5:2.6);}
+  else if(C.basse){const arr=new THREE.Vector3(-Math.sin(PV.yaw),0,-Math.cos(PV.yaw));const p=PV.pos.clone().addScaledVector(arr,-260).add(new THREE.Vector3(-20,70+Math.sin(t*.2)*4,-210));cam.position.copy(p);cam.lookAt(new THREE.Vector3(60,40,-20));sc.fog.near=500;sc.fog.far=2200;}
   else{const c=C.cible(),p=C.pitch*Math.PI/180,y=C.yaw(t);cam.position.set(c.x+Math.sin(y)*Math.cos(p)*C.dist,c.y+Math.sin(p)*C.dist,c.z+Math.cos(y)*Math.cos(p)*C.dist);cam.lookAt(c);sc.fog.near=C.dist*.95;sc.fog.far=C.dist*2.6;}
   cam.updateProjectionMatrix();}
 // ---------- simulation de la bataille (décor : personne ne meurt) ----------
 let T0=0,cad=0,cadG=0;
 function majBataille(t,dt){
-  for(const n of U){const av=n.avance?Math.sin(t*.07+n.ph)*90:Math.sin(t*.05+n.ph)*40;const dx=n.camp?-1:1;n.pos.set(n.base.x+av*dx,n.base.y+Math.sin(t*.6+n.ph)*2.5,n.base.z+Math.cos(t*.04+n.ph)*25);
+  for(const n of U){const av=n.pv?Math.sin(t*.02)*20:n.avance?Math.sin(t*.07+n.ph)*90:Math.sin(t*.05+n.ph)*40;const dx=n.camp?-1:1;n.pos.set(n.base.x+av*dx,n.base.y+Math.sin(t*.6+n.ph)*2.5,n.base.z+Math.cos(t*.04+n.ph)*25);
     n.g.position.copy(n.pos);n.g.rotation.y=n.yaw;n.g.rotation.z=Math.sin(t*.5+n.ph)*.02;n.om.position.set(n.pos.x,Math.max(0,H(n.pos.x,n.pos.z))+1.5,n.pos.z);n.om.rotation.y=n.yaw;}
   for(const e of ESC){const c=e.centre();for(const m of e.m){m.a+=m.w*dt;m.pre.copy(m.pos);m.pos.set(c.x+Math.cos(m.a)*m.rr,c.y+Math.sin(m.a*2+m.h)*14,c.z+Math.sin(m.a)*m.rr*.8);
       const v=m.pos.clone().sub(m.pre);if(v.lengthSq()>1e-6){m.g.rotation.y=yawVers(v.x,v.z);m.g.rotation.x=Math.atan2(v.y,Math.hypot(v.x,v.z))*.8;}m.g.rotation.z=.55;m.g.position.copy(m.pos);}}
@@ -208,7 +227,11 @@ function majBataille(t,dt){
   for(const e of ECL){if(e.t>=1){e.s.visible=false;continue;}e.t+=dt*3.5;e.s.scale.setScalar(e.taille*(.4+e.t));e.s.material.opacity=1-e.t;}
   if(Math.random()<dt*.5){const m=R2.m[Math.random()*R2.m.length|0];eclat(m.pos,40);}
   for(const I of ILES)if(I.cristal)I.cristal.rotation.y=t*.3;
-  nuages.forEach((g,i)=>g.position.x+=dt*(4+i%3));}
+  nuages.forEach((g,i)=>g.position.x+=dt*(4+i%3));
+  for(const c of COLL){const u=(t+c.ph)%25,A=PV.pos.clone().add(new THREE.Vector3(60,-12,0)),B=c.I.cristal.position.clone().add(new THREE.Vector3(0,45,0));let k=0,mine=false;
+    if(u<8)k=u/8;else if(u<14){k=1;mine=true;}else if(u<22)k=1-(u-14)/8;const s=k*k*(3-2*k);c.pre.copy(c.pos);c.pos.lerpVectors(A,B,s);c.pos.y+=Math.sin(s*Math.PI)*60;
+    if(mine){c.pos.x+=Math.cos(t*1.2+c.ph)*22;c.pos.z+=Math.sin(t*1.2+c.ph)*22;}const v=c.pos.clone().sub(c.pre);if(v.lengthSq()>1e-4)c.g.rotation.y=yawVers(v.x,v.z);c.g.position.copy(c.pos);
+    c.rayon.visible=mine;if(mine){const p=c.rayon.geometry.attributes.position,q=c.I.cristal.position;p.setXYZ(0,c.pos.x,c.pos.y-4,c.pos.z);p.setXYZ(1,q.x,q.y+14,q.z);p.needsUpdate=true;c.rayon.material.opacity=.55+.45*Math.sin(t*18);}}}
 // ---------- interface (coordonnées virtuelles, mise à l'échelle du cadre) ----------
 let VW=1280,VH=720,echelle=1;
 const proj=(v)=>{const p=v.clone().project(cam);return{x:(p.x+1)/2*VW,y:(1-p.y)/2*VH,ok:p.z<1&&Math.abs(p.x)<1.1&&Math.abs(p.y)<1.1};};
@@ -218,31 +241,33 @@ const svgChasseur=(c,n)=>`<svg width="${n*18}" height="22" viewBox="0 0 ${n*18} 
 const svgNavire=c=>`<svg width="70" height="22" viewBox="0 0 70 22"><path d="M2 11 L14 4 L58 5 L68 11 L58 17 L14 18Z" fill="${c}"/><rect x="28" y="8" width="12" height="6" fill="#fff" opacity=".5"/></svg>`;
 let miniFond=null;
 function mini(cv){const x=cv.getContext('2d'),w=cv.width,h=cv.height,E=1150,X=v=>(v/E*.5+.5)*w,Z=v=>(v/E*.5+.5)*h;
-  if(!miniFond||miniFond.width!==w){miniFond=document.createElement('canvas');miniFond.width=w;miniFond.height=h;const y=miniFond.getContext('2d'),d=y.createImageData(w,h),S=new THREE.Color(AMB.sol[1]),M=new THREE.Color(AMB.fond);
-    for(let j=0;j<h;j++)for(let i=0;i<w;i++){const k=(j*w+i)*4,hh=H((i/w-.5)*2*E,(j/h-.5)*2*E),c=hh>0?S:M;d.data[k]=c.r*255;d.data[k+1]=c.g*255;d.data[k+2]=c.b*255;d.data[k+3]=255;}y.putImageData(d,0,0);}
+  if(!miniFond||miniFond.width!==w){miniFond=document.createElement('canvas');miniFond.width=w;miniFond.height=h;const y=miniFond.getContext('2d'),d=y.createImageData(w,h),S=new THREE.Color(AMB.sol[1]),A2=new THREE.Color('#7d6c7a'),M=new THREE.Color(AMB.fond);
+    for(let j=0;j<h;j++)for(let i=0;i<w;i++){const k=(j*w+i)*4,wx=(i/w-.5)*2*E,wz=(j/h-.5)*2*E,hh=AMB.espace?(ILES.some(I=>Math.hypot(wx-I.x,wz-I.z)<I.r*.48)?1:-1):H(wx,wz),c=hh>0?(AMB.espace?A2:S):M;d.data[k]=c.r*255;d.data[k+1]=c.g*255;d.data[k+2]=c.b*255;d.data[k+3]=255;}y.putImageData(d,0,0);}
   x.drawImage(miniFond,0,0);
   for(const I of ILES)if(I.nom){x.strokeStyle=COUL_CAMP[I.prise?0:I.camp<0?2:I.camp];x.lineWidth=1.5;x.beginPath();x.arc(X(I.x),Z(I.z),I.r*.82/E*.5*w,0,6.283);x.stroke();}
   for(const n of U){x.fillStyle=n.camp?'#ff6a4a':'#7fd0ff';const s=n.pv?6:4;x.fillRect(X(n.pos.x)-s/2,Z(n.pos.z)-s/2,s,s);}
   for(const e of ESC)for(const m of e.m){x.fillStyle=e.camp?'#ffb0a0':'#d8f2ff';x.fillRect(X(m.pos.x)-1,Z(m.pos.z)-1,2,2);}
+  for(const c of COLL){x.fillStyle='#9ff0ff';x.fillRect(X(c.pos.x)-1.5,Z(c.pos.z)-1.5,3,3);}
   // ce que voit la caméra (les quatre coins projetés sur la mer)
   const rc=new THREE.Raycaster(),pl=new THREE.Plane(new THREE.Vector3(0,1,0),0),pts=[];for(const[a,b]of[[-1,-1],[1,-1],[1,1],[-1,1]]){rc.setFromCamera({x:a,y:b},cam);const q=new THREE.Vector3();if(rc.ray.intersectPlane(pl,q))pts.push(q);}
   if(pts.length===4){x.strokeStyle='rgba(255,255,255,.8)';x.lineWidth=1;x.beginPath();pts.forEach((q,i)=>i?x.lineTo(X(q.x),Z(q.z)):x.moveTo(X(q.x),Z(q.z)));x.closePath();x.stroke();}}
 // gabarits de chaque direction : statique (une fois) et dynamique (chaque image)
 function hautRessources(tel){return `<div class="pan" style="left:12px;top:10px"><div class="l"><b class="cr">◆ 340</b><span>+18/MIN</span></div>${tel?'':'<div class="l"><span>ILES</span><b>1 / 5</b></div>'}<div class="l"><span>TEMPS</span><b>08:42</b></div></div>`;}
 function objectif(x,w){return `<div class="pan" style="left:${x}px;top:10px;width:${w}px;text-align:center"><span style="color:#ffd2a0">ESCARMOUCHE 2 · ★★☆</span><div>TENIR L'ILE CENTRALE</div>${barre(.45,'cap')}</div>`;}
+const boutonsCam=pos=>`<div style="position:absolute;${pos};display:flex;gap:5px">${[['+','+'],['−','-'],['⟲','r'],['N','n']].map(([t,v])=>`<span class="bt clic" data-cam="${v}" style="pointer-events:auto;cursor:pointer;min-width:34px">${t}</span>`).join('')}</div>`;
 const GAB={
 A:{pc:()=>`${hautRessources()}${objectif(470,340)}<canvas class="mini" width="190" height="190" style="left:12px;bottom:12px;width:190px;height:190px"></canvas>
   <div class="pan" style="left:216px;bottom:118px;display:flex;gap:6px;padding:5px"><span class="bt on"><span class="k">1</span>ESC. 1</span><span class="bt"><span class="k">2</span>ESC. 2</span><span class="bt"><span class="k">3</span>ESC. 3</span><span class="bt"><span class="k">4</span>DESTROYERS</span></div>
   <div class="pan" style="left:216px;bottom:12px;width:520px;height:98px"><div class="l"><b>ESCADRILLE 1 · 5 CHASSEURS</b><span>ATTAQUE FREGATE</span></div><div style="display:flex;gap:14px;align-items:center;margin-top:4px">${svgChasseur('#7fd0ff',5)}<div style="flex:1">${barre(.8)}</div></div>
    <div style="display:flex;gap:6px;margin-top:8px"><span class="bt"><span class="k">A</span>ATTAQUER</span><span class="bt"><span class="k">D</span>DEFENDRE</span><span class="bt"><span class="k">P</span>PATROUILLE</span><span class="bt"><span class="k">R</span>RETOUR</span></div></div>
   <div class="pan" style="right:12px;bottom:12px;width:300px"><div class="l"><b>PORTE-VAISSEAUX AURORE</b></div>${barre(.86)}<div class="mut" style="margin:8px 0 4px">CHANTIER</div>
-   <div style="display:grid;gap:5px"><span class="bt" style="justify-content:space-between"><span><span class="k">Q</span>CHASSEUR</span><b class="cr">40◆</b></span><span class="bt" style="justify-content:space-between"><span><span class="k">W</span>BOMBARDIER</span><b class="cr">70◆</b></span><span class="bt" style="justify-content:space-between"><span><span class="k">E</span>FREGATE</span><b class="cr">150◆</b></span></div>
+   <div style="display:grid;gap:5px"><span class="bt" style="justify-content:space-between"><span><span class="k">Q</span>CHASSEUR</span><b class="cr">40◆</b></span><span class="bt" style="justify-content:space-between"><span><span class="k">W</span>BOMBARDIER</span><b class="cr">70◆</b></span><span class="bt" style="justify-content:space-between"><span><span class="k">E</span>FREGATE</span><b class="cr">150◆</b></span><span class="bt" style="justify-content:space-between"><span><span class="k">T</span>COLLECTEUR</span><b class="cr">30◆</b></span></div><div style="display:flex;justify-content:space-between;margin-top:6px"><span class="mut">COLLECTEURS 3</span><span class="bt"><span class="k">U</span>ARSENAL</span></div>
    <div class="mut" style="margin-top:6px">EN COURS : CHASSEUR</div>${barre(.6,'cap')}</div>
-  <svg class="ov" width="1280" height="720"></svg><div class="astuce" style="right:12px;top:12px">GLISSER : CADRE · CLIC DROIT : ORDRE</div>`,
+  <svg class="ov" width="1280" height="720"></svg><div class="astuce" style="right:12px;top:12px">MOLETTE : ZOOM · CLIC DROIT GLISSE : PIVOTER · CLIC DROIT : ORDRE</div>${boutonsCam('left:12px;bottom:210px')}`,
  tel:()=>`${hautRessources(1)}${objectif(300,280)}<canvas class="mini" width="110" height="110" style="right:10px;top:10px;width:110px;height:110px"></canvas>
   <div style="position:absolute;left:10px;top:96px;display:grid;gap:7px"><span class="bt gros on">ESC. 1</span><span class="bt gros">ESC. 2</span><span class="bt gros">ESC. 3</span><span class="bt gros">FLOTTE</span></div>
   <div style="position:absolute;right:10px;bottom:10px;display:grid;gap:7px"><span class="bt gros">ATTAQUER</span><span class="bt gros">DEFENDRE</span><span class="bt gros">RETOUR</span><span class="bt gros" style="background:#4a3a1a">◆ CHANTIER</span></div>
-  <svg class="ov" width="880" height="400"></svg><div class="astuce" style="left:50%;bottom:10px;transform:translateX(-50%)">UN GROUPE, PUIS TOUCHER LA CIBLE</div>`},
+  <svg class="ov" width="880" height="400"></svg><div class="astuce" style="left:50%;bottom:10px;transform:translateX(-50%)">PINCER : ZOOM · DEUX DOIGTS : PIVOTER</div>${boutonsCam('right:10px;top:126px')}`},
 B:{pc:()=>`<div class="pan" style="left:12px;top:10px;display:flex;gap:16px"><b class="cr">◆ 340</b><span>08:42</span><span>★★☆</span></div><div id="tags"></div><svg class="ov" width="1280" height="720"></svg>
   <div class="astuce" style="left:12px;bottom:12px">CLIC SUR UN ANNEAU : CHOISIR · CLIC DROIT : ORDRE · CLIC SUR AURORE : CHANTIER</div>`,
  tel:()=>`<div class="pan" style="left:10px;top:8px;display:flex;gap:12px"><b class="cr">◆ 340</b><span>08:42</span></div><div id="tags"></div><svg class="ov" width="880" height="400"></svg>
@@ -280,24 +305,39 @@ function majUI(t){const ov=ui.querySelector('svg.ov'),mc=ui.querySelector('canva
 const curseur=(x,y)=>`<path d="M${x} ${y} l0 16 l4 -4 l3 7 l3 -1 l-3 -7 l6 0Z" fill="#fff" stroke="#000" stroke-width="1"/>`;
 const ping=(c,k,txt,doigt)=>`<circle cx="${c.x}" cy="${c.y}" r="${8+k*30}" fill="none" stroke="${doigt?'#fff':'#ff8a5a'}" stroke-width="2" opacity="${1-k}"/>${doigt?`<circle cx="${c.x}" cy="${c.y}" r="11" fill="rgba(255,255,255,.35)"/>`:''}${txt?`<text x="${c.x+18}" y="${c.y-12}" fill="#ffb8a0" font-family="Silkscreen" font-size="13" paint-order="stroke" stroke="#000" stroke-width="3">${txt}</text>`:''}`;
 // ---------- descriptions ----------
-const DESC={A:[['CAMERA','Vue de haut, presque à la verticale, qui couvre toute la bataille. On fait défiler la carte au bord de l\'écran, au clavier ou en glissant.'],['INTERFACE','Classique : ressources en haut, mini-carte, barre des groupes (1 à 4), panneau de la sélection avec ses ordres, et le chantier du porte-vaisseaux à droite.'],['PC','Cadre à la souris, clic droit pour l\'ordre, raccourcis A D P R et Q W E.'],['TELEPHONE','Gros boutons des groupes à gauche, ordres à droite : on touche un groupe, puis la cible.'],['+ / −','+ le plus lisible pour commander beaucoup d\'unités. − les vaisseaux sont petits, on voit moins le beau rendu.']],
+const DESC={A:[['CAMERA (CHOISIE)','Caméra libre : zoom à la molette ou au pincement, pivoter au clic droit glissé ou à deux doigts, déplacer en glissant (dans le jeu, glisser au clic gauche fera le cadre de sélection ; on déplacera aux bords de l\'écran et aux flèches). Plus on zoome, plus la vue s\'incline : de près, on retrouve l\'allure de B. Boutons + − ⟲ N pour qui n\'a pas de molette.'],['INTERFACE','Classique : ressources en haut, mini-carte, barre des groupes (1 à 4), panneau de la sélection avec ses ordres, et le chantier du porte-vaisseaux à droite.'],['PC','Cadre à la souris, clic droit pour l\'ordre, raccourcis A D P R et Q W E.'],['TELEPHONE','Gros boutons des groupes à gauche, ordres à droite : on touche un groupe, puis la cible.'],['+ / −','+ le plus lisible pour commander beaucoup d\'unités. − les vaisseaux sont petits, on voit moins le beau rendu.']],
  B:[['CAMERA','Vue de biais, plus proche : on voit le relief des îles, les coques et les combats tournoyants.'],['INTERFACE','Tout sur la carte : étiquettes et points de vie au-dessus des groupes, anneaux des îles avec leur prise, ordre en pointillés, chantier en menu autour du porte-vaisseaux.'],['PC','Clic sur une étiquette ou un anneau pour choisir, clic droit pour l\'ordre.'],['TELEPHONE','Les étiquettes sont les boutons ; une petite barre de groupes en bas.'],['+ / −','+ beau et immersif, peu de panneaux (dans l\'esprit de Bastion B). − les étiquettes s\'empilent quand la bataille grossit.']],
  C:[['CAMERA','Vue basse, derrière le porte-vaisseaux : la plus cinématique, le ciel et les nuages comptent.'],['INTERFACE','Chaque escadrille est une carte en bas de l\'écran (état, ordre en cours) ; la carte tactique en haut à droite sert à donner les ordres.'],['PC','Touches 1 à 4 ou clic sur une carte, puis glisser sur la carte tactique.'],['TELEPHONE','Les cartes au pouce, la carte tactique qu\'on touche pour l\'agrandir.'],['+ / −','+ très beau, peu d\'unités à suivre : chaque escadrille compte. − on commande surtout depuis la petite carte, moins « RTS ».']]};
 function majDesc(){$('#desc').innerHTML=DESC[DIR].map(([h,p])=>`<div class="carte"><h3>${h}</h3><p>${p}</p></div>`).join('');}
 // ---------- cadre, boutons ----------
-function redim(){const r=cadre.getBoundingClientRect(),dpr=Math.min(2,window.devicePixelRatio||1);const w=Math.max(320,Math.round(r.width*dpr/2.5)),h=Math.round(w*r.height/r.width);
+function redim(){const r=cadre.getBoundingClientRect(),dpr=Math.min(2,window.devicePixelRatio||1);const w=Math.max(320,Math.round(r.width*dpr/(NET?1:2.5))),h=Math.round(w*r.height/r.width);
   R.setSize(w,h,false);cam.aspect=r.width/r.height;cam.updateProjectionMatrix();echelle=Math.min(r.width/VW,r.height/VH);ui.style.transform=`translate(${(r.width-VW*echelle)/2}px,${(r.height-VH*echelle)/2}px) scale(${echelle})`;
   if(APP==='pc'||document.fullscreenElement){VW=Math.round(VH*r.width/r.height);ui.style.width=VW+'px';echelle=r.height/VH;ui.style.transform=`scale(${echelle})`;const o=ui.querySelector('svg.ov');if(o)o.setAttribute('width',VW);}}
 function groupe(id,f){$(id).addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;$(id).querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));f(b.dataset.v);});}
 groupe('#gDir',v=>{DIR=v;construireUI();majDesc();});
 groupe('#gApp',v=>{APP=v;cadre.classList.toggle('tel',v==='tel');construireUI();});
 groupe('#gAmb',v=>ambiance(v));
+groupe('#gNet',v=>{NET=v==='net';cv.style.imageRendering=NET?'auto':'pixelated';redim();});
 $('#bPlein').onclick=async()=>{try{await cadre.requestFullscreen();if(APP==='tel'&&screen.orientation&&screen.orientation.lock)screen.orientation.lock('landscape').catch(()=>{});}catch(e){}};
 addEventListener('resize',()=>{redim();});document.addEventListener('fullscreenchange',()=>setTimeout(redim,60));
 // ---------- boucle ----------
 ambiance('crepuscule');construireUI();majDesc();$('#chg').remove();
+// commandes de la caméra libre (direction A) : souris et doigts
+const PTR=new Map();
+function deplacer(dx,dy){const r=cadre.getBoundingClientRect(),k=2*CA.dist*Math.tan(16*Math.PI/180)/r.height*1.15,y=CA.yaw;CA.c.x+=(-Math.cos(y)*dx-Math.sin(y)*dy)*k;CA.c.z+=(Math.sin(y)*dx-Math.cos(y)*dy)*k;CA.c.x=clamp(CA.c.x,-1000,1000);CA.c.z=clamp(CA.c.z,-1000,1000);}
+const zoom=f=>{CA.dist=clamp(CA.dist*f,420,2400);};
+cadre.addEventListener('contextmenu',e=>e.preventDefault());
+cadre.addEventListener('wheel',e=>{if(DIR!=='A')return;e.preventDefault();zoom(Math.exp(e.deltaY*.0012));},{passive:false});
+cadre.addEventListener('pointerdown',e=>{if(DIR!=='A'||e.target.closest('.clic'))return;try{cadre.setPointerCapture(e.pointerId);}catch(x){}PTR.set(e.pointerId,{x:e.clientX,y:e.clientY,b:e.button});});
+cadre.addEventListener('pointermove',e=>{const p=PTR.get(e.pointerId);if(!p)return;const dx=e.clientX-p.x,dy=e.clientY-p.y;
+  if(PTR.size===1){if(p.b===0)deplacer(dx,dy);else{CA.yaw-=dx*.006;CA.tilt=clamp(CA.tilt-dy*.15,-16,18);}}
+  else if(PTR.size===2){const[a,b]=[...PTR.values()],d0=Math.hypot(a.x-b.x,a.y-b.y),a0=Math.atan2(b.y-a.y,b.x-a.x);p.x=e.clientX;p.y=e.clientY;const d1=Math.hypot(a.x-b.x,a.y-b.y),a1=Math.atan2(b.y-a.y,b.x-a.x);
+    if(d1>10)zoom(d0/d1);let da=a1-a0;if(da>Math.PI)da-=6.283;if(da<-Math.PI)da+=6.283;CA.yaw+=da;deplacer(dx/2,dy/2);}
+  p.x=e.clientX;p.y=e.clientY;});
+const lacher=e=>PTR.delete(e.pointerId);cadre.addEventListener('pointerup',lacher);cadre.addEventListener('pointercancel',lacher);
+ui.addEventListener('click',e=>{const b=e.target.closest('[data-cam]');if(!b)return;const v=b.dataset.cam;if(v==='+')zoom(.8);if(v==='-')zoom(1.25);if(v==='r')CA.yaw+=Math.PI/4;if(v==='n'){CA.yaw=0;CA.tilt=0;CA.dist=1500;CA.c.set(-40,0,40);}});
 let der=performance.now(),tt=0;
-function boucle(now){const dt=Math.min(.05,(now-der)/1000);der=now;tt+=dt;majBataille(tt,dt);placeCam(tt);majUI(tt);R.render(sc,cam);requestAnimationFrame(boucle);}
+function boucle(now){const dt=Math.min(.05,(now-der)/1000);der=now;tt+=dt;majBataille(tt,dt);placeCam(tt);majUI(tt);fondEsp.position.copy(cam.position);R.render(sc,cam);requestAnimationFrame(boucle);}
 requestAnimationFrame(boucle);
 window.Maquette={set:(d,a,k)=>{if(d){DIR=d;construireUI();majDesc();}if(a){APP=a;cadre.classList.toggle('tel',a==='tel');construireUI();}if(k)ambiance(k);}};
 })();
