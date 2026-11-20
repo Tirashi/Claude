@@ -2,8 +2,8 @@
 Gestion d'écurie de course, courses regardées en 3D. Cahier des charges : [`specs/ecurie.md`](../specs/ecurie.md).
 
 ## Fichiers (scripts classiques, dans cet ordre)
-- `donnees.js` : modèles (`ENTETE`, `BLOB` gzip base64, `GLB` des 3 tuiles de route) ; fabriqué depuis la maquette 6 (garder seulement les modèles utilisés), ne pas éditer à la main.
-- `modeles.js` (`Modeles`) : décodage, carrosserie repeinte (`maillage(nom, teinte)`) ; `voiture(nom, teinte)` = carrosserie + roues séparées (pièces qui touchent le sol, avec leurs jantes) qui tournent (`tourner(d)`, plafonné à 0,38 rad par image) et position des feux stop (`feu`, d'après l'arrière de la carrosserie) ; tuiles GLB ; met `createImageBitmap` à `undefined` (artefact).
+- `donnees.js` : modèles (`ENTETE`, `BLOB` gzip base64, `GLB` des 3 tuiles de route) ; tiré de la maquette 6, ne pas éditer à la main.
+- `modeles.js` (`Modeles`) : décodage, carrosserie repeinte (`maillage(nom, teinte)`) ; `voiture(nom, teinte)` : roues séparées qui tournent (`tourner(d)`, plafonné) et feux stop (`feu`) ; tuiles GLB ; met `createImageBitmap` à `undefined` (artefact).
 - `circuit.js` (`Circuits`) : circuits posés « à la tortue » (`plan` : 'S' = 12 m, 18 / 42 = virage), trajectoire idéale, ligne de départ. Un plan doit se refermer (4 virages à gauche ; `ferme`).
 - `course.js` (`Course`) : simulation pure (`creer`, `pas`, `finir`) ; qualifications, arrivée, abandons (accident, casse tirée d'avance).
 - `regles.js` (`Regles`) : données (voitures, pièces, rivaux par division, sponsors, activités, revenus) et logique (`preparer`, `resultats`, fin de saison).
