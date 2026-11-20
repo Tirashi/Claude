@@ -33,6 +33,8 @@ ul{margin:0;padding-left:22px;display:grid;gap:6px;max-width:76ch}
 .tour small{color:#c9c0e8;font-size:1.8cqi}.tour .moi small{color:#2b1606}
 .defile{overflow-x:auto} table{border-collapse:collapse;font-size:15px;width:100%;min-width:720px} td,th{border-bottom:1px solid var(--bord);padding:6px 8px;text-align:left}
 .bcam{position:absolute;right:3cqi;top:9cqi;font:2cqi var(--titre);background:#f08a24;color:#2b1606;border:0;border-bottom:3px solid #8a4a10;padding:1.6cqi 2cqi;cursor:pointer;z-index:3}
+.feux{position:absolute;left:50%;top:20%;transform:translateX(-50%);display:flex;gap:2cqi;padding:2cqi;background:rgba(10,10,14,.85);border:2px solid #000}
+.feux:empty{display:none}.feux i{width:6cqi;height:6cqi;border-radius:50%;background:#2a1414;display:block}.feux i.r{background:#ff3a2a;box-shadow:0 0 3cqi #ff3a2a}.feux i.v{background:#3cff6a;box-shadow:0 0 3cqi #3cff6a}
 .duel{position:absolute;left:3cqi;bottom:3cqi;font-size:2.2cqi;background:#ffd23f;color:#0d1118;padding:1.6cqi 2cqi}
 .flash{position:absolute;inset:0;background:#fff;opacity:0;transition:opacity .3s}
 .chargement{position:absolute;inset:0;display:grid;place-items:center;font-size:2.4cqi;color:#c9c0e8}
@@ -44,13 +46,13 @@ ul{margin:0;padding-left:22px;display:grid;gap:6px;max-width:76ch}
 </header>
 <section class="tels">
 <figure><div class="tel" id="t1"><canvas></canvas><div class="chargement">CHARGEMENT…</div>
-  <div class="hud"><div class="haut"><span>GP DE LA VILLE</span><span class="tourN"></span></div><div class="tour"></div><div class="fil"></div></div><button class="bcam">CAMERA : SUIVIE</button></div>
+  <div class="hud"><div class="haut"><span>GP DE LA VILLE</span><span class="tourN"></span></div><div class="tour"></div><div class="feux"></div><div class="fil"></div></div><button class="bcam">CAMERA : SUIVIE</button></div>
 <figcaption><b>1 · DERRIERE TA VOITURE</b><span>Le bouton CAMERA passe d'un point de vue à l'autre (suivie, diorama, télé). Caméra suivie plus haute qui suit ta voiture orange. Course de 8 tours simulée avec les stats ci-dessous : freinage avant les virages, aspiration en ligne droite, attaques, portes fermées, erreurs. Les écarts en secondes et le fil des événements sont à l'écran.</span></figcaption></figure>
 <figure><div class="tel" id="t2"><canvas></canvas><div class="chargement">CHARGEMENT…</div>
-  <div class="hud"><div class="haut"><span>GP DE LA VILLE</span><span class="tourN"></span></div><div class="tour"></div></div></div>
+  <div class="hud"><div class="haut"><span>GP DE LA VILLE</span><span class="tourN"></span></div><div class="tour"></div><div class="feux"></div></div></div>
 <figcaption><b>2 · LE DIORAMA</b><span>Tout le circuit d'un coup, vu de haut, la caméra tourne lentement autour.</span></figcaption></figure>
 <figure><div class="tel" id="t3"><canvas></canvas><div class="chargement">CHARGEMENT…</div>
-  <div class="hud"><div class="haut"><span>GP DE LA VILLE</span><span class="tourN"></span></div><div class="tour"></div><div class="cam">● CAM 1</div><div class="duel"></div><div class="flash"></div></div></div>
+  <div class="hud"><div class="haut"><span>GP DE LA VILLE</span><span class="tourN"></span></div><div class="tour"></div><div class="feux"></div><div class="cam">● CAM 1</div><div class="duel"></div><div class="flash"></div></div></div>
 <figcaption><b>3 · LA TELE</b><span>Des caméras posées au bord de la piste ; le réalisateur passe de l'une à l'autre pour suivre le duel le plus serré.</span></figcaption></figure>
 </section>
 <section><h2>Les stats (à la louche)</h2><div class="defile"><table id="stats"></table></div><p style="margin-top:10px">Les voitures les plus rapides partent derrière (grille inversée selon une note de performance), pour forcer les remontées. Talent : freine plus tard et passe plus vite en virage. Constance : fait moins d'erreurs. Agressivité : attaque plus souvent et ferme la porte.</p></section>
@@ -113,21 +115,22 @@ Promise.all([decoder(),glb('Road1'),glb('Road1_Curve3'),glb('Road1_Curve4')]).th
   const Ls=[0];for(let i=1;i<=pts.length;i++){const a=pts[i-1],b=pts[i%pts.length];Ls.push(Ls[i-1]+Math.hypot(b[0]-a[0],b[1]-a[1]));}const TOT=Ls[Ls.length-1];
   const at=(s,dec=0)=>{s=((s%TOT)+TOT)%TOT;let lo=0,hi=pts.length-1;while(lo<hi){const m=(lo+hi+1)>>1;if(Ls[m]<=s)lo=m;else hi=m-1;}const i=lo,a=pts[i],b=pts[(i+1)%pts.length];const f=(s-Ls[i])/(Ls[i+1]-Ls[i]);
     const h=Math.atan2(b[1]-a[1],b[0]-a[0]);return[a[0]+(b[0]-a[0])*f-Math.sin(h)*dec,a[1]+(b[1]-a[1])*f+Math.cos(h)*dec,h];};
+  let DEPART=0;{let best=0,i=0;while(i<pts.length){if(RAD[i]>1e8){let j=i;while(j<pts.length&&RAD[j]>1e8)j++;if(j-i>best){best=j-i;DEPART=Ls[j-6];}i=j;}else i++;}}
   /* ---------- le décor ---------- */
   const R=rnd(7);const pose=(nom,x,z,a,s=1)=>{const o=maillage(M,'deco-'+nom);o.position.set(x,0,z);o.rotation.y=a;o.scale.setScalar(s);sc.add(o);return o;};
   for(let s=6;s<TOT;s+=24){const[x,z,h]=at(s,8.2);pose('lamp_1',x,z,-h-Math.PI/2+Math.PI);const[x2,z2,h2]=at(s+12,-8.2);pose('lamp_1',x2,z2,-h2+Math.PI/2+Math.PI);}
   // barrières à l'extérieur des virages, fûts et cônes à l'entrée
   for(const t of tuiles)if(t.type==='C'){const n=Math.round(t.R*Math.PI/2/3.3);for(let i=0;i<=n;i++){const a=t.th-Math.PI/2+i/n*Math.PI/2;const r=t.R+8.6;pose('road_barier_2a',t.cx+r*Math.cos(a),t.cz+r*Math.sin(a),-(a+Math.PI/2));}
     const a0=t.th-Math.PI/2;for(let k=0;k<3;k++)pose('traffic_barell_1',t.cx+(t.R+11+k*2.2)*Math.cos(a0-.05),t.cz+(t.R+11+k*2.2)*Math.sin(a0-.05),0);}
-  {const[x,z,h]=at(-6,-8);pose('traffic_light_1',x,z,-h+Math.PI/2+Math.PI);}
+  {const[x,z,h]=at(DEPART-2,-8);pose('traffic_light_1',x,z,-h+Math.PI/2+Math.PI);}
   for(let s=0;s<TOT;s+=31){const[x,z]=at(s,R()<.5?-10.5:10.5);pose('hazzard_cone_1',x,z,R()*6);}
   // arbres : loin de la route
   const loin=(x,z,d)=>pts.every(p=>Math.hypot(p[0]-x,p[1]-z)>d);
   for(let i=0;i<260;i++){const x=-120+R()*290,z=-90+R()*260;if(!loin(x,z,14))continue;pose(R()<.5?'Tree3':'Tree4',x,z,R()*6,.8+R()*.6);}
   // ligne de départ
-  {const[x,z,h]=at(2);const g=new THREE.Group();for(let i=0;i<10;i++)for(let j=0;j<2;j++){const q=new THREE.Mesh(new THREE.PlaneGeometry(1,1.04),new THREE.MeshLambertMaterial({color:(i+j)%2?0x111111:0xffffff}));q.rotation.x=-Math.PI/2;q.position.set(j,.5,-5.2+i*1.04+.52);g.add(q);}g.position.set(x,0,z);g.rotation.y=-h;sc.add(g);}
+  {const[x,z,h]=at(DEPART);const g=new THREE.Group();for(let i=0;i<10;i++)for(let j=0;j<2;j++){const q=new THREE.Mesh(new THREE.PlaneGeometry(1,1.04),new THREE.MeshLambertMaterial({color:(i+j)%2?0x111111:0xffffff}));q.rotation.x=-Math.PI/2;q.position.set(j,.215,-5.2+i*1.04+.52);g.add(q);}g.position.set(x,0,z);g.rotation.y=-h;sc.add(g);}
   // tribune (faite par le code)
-  {const[x,z,h]=at(30,-18);const g=new THREE.Group();const gris=new THREE.MeshLambertMaterial({color:0x8a90a0,flatShading:true});
+  {const[x,z,h]=at(DEPART-22,-18);const g=new THREE.Group();const gris=new THREE.MeshLambertMaterial({color:0x8a90a0,flatShading:true});
     for(let m=0;m<4;m++){const b=new THREE.Mesh(new THREE.BoxGeometry(34,1,2.2),gris);b.position.set(0,.5+m*1,-m*2.2);b.castShadow=b.receiveShadow=true;g.add(b);
       for(let p=0;p<22;p++){const q=new THREE.Mesh(new THREE.BoxGeometry(.7,.9,.7),new THREE.MeshLambertMaterial({color:new THREE.Color().setHSL(R(),.6,.55)}));q.position.set(-15.5+p*1.47,1.45+m,-m*2.2);g.add(q);}}
     const toit=new THREE.Mesh(new THREE.BoxGeometry(36,.5,11),new THREE.MeshLambertMaterial({color:0xc03a3a,flatShading:true}));toit.position.set(0,7.5,-3.6);toit.castShadow=true;g.add(toit);
@@ -161,18 +164,24 @@ Promise.all([decoder(),glb('Road1'),glb('Road1_Curve3'),glb('Road1_Curve4')]).th
   // grille : les plus rapides partent derrière, pour qu'il y ait des dépassements
   const note=g=>g.vmax*.3+g.grip*20+g.tal*12;
   const depart=GRILLE.map((g,k)=>k).sort((a,b)=>note(GRILLE[a])-note(GRILLE[b]));
+  const FEU_OFF=new THREE.MeshBasicMaterial({color:0x5a1010}),FEU_ON=new THREE.MeshBasicMaterial({color:0xff3a2a});
   const V=GRILLE.map((g,k)=>{const m=maillage(M,g.n,g.c);m.scale.setScalar(LV);sc.add(m);const rang=depart.indexOf(k);
-    const lat=rang%2?2.4:-2.4;return Object.assign({},g,{k,m,coul:g.c,s:-4-rang*7,lat,cibleLat:lat,dec:lat,v:0,erreur:0,bloque:0,mem:0,lacet:0});});
+    const col=rang%2?2.4:-2.4,s0=DEPART-5-rang*7.5;
+    const feux=[];for(const zz of[-.17,.17]){const fe=new THREE.Mesh(new THREE.BoxGeometry(.012,.035,.07),FEU_OFF);fe.position.set(-.5,.19,zz);m.add(fe);feux.push(fe);}
+    return Object.assign({},g,{k,m,feux,coul:g.c,s:s0,col,lat:0,cibleLat:0,dec:col,v:0,erreur:0,sortie:false,bloque:0,mem:0,lacet:0,tang:0});});
   const vVirage=(i,g)=>Math.sqrt(g*9.81*Math.min(RAYON[((i%NP)+NP)%NP],400));
-  let t=0,ordre=V.slice();const EV=[],NB={};const evenement=x=>{const k=x.split(' ')[0];NB[k]=(NB[k]||0)+1;EV.unshift(x);EV.length=Math.min(EV.length,3);};
+  let t=-4.5,ordre=V.slice().sort((a,b)=>b.s-a.s);const EV=[],NB={};const evenement=x=>{const k=x.split(' ')[0];NB[k]=(NB[k]||0)+1;EV.unshift(x);EV.length=Math.min(EV.length,3);};
   const cote=(a,b)=>Math.abs(a.dec-b.dec)<LARG; // se recouvrent en largeur
   function course(dt){t+=dt;const R=Math.random;
+    if(t<0){for(const v of V){const[x,z,h]=at(v.s,v.dec);v.m.position.set(x,Y,z);v.m.rotation.y=-h;}return;}
     for(const v of V){
       // hors de la trajectoire, on passe un peu moins vite en virage
       const g=v.grip*(.94+.08*v.tal)*(1-.05*Math.min(1,Math.abs(v.lat)/COTE));let cible=v.vmax*(.97+.03*v.tal);const i0=idx(v.s);
-      for(let d=0;d<70;d+=3){const vc=vVirage(i0+d,g);cible=Math.min(cible,Math.sqrt(vc*vc+2*FREIN*(.9+.1*v.tal)*d));}
+      for(let d=0;d<70;d+=3){const vc=vVirage(i0+d,g);cible=Math.min(cible,Math.sqrt(vc*vc+2*FREIN*(.9+.1*v.tal)*(v.mem>0?1+.12*v.agr:1)*d));}
       for(const o of V)if(o!==v){const e=o.s-v.s;if(e>0&&e<20&&cote(o,v)&&RAD[i0]>1e8)cible*=1.05;}
-      if(v.erreur>0){v.erreur-=dt;cible*=.55;}else if(t>4&&R()<(1-v.cst)*.035*dt){v.erreur=1+R();evenement(`ERREUR DE ${v.nom} !`);}
+      if(v.erreur>0){v.erreur-=dt;cible*=v.sortie?.45:.6;if(v.erreur<=0)v.sortie=false;}
+      else if(t>4&&R()<(1-v.cst)*.035*dt){v.erreur=1.2+R();let virage=false;for(let d=0;d<25;d+=5)if(RAD[(i0+d)%NP]<1e8)virage=true;
+        v.sortie=virage&&R()<.6;evenement(v.sortie?`SORTIE DE PISTE DE ${v.nom} !`:`ERREUR DE ${v.nom} !`);}
       v.cibleV=cible;if(v.v<cible)v.v=Math.min(cible,v.v+v.acc*(1-v.v/(v.vmax*1.1))*dt*1.6);else v.v=Math.max(cible,v.v-FREIN*1.3*dt);
       v.cibleLat=v.mem>0||v.bloque>0?v.cibleLat:0;}
     // attaques et défenses : l'attaquant quitte la trajectoire du côté où il y a de la place
@@ -181,7 +190,8 @@ Promise.all([decoder(),glb('Road1'),glb('Road1_Curve3'),glb('Road1_Curve4')]).th
       if(e<10&&cote(a,b)){
         const plusVite=b.cibleV>a.v+.6||b.v>a.v+.8;
         if(plusVite&&b.mem<=0&&R()<b.agr*dt*4){const l=ligne(b.s);const cote1=l>0?-COTE:COTE;const ok=c=>Math.abs(l+c)<=BORD+.01&&V.every(o=>o===b||Math.abs(o.s-b.s)>LONG+1||Math.abs(o.dec-(l+c))>=LARG);
-          const c=ok(cote1)?cote1:ok(-cote1)?-cote1:0;
+          let virage=false;{const ib=idx(b.s);for(let d=15;d<60;d+=5)if(RAD[(ib+d)%NP]<1e8)virage=true;}
+          const c=virage&&ok(COTE)?COTE:ok(cote1)?cote1:ok(-cote1)?-cote1:0;
           if(c){b.cibleLat=c;b.mem=2.5;if(a.bloque<=0&&R()<a.agr*.3){a.cibleLat=c*.7;a.bloque=2.5;evenement(`${a.nom} FERME LA PORTE A ${b.nom}`);}}}
         if(Math.abs(a.dec-b.dec)<LARG)b.v=Math.min(b.v,a.v+(e-6.5)*.8);}}
     for(const v of V){v.mem-=dt;v.bloque-=dt;v.s+=v.v*dt;}
@@ -189,14 +199,18 @@ Promise.all([decoder(),glb('Road1'),glb('Road1_Curve3'),glb('Road1_Curve4')]).th
     const P2=V.slice().sort((a,b)=>b.s-a.s);
     for(let i=1;i<P2.length;i++)for(let j=0;j<i;j++){const a=P2[j],b=P2[i];if(a.s-b.s<LONG&&cote(a,b)){b.s=a.s-LONG;b.v=Math.min(b.v,a.v);}}
     // déplacement latéral progressif, bloqué si la place est prise
-    for(const v of V){const l=ligne(v.s);const vise=Math.max(-BORD,Math.min(BORD,l+v.cibleLat));const pas=Math.max(-VLAT*dt,Math.min(VLAT*dt,vise-v.dec));
+    for(const v of V){const l=ligne(v.s);let vise=Math.max(-BORD,Math.min(BORD,l+v.cibleLat));
+      const parcouru=v.s-DEPART;if(parcouru<110){const w=Math.max(0,Math.min(1,(parcouru-15)/95));vise=v.col*(1-w)+vise*w;}
+      if(v.sortie)vise=-5.6;const pas=Math.max(-VLAT*dt,Math.min(VLAT*dt,vise-v.dec));
       const nd=v.dec+pas;const gene=V.some(o=>o!==v&&Math.abs(o.s-v.s)<LONG+.4&&Math.abs(o.dec-nd)<LARG&&Math.abs(o.dec-nd)<Math.abs(o.dec-v.dec));
       if(!gene){v.lat+= (nd-l)-v.lat;v.dec=nd;}else{v.lat=v.dec-l;}
       const[x,z,h]=at(v.s,v.dec);v.lacet+=((Math.atan2(gene?0:pas,Math.max(.01,v.v*dt)))-v.lacet)*Math.min(1,dt*8);
-      v.m.position.set(x,Y,z);v.m.rotation.y=-h-v.lacet;}
+      const freine=v.v>v.cibleV+.4||v.erreur>0;for(const fe of v.feux)fe.material=freine?FEU_ON:FEU_OFF;
+      v.tang+=((freine?.022:v.v<v.cibleV-1?-.012:0)-v.tang)*Math.min(1,dt*6);
+      v.m.position.set(x,Y-(Math.abs(v.dec)>5.2?.15:0),z);v.m.rotation.y=-h-v.lacet;v.m.rotation.z=-v.tang;}
     const avant=ordre;ordre=ordre.slice();for(let p=0;p<3;p++)for(let i=1;i<ordre.length;i++)if(ordre[i].s>ordre[i-1].s+2.5){const x=ordre[i];ordre[i]=ordre[i-1];ordre[i-1]=x;}
     if(t>3)ordre.forEach((v,i)=>{const j=avant.indexOf(v);if(j===i+1){const p=avant[i];evenement(`DEPASSEMENT ! ${v.nom} PASSE ${p.nom} (P${i+1})`);}});}
-  const tourTxt=()=>'TOUR '+Math.min(TOURS,Math.max(1,Math.floor(ordre[0].s/TOT)+1))+'/'+TOURS;
+  const tourTxt=()=>'TOUR '+Math.min(TOURS,Math.max(1,Math.floor((ordre[0].s-DEPART)/TOT)+1))+'/'+TOURS;
   const hud=(el,n,ecarts)=>{el.querySelector('.tourN').textContent=tourTxt();const L0=ordre[0];
     el.querySelector('.tour').innerHTML=ordre.slice(0,n).map((v,i)=>`<div class="${v.k===0?'moi':''}"><span>${i+1}</span><i style="background:${v.coul}"></i>${v.pil}${ecarts&&i?' <small>+'+((L0.s-v.s)/Math.max(10,v.v)).toFixed(1)+'</small>':''}</div>`).join('');
     const f=el.querySelector('.fil');if(f)f.innerHTML=EV.map(x=>`<div>${x}</div>`).join('');};
@@ -225,6 +239,8 @@ Promise.all([decoder(),glb('Road1'),glb('Road1_Curve3'),glb('Road1_Curve4')]).th
       cv3.lerp(m,Math.min(1,dt*5));if(cv3.lengthSq()===0)cv3.copy(m);const d=Math.hypot(P.x-m.x,P.z-m.z);C.cam.fov=Math.max(14,Math.min(45,900/Math.max(1,d)));C.cam.lookAt(cv3);if(vu(C.el))C.dessiner();}
     // le téléphone A peut prendre le point de vue des deux autres (bouton CAMERA)
     if(vu(A.el)){if(MODE_A){const src=MODE_A===1?B.cam:C.cam;A.cam.position.copy(src.position);A.cam.quaternion.copy(src.quaternion);A.cam.fov=src.fov;}A.dessiner();}
+    {const etat=t<-3.5?0:t<0?Math.min(5,Math.floor((t+3.5)/.6)+1):t<1.2?6:7;if(etat!==window.__feux){window.__feux=etat;
+      const html=etat===7?'':Array.from({length:5},(_,i)=>`<i class="${etat===6?'v':i<etat?'r':''}"></i>`).join('');document.querySelectorAll('.feux').forEach(e=>e.innerHTML=html);}}
     if((acc+=dt)>.3){acc=0;hud(A.el,8,true);hud(B.el,8);hud(C.el,8);}});
 });
 </script>

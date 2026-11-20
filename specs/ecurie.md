@@ -28,7 +28,10 @@ Idée de l'utilisateur (18/11) : un petit jeu de **gestion d'écurie de course**
 - Classement avec une marge de 2,5 m (sinon deux voitures côte à côte s'échangent la place à chaque image). Grille inversée (les plus fortes derrière).
 - Mesuré sur 8 tours : environ 35 dépassements, 7 erreurs, une douzaine de portes fermées, aucun chevauchement.
 - Mesuré avec la trajectoire (20/11) : environ 27 dépassements sur 8 tours, aucun chevauchement, tours plus rapides (≈ 15 s).
-- **Reste à améliorer** : freinages visibles (feux stop, voiture qui plonge), dépassements au freinage par l'intérieur, sorties de piste après une erreur, réglage des stats.
+- **Départ** (20/11) : départ arrêté, ligne au bout de la plus longue ligne droite (grille de 8 en deux colonnes décalées, 7,5 m entre deux rangs), 5 feux rouges puis vert ; les voitures gardent leur colonne sur les 15 premiers mètres puis rejoignent la trajectoire progressivement (sur 95 m). Les tours se comptent depuis la ligne.
+- **Pilotage** (20/11) : feux stop allumés au freinage, la voiture plonge au freinage et se cabre à l'accélération ; l'attaquant choisit l'intérieur si un virage arrive (15 à 60 m) et freine plus tard (+12 % × agressivité) ; une erreur près d'un virage peut finir en **sortie de piste** (la voiture part à l'extérieur, sur l'herbe, puis revient).
+- Mesuré (20/11) : environ 27 dépassements, 4 sorties de piste et 3 erreurs sur 8 tours, aucun chevauchement.
+- **Reste à régler** : stats et équilibre, puis course accélérée / résultat direct.
 
 ## Boucle de jeu (proposition des maquettes 1 et 2, à confirmer)
 - Saison de grands prix (circuits différents), une course par « semaine ».
