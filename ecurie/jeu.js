@@ -19,6 +19,32 @@
   const nomModele = m => { const v = R.VOITURES.find(x => x.m === m); return v ? v.nom : MODELES[m] || m.toUpperCase(); };
   const categorie = ch => ch <= 150 ? '150 CH' : ch <= 300 ? '300 CH' : ch <= 500 ? '500 CH' : 'ILLIMITEE';
 
+  /* ---------- icônes en pixels (9 × 9, en masque : couleur du texte) ---------- */
+  const PIX = {
+    ecurie: ['..#####..', '.#######.', '#########', '####...##', '####...##', '#########', '########.', '.######..', '.........'],
+    garage: ['......##.', '.....#..#', '......#.#', '.....###.', '....###..', '...###...', '..###....', '.###.....', '.##......'],
+    achat: ['.........', '...####..', '..#.#..#.', '.########', '#########', '#########', '.##...##.', '.##...##.', '.........'],
+    sponsors: ['....#....', '....#....', '...###...', '#########', '.#######.', '..#####..', '..##.##..', '.##...##.', '.........'],
+    semaine: ['.#.....#.', '#########', '#########', '#.......#', '#.#.#.#.#', '#.......#', '#.#.#.#.#', '#.......#', '#########'],
+    fans: ['.##...##.', '####.####', '#########', '#########', '.#######.', '..#####..', '...###...', '....#....', '.........'],
+    camera: ['.........', '..###....', '#########', '####.####', '###...###', '####.####', '#########', '.........', '.........'],
+    vite: ['.........', '#...#....', '##..##...', '###.###..', '########.', '###.###..', '##..##...', '#...#....', '.........'],
+    drapeau: ['#........', '#########', '##.#.#.##', '#.#.#.#.#', '##.#.#.##', '#########', '#........', '#........', '#........'],
+    piece: ['..#####..', '.##...##.', '##.###.##', '#.##..#.#', '#.##..#.#', '##.###.##', '.##...##.', '..#####..', '.........'],
+    etoile: ['....#....', '...###...', '#########', '.#######.', '..#####..', '..##.##..', '.##...##.', '.#.....#.', '.........'],
+    menu: ['.........', '#########', '#########', '.........', '#########', '#########', '.........', '#########', '#########'],
+    outil: ['.##...##.', '.##...##.', '.#######.', '..#####..', '...###...', '...###...', '...###...', '...###...', '...###...'],
+    lit: ['.........', '#........', '#.##.....', '#.##.####', '#########', '#########', '#.......#', '#.......#', '.........'],
+    micro: ['...###...', '..#####..', '..#####..', '..#####..', '#.#####.#', '#..###..#', '.#.....#.', '...###...', '..#####..'],
+    ecran: ['#########', '#.......#', '#.#.#.#.#', '#.......#', '#.#####.#', '#.......#', '#########', '...###...', '.#######.'],
+    chrono: ['...###...', '....#....', '..#####..', '.#..#..#.', '#...#...#', '#...##..#', '#.......#', '.#.....#.', '..#####..'],
+    pilote: ['..#####..', '.#######.', '.#.....#.', '.#######.', '..#####..', '...###...', '.#######.', '#########', '#########'],
+    trophee: ['#########', '#.#####.#', '#.#####.#', '.#######.', '..#####..', '...###...', '...###...', '..#####..', '.#######.']};
+  const ICONES = {}; for (const [k, L] of Object.entries(PIX)) { let r = ''; L.forEach((l, y) => [...l].forEach((c, x) => { if (c === '#') r += `<rect x="${x}" y="${y}" width="1" height="1"/>`; }));
+    ICONES[k] = `url('data:image/svg+xml,${encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 9 9' shape-rendering='crispEdges'>${r}</svg>`).replace(/'/g, '%27')}')`; }
+  const ic = k => `<i class="ic" style="--m:${ICONES[k]}"></i>`;
+  const ICJOUR = ['chrono', 'outil', 'ecran', 'lit', 'micro'];
+
   /* ---------- boucle d'affichage (une seule) ---------- */
   let actif = null, av = performance.now();
   (function b(m) { const dt = Math.min(.05, Math.max(0, (m - av) / 1000)); av = m; if (actif) try { actif(dt); } catch (e) { console.error(e); actif = null; } requestAnimationFrame(b); })(av);
@@ -30,8 +56,8 @@
   function titre() {
     finCourse();
     app.innerHTML = `<div class="titre"><h1>ECURIE<br>MINIATURE<small>GERE TON ECURIE, REGARDE TES PILOTES</small></h1><div class="vitrine" id="vt"></div>
-      <div class="boutons">${E ? `<button class="btn grand" data-a="continuer">CONTINUER</button><div class="doux" style="text-align:center">SAISON ${E.saison} · GP ${E.gp + 1}/${R.GP_SAISON} · ${R.DIVISIONS[E.division].nom}</div>` : ''}
-        <button class="btn ${E ? 'second' : 'grand'}" data-a="nouvelle">NOUVELLE PARTIE</button><button class="btn second" data-a="aide">COMMENT JOUER</button>
+      <div class="boutons">${E ? `<button class="btn grand" data-a="continuer">${ic('drapeau')}CONTINUER</button><div class="doux" style="text-align:center">SAISON ${E.saison} · GP ${E.gp + 1}/${R.GP_SAISON} · ${R.DIVISIONS[E.division].nom}</div>` : ''}
+        <button class="btn ${E ? 'second' : 'grand'}" data-a="nouvelle">${ic('pilote')}NOUVELLE PARTIE</button><button class="btn second" data-a="aide">${ic('ecran')}COMMENT JOUER</button>
         <a class="btn second ludo-retour" href="../index.html">LUDOTHEQUE</a></div></div><div class="toast"></div>`;
     app.querySelector('#vt').appendChild(cvVit);
     const x = E && (R.voitureDe(E, E.pilotes[0] && E.pilotes[0].voiture) || E.parc[0]);
@@ -59,7 +85,7 @@
   const vues = {
     ecurie() { const pl = places(), libres = pl - E.pilotes.length, reserve = E.parc.filter(x => !R.piloteDe(E, x.id));
       const signes = new Set(E.pilotes.map(p => p.nom));
-      return `<div class="bloc"><h3>PILOTES · ${E.pilotes.length}/${pl} PLACES</h3>${E.pilotes.map((p, i) => { const x = R.voitureDe(E, p.voiture), emp = x && R.empechement(E, x);
+      return `<div class="bloc"><h3>${ic('pilote')}PILOTES · ${E.pilotes.length}/${pl} PLACES</h3>${E.pilotes.map((p, i) => { const x = R.voitureDe(E, p.voiture), emp = x && R.empechement(E, x);
           return `<div class="carte"><div class="tete" style="background:${p.c}">${initiales(p.nom)}</div><b>${p.nom}</b><small>TAL ${p.n[0]} · CST ${p.n[1]} · AGR ${p.n[2]} · FORME ${p.forme} %</small>
             ${E.pilotes.length > 1 ? `<button class="lib" data-liberer="${i}">LIBERER</button>` : `<small>${p.age} ANS · ${argent(p.salaire)} / SEM.</small>`}
             <button class="vt" data-donner="${i}"><i style="background:${x ? x.c : '#120e1e'}"></i>${x ? R.VOITURES[x.v].nom : 'AUCUNE'}<span style="font-size:1.4cqi;color:${emp ? '#ff8a6a' : '#c9c0e8'}">${U.ouvert === i ? 'FERMER' : emp ? 'INDISPONIBLE' : 'CHANGER'}</span></button></div>
@@ -68,54 +94,54 @@
               return `<button class="ligne ${moi ? 'on' : raison ? 'non' : ''}" ${raison ? '' : `data-prendre="${v.id}"`}><span>${pastille(v.c)}${R.VOITURES[v.v].nom}</span><em>${raison ? '' : 'PRENDRE'}</em><small>${raison || 'DISPONIBLE'} · VIT ${n[0]} · ACC ${n[1]} · ADH ${n[2]} · FIA ${n[3]}</small></button>`; }).join('')}</div>` : ''}`; }).join('')}
           ${libres > 0 ? `<div class="carte verrou"><div class="tete">?</div><b>PLACE LIBRE</b><small>RECRUTE UN PILOTE CI-DESSOUS</small></div>` : ''}
           ${pl < 4 ? `<div class="carte verrou"><div class="tete">X</div><b>PLACE ${pl + 1}</b><small>NIVEAU ${E.niveau + 1} DE L'ECURIE · REPUTATION ${E.rep}/${R.NIVEAUX[E.niveau]}</small></div>` : ''}</div>
-        <div class="bloc"><h3>RESERVE · ${reserve.length} VOITURE${reserve.length > 1 ? 'S' : ''}</h3>${reserve.length ? reserve.map(x => `<button class="ligne" data-voir="${E.parc.indexOf(x)}"><span>${pastille(x.c)}${R.VOITURES[x.v].nom}</span><em>VOIR</em><small>${etatTxt(x)} · ${categorie(R.chevaux(x))}</small></button>`).join('') : '<div class="doux">AUCUNE VOITURE DE RESERVE</div>'}
+        <div class="bloc"><h3>${ic('achat')}RESERVE · ${reserve.length} VOITURE${reserve.length > 1 ? 'S' : ''}</h3>${reserve.length ? reserve.map(x => `<button class="ligne" data-voir="${E.parc.indexOf(x)}"><span>${pastille(x.c)}${R.VOITURES[x.v].nom}</span><em>VOIR</em><small>${etatTxt(x)} · ${categorie(R.chevaux(x))}</small></button>`).join('') : '<div class="doux">AUCUNE VOITURE DE RESERVE</div>'}
           <div class="doux">SI UNE VOITURE CASSE, LA RESERVE LA REMPLACE AU GP SUIVANT.</div></div>
-        <div class="bloc"><h3>PILOTES LIBRES</h3>${R.LIBRES.filter(l => !signes.has(l.nom)).map(l => `<button class="ligne ${libres > 0 ? '' : 'non'}" data-recrue="${R.LIBRES.indexOf(l)}"><span>${l.nom} · ${l.age} ANS</span><em>${argent(l.salaire)}<br><small style="color:#a99fd0">/ SEM.</small></em><small>TAL ${l.n[0]} · CST ${l.n[1]} · AGR ${l.n[2]} · ${l.note} · PRIME ${argent(l.salaire * 2)}</small></button>`).join('')}
+        <div class="bloc"><h3>${ic('pilote')}PILOTES LIBRES</h3>${R.LIBRES.filter(l => !signes.has(l.nom)).map(l => `<button class="ligne ${libres > 0 ? '' : 'non'}" data-recrue="${R.LIBRES.indexOf(l)}"><span>${l.nom} · ${l.age} ANS</span><em>${argent(l.salaire)}<br><small style="color:#a99fd0">/ SEM.</small></em><small>TAL ${l.n[0]} · CST ${l.n[1]} · AGR ${l.n[2]} · ${l.note} · PRIME ${argent(l.salaire * 2)}</small></button>`).join('')}
           <div class="doux">${libres > 0 ? 'TOUCHE UN PILOTE POUR LE SIGNER (PRIME = 2 SEMAINES DE SALAIRE).' : 'PLUS DE PLACE : IL FAUT MONTER DE NIVEAU (OU LIBERER UN PILOTE).'}</div></div>`; },
     garage() { U.choix = Math.min(U.choix, E.parc.length - 1); const x = E.parc[U.choix], v = R.VOITURES[x.v], n = R.notes(x), p = R.piloteDe(E, x.id), ch = R.chevaux(x), hc = R.horsCategorie(E, x);
-      return `<div class="bloc"><div class="nav2"><button data-fl="-1">‹</button><div style="text-align:center"><h3>${v.nom}</h3><div class="doux">${U.choix + 1}/${E.parc.length} · ${p ? 'PILOTE : ' + p.nom : 'EN RESERVE'}</div></div><button data-fl="1">›</button></div>
+      return `<div class="bloc"><div class="nav2"><button class="fl" data-fl="-1">‹</button><div style="text-align:center"><h3>${v.nom}</h3><div class="doux">${U.choix + 1}/${E.parc.length} · ${p ? 'PILOTE : ' + p.nom : 'EN RESERVE'}</div></div><button class="fl" data-fl="1">›</button></div>
         <div class="doux">${categorie(ch)} · ${ch} CH · ${etatTxt(x)}</div>${hc ? `<div class="etat">TROP PUISSANTE POUR LA ${R.DIVISIONS[E.division].nom} : ELLE NE PEUT PAS COURIR</div>` : ''}${notesBarres(NOTES.map((y, i) => [y, n[i]]))}
         <div class="teintes">${TEINTES.map(t => `<button data-teinte="${t}" class="${x.c === t ? 'on' : ''}" style="background:${t}"></button>`).join('')}</div>
         ${x.repar ? `<button class="btn" data-reparer="1">REPARER TOUT DE SUITE ${argent(4000 * x.repar)}</button>` : x.etat < 100 ? `<button class="btn second" data-remettre="1">REMETTRE A NEUF ${argent((100 - x.etat) * 80)}</button>` : ''}
         ${p || E.parc.length <= 1 ? '' : `<button class="btn second" data-vendre="1">VENDRE ${argent(prixVente(x))}</button>`}</div>
-        <div class="bloc"><h3>PIECES</h3>${R.PIECES.map(q => { const pose = x.pieces[q.k]; return `<button class="ligne ${pose ? 'on' : ''}" data-piece="${q.k}"><span>${q.nom}</span><em>${pose ? (q.k === 'pneus' ? pose + ' GP' : 'POSEE') : prixPiece(q) ? argent(q.prix) : 'OFFERT'}</em><small>${q.d}${pose ? ' · TOUCHE POUR LA REVENDRE' : ''}</small></button>`; }).join('')}</div>`; },
+        <div class="bloc"><h3>${ic('garage')}PIECES</h3>${R.PIECES.map(q => { const pose = x.pieces[q.k]; return `<button class="ligne ${pose ? 'on' : ''}" data-piece="${q.k}"><span>${q.nom}</span><em>${pose ? (q.k === 'pneus' ? pose + ' GP' : 'POSEE') : prixPiece(q) ? argent(q.prix) : 'OFFERT'}</em><small>${q.d}${pose ? ' · TOUCHE POUR LA REVENDRE' : ''}</small></button>`; }).join('')}</div>`; },
     achat() { const L = U.occ ? E.occasions : R.VOITURES; if (!L.length) { U.occ = false; return vues.achat(); }
       U.vue = Math.min(U.vue, L.length - 1); const o = U.occ ? E.occasions[U.vue] : null, v = U.occ ? R.VOITURES[o.i] : R.VOITURES[U.vue];
       const n = v.n.map((x, i) => Math.max(0, x + (o ? o.u[i] : 0))), prix = o ? o.prix : v.prix, trop = v.ch > R.DIVISIONS[E.division].ch;
-      return `<div class="nav2"><button data-occ="0" style="${U.occ ? 'opacity:.5' : ''}">NEUVES</button><button data-occ="1" style="${U.occ ? '' : 'opacity:.5'}">OCCASION (${E.occasions.length})</button></div>
-        <div class="bloc"><div class="nav2"><button data-fl="-1">‹</button><div style="text-align:center"><h3>${v.nom}</h3><div class="doux">${U.vue + 1}/${L.length} · ${categorie(v.ch)} · ${v.ch} CH${o ? ' · ' + nombre(o.km) + ' KM' : ''}</div></div><button data-fl="1">›</button></div>
+      return `<div class="nav2"><button class="onglet2 ${U.occ ? '' : 'choisi'}" data-occ="0">NEUVES</button><button class="onglet2 ${U.occ ? 'choisi' : ''}" data-occ="1">OCCASION (${E.occasions.length})</button></div>
+        <div class="bloc"><div class="nav2"><button class="fl" data-fl="-1">‹</button><div style="text-align:center"><h3>${v.nom}</h3><div class="doux">${U.vue + 1}/${L.length} · ${categorie(v.ch)} · ${v.ch} CH${o ? ' · ' + nombre(o.km) + ' KM' : ''}</div></div><button class="fl" data-fl="1">›</button></div>
         ${notesBarres(NOTES.map((x, i) => [x, n[i]]))}<div class="doux">${o ? o.etat + ' · ETAT ' + o.et + ' %' : 'NEUVE'} · ELLE REJOINDRA TON PARC (${E.parc.length} VOITURE${E.parc.length > 1 ? 'S' : ''})</div>
         ${trop ? `<div class="etat">TROP PUISSANTE POUR LA ${R.DIVISIONS[E.division].nom}</div>` : ''}
         <div class="nav2"><b class="gros" style="font-weight:400;font-size:2.6cqi">${argent(prix)}</b><button class="btn" data-acheter="1">${prix > E.argent ? 'TROP CHER' : 'ACHETER'}</button></div></div>
         <div class="doux">LES OCCASIONS CHANGENT CHAQUE SEMAINE. ENTRETIEN : ${argent(R.ENTRETIEN)} PAR VOITURE ET PAR SEMAINE.</div>`; },
-    sponsors() { return `<div class="bloc"><h3>CONTRATS · ${E.signes.length}/2 PLACES</h3>${R.SPONSORS.map((s, i) => { const on = E.signes.includes(i), rompu = E.rompus.includes(i), bloque = s.niv > E.niveau;
+    sponsors() { return `<div class="bloc"><h3>${ic('sponsors')}CONTRATS · ${E.signes.length}/2 PLACES</h3>${R.SPONSORS.map((s, i) => { const on = E.signes.includes(i), rompu = E.rompus.includes(i), bloque = s.niv > E.niveau;
         return `<button class="ligne ${on ? 'on' : rompu || bloque || E.signes.length >= 2 ? 'non' : ''}" data-sponsor="${i}"><span>${pastille(s.coul)}${s.nom}</span><em>${on ? 'SIGNE' : bloque ? 'NIV. ' + s.niv : rompu ? 'ROMPU' : '+' + argent(s.gain)}</em><small>${argent(s.gain)} PAR COURSE · ${s.obj}${rompu ? ' · CONTRAT ROMPU CETTE SAISON' : ''}</small></button>`; }).join('')}
         <div class="doux">TOUCHE UN CONTRAT POUR LE SIGNER OU LE RESILIER.</div></div>`; },
     semaine() { const J = ['LUN', 'MAR', 'MER', 'JEU', 'VEN'], tot = {}; E.semaine.forEach(a => tot[a] = (tot[a] || 0) + 1);
       const K = Circuits.get(R.calendrier(E.gp)), cl = R.classement(E);
-      return `<div class="bloc"><h3>GP ${E.gp + 1}/${R.GP_SAISON} · ${K.nom}</h3><div class="jours">${E.semaine.map((a, i) => `<button data-jour="${i}"><b>${J[i]}</b>${R.ACTIVITES[a].n}</button>`).join('')}</div><div class="doux">TOUCHE UN JOUR POUR CHANGER SON ACTIVITE.</div></div>
-        <div class="bloc"><h3>EFFETS</h3>${Object.entries(tot).map(([a, n]) => `<div class="ligne fixe"><span>${R.ACTIVITES[a].n} ×${n}</span><small>${R.ACTIVITES[a].e}</small></div>`).join('')}</div>
-        <button class="btn grand" data-gp="1">LANCER LE GRAND PRIX</button>
-        <div class="bloc"><h3>CHAMPIONNAT · ${R.DIVISIONS[E.division].nom}</h3><table>${cl.map((c, i) => `<tr class="${c.joueur ? 'moi' : ''}"><td>${i + 1}</td><td>${c.nom}</td><td>${c.pts} PTS</td></tr>`).join('')}</table>
+      return `<div class="bloc"><h3>${ic('semaine')}GP ${E.gp + 1}/${R.GP_SAISON} · ${K.nom}</h3><div class="jours">${E.semaine.map((a, i) => `<button data-jour="${i}"><b>${J[i]}</b>${ic(ICJOUR[a])}${R.ACTIVITES[a].n}</button>`).join('')}</div><div class="doux">TOUCHE UN JOUR POUR CHANGER SON ACTIVITE.</div></div>
+        <div class="bloc"><h3>${ic('etoile')}EFFETS</h3>${Object.entries(tot).map(([a, n]) => `<div class="ligne fixe"><span>${R.ACTIVITES[a].n} ×${n}</span><small>${R.ACTIVITES[a].e}</small></div>`).join('')}</div>
+        <button class="btn grand" data-gp="1">${ic('drapeau')}LANCER LE GRAND PRIX</button>
+        <div class="bloc"><h3>${ic('trophee')}CHAMPIONNAT · ${R.DIVISIONS[E.division].nom}</h3><table>${cl.map((c, i) => `<tr class="${c.joueur ? 'moi' : ''}"><td>${i + 1}</td><td>${c.nom}</td><td>${c.pts} PTS</td></tr>`).join('')}</table>
           <div class="doux">LES 3 PREMIERS MONTENT DE DIVISION EN FIN DE SAISON.</div></div>`; },
     fans() { const rev = R.REVENUS.filter(x => E.revenus[x.k]), parSemaine = rev.filter(x => x.tous === 1).reduce((a, x) => a + Math.round(E.fans * x.par), 0), prochain = R.REVENUS.find(x => E.fans < x.seuil);
-      return `<div class="bloc" style="text-align:center"><h3>TES FANS</h3><div class="gros">${nombre(E.fans)}</div>
+      return `<div class="bloc" style="text-align:center"><h3 style="justify-content:center">${ic('fans')}TES FANS</h3><div class="gros">${nombre(E.fans)}</div>
           ${prochain ? `<div class="jauge"><i style="width:${Math.round(E.fans / prochain.seuil * 100)}%"></i><span>${prochain.nom} A ${nombre(prochain.seuil)}</span></div>` : ''}
           <div class="doux">REVENUS DES FANS : <span class="ok">+${argent(parSemaine)} PAR SEMAINE</span></div></div>
-        <div class="bloc"><h3>CE QUI ATTIRE LES FANS</h3>
+        <div class="bloc"><h3>${ic('fans')}CE QUI ATTIRE LES FANS</h3>
           <div class="ligne fixe"><span>VICTOIRE</span><em>+400</em></div><div class="ligne fixe"><span>PODIUM</span><em>+150</em></div><div class="ligne fixe"><span>CHAQUE POINT</span><em>+10</em></div>
           <div class="ligne fixe"><span>DEPASSEMENT</span><em>+10</em></div><div class="ligne fixe"><span>JOUR DE MEDIAS</span><em>+60</em></div><div class="ligne fixe"><span>ABANDON</span><em class="moins">-20</em></div></div>
-        <div class="bloc"><h3>REVENUS A DEBLOQUER</h3>${R.REVENUS.map(x => { const on = E.revenus[x.k], peut = E.fans >= x.seuil;
+        <div class="bloc"><h3>${ic('piece')}REVENUS A DEBLOQUER</h3>${R.REVENUS.map(x => { const on = E.revenus[x.k], peut = E.fans >= x.seuil;
           return `<button class="ligne ${on ? 'on' : peut ? '' : 'non'}" data-revenu="${x.k}"><span>${x.nom}</span><em>${on ? '+' + argent(Math.round(E.fans * x.par)) : peut ? argent(x.prix) : nombre(x.seuil) + ' FANS'}</em><small>${x.d} · ${x.par} $ PAR FAN ${x.quand}</small></button>`; }).join('')}</div>`; }};
   function gestion(onglet) {
     finCourse(); if (onglet) U.onglet = onglet;
-    app.innerHTML = `<div class="entete"><span>NIV. ${E.niveau} · S${E.saison} · GP ${E.gp + 1}/${R.GP_SAISON}</span><b class="arg"></b><button class="menu" data-a="titre">MENU</button></div>
-      <div class="vitrine" id="vt"></div><div class="corps"></div><nav>${ONGLETS.map(([k, n]) => `<button data-o="${k}">${n}</button>`).join('')}</nav><div class="toast"></div>`;
+    app.innerHTML = `<div class="entete"><span class="puce">${ic('etoile')}NIV ${E.niveau}</span><span class="puce">${ic('drapeau')}${E.gp + 1}/${R.GP_SAISON}</span><b class="puce arg"></b><button class="menu" data-a="titre">${ic('menu')}</button></div>
+      <div class="vitrine" id="vt"></div><div class="corps"></div><nav>${ONGLETS.map(([k, n]) => `<button data-o="${k}">${ic(k)}${n}</button>`).join('')}</nav><div class="toast"></div>`;
     app.querySelector('#vt').appendChild(cvVit); majGestion(); actif = dt => { if (!app.querySelector('#vt').hidden) VIT.image(dt); };
   }
   function majGestion() {
     const vt = app.querySelector('#vt'), corps = app.querySelector('.corps'); if (!vt) return;
-    const a = app.querySelector('.arg'); a.textContent = argent(E.argent); a.style.color = E.argent < 0 ? '#ff8a6a' : '';
+    const a = app.querySelector('.arg'); a.innerHTML = ic('piece') + argent(E.argent); a.style.color = E.argent < 0 ? '#ff8a6a' : '';
     vt.hidden = !['ecurie', 'garage', 'achat'].includes(U.onglet);
     if (!vt.hidden) { let objets;
       if (U.onglet === 'ecurie') objets = E.pilotes.map(p => R.voitureDe(E, p.voiture)).filter(Boolean).map(x => [R.VOITURES[x.v].m, x.c]);
@@ -171,18 +197,18 @@
     const C = Course.creer(K, prep.grille, {tours: 8});
     G = {prep, C, K, vitesse: 1, cam: 0, bilan: null};
     const ordreDep = C.depart.map(k => C.V[k]);
-    app.innerHTML = `<div class="entete"><span>${K.nom}</span><b>GP ${E.gp + 1}/${R.GP_SAISON}</b></div><div class="corps">
-      ${prep.msg.length ? `<div class="bloc"><h3>TA SEMAINE</h3>${prep.msg.map(m => `<div class="doux">${m}</div>`).join('')}</div>` : ''}
-      <div class="bloc"><h3>GRILLE DE DEPART · 8 TOURS</h3><table>${ordreDep.map((v, i) => `<tr class="${v.joueur ? 'moi' : ''}"><td>P${i + 1}</td><td>${pastille(v.c)}${v.nom}</td><td>${nomModele(v.m)}</td></tr>`).join('')}</table>
+    app.innerHTML = `<div class="entete"><span>${K.nom}</span><span class="puce">${ic('drapeau')}GP ${E.gp + 1}/${R.GP_SAISON}</span></div><div class="corps">
+      ${prep.msg.length ? `<div class="bloc"><h3>${ic('semaine')}TA SEMAINE</h3>${prep.msg.map(m => `<div class="doux">${m}</div>`).join('')}</div>` : ''}
+      <div class="bloc"><h3>${ic('drapeau')}GRILLE DE DEPART · 8 TOURS</h3><table>${ordreDep.map((v, i) => `<tr class="${v.joueur ? 'moi' : ''}"><td>P${i + 1}</td><td>${pastille(v.c)}${v.nom}</td><td>${nomModele(v.m)}</td></tr>`).join('')}</table>
         <div class="doux">LA GRILLE VIENT DES QUALIFICATIONS : VOITURE, TALENT ET UN PEU DE CHANCE.</div></div>
-      <button class="btn grand" data-a="depart">DEPART !</button><button class="btn second" data-a="direct">RESULTAT DIRECT</button></div><div class="toast"></div>`;
+      <button class="btn grand vert" data-a="depart">${ic('drapeau')}DEPART !</button><button class="btn second" data-a="direct">${ic('vite')}RESULTAT DIRECT</button></div><div class="toast"></div>`;
     actif = null;
   }
   function course() {
     const {C, K} = G;
     app.innerHTML = `<div class="course"><canvas></canvas><div class="hud"><div class="haut"><span>${K.nom}</span><span class="tourN"></span></div><div class="tour"></div><div class="feux"></div>
       <div class="cam"></div><div class="duel"></div><div class="fil"></div><div class="flash"></div></div>
-      <div class="commandes"><button data-a="camera"></button><button class="second" data-a="vitesse">×1</button><button class="second" data-a="direct">RESULTAT</button></div></div>`;
+      <div class="commandes"><button data-a="camera"></button><button class="second" data-a="vitesse"></button><button class="second" data-a="direct">${ic('drapeau')}RESULTAT</button></div></div>`;
     G.cams = []; C.V.forEach((v, i) => { if (v.joueur) G.cams.push(['SUIVIE ' + v.pil, 0, i]); }); G.cams.push(['DIORAMA', 1], ['TELE', 2]); G.cam = 0;
     G.S = Scene3D.creer(app.querySelector('canvas'), K, C); appliquerCam();
     const hud = app.querySelector('.hud'); let acc = 1, feux = -1, coupe = 0, finVu = false;
@@ -193,10 +219,10 @@
       if (etat !== feux) { feux = etat; hud.querySelector('.feux').innerHTML = etat === 7 ? '' : Array.from({length: 5}, (_, i) => `<i class="${etat === 6 ? 'v' : i < etat ? 'r' : ''}"></i>`).join(''); }
       if (G.S.mode === 2 && G.S.tele.coupe !== coupe) { coupe = G.S.tele.coupe; const f = hud.querySelector('.flash'); f.style.transition = 'none'; f.style.opacity = .8; requestAnimationFrame(() => { f.style.transition = 'opacity .3s'; f.style.opacity = 0; }); }
       if ((acc += dt) > .25) { acc = 0; majHud(hud); }
-      if (C.fin && !finVu) { finVu = true; const c = app.querySelector('.commandes'); c.innerHTML = '<button data-a="resultats">VOIR LES RESULTATS</button>'; majHud(hud); }
+      if (C.fin && !finVu) { finVu = true; const c = app.querySelector('.commandes'); c.innerHTML = '<button data-a="resultats">' + ic('trophee') + 'VOIR LES RESULTATS</button>'; majHud(hud); }
     };
   }
-  function appliquerCam() { const [nom, mode, suivi] = G.cams[G.cam]; G.S.mode = mode; if (suivi != null) G.S.suivi = suivi; const b = app.querySelector('[data-a=camera]'); if (b) b.textContent = 'CAM : ' + nom; }
+  function appliquerCam() { const [nom, mode, suivi] = G.cams[G.cam]; G.S.mode = mode; if (suivi != null) G.S.suivi = suivi; const b = app.querySelector('[data-a=camera]'); if (b) b.innerHTML = ic('camera') + nom; const v = app.querySelector('[data-a=vitesse]'); if (v) v.innerHTML = ic('vite') + '×' + G.vitesse; }
   function majHud(hud) {
     const C = G.C, O = C.ordre, L0 = O[0];
     hud.querySelector('.tourN').textContent = C.fin ? 'ARRIVEE' : C.arrivee.length ? 'DRAPEAU A DAMIER' : 'TOUR ' + Course.tour(C) + '/' + C.tours;
@@ -208,12 +234,12 @@
     finCourse(); const {C, prep, K} = G;
     if (!G.bilan) { G.bilan = R.resultats(E, C, prep); record(C, G.bilan); sauver(); }
     const b = G.bilan, L0 = C.ordre[0], total = b.lignes.reduce((a, [, v]) => a + (typeof v === 'number' ? v : 0), 0);
-    app.innerHTML = `<div class="entete"><span>RESULTATS · ${K.nom}</span><b class="arg">${argent(E.argent)}</b></div><div class="corps">
-      <div class="bloc"><h3>ARRIVEE</h3><table>${C.ordre.map((v, i) => `<tr class="${v.joueur ? 'moi' : ''}"><td>${i + 1}</td><td>${pastille(v.c)}${v.nom}</td><td>${v.abandon ? 'ABANDON' : i ? '+' + (v.fini ? (v.temps - L0.temps).toFixed(1) + ' S' : '1 TOUR') : (L0.temps / 60 | 0) + ':' + String((L0.temps % 60).toFixed(1)).padStart(4, '0')}</td><td>${v.abandon ? 0 : R.POINTS[i] || 0} PTS</td></tr>`).join('')}</table></div>
-      <div class="bloc"><h3>BILAN DE LA SEMAINE</h3>${b.lignes.map(([t, v]) => `<div class="ligne fixe"><span>${t}</span><em class="${typeof v === 'number' ? (v < 0 ? 'moins' : 'plus') : ''}">${typeof v === 'number' ? signe(v) : ''}</em></div>`).join('')}
+    app.innerHTML = `<div class="entete"><span>RESULTATS · ${K.nom}</span><b class="puce arg">${ic('piece')}${argent(E.argent)}</b></div><div class="corps">
+      <div class="bloc"><h3>${ic('drapeau')}ARRIVEE</h3><table>${C.ordre.map((v, i) => `<tr class="${v.joueur ? 'moi' : ''}"><td>${i + 1}</td><td>${pastille(v.c)}${v.nom}</td><td>${v.abandon ? 'ABANDON' : i ? '+' + (v.fini ? (v.temps - L0.temps).toFixed(1) + ' S' : '1 TOUR') : (L0.temps / 60 | 0) + ':' + String((L0.temps % 60).toFixed(1)).padStart(4, '0')}</td><td>${v.abandon ? 0 : R.POINTS[i] || 0} PTS</td></tr>`).join('')}</table></div>
+      <div class="bloc"><h3>${ic('piece')}BILAN DE LA SEMAINE</h3>${b.lignes.map(([t, v]) => `<div class="ligne fixe"><span>${t}</span><em class="${typeof v === 'number' ? (v < 0 ? 'moins' : 'plus') : ''}">${typeof v === 'number' ? signe(v) : ''}</em></div>`).join('')}
         <div class="ligne fixe"><span>TOTAL</span><em class="${total < 0 ? 'moins' : 'plus'}">${signe(total)}</em></div></div>
       ${b.monte ? `<div class="bloc"><h3>L'ECURIE PASSE AU NIVEAU ${b.niveau} !</h3><div class="doux">${b.places} PLACES DE PILOTES, DE NOUVEAUX SPONSORS.</div></div>` : ''}
-      <button class="btn grand" data-a="apres">${b.fin ? 'FIN DE SAISON' : 'SEMAINE SUIVANTE'}</button></div>`;
+      <button class="btn grand" data-a="apres">${ic(b.fin ? 'trophee' : 'semaine')}${b.fin ? 'FIN DE SAISON' : 'SEMAINE SUIVANTE'}</button></div>`;
     actif = null;
   }
   function apres() {
@@ -250,7 +276,7 @@
     else if (d.a === 'depart') course();
     else if (d.a === 'direct') { Course.finir(G.C); resultats(); }
     else if (d.a === 'camera') { G.cam = (G.cam + 1) % G.cams.length; appliquerCam(); majHud(app.querySelector('.hud')); }
-    else if (d.a === 'vitesse') { G.vitesse = G.vitesse === 1 ? 2 : G.vitesse === 2 ? 4 : 1; b.textContent = '×' + G.vitesse; }
+    else if (d.a === 'vitesse') { G.vitesse = G.vitesse === 1 ? 2 : G.vitesse === 2 ? 4 : 1; b.innerHTML = ic('vite') + '×' + G.vitesse; }
     else if (d.a === 'resultats') resultats();
     else if (d.a === 'apres') apres();
     else if (E && app.querySelector('nav')) actionGestion(d);

@@ -92,3 +92,57 @@ button{font:inherit;color:inherit}
 .commandes button{flex:1;font-size:1.9cqi;background:#f08a24;color:#2b1606;border:0;border-bottom:3px solid #8a4a10;padding:2.4cqi 1cqi;cursor:pointer}
 .commandes button.second{background:#5b4d86;color:#fff;border-bottom-color:#2b2440}
 .arrivee{position:absolute;left:50%;top:30%;transform:translateX(-50%);font-size:4cqi;color:#ffd166;text-shadow:3px 3px 0 #000;white-space:nowrap}
+
+/* ---- habillage 16 bits (20/11) : boutons en relief, icônes en pixels, en-têtes ---- */
+.ic{display:inline-block;width:3.6cqi;height:3.6cqi;background:currentColor;-webkit-mask:var(--m) center/contain no-repeat;mask:var(--m) center/contain no-repeat;image-rendering:pixelated;vertical-align:middle;flex:none}
+.A .btn,.A .nav2 button,.commandes button{position:relative;border:3px solid #120e1e;border-radius:0;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:1.6cqi;
+  background:#f08a24;color:#2b1606;text-shadow:1px 1px 0 #ffc98a;
+  box-shadow:inset 3px 3px 0 #ffbf6e,inset -3px -3px 0 #b3560c,0 4px 0 #120e1e;margin-bottom:4px;transition:transform .05s}
+.A .btn:active,.A .nav2 button:active,.commandes button:active{transform:translateY(3px);box-shadow:inset 3px 3px 0 #b3560c,inset -3px -3px 0 #ffbf6e,0 1px 0 #120e1e}
+.A .btn.second,.A .nav2 button,.commandes button.second{background:#5b4d86;color:#fff;text-shadow:1px 1px 0 #2b2440;box-shadow:inset 3px 3px 0 #8a7cc0,inset -3px -3px 0 #352a5a,0 4px 0 #120e1e}
+.A .btn.second:active,.A .nav2 button:active,.commandes button.second:active{box-shadow:inset 3px 3px 0 #352a5a,inset -3px -3px 0 #8a7cc0,0 1px 0 #120e1e}
+.A .btn.grand{font-size:2.8cqi;padding:3.2cqi}
+.A .btn.vert{background:#4cc06a;color:#0e2a16;text-shadow:1px 1px 0 #a8f0b8;box-shadow:inset 3px 3px 0 #a0eab0,inset -3px -3px 0 #237a3c,0 4px 0 #120e1e}
+.A .nav2 button.choisi{background:#f08a24;color:#2b1606;text-shadow:1px 1px 0 #ffc98a;box-shadow:inset 3px 3px 0 #ffbf6e,inset -3px -3px 0 #b3560c,0 4px 0 #120e1e}
+.A .nav2 .fl{width:10cqi;height:10cqi;padding:0;font-size:3.4cqi;flex:none}
+.A .nav2 .onglet2{flex:1;padding:2.2cqi 1cqi}
+/* lignes touchables : petite carte en relief, prix dans une étiquette */
+.A .ligne{border:2px solid #120e1e;box-shadow:inset 2px 2px 0 #3e3466,inset -2px -2px 0 #19132a;border-left:5px solid #5b4d86}
+.A button.ligne:active{transform:translateY(2px);box-shadow:inset 2px 2px 0 #19132a}
+.A .ligne em{background:#120e1e;padding:1cqi 1.4cqi;border:1px solid #3e3466}
+.A .ligne.on{border-left-color:#7be08a;box-shadow:inset 2px 2px 0 #3e3466,inset -2px -2px 0 #19132a,inset 0 0 0 2px #7be08a}
+.A .ligne.fixe{border-left-color:#3e3466}.A .ligne.fixe em{background:none;border:0;padding:0}
+/* blocs et titres */
+.A .bloc{box-shadow:inset 0 0 0 2px #5b4d86,inset 0 0 0 4px #120e1e,4px 4px 0 rgba(0,0,0,.35)}
+.A h3{display:flex;align-items:center;gap:1.6cqi;padding-bottom:1.6cqi;background:linear-gradient(90deg,#f08a24 0 8cqi,#5b4d86 8cqi) bottom/100% 3px no-repeat}
+.A h3 .ic{color:#f08a24;width:3.2cqi;height:3.2cqi}
+/* en-tête : niveau et argent en pastilles */
+.A .entete{gap:1.4cqi}
+.A .entete .puce{display:flex;align-items:center;gap:1cqi;background:#2b2440;border:2px solid #120e1e;box-shadow:inset 2px 2px 0 #4a3e72;padding:1cqi 1.6cqi;white-space:nowrap}
+.A .entete .puce .ic{width:2.8cqi;height:2.8cqi;color:#ffd166}
+.A .entete .arg{color:#ffd166}
+.A .entete .menu{border:3px solid #120e1e;box-shadow:inset 2px 2px 0 #8a7cc0,inset -2px -2px 0 #352a5a;padding:1.2cqi 1.6cqi;display:flex;align-items:center;gap:1cqi}
+.A .entete .menu:active{transform:translateY(2px)}
+/* onglets : icône au-dessus du nom, l'onglet choisi ressort */
+.A nav{background:#120e1e;padding:1cqi 1cqi 0;gap:1cqi}
+.A nav button{display:grid;justify-items:center;gap:1cqi;padding:2cqi 0 2.6cqi;border:0;border-top:3px solid #3e3466;box-shadow:inset 2px 0 0 #3e3466;font-size:1.45cqi;background:#241d3a}
+.A nav button .ic{width:4.4cqi;height:4.4cqi}
+.A nav button.on{background:#f08a24;color:#2b1606;border-top-color:#ffbf6e;box-shadow:inset 2px 0 0 #ffbf6e,inset -2px 0 0 #b3560c;transform:translateY(-1cqi);margin-bottom:-1cqi}
+/* jours de la semaine */
+.A .jours button{border:2px solid #120e1e;box-shadow:inset 2px 2px 0 #3e3466,inset -2px -2px 0 #19132a;padding:0 0 2cqi;gap:1.6cqi;overflow:hidden}
+.A .jours button b{display:block;background:#5b4d86;color:#fff;padding:1cqi 0;border-bottom:2px solid #120e1e}
+.A .jours button .ic{justify-self:center;width:4cqi;height:4cqi;color:#ffd166}
+.A .jours button:active{transform:translateY(2px)}
+.A .teintes button{box-shadow:inset 2px 2px 0 rgba(255,255,255,.45),inset -2px -2px 0 rgba(0,0,0,.35)}
+/* écran titre : damier sous le titre */
+.titre h1{position:relative;padding-bottom:5cqi}
+.titre h1:after{content:"";position:absolute;left:18cqi;right:18cqi;bottom:1cqi;height:3cqi;background:repeating-conic-gradient(#fff 0 25%,#120e1e 0 50%) 0 0/3cqi 3cqi;border:2px solid #120e1e}
+/* commandes de course : bandeau sombre, boutons avec icône */
+.commandes{background:rgba(18,14,30,.78);padding:2cqi;border:3px solid #120e1e;left:2cqi;right:2cqi}
+.commandes button{font-size:1.8cqi;padding:2.2cqi 1cqi;margin-bottom:4px}
+.commandes button .ic{width:3.4cqi;height:3.4cqi}
+.hud .tour div{border-left:3px solid transparent}.hud .tour .moi{border-left-color:#ffd166}
+.A .carte .vt{border:3px solid #120e1e;box-shadow:inset 3px 3px 0 #8a7cc0,inset -3px -3px 0 #352a5a,0 3px 0 #120e1e}
+.A .carte .vt:active{transform:translateY(2px);box-shadow:inset 3px 3px 0 #352a5a,inset -3px -3px 0 #8a7cc0}
+.A .carte{box-shadow:inset 2px 2px 0 #3e3466,inset -2px -2px 0 #19132a}
+.hud .feux{left:62%;top:30%}

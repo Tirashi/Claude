@@ -59,6 +59,10 @@ Idée de l'utilisateur (18/11) : un petit jeu de **gestion d'écurie de course**
 - **Faillite** sous −20 000 $. Sauvegarde `ecurie.partie`, records `ecurie.record` (GP, victoires, podiums, titres).
 - **Équilibre** (`node outils/ecurie-simulateur.js equilibre`) : avec les voitures de départ, milieu de tableau en division 1 ; avec deux RG Sport et trois pièces, champion presque à chaque fois.
 
+## Retours du 20/11 sur la session 1
+- Les roues tournent (pièces séparées à la lecture du modèle ; vitesse de rotation plafonnée pour ne pas voir les jantes tourner à l'envers) ; feux stop posés sur l'arrière de chaque carrosserie (ils flottaient sur certaines voitures).
+- Interface retravaillée : boutons en relief 16 bits (biseau clair et sombre, enfoncés au toucher), icônes en pixels (onglets, en-tête, jours, commandes de course), titres soulignés, damier sur l'écran titre.
+
 ## Questions ouvertes
 - Durée d'une partie (une saison, une carrière ?), classement ou non.
 - Comment l'écurie grandit (niveaux ? réputation ?) et ce que ça débloque (places de pilotes, garage plus grand, goodies, convention).

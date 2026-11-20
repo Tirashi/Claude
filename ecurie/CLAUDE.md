@@ -3,12 +3,12 @@ Gestion d'écurie de course, courses regardées en 3D. Cahier des charges : [`sp
 
 ## Fichiers (scripts classiques, dans cet ordre)
 - `donnees.js` : modèles (`ENTETE`, `BLOB` gzip base64, `GLB` des 3 tuiles de route) ; fabriqué depuis la maquette 6 (garder seulement les modèles utilisés), ne pas éditer à la main.
-- `modeles.js` (`Modeles`) : décodage, carrosserie repeinte (`maillage(nom, teinte)`), tuiles GLB ; met `createImageBitmap` à `undefined` (artefact).
+- `modeles.js` (`Modeles`) : décodage, carrosserie repeinte (`maillage(nom, teinte)`) ; `voiture(nom, teinte)` = carrosserie + roues séparées (pièces qui touchent le sol, avec leurs jantes) qui tournent (`tourner(d)`, plafonné à 0,38 rad par image) et position des feux stop (`feu`, d'après l'arrière de la carrosserie) ; tuiles GLB ; met `createImageBitmap` à `undefined` (artefact).
 - `circuit.js` (`Circuits`) : circuits posés « à la tortue » (`plan` : 'S' = 12 m, 18 / 42 = virage), trajectoire idéale, ligne de départ. Un plan doit se refermer (4 virages à gauche ; `ferme`).
 - `course.js` (`Course`) : simulation pure (`creer`, `pas`, `finir`) ; qualifications, arrivée, abandons (accident, casse tirée d'avance).
 - `regles.js` (`Regles`) : données (voitures, pièces, rivaux par division, sponsors, activités, revenus) et logique (`preparer`, `resultats`, fin de saison).
 - `scene.js` (`Scene3D`) : la course en 3D et ses caméras ; la vitrine (plateau qui tourne).
-- `jeu.js` (`window.Ecurie`) : écrans en HTML (style A, unités `cqi` du conteneur `.boite`), une seule boucle `requestAnimationFrame` (`actif`).
+- `jeu.js` (`window.Ecurie`) : écrans en HTML (style A, unités `cqi` du conteneur `.boite`), une seule boucle `requestAnimationFrame` (`actif`) ; icônes en pixels 9 × 9 (`PIX`, masque SVG : couleur du texte).
 
 ## Tests
 - `node outils/ecurie-simulateur.js` (lancé par `verifications.js`) ; `… equilibre` : place moyenne selon division et voitures.

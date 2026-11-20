@@ -37,8 +37,8 @@
       g.position.set(x, 0, z); g.rotation.y = -h + Math.PI; sc.add(g); }
     // les voitures
     const FEU_OFF = new THREE.MeshBasicMaterial({color: 0x5a1010}), FEU_ON = new THREE.MeshBasicMaterial({color: 0xff3a2a}), boiteFeu = new THREE.BoxGeometry(.012, .035, .07);
-    const objets = C.V.map(v => { const m = Modeles.maillage(v.m, v.c); m.scale.setScalar(LV); sc.add(m);
-      const feux = [-.17, .17].map(zz => { const fe = new THREE.Mesh(boiteFeu, FEU_OFF); fe.position.set(-.5, .19, zz); m.add(fe); return fe; }); return {m, feux}; });
+    const objets = C.V.map(v => { const m = Modeles.voiture(v.m, v.c); m.scale.setScalar(LV); sc.add(m);
+      const [fx, fy, fz] = m.feu, feux = [-fz, fz].map(zz => { const fe = new THREE.Mesh(boiteFeu, FEU_OFF); fe.position.set(fx, fy, zz); m.add(fe); return fe; }); return {m, feux, d: 0}; });
     // rendu et caméras
     const r = new THREE.WebGLRenderer({canvas: cv, antialias: true}); r.setPixelRatio(Math.min(2, W.devicePixelRatio || 1)); r.shadowMap.enabled = true; r.shadowMap.type = THREE.PCFSoftShadowMap;
     const cam = new THREE.PerspectiveCamera(40, 1, .5, 900);
@@ -53,6 +53,8 @@
     S.image = function (dt) {
       for (let i = 0; i < C.V.length; i++) { const v = C.V[i], o = objets[i];
         o.m.position.set(v.x, Y - (Math.abs(v.dec) > 5.2 ? .15 : 0), v.z); o.m.rotation.y = -v.h - v.lacet; o.m.rotation.z = -v.tang;
+        // roues : elles tournent selon la distance parcourue (plafonnée dans Modeles.voiture)
+        o.m.tourner(Math.max(0, v.s - o.d) / LV); o.d = v.s;
         const f = v.freine ? FEU_ON : FEU_OFF; if (o.feux[0].material !== f) for (const fe of o.feux) fe.material = f; }
       if (S.mode === 0) { const J = C.V[S.suivi], [jx, jz, jh] = at(J.s + 5, J.dec * .5), c = new THREE.Vector3(jx, 0, jz), p = new THREE.Vector3(jx - Math.cos(jh) * 30, 46, jz - Math.sin(jh) * 30);
         if (!init) { vise.copy(c); pos.copy(p); init = true; } vise.lerp(c, Math.min(1, dt * 3)); pos.lerp(p, Math.min(1, dt * 1.5)); cam.position.copy(pos); cam.lookAt(vise); cam.fov = 40; }
