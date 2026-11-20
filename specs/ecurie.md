@@ -34,11 +34,20 @@ Idée de l'utilisateur (18/11) : un petit jeu de **gestion d'écurie de course**
 - Mesuré (20/11) : environ 27 dépassements, 4 sorties de piste et 3 erreurs sur 8 tours, aucun chevauchement.
 - **Reste à régler** : stats et équilibre, puis course accélérée / résultat direct.
 
-## Boucle de jeu (proposition des maquettes 1 et 2, à confirmer)
+## Gestion : décisions du 20/11 (maquette 7)
+- **Style A retenu** (paddock 16 bits : Press Start 2P, fond violet rayé, blocs à double bordure, barres de notes, voiture 3D sur un plateau qui tourne). La course en 3D reste celle de la maquette 6.
+- Onglets de départ : garage, concession, pilotes, sponsors, semaine ; on verra plus tard s'il en faut d'autres (usine, saison, classement).
+- **Plusieurs pilotes** : 2 au début, puis davantage de places à mesure que l'écurie grandit (réputation, niveau de l'écurie).
+- **Plusieurs voitures** : l'écurie possède un parc de voitures ; on **attribue une voiture à chaque pilote** engagé ; les autres restent **en réserve** (remplaçantes en cas d'accident ou de panne, voitures d'une autre catégorie).
+- **Fans** : le nombre de fans monte avec les résultats (et les médias) ; au bout d'un moment on **débloque** des sources de revenus simplifiées (boutique de goodies, convention…) qui rapportent selon le nombre de fans.
+
+## Boucle de jeu (à préciser)
 - Saison de grands prix (circuits différents), une course par « semaine ».
-- Entre deux courses : planning de la semaine (essais, soufflerie, repos, médias), achat de voitures (concession neuve et occasion), pièces (moteur, turbo, aéro, pneus, freins), sponsors (argent contre objectifs), pilotes (recrutement, progression).
+- Entre deux courses : planning de la semaine (essais, atelier, simulateur, repos, médias), achat de voitures (concession neuve et occasion), pièces (moteur, turbo, aileron, pneus, freins, allègement), sponsors (argent contre objectifs), pilotes (recrutement, progression), attribution des voitures, fans.
 - Catégories par puissance (150, 300, 500 ch, illimité) : une pièce peut faire sortir la voiture de sa catégorie.
+- Accidents et pannes (fiabilité) : une voiture abîmée part en réparation, la réserve sert alors.
 
 ## Questions ouvertes
-- Boucle de gestion à valider (pilotes à recruter ou pilote unique ? durée d'une partie, classement ?).
-- Prochaine étape proposée : améliorer la simulation et les trajectoires dans la maquette, puis maquette de la gestion (garage, concession, semaine) dans le même style low poly.
+- Durée d'une partie (une saison, une carrière ?), classement ou non.
+- Comment l'écurie grandit (niveaux ? réputation ?) et ce que ça débloque (places de pilotes, garage plus grand, goodies, convention).
+- Prochaine étape proposée : compléter la maquette A (écran ÉCURIE : pilotes et attribution des voitures, réserve ; écran FANS) puis session 1 du jeu.
