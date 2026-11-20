@@ -32,6 +32,7 @@ ul{margin:0;padding-left:22px;display:grid;gap:6px;max-width:76ch}
 .fil{position:absolute;left:3cqi;right:3cqi;bottom:3cqi;display:grid;gap:1cqi;font-size:1.9cqi}.fil div{background:rgba(18,14,30,.8);padding:1.2cqi 1.6cqi;border-left:3px solid #ffd166}.fil div:first-child{background:#ffd166;color:#1c1630}
 .tour small{color:#c9c0e8;font-size:1.8cqi}.tour .moi small{color:#2b1606}
 .defile{overflow-x:auto} table{border-collapse:collapse;font-size:15px;width:100%;min-width:720px} td,th{border-bottom:1px solid var(--bord);padding:6px 8px;text-align:left}
+.bcam{position:absolute;right:3cqi;top:9cqi;font:2cqi var(--titre);background:#f08a24;color:#2b1606;border:0;border-bottom:3px solid #8a4a10;padding:1.6cqi 2cqi;cursor:pointer;z-index:3}
 .duel{position:absolute;left:3cqi;bottom:3cqi;font-size:2.2cqi;background:#ffd23f;color:#0d1118;padding:1.6cqi 2cqi}
 .flash{position:absolute;inset:0;background:#fff;opacity:0;transition:opacity .3s}
 .chargement{position:absolute;inset:0;display:grid;place-items:center;font-size:2.4cqi;color:#c9c0e8}
@@ -43,8 +44,8 @@ ul{margin:0;padding-left:22px;display:grid;gap:6px;max-width:76ch}
 </header>
 <section class="tels">
 <figure><div class="tel" id="t1"><canvas></canvas><div class="chargement">CHARGEMENT…</div>
-  <div class="hud"><div class="haut"><span>GP DE LA VILLE</span><span class="tourN"></span></div><div class="tour"></div><div class="fil"></div></div></div>
-<figcaption><b>1 · DERRIERE TA VOITURE</b><span>Caméra plus haute qui suit ta voiture orange. Course de 8 tours simulée avec les stats ci-dessous : freinage avant les virages, aspiration en ligne droite, attaques, portes fermées, erreurs. Les écarts en secondes et le fil des événements sont à l'écran.</span></figcaption></figure>
+  <div class="hud"><div class="haut"><span>GP DE LA VILLE</span><span class="tourN"></span></div><div class="tour"></div><div class="fil"></div></div><button class="bcam">CAMERA : SUIVIE</button></div>
+<figcaption><b>1 · DERRIERE TA VOITURE</b><span>Le bouton CAMERA passe d'un point de vue à l'autre (suivie, diorama, télé). Caméra suivie plus haute qui suit ta voiture orange. Course de 8 tours simulée avec les stats ci-dessous : freinage avant les virages, aspiration en ligne droite, attaques, portes fermées, erreurs. Les écarts en secondes et le fil des événements sont à l'écran.</span></figcaption></figure>
 <figure><div class="tel" id="t2"><canvas></canvas><div class="chargement">CHARGEMENT…</div>
   <div class="hud"><div class="haut"><span>GP DE LA VILLE</span><span class="tourN"></span></div><div class="tour"></div></div></div>
 <figcaption><b>2 · LE DIORAMA</b><span>Tout le circuit d'un coup, vu de haut, la caméra tourne lentement autour.</span></figcaption></figure>
@@ -202,13 +203,16 @@ Promise.all([decoder(),glb('Road1'),glb('Road1_Curve3'),glb('Road1_Curve4')]).th
     cible=[ordre[best-1],ordre[best]];const sm=((cible[0].s%TOT)+TOT)%TOT;let bp=0,bd=1e9;POSTES.forEach((p,i)=>{let d=(p.s-sm+TOT)%TOT;if(d<bd&&d>8){bd=d;bp=i;}});poste=bp;num=bp+1;
     C.el.querySelector('.cam').textContent='● CAM '+num;C.el.querySelector('.duel').textContent=`DUEL POUR P${best} · ${cible[0].pil} / ${cible[1].pil}`;
     const f=C.el.querySelector('.flash');f.style.transition='none';f.style.opacity=.8;requestAnimationFrame(()=>{f.style.transition='opacity .3s';f.style.opacity=0;});}
-  let acc=0,ang=0;
+  let acc=0,ang=0,MODE_A=0;const NOMS_CAM=['SUIVIE','DIORAMA','TELE'];
+  const btn=A.el.querySelector('.bcam');btn.onclick=()=>{MODE_A=(MODE_A+1)%3;btn.textContent='CAMERA : '+NOMS_CAM[MODE_A];};
   boucle([A.el,B.el,C.el],(dt,vu)=>{course(dt);
-    if(vu(A.el)){const J=V[0],[jx,jz,jh]=at(J.s+5,J.dec*.5);const c=new THREE.Vector3(jx,0,jz),p=new THREE.Vector3(jx-Math.cos(jh)*30,46,jz-Math.sin(jh)*30);
-      if(!init){vise.copy(c);pos.copy(p);init=true;}vise.lerp(c,Math.min(1,dt*3));pos.lerp(p,Math.min(1,dt*1.5));A.cam.position.copy(pos);A.cam.lookAt(vise);A.dessiner();}
-    if(vu(B.el)){ang+=dt*.06;B.cam.position.set(24+Math.cos(ang)*175,265,42+Math.sin(ang)*175);B.cam.lookAt(24,0,42);B.cam.fov=40;B.dessiner();}
-    if(vu(C.el)){plan-=dt;if(plan<=0||!cible){plan=5;couper();}const P=POSTES[poste];C.cam.position.set(P.x,4.5,P.z);const m=cible[0].m.position.clone().add(cible[1].m.position).multiplyScalar(.5);
-      cv3.lerp(m,Math.min(1,dt*5));if(cv3.lengthSq()===0)cv3.copy(m);const d=Math.hypot(P.x-m.x,P.z-m.z);C.cam.fov=Math.max(14,Math.min(45,900/Math.max(1,d)));C.cam.lookAt(cv3);C.dessiner();}
+    {const J=V[0],[jx,jz,jh]=at(J.s+5,J.dec*.5);const c=new THREE.Vector3(jx,0,jz),p=new THREE.Vector3(jx-Math.cos(jh)*30,46,jz-Math.sin(jh)*30);
+      if(!init){vise.copy(c);pos.copy(p);init=true;}vise.lerp(c,Math.min(1,dt*3));pos.lerp(p,Math.min(1,dt*1.5));A.cam.position.copy(pos);A.cam.lookAt(vise);A.cam.fov=40;}
+    {ang+=dt*.06;B.cam.position.set(24+Math.cos(ang)*175,265,42+Math.sin(ang)*175);B.cam.lookAt(24,0,42);B.cam.fov=40;if(vu(B.el))B.dessiner();}
+    {plan-=dt;if(plan<=0||!cible){plan=5;couper();}const P=POSTES[poste];C.cam.position.set(P.x,4.5,P.z);const m=cible[0].m.position.clone().add(cible[1].m.position).multiplyScalar(.5);
+      cv3.lerp(m,Math.min(1,dt*5));if(cv3.lengthSq()===0)cv3.copy(m);const d=Math.hypot(P.x-m.x,P.z-m.z);C.cam.fov=Math.max(14,Math.min(45,900/Math.max(1,d)));C.cam.lookAt(cv3);if(vu(C.el))C.dessiner();}
+    // le téléphone A peut prendre le point de vue des deux autres (bouton CAMERA)
+    if(vu(A.el)){if(MODE_A){const src=MODE_A===1?B.cam:C.cam;A.cam.position.copy(src.position);A.cam.quaternion.copy(src.quaternion);A.cam.fov=src.fov;}A.dessiner();}
     if((acc+=dt)>.3){acc=0;hud(A.el,8,true);hud(B.el,8);hud(C.el,8);}});
 });
 </script>
