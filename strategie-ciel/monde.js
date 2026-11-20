@@ -80,7 +80,7 @@ function caillou(det, amp, seed){ const g = new THREE.IcosahedronGeometry(1, det
   g.computeVertexNormals(); return g; }
 // les gisements : gros astéroïdes avec des cristaux, dans la ceinture, autour de l'endroit où commence le porte-vaisseaux
 const GIS = [[.62, 2000], [.70, 2350], [.78, 1900], [.86, 2300], [.55, 2380], [.95, 2050], [1.06, 2250], [.42, 2100]].map(([a, d], i) => ({ i, p: V3(Math.cos(a) * d, 0, Math.sin(a) * d), r: 70 + (i * 37) % 40, reste: 1500, max: 1500 }));
-const BASE = V3(Math.cos(.85) * 1500, 105, Math.sin(.85) * 1500); // départ du porte-vaisseaux : à l'intérieur de la ceinture, près de GAIA (gisements à 400 m et plus)
+const BASE = V3(Math.cos(.95) * 1550, 105, Math.sin(.95) * 1550); // départ du porte-vaisseaux : à l'intérieur de la ceinture, près de GAIA (gisements à 400 m et plus)
 { const N = TACTILE ? 900 : 1400, champ = new THREE.InstancedMesh(caillou(1, .35, 1), new THREE.MeshPhongMaterial({ flatShading: true, shininess: 0 }), N), m = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler(), c = new THREE.Color(); graine = 41; let n = 0;
   for (let k = 0; k < 6000 && n < N; k++){ const s = 3 + Math.pow(rnd(), 3) * 34; let P;
     if (n < N * .85){ const a = rnd() * 6.283, d = SYS.ceinture[0] + (rnd() + rnd() + rnd()) / 3 * (SYS.ceinture[1] - SYS.ceinture[0]); P = V3(Math.cos(a) * d, -160 + rnd() * 320, Math.sin(a) * d); }
@@ -142,10 +142,43 @@ function texRepeinte(t, h){ const im = t.image; if (!im || !im.width) return t; 
 function teinte(c, h){ const o = {}; c.getHSL(o); if (o.s > .3 && o.l > .12 && o.l < .9) c.setHSL(h, .62, Math.min(.62, Math.max(.4, o.l))); else c.setHSL(0, 0, Math.min(.82, o.l * .95 + .04)); }
 function repeint(sc0, h){ const s = sc0.clone(); s.traverse(o => { if (!o.isMesh) return; const mm = Array.isArray(o.material) ? o.material : [o.material];
   const n = mm.map(m => { const r = m.clone(); if (m.map) r.map = texRepeinte(m.map, h); else { r.color = m.color.clone(); teinte(r.color, h); } return r; }); o.material = Array.isArray(o.material) ? n : n[0]; }); return s; }
-const MOD = {};
+const MOD = {}, CAT = window.CDG_CAT || {};
+// tourelles des grands vaisseaux (catalogue de Ciel de guerre) : leurs triangles passent dans une pièce à part, qui pivote autour de sa base
+function decoupe(sc0,tours){let me=null;sc0.traverse(o=>{if(o.isMesh&&!me)me=o;});const g=me.geometry,ix=g.index.array,pris=new Uint8Array(ix.length/3);
+  tours.forEach((t,n)=>{const l=[];for(const[a,nb]of t.pl)for(let q=a;q<a+nb;q++){pris[q]=1;l.push(ix[q*3],ix[q*3+1],ix[q*3+2]);}
+    const gg=new THREE.BufferGeometry();for(const nm in g.attributes)gg.setAttribute(nm,g.attributes[nm]);gg.setIndex(l);
+    const piv=new THREE.Group();piv.name='tourelle'+n;piv.position.fromArray(t.piv);piv.userData={a0:t.a0,bout:t.bout};const m=new THREE.Mesh(gg,me.material);m.position.fromArray(t.piv).negate();piv.add(m);me.add(piv);});
+  const reste=[];for(let q=0;q<pris.length;q++)if(!pris[q])reste.push(ix[q*3],ix[q*3+1],ix[q*3+2]);g.setIndex(reste);}
+// tuyères : les points les plus en arrière du modèle, regroupés en taches (repris de Ciel de guerre)
+function tuyeres(g,force,coupe){g.updateMatrixWorld(true);const P=[],v=new THREE.Vector3();g.traverse(o=>{if(!o.isMesh)return;const a=o.geometry.attributes.position,pas=Math.max(1,Math.floor(a.count/6000));for(let i=0;i<a.count;i+=pas){v.fromBufferAttribute(a,i).applyMatrix4(o.matrixWorld);P.push([v.x,v.y,v.z]);}});
+  let z0=1e9,z1=-1e9,x0=1e9,x1=-1e9;for(const p of P){z0=Math.min(z0,p[2]);z1=Math.max(z1,p[2]);x0=Math.min(x0,p[0]);x1=Math.max(x1,p[0]);}
+  if(coupe){const zc=z1-coupe*(z1-z0);for(let i=P.length-1;i>=0;i--)if(P[i][2]>zc)P.splice(i,1);z1=-1e9;for(const p of P)z1=Math.max(z1,p[2]);}/* coupe : on ignore les tiges (canons, antennes) qui dépassent à l'arrière */
+  if(force)return force.map(([fx,fy])=>{const x=fx*(x1-x0),y=fy*(x1-x0),R=(x1-x0)*.08;let z=-1e9;for(const p of P)if(Math.hypot(p[0]-x,p[1]-y)<R)z=Math.max(z,p[2]);return[x,y,z>-1e9?z:z1];});
+  const L=z1-z0,W=x1-x0,c=W/20,arr=P.filter(p=>p[2]>z1-L*.07),cel=new Map();
+  for(const p of arr){const k=Math.floor(p[0]/c)+','+Math.floor(p[1]/c);const e=cel.get(k);if(e){e.n++;e.x+=p[0];e.y+=p[1];e.z=Math.max(e.z,p[2]);}else cel.set(k,{n:1,x:p[0],y:p[1],z:p[2]});}
+  const vu=new Set(),taches=[];for(const k of cel.keys()){if(vu.has(k))continue;const t={n:0,x:0,y:0,z:-1e9,c:0},pile=[k];vu.add(k);
+    while(pile.length){const q=pile.pop(),e=cel.get(q);t.n+=e.n;t.x+=e.x;t.y+=e.y;t.z=Math.max(t.z,e.z);t.c++;const [i,j]=q.split(',').map(Number);for(let a=-1;a<=1;a++)for(let b=-1;b<=1;b++){const r=(i+a)+','+(j+b);if(cel.has(r)&&!vu.has(r)){vu.add(r);pile.push(r);}}}
+    taches.push({x:t.x/t.n,y:t.y/t.n,z:t.z,c:t.c});}
+  taches.sort((a,b)=>b.c-a.c);return taches.filter(t=>t.c>=Math.max(2,taches[0].c*.3)).slice(0,4).map(t=>[t.x,t.y,t.z]);}
+// flammes des réacteurs : trois cônes emboîtés (halo, flamme, cœur blanc), un point chaud et une lueur ; bleues pour notre camp, orangées pour l'ennemi (repris de Ciel de guerre)
+const GEO_FL = new THREE.ConeGeometry(1, 1, 10, 1, true).rotateX(Math.PI / 2).translate(0, 0, .5), GEO_PT = new THREE.IcosahedronGeometry(1, 1);
+const TEINTES = { b: ['#3f9cff', '#a8e2ff', '#ffffff', '#d8f4ff'], r: ['#ff5020', '#ffb050', '#fff2c8', '#ffe6b0'] }, MATS_FL = {};
+function matFl(col, op){ const k = col + op; return MATS_FL[k] || (MATS_FL[k] = new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: op, depthWrite: false, fog: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending })); }
+const MAT_LUEUR = { b: new THREE.SpriteMaterial({ map: lueurTex, color: '#6ab8ff', transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, fog: false, opacity: .8 }), r: new THREE.SpriteMaterial({ map: lueurTex, color: '#ff7a3a', transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, fog: false, opacity: .8 }) };
+function flamme(s, camp){ const T = TEINTES[camp], f = new THREE.Group();
+  for (const [col, r, l, op] of [[T[0], 1, 4.6, .42], [T[1], .66, 3, .62], [T[2], .38, 1.6, .92]]){ const m = new THREE.Mesh(GEO_FL, matFl(col, op)); m.scale.set(r * s, r * s, l * s); m.renderOrder = 5; f.add(m); }
+  const p = new THREE.Mesh(GEO_PT, matFl(T[3], .9)); p.scale.setScalar(.6 * s); p.renderOrder = 5; f.add(p);
+  const l = new THREE.Sprite(MAT_LUEUR[camp]); l.scale.setScalar(s * 7); l.renderOrder = 5; f.add(l); return f; }
+const TUY = {};
+// un vaisseau équipé : ses tourelles (pièces qui pivotent) et ses flammes, placées sur les tuyères (calculées une fois par modèle et par taille)
+function equipe(g, k, L, camp){ const tours = []; g.traverse(o => { if (/^tourelle/.test(o.name)) tours.push({ o, cd: Math.random() * 2, c: null, tc: 0 }); });
+  const cle = k + '@' + L; if (!TUY[cle]) TUY[cle] = tuyeres(g); const s = L > 100 ? L * .022 : L * .05, fl = [];
+  for (const t of TUY[cle]){ const f = flamme(s, camp ? 'r' : 'b'); f.position.set(t[0], t[1], t[2] - s * .2); g.add(f); fl.push(f); }
+  return { tours, fl }; }
 function prepare(k, s){ dequantifie(s); s.traverse(o => { if (!o.isMesh) return; const mm = Array.isArray(o.material) ? o.material : [o.material];
   const n = mm.map(m => { if (m.map){ m.map.encoding = THREE.LinearEncoding; if (m.map.image && m.map.image.height <= 4) texNet(m.map); } return new THREE.MeshPhongMaterial({ color: m.color, map: m.map || null, vertexColors: !!m.vertexColors, flatShading: true, shininess: 0, specular: 0, side: THREE.DoubleSide }); });
   o.material = Array.isArray(o.material) ? n : n[0]; });
+  if (CAT[k] && CAT[k].tour) decoupe(s, CAT[k].tour);
   MOD[k] = s; if (k.startsWith('py')){ MOD[k + '_b'] = repeint(s, .6); MOD[k + '_r'] = repeint(s, 0); } }
 function charger(k){ return new Promise(ok => { const L = new THREE.GLTFLoader(), fin = g => { try { prepare(k, g.scene); } catch (e){ console.warn(k, e); } ok(); }, err = e => { console.warn(k, e); ok(); };
   if (window.SC_B64 && window.SC_B64[k]) L.parse(b64(window.SC_B64[k]), '', fin, err); else L.load('../ciel-de-guerre/modeles/' + k + '.glb', fin, undefined, err); }); }

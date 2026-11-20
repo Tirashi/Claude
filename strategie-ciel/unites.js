@@ -30,6 +30,7 @@ const yawVers = (dx, dz) => Math.atan2(-dx, -dz);
 function cree(type, pos, o = {}){ const T = TYPES[type], camp = T.camp || 0;
   const k = T.mod + (T.mod.startsWith('py') ? (camp ? '_r' : '_b') : '');
   const u = Object.assign({ id: ++ID, type, T, camp, vie: T.vie, pos: pos.clone(), yaw: camp ? PI / 2 : -PI / 2, cd: Math.random() * (T.cad || 1), ordre: { k: 'rien' }, cible: null, charge: 0, ph: Math.random() * 6.283, a: Math.random() * 6.283, sel: false, g: importe(k, T.rot, T.L) }, o);
+  Object.assign(u, equipe(u.g, k, T.L, camp)); u.dep = 0;
   u.pos.y = T.alt + (Math.random() - .5) * 16; u.g.position.copy(u.pos); sc.add(u.g);
   u.anneau = new THREE.Mesh(geoAnneau, matSel[0]); u.anneau.renderOrder = 3; u.anneau.scale.setScalar(Math.max(18, T.L * .62)); u.anneau.visible = false; sc.add(u.anneau);
   U.push(u); return u; }
@@ -70,21 +71,37 @@ function majUnite(u, dt, adv){
   if (u.ordre.k !== 'rien' || u.cible) u.centre = null;
   // déplacement
   if (but){ _d.copy(but).sub(u.pos); _d.y = (T.alt + (u.id % 7 - 3) * 4 - u.pos.y) * .5 + (T.vole && u.cible ? _d.y : 0); const d = _d.length();
-    if (d > 1){ const pas = Math.min(d, vmax * dt * (T.gros && d < 60 ? d / 60 : 1)); u.pos.addScaledVector(_d.normalize(), pas);
+    if (d > 1){ const pas = Math.min(d, vmax * dt * (T.gros && d < 60 ? d / 60 : 1)); u.pos.addScaledVector(_d.normalize(), pas); u.dep += (pas / dt / T.v - u.dep) * Math.min(1, dt * 3);
       const vise = yawVers(_d.x, _d.z); let dy = vise - u.yaw; while (dy > PI) dy -= 2 * PI; while (dy < -PI) dy += 2 * PI;
       const vir = T.vole ? 4 : T.gros ? .5 : 1.6; u.yaw += clamp(dy, -vir * dt, vir * dt); u.roll = T.vole ? clamp(dy * 1.2, -.9, .9) : 0; } }
   else if (T.gros && u.cible){ _d.copy(u.cible.pos).sub(u.pos); const vise = yawVers(_d.x, _d.z) + PI / 2.6; let dy = vise - u.yaw; while (dy > PI) dy -= 2 * PI; while (dy < -PI) dy += 2 * PI; u.yaw += clamp(dy, -.3 * dt, .3 * dt); }
-  // tir
+  else u.dep += (0 - u.dep) * Math.min(1, dt * 2);
+  // tir : les grands vaisseaux tirent de leurs tourelles, qui pivotent vers leur cible ; les autres, droit devant
   u.cd -= dt;
-  if (u.cible && u.cd <= 0 && u.pos.distanceTo(u.cible.pos) <= T.portee){ u.cd = T.cad * (.85 + Math.random() * .3);
-    const cv = u.cible; let deg = T.deg; if (T.antigros && (cv.T.gros || cv.T.L > 30)) deg *= 2.6; if (T.gros && cv.T.vole) deg *= .55;
-    const de = T.gros ? u.pos.clone().add(V3((Math.random() - .5) * T.L * .5, 6, (Math.random() - .5) * T.L * .3)) : u.pos;
-    tir(de, cv.pos.clone().add(V3((Math.random() - .5) * 6, 0, (Math.random() - .5) * 6)), u.camp, T.gros ? 26 : T.antigros ? 18 : 9, T.gros ? 600 : 480);
-    cv.vie -= deg; cv.touche = TEMPS.t; if (cv.vie <= 0) meurt(cv); }
-  // posé dans la scène
-  u.g.position.copy(u.pos); u.g.rotation.y = u.yaw; u.g.rotation.z += ((u.roll || 0) - u.g.rotation.z) * Math.min(1, dt * 4);
-  if (T.gros) u.g.rotation.z = Math.sin(TEMPS.t * .5 + u.ph) * .02;
+  if (u.tours.length){ posee(u, dt); tourelles(u, dt, adv); }
+  else if (u.cible && u.cd <= 0 && u.pos.distanceTo(u.cible.pos) <= T.portee){ u.cd = T.cad * (.85 + Math.random() * .3);
+    degats(u, u.cible, T.gros ? u.pos.clone().add(V3((Math.random() - .5) * T.L * .5, 6, (Math.random() - .5) * T.L * .3)) : u.pos); }
+  posee(u, dt);
+  // flammes : plus longues en vitesse, elles vacillent
+  for (const f of u.fl){ const k = (.45 + u.dep * .9) * (.82 + Math.random() * .36); f.scale.set(1, 1, k); }
 }
+function posee(u, dt){ const T = u.T;
+  u.g.position.copy(u.pos); u.g.rotation.y = u.yaw; u.g.rotation.z += ((u.roll || 0) - u.g.rotation.z) * Math.min(1, dt * 4);
+  if (T.gros) u.g.rotation.z = Math.sin(TEMPS.t * .5 + u.ph) * .02; }
+// chaque tourelle choisit sa cible (celle du vaisseau si elle est à portée, sinon l'ennemi le plus proche), pivote vers elle et tire quand elle est alignée
+const _loc = V3(), _bout = V3();
+function degats(tireur, cv, de){ const T = tireur.T; let deg = T.deg; if (T.antigros && (cv.T.gros || cv.T.L > 30)) deg *= 2.6; if (T.gros && cv.T.vole) deg *= .55;
+  tir(de, cv.pos.clone().add(V3((Math.random() - .5) * 6, 0, (Math.random() - .5) * 6)), tireur.camp, T.gros ? 26 : T.antigros ? 18 : 9, T.gros ? 600 : 480);
+  cv.vie -= deg; cv.touche = TEMPS.t; if (cv.vie <= 0) meurt(cv); }
+function tourelles(u, dt, adv){ const T = u.T, n = u.tours.length; u.g.updateMatrixWorld(true);
+  for (const t of u.tours){ t.cd -= dt; t.tc -= dt;
+    if (t.tc <= 0 || !vivant(t.c) || t.c.pos.distanceTo(u.pos) > T.portee){ t.tc = .5 + Math.random() * .3;
+      t.c = u.cible && vivant(u.cible) && u.cible.pos.distanceTo(u.pos) <= T.portee ? u.cible : plusProche(u, adv, T.portee); }
+    let da;
+    if (t.c){ t.o.parent.worldToLocal(_loc.copy(t.c.pos)); const vise = Math.atan2(_loc.z - t.o.position.z, _loc.x - t.o.position.x); da = (t.o.userData.a0 - vise) - t.o.rotation.y; }
+    else da = -t.o.rotation.y;
+    da = Math.atan2(Math.sin(da), Math.cos(da)); const pas = dt * 1.6; t.o.rotation.y += clamp(da, -pas, pas);
+    if (t.c && t.cd <= 0 && Math.abs(da) < .2){ t.cd = T.cad * n * (.85 + Math.random() * .3); t.o.localToWorld(_bout.fromArray(t.o.userData.bout)); degats(u, t.c, _bout.clone()); } } }
 // collecteur : va au gisement, mine jusqu'à être plein, rapporte au porte-vaisseaux
 function minage(u, dt){ const o = u.ordre, pv = PV();
   if (!o.gis || o.gis.reste <= 0){ if (u.charge < u.T.cap) o.gis = gisementProche(u.pos); if (!o.gis && !u.charge){ u.ordre = { k: 'rien' }; return null; } }
