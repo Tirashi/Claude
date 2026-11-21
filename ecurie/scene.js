@@ -1,4 +1,3 @@
-/* global Modeles */
 /* Écurie miniature : la course en 3D (circuit en tuiles, décor, voitures) et ses trois caméras : suivie, diorama, télé.
    Scene3D.creer(canvas, circuit, course) ; .image(dt) dessine l'état de la course ; .mode : 0 suivie, 1 diorama, 2 télé ; .suivi : index de la voiture suivie. */
 (function (W) {
@@ -93,5 +92,5 @@
         if (cote) { pivot.rotation.y = 0; const rec = n > 3 ? 1.35 : 1; cam.position.set(0, 1.25 * rec, 2.9 * rec); cam.lookAt(0, .1, 0); } else { pivot.rotation.y += dt * .5; cam.position.set(0, 1.05, 2.7); cam.lookAt(0, .12, 0); }
         r.render(sc, cam); }};
   }
-  W.Scene3D = {creer, vitrine};
+  window.Scene3D = W.Scene3D = {creer, vitrine};
 })(window);

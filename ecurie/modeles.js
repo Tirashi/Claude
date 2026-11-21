@@ -76,5 +76,5 @@
   let promesse = null;
   // tout charger une fois (renvoie une promesse)
   function charger() { return promesse || (promesse = Promise.all([decoder(), glb('Road1'), glb('Road1_Curve3'), glb('Road1_Curve4')]).then(([m, a, b, c]) => { M = m; routes = {S: a, 18: b, 42: c}; return true; })); }
-  W.Modeles = {charger, maillage, voiture, routes: () => routes, existe: nom => !!(M && M[nom])};
+  window.Modeles = W.Modeles = {charger, maillage, voiture, routes: () => routes, existe: nom => !!(M && M[nom])};
 })(window);

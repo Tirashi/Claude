@@ -175,4 +175,5 @@
   }
   W.Regles = {VOITURES, PIECES, DIVISIONS, LIBRES, SPONSORS, ACTIVITES, REVENUS, POINTS, PRIX, NIVEAUX, PLACES, GP_SAISON, ENTRETIEN, TEINTE,
     nouvellePartie, tirerOccasions, voitureDe, piloteDe, notes, chevaux, horsCategorie, empechement, niveauDe, physique, rivaux, preparer, resultats, classement, calendrier};
+  if (typeof window !== 'undefined') window.Regles = W.Regles; // déclaré pour l'analyse du code (lint.js)
 })(typeof window !== 'undefined' ? window : globalThis);

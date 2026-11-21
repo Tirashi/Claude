@@ -83,4 +83,5 @@
   // tour en cours (du premier), pour l'affichage
   const tour = C => Math.min(C.tours, Math.max(1, Math.floor((C.ordre[0].s - C.K.DEPART) / C.K.TOT) + 1));
   W.Course = {creer, pas, finir, tour, DT};
+  if (typeof window !== 'undefined') window.Course = W.Course; // déclaré pour l'analyse du code (lint.js)
 })(typeof window !== 'undefined' ? window : globalThis);

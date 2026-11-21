@@ -49,4 +49,5 @@
   }
   const cache = {};
   W.Circuits = {LISTE: CIRCUITS, BORD, get(k) { const d = CIRCUITS.find(c => c.k === k) || CIRCUITS[0]; return cache[d.k] || (cache[d.k] = construire(d)); }, construire};
+  if (typeof window !== 'undefined') window.Circuits = W.Circuits; // déclaré pour l'analyse du code (lint.js)
 })(typeof window !== 'undefined' ? window : globalThis);
