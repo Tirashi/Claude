@@ -181,6 +181,7 @@ Reprendre `nebula/sons.js` (`NebulaSons.play(...)`) : `laser` (frégate), `missi
 - Les crédits gardés à moitié en cas de défaite (§ 8).
 - Le déroulé et les deux boss (§ 9).
 - Le secteur du jour sans chantier naval (§ 12).
+- **Doute de l'utilisateur (21/11, en voyant la maquette 3)** : « un sacré bazar à l'écran » ; commander une flotte en mode survivor rend l'action brouillonne et difficile à suivre, on risque de perdre des vaisseaux bêtement, frustration « pas de la bonne façon ». Pistes proposées : lisibilité (moins d'ennemis mais plus gros, couleurs de camp tranchées, plus de drones), flotte serrée autour de l'amiral (les vaisseaux sont ses armes), plus de perte définitive au combat (vaisseau désemparé qui revient se réparer). À trancher avant la session 1.
 
 ## Idée d'origine (passages d'IDEES.md déplacés le 05/11)
 Recopiés tels quels lors du rangement du 05/11 ([`plan-rangement.md`](plan-rangement.md), phase 3) ; `IDEES.md` ne garde qu'une ligne qui renvoie ici. Les liens relatifs de ces passages partent de la racine du dépôt.
