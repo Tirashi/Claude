@@ -7,7 +7,7 @@
    - Tranches.prep(id, f) : prépare le vaisseau réduit d'un facteur f
      (f = taille affichée / taille du sprite : une tranche = un pixel à l'écran).
    - Tranches.draw(g, P, x, y, ang, opt) : dessine la pile centrée en (x, y),
-     ang = rotation du sprite (comme ctx.rotate), opt = { tilt, ex, sc, t, glow, shadow, flash }.
+     ang = rotation du sprite (comme ctx.rotate), opt = { tilt, ex, sc, t, glow, shadow, flash, tint }.
      Chaque cap (48 par tour) est assemblé une seule fois en une image : un drawImage par vaisseau.
    À charger après commun/vaisseaux.js, AVANT de fabriquer les sprites :
    il appelle NebulaVaisseaux.keepHeights(true).
@@ -102,14 +102,17 @@ function glowImg(foe) {
 }
 
 /* pile assemblée une fois par cap (48 caps) : tranches empilées + ombre portée, dans une seule image */
-function compose(P, bk, tilt, ex, shadow) {
-  const key = bk + '|' + tilt + '|' + ex + '|' + shadow, hit = P.cache.get(key); if (hit) return hit;
+function compose(P, bk, tilt, ex, shadow, tint) {
+  const key = bk + '|' + tilt + '|' + ex + '|' + shadow + '|' + (tint || ''), hit = P.cache.get(key); if (hit) return hit;
   const A = atlas(P, bk), { w, h, nl } = P, a = bk / BUCKETS * TAU, ct = Math.cos(tilt), lift = Math.sin(tilt) * ex;
   const D = Math.ceil(Math.hypot(w, h)) + 2, so = shadow ? nl * lift * .9 : 0, m = Math.max(1, Math.ceil(lift * 1.2));
   const ox = 2 + D / 2, oyb = 2 + nl * lift + D * ct / 2, c = mk(Math.ceil(D + so + 4), Math.ceil(oyb + D * ct / 2 + so + 2)), g = c.getContext('2d');
   const ca = Math.cos(a), sa = Math.sin(a), put = (e, f) => g.setTransform(ca, ct * sa, -sa, ct * ca, e, f);
-  if (shadow) { g.globalAlpha = shadow; put(ox + so, oyb + so); g.drawImage(P.shadow, -w / 2, -h / 2); g.globalAlpha = 1; }
   for (let k = 0; k < nl; k++) for (let j = 0; j < (k === nl - 1 ? 1 : m); j++) { put(ox, oyb - (k + j / m) * lift); g.drawImage(A, k * w, 0, w, h, -w / 2, -h / 2, w, h); }
+  // teinte de camp (couleur CSS avec transparence) : posée sur le vaisseau seulement
+  if (tint) { g.setTransform(1, 0, 0, 1, 0, 0); g.globalCompositeOperation = 'source-atop'; g.fillStyle = tint; g.fillRect(0, 0, c.width, c.height); }
+  if (shadow) { g.globalCompositeOperation = 'destination-over'; g.globalAlpha = shadow; put(ox + so, oyb + so); g.drawImage(P.shadow, -w / 2, -h / 2); }
+  g.globalCompositeOperation = 'source-over'; g.globalAlpha = 1;
   const r = { c, ox, oy: oyb - nl * lift / 2 };
   P.cache.set(key, r); return r;
 }
@@ -119,7 +122,7 @@ function compose(P, bk, tilt, ex, shadow) {
 function draw(g, P, x, y, ang, opt = {}) {
   const tilt = opt.tilt ?? .55, ex = opt.ex ?? 1.3, sc = opt.sc ?? 1, t = opt.t || 0;
   const u = ang / TAU * BUCKETS, bk = ((Math.round(u) % BUCKETS) + BUCKETS) % BUCKETS, rest = (u - Math.round(u)) / BUCKETS * TAU;
-  const C = compose(P, bk, tilt, ex, opt.shadow || 0);
+  const C = compose(P, bk, tilt, ex, opt.shadow || 0, opt.tint);
   g.save(); g.translate(x, y); g.rotate(rest); g.scale(sc, sc);
   g.drawImage(C.c, -C.ox, -C.oy);
   if (opt.flash) { g.globalCompositeOperation = 'lighter'; g.globalAlpha = opt.flash; g.drawImage(C.c, -C.ox, -C.oy); }
