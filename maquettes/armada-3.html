@@ -35,13 +35,13 @@ header p{margin:10px 0 0;color:var(--doux);max-width:72ch}
 <div class="page">
 <header>
   <h1>ARMADA EN RELIEF</h1>
-  <p><b>Essai du sprite stacking « lumière fixe »</b> sur la maquette de la flotte : chaque vaisseau (flotte et pirates) est une pile de tranches rééclairée selon son cap, avec une petite ombre portée sur la nébuleuse. Le bouton RELIEF montre l'ancien rendu à plat pour comparer.</p>
+  <p><b>Essai du sprite stacking « lumière fixe »</b> sur la maquette de la flotte : chaque vaisseau (flotte et pirates) est une pile de tranches rééclairée selon son cap, avec une petite ombre portée sur la nébuleuse. Le bouton RELIEF passe de FORT (caméra plus basse, piles plus hautes) à NON (l'ancien rendu à plat) en passant par LEGER (le premier essai).</p>
   <p>Deux sortes de petits vaisseaux, deux cartes différentes : les <b>drones</b> (un essaim qui colle aux ennemis) et les <b>chasseurs</b> (des patrouilles de trois qui font des passes d'attaque rapides puis reviennent en boucle). Chaque groupe gagne un vaisseau à intervalles réguliers. Toutes les 24 secondes, la corvette bouclier est détruite : toute la flotte perd ses boucliers, puis on la rachète. Touche une icône en bas pour changer de formation ; le bouton sous chaque téléphone change l'affichage de la vie (réglage du jeu).</p>
 </header>
 <div class="grille">
-  <section class="dir"><div class="tel" id="t1"><canvas width="544" height="960"></canvas></div><h2>1. DRONES</h2><p>Petits, vifs, ils tournent autour des ennemis comme des guêpes. L'ancien comportement des « chasseurs ».</p><div style="display:flex;gap:8px"><button type="button" id="b1">VIE : LES DEUX</button><button type="button" id="r1">RELIEF : OUI</button></div></section>
-  <section class="dir"><div class="tel" id="t2"><canvas width="544" height="960"></canvas></div><h2>2. CHASSEURS</h2><p>Patrouilles de trois (un chef et deux ailiers) : ils foncent en ligne droite à travers les ennemis en tirant, puis font une large boucle pour revenir.</p><div style="display:flex;gap:8px"><button type="button" id="b2">VIE : LES DEUX</button><button type="button" id="r2">RELIEF : OUI</button></div></section>
-  <section class="dir"><div class="tel" id="t3"><canvas width="544" height="960"></canvas></div><h2>3. LES DEUX</h2><p>Les deux cartes prises dans la même partie : un portrait par groupe en haut.</p><div style="display:flex;gap:8px"><button type="button" id="b3">VIE : LES DEUX</button><button type="button" id="r3">RELIEF : OUI</button></div></section>
+  <section class="dir"><div class="tel" id="t1"><canvas width="544" height="960"></canvas></div><h2>1. DRONES</h2><p>Petits, vifs, ils tournent autour des ennemis comme des guêpes. L'ancien comportement des « chasseurs ».</p><div style="display:flex;gap:8px"><button type="button" id="b1">VIE : LES DEUX</button><button type="button" id="r1">RELIEF : FORT</button></div></section>
+  <section class="dir"><div class="tel" id="t2"><canvas width="544" height="960"></canvas></div><h2>2. CHASSEURS</h2><p>Patrouilles de trois (un chef et deux ailiers) : ils foncent en ligne droite à travers les ennemis en tirant, puis font une large boucle pour revenir.</p><div style="display:flex;gap:8px"><button type="button" id="b2">VIE : LES DEUX</button><button type="button" id="r2">RELIEF : FORT</button></div></section>
+  <section class="dir"><div class="tel" id="t3"><canvas width="544" height="960"></canvas></div><h2>3. LES DEUX</h2><p>Les deux cartes prises dans la même partie : un portrait par groupe en haut.</p><div style="display:flex;gap:8px"><button type="button" id="b3">VIE : LES DEUX</button><button type="button" id="r3">RELIEF : FORT</button></div></section>
 </div>
 <div class="regles">
   <section><h2>DRONES ET CHASSEURS</h2><ul>
@@ -75,8 +75,9 @@ const TYPES = {
   drone:     { sp: 'drone1',     sz: 18,  max: 14 },
 };
 const ESCORTE = ['fregate', 'porte', 'canon', 'bouclier', 'mecano', 'mouilleur', 'fregate'];
-let REL = true;   // relief (sprite stacking) ou rendu à plat
-const TOPT = { tilt: .55, ex: 1.3, shadow: .32 };
+// relief : 0 = à plat (ancien rendu), 1 = léger (premier essai), 2 = fort (caméra plus basse, piles plus hautes, ombre plus marquée)
+const NIV = [null, { tilt: .55, ex: 1.3, shadow: .32 }, { tilt: .9, ex: 2.8, shadow: .45 }], NIVN = ['NON', 'LEGER', 'FORT'];
+let REL = 2, TOPT = NIV[2];
 const FORMS = ['EN V', 'EN CERCLE', 'EN CONVOI', 'EN CARRE'];
 function slots(form, n) {
   const s = 62, out = [];
@@ -391,8 +392,8 @@ function hud(g, S, t, mode) {
 /* ==================== boucle ==================== */
 const VIE = [['VIE : AUTOUR', 0], ['VIE : EN HAUT', 1], ['VIE : LES DEUX', 2]];
 const PHONES = [['t1', 'b1', 3, { dr: 1 }], ['t2', 'b2', 5, { fi: 1 }], ['t3', 'b3', 7, { dr: 1, fi: 1 }]].map(([id, bid, seed, cfg]) => {
-  const el = document.getElementById(id), cv = el.querySelector('canvas'), g = cv.getContext('2d'), S = makeSim(seed, cfg), P = { g, S, mode: 2, vis: true, rel: true }, btn = document.getElementById(bid), rb = document.getElementById('r' + bid.slice(1));
-  rb.addEventListener('click', () => { P.rel = !P.rel; rb.textContent = 'RELIEF : ' + (P.rel ? 'OUI' : 'NON'); });
+  const el = document.getElementById(id), cv = el.querySelector('canvas'), g = cv.getContext('2d'), S = makeSim(seed, cfg), P = { g, S, mode: 2, vis: true, rel: 2 }, btn = document.getElementById(bid), rb = document.getElementById('r' + bid.slice(1));
+  rb.addEventListener('click', () => { P.rel = (P.rel + 2) % 3; rb.textContent = 'RELIEF : ' + NIVN[P.rel]; });
   btn.addEventListener('click', () => { P.mode = (P.mode + 1) % 3; btn.textContent = VIE[P.mode][0]; });
   cv.addEventListener('pointerdown', ev => { const r = cv.getBoundingClientRect(), x = (ev.clientX - r.left) / r.width * W, y = (ev.clientY - r.top) / r.height * H;
     for (let i = 0; i < 4; i++) if (Math.abs(x - iconX(i)) < ICON.w / 2 + 8 && Math.abs(y - ICON.y) < ICON.w / 2 + 14) { S.form = i; S.auto = false; } });
@@ -401,7 +402,7 @@ const PHONES = [['t1', 'b1', 3, { dr: 1 }], ['t2', 'b2', 5, { fi: 1 }], ['t3', '
   return P;
 });
 let last = performance.now();
-function loop(now) { const dt = Math.min(1 / 25, (now - last) / 1000); last = now; for (const P of PHONES) if (P.vis) { step(P.S, dt); REL = P.rel; render(P.g, P.S, now / 1000, P.mode); } requestAnimationFrame(loop); }
+function loop(now) { const dt = Math.min(1 / 25, (now - last) / 1000); last = now; for (const P of PHONES) if (P.vis) { step(P.S, dt); REL = P.rel; TOPT = NIV[REL]; render(P.g, P.S, now / 1000, P.mode); } requestAnimationFrame(loop); }
 (document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve()).then(() => {
   for (const P of PHONES) render(P.g, P.S, 0, P.mode);
   if (!matchMedia('(prefers-reduced-motion: reduce)').matches) requestAnimationFrame(loop);
