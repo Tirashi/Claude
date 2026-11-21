@@ -18,7 +18,7 @@ const RECH = {
   coll_lourd:    { d: 'vaisseaux', nom: 'COLLECTEUR LOURD', txt: 'Les collecteurs emportent deux fois plus de cristal.', c: 60, f(){ S.mod.cap *= 2; } },
   blindage_ch:   { d: 'vaisseaux', nom: 'BLINDAGE DES CHASSEURS', txt: '+30 % de vie pour les chasseurs.', c: 50, f(){ renforcer('chasseur', 1.3); } },
   coque:         { d: 'vaisseaux', nom: 'COQUE D\'AURORE', txt: '+30 % de vie pour AURORE.', c: 80, f(){ renforcer('pv', 1.3); } },
-  colonisation:  { d: 'colonies', nom: 'COLONISATION', txt: 'Débloque le colon, qui s\'installe sur une planète libre.', c: 30, f(){ S.deb.colon = true; } },
+  colonisation:  { d: 'colonies', nom: 'COLONISATION', txt: 'Permet de fonder des colonies : amène AURORE près d\'une planète libre.', c: 30, f(){ S.deb.colon = true; } },
   glace:         { d: 'colonies', nom: 'HABITAT DE GLACE', txt: 'Permet de coloniser BOREA, planète de glace riche.', c: 70, req: 'colonisation', f(){ S.deb.glace = true; } },
   lave:          { d: 'colonies', nom: 'HABITAT RESISTANT', txt: 'Permet de coloniser BRASIER, planète de lave.', c: 60, req: 'colonisation', f(){ S.deb.lave = true; } },
   raffinerie:    { d: 'colonies', nom: 'RAFFINERIE', txt: '+30 % de cristal pour les mines des colonies.', c: 60, f(){ S.mod.mine *= 1.3; } },
@@ -46,16 +46,23 @@ const enAttente = () => Object.values(S.rech.dom).filter(D => !D.cur && D.choix.
 
 // ---------- colonies et bâtiments ----------
 const PLACES = { terre: 6, desert: 4, glace: 4, lave: 3, roche: 2, gaz: 0 };
-const BAT = { mine: { nom: 'MINE', prix: 100, temps: 20, txt: '+40 cristal/min (×1,5 sur une planète riche)' }, labo: { nom: 'LABO', prix: 120, temps: 25, txt: '+15 points de recherche/min' },
+const BAT = { mine: { nom: 'MINE', prix: 100, temps: 20, txt: '+25 cristal/min (×1,5 sur une planète riche)' }, labo: { nom: 'LABO', prix: 120, temps: 25, txt: '+15 points de recherche/min' },
   chantier: { nom: 'CHANTIER', prix: 150, temps: 30, txt: 'AURORE produit 10 % plus vite' }, defense: { nom: 'DEFENSE', prix: 140, temps: 25, txt: 'Une tourelle qui tire sur les ennemis proches', req: 'defense' } };
 const colonies = () => PLANETES.filter(P => P.camp === 0 && P.col);
 const places = P => PLACES[P.t] + (P.col ? S.mod.places : 0);
-function cristalMinute(P){ return P.col.bat.filter(b => b === 'mine').length * 40 * S.mod.mine * (P.riche ? 1.5 : 1); }
+function cristalMinute(P){ return P.col.bat.filter(b => b === 'mine').length * 25 * S.mod.mine * (P.riche ? 1.5 : 1); }
 const facteurChantier = () => Math.pow(.9, colonies().reduce((a, P) => a + P.col.bat.filter(b => b === 'chantier').length, 0)) * S.mod.prod;
 function construire(P, b){ const B = BAT[b]; if (!P.col || P.col.file || P.col.bat.length >= places(P)) return false; if (B.req && !S.deb[B.req]){ bulle('A RECHERCHER D\'ABORD'); return false; }
   if (S.cristal < B.prix){ bulle('PAS ASSEZ DE CRISTAL'); return false; } S.cristal -= B.prix; P.col.file = { b, t: 0 }; sigVolet = sigListe = ''; return true; }
 function peutColoniser(P){ if (P.camp === 0) return 'DEJA COLONISEE'; if (P.t === 'gaz') return 'GEANTE GAZEUSE : INHABITABLE POUR L\'INSTANT';
   if (P.t === 'glace' && !S.deb.glace) return 'IL FAUT LA RECHERCHE HABITAT DE GLACE'; if (P.t === 'lave' && !S.deb.lave) return 'IL FAUT LA RECHERCHE HABITAT RESISTANT'; return ''; }
+// fonder une colonie : AURORE doit être près de la planète ; un colon part d'AURORE et s'y pose
+const PRIX_COLONIE = 150, PRES = P => P.r + 650;
+const aurorePres = P => { const pv = PV(); return pv && Math.hypot(pv.pos.x - P.x, pv.pos.z - P.z) < PRES(P); };
+function fonderColonie(P){ const pb = peutColoniser(P); if (pb){ bulle(pb); return false; } if (!S.deb.colon){ bulle('IL FAUT LA RECHERCHE COLONISATION'); return false; }
+  if (!aurorePres(P)){ bulle('AMENE AURORE PRES DE ' + P.nom); return false; } if (P.colon && vivant(P.colon)){ bulle('UN COLON EST EN ROUTE'); return false; }
+  if (S.cristal < PRIX_COLONIE){ bulle('PAS ASSEZ DE CRISTAL'); return false; } S.cristal -= PRIX_COLONIE; const pv = PV(), u = cree('colon', pv.pos.clone()); u.ordre = { k: 'coloniser', P }; P.colon = u; sigVolet = ''; bulle('UN COLON PART POUR ' + P.nom); return true; }
+function amenerAurore(P){ const pv = PV(); if (!pv) return; const d = V3(pv.pos.x - P.x, 0, pv.pos.z - P.z).normalize().multiplyScalar(P.r + 420); pv.ordre = { k: 'aller', p: V3(P.x, 0, P.z).add(d) }; pv.cible = null; ping(V3(P.x, 40, P.z), 0); bulle('AURORE PART POUR ' + P.nom); }
 function coloniser(P, u){ const pb = peutColoniser(P); if (pb){ bulle(pb); u.ordre = { k: 'rien' }; return; }
   P.camp = 0; P.col = { bat: [], file: null }; anneauPlanete(P); eclat(V3(P.x, P.y + P.r, P.z), 160);
   u.mort = 1; u.vie = 0; sc.remove(u.g); sc.remove(u.anneau); sc.remove(u.ic); u.sel = false; sigListe = sigVolet = ''; bulle(`${P.nom} EST COLONISEE`); }
@@ -72,7 +79,7 @@ function initColonies(){
   S.deb = { collecteur: true, chasseur: true, bombardier: false, destroyer: false, colon: false, intercepteur: false, corvette: false, fregate: false, torpilleur: false, cuirasse: false, glace: false, lave: false, defense: false };
   S.mod = { vit: 1, cap: 1, vieCh: 1, viePv: 1, degCh: 1, degLourd: 1, bouclier: 1, mine: 1, labo: 1, prod: 1, places: 0, repar: 0 };
   S.rech = { fait: [], dom: {} }; for (const d in DOMAINES) S.rech.dom[d] = { cur: DEPART_RECH[d], pts: 0, choix: [] };
-  for (const P of PLANETES){ P.col = null; if (P.camp === 0 && P.nom !== 'GAIA') P.camp = undefined; anneauPlanete(P); }
+  for (const P of PLANETES){ P.col = null; P.colon = null; if (P.camp === 0 && P.nom !== 'GAIA') P.camp = undefined; anneauPlanete(P); }
   const G = PLN.GAIA; G.camp = 0; G.col = { bat: ['mine'], file: null }; anneauPlanete(G); SELP = null; sigRech = sigVolet = ''; }
 
 // ---------- panneaux : recherche, volet de la planète ----------
@@ -82,7 +89,7 @@ function ouvrirPlanete(P){ SELP = P; VOLET_CHOIX = false; sigVolet = ''; choisir
 function visePlanete(x, y){ let m = null, dm = 1e9; for (const P of PLANETES){ const e = ecranDe(P.g.position); if (!e.ok) continue; const d = Math.hypot(e.x - x, e.y - y), r = Math.max(24, rayonEcran(P.g.position, P.r)); if (d < r && d < dm){ dm = d; m = P; } } return m; }
 const mmss = s => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
 function majVolet(){ const v = $('#volet'), P = SELP; if (!P){ v.hidden = true; sigVolet = ''; return; } v.hidden = false;
-  const c = P.col, sig = [P.nom, c ? c.bat.join() + (c.file ? c.file.b : '') : '-', VOLET_CHOIX, Object.keys(BAT).map(b => S.cristal >= BAT[b].prix ? 1 : 0).join(''), S.deb.defense, U.some(u => u.type === 'colon' && u.vie > 0), places(P)].join('|');
+  const c = P.col, sig = [P.nom, c ? c.bat.join() + (c.file ? c.file.b : '') : '-', VOLET_CHOIX, Object.keys(BAT).map(b => S.cristal >= BAT[b].prix ? 1 : 0).join(''), S.deb.defense, S.deb.colon, P.camp === 0 ? 1 : aurorePres(P), P.colon && vivant(P.colon), S.cristal >= PRIX_COLONIE, places(P)].join('|');
   if (sig !== sigVolet){ sigVolet = sig; const type = { terre: 'TERRESTRE', desert: 'DESERT', glace: 'GLACE', lave: 'LAVE', roche: 'ROCHE', gaz: 'GAZEUSE' }[P.t];
     let h = `<div class="vt"><i style="background:${COUL_PLA[P.t]}"></i><b>${P.nom}</b><span class="dx">${type}${P.riche ? ' · <span class="cr">◆◆ RICHE</span>' : ''}</span><span class="b" data-act="fermerP" title="Fermer">✕</span></div>`;
     if (c){ const n = places(P); h += `<div class="dx" style="font-size:12px">COLONIE · <span class="n cr">+${Math.round(cristalMinute(P))}◆</span>/MIN</div><div class="places">`;
@@ -92,9 +99,9 @@ function majVolet(){ const v = $('#volet'), P = SELP; if (!P){ v.hidden = true; 
         else h += `<span class="b place vide${VOLET_CHOIX && i === c.bat.length ? ' on' : ''}" data-act="${c.file ? '' : 'placer'}" title="Construire">+</span>`; }
       h += `</div>`;
       if (VOLET_CHOIX && !c.file) h += `<div class="choix">${Object.entries(BAT).map(([k, B]) => { const ver = B.req && !S.deb[B.req]; return `<span class="b${S.cristal < B.prix || ver ? ' cher' : ''}" data-bat="${k}" title="${B.txt}${ver ? ' (à rechercher)' : ''}">${ic(ICB[k], 18)}<span>${B.nom}</span><span class="n cr">${ver ? ic('verrou', 11) : B.prix}</span></span>`; }).join('')}</div>`; }
-    else { const pb = peutColoniser(P), colon = U.some(u => u.type === 'colon' && u.vie > 0);
-      h += `<div style="font-size:13px">PLANETE LIBRE · ${places(P)} EMPLACEMENT${places(P) > 1 ? 'S' : ''}</div><div class="dx" style="font-size:12px">${pb || (colon ? 'UN COLON PEUT S\'Y INSTALLER' : S.deb.colon ? 'PRODUIS UN COLON AU CHANTIER D\'AURORE' : 'IL FAUT LA RECHERCHE COLONISATION')}</div>`;
-      if (!pb && colon) h += `<span class="b" data-act="envoyerColon" style="height:30px;margin-top:4px">${ic('colon', 16)} ENVOYER UN COLON</span>`; }
+    else { const pb = peutColoniser(P), pres = aurorePres(P), enRoute = P.colon && vivant(P.colon);
+      h += `<div style="font-size:13px">PLANETE LIBRE · ${places(P)} EMPLACEMENT${places(P) > 1 ? 'S' : ''}</div><div class="dx" style="font-size:12px">${pb || (!S.deb.colon ? 'IL FAUT LA RECHERCHE COLONISATION' : enRoute ? 'UN COLON EST EN ROUTE' : pres ? 'AURORE EST ASSEZ PROCHE POUR FONDER UNE COLONIE' : 'AMENE AURORE PRES DE LA PLANETE POUR Y FONDER UNE COLONIE')}</div>`;
+      if (!pb && S.deb.colon && !enRoute) h += pres ? `<span class="b${S.cristal < PRIX_COLONIE ? ' cher' : ''}" data-act="fonder" style="height:30px;margin-top:4px">${ic('colon', 16)} FONDER UNE COLONIE · <span class="n cr">${PRIX_COLONIE}◆</span></span>` : `<span class="b" data-act="amener" style="height:30px;margin-top:4px">${ic('pv', 16)} AMENER AURORE</span>`; }
     v.innerHTML = h; }
   const t = $('#vT'); if (t && c && c.file) t.textContent = Math.ceil(BAT[c.file.b].temps - c.file.t) + ' S'; }
 function majRechPanneau(){ const b = $('#rBadge'), n = enAttente(); b.textContent = n || ''; b.hidden = !n; $('#bRech').classList.toggle('alerte', n > 0);

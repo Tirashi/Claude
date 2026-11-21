@@ -114,6 +114,8 @@ $('#hud').addEventListener('click', e => { const b = e.target.closest('[data-vit
   if (b.dataset.act === 'recherche'){ RECH_OUVERT = !RECH_OUVERT; sigRech = ''; majRechPanneau(); return; }
   if (b.dataset.act === 'fermerP'){ SELP = null; majVolet(); sigListe = ''; return; }
   if (b.dataset.act === 'placer'){ VOLET_CHOIX = !VOLET_CHOIX; sigVolet = ''; majVolet(); return; }
+  if (b.dataset.act === 'fonder' && SELP){ fonderColonie(SELP); sigVolet = ''; majVolet(); return; }
+  if (b.dataset.act === 'amener' && SELP){ amenerAurore(SELP); return; }
   if (b.dataset.act === 'envoyerColon' && SELP){ const c = U.filter(u => u.type === 'colon' && u.vie > 0).sort((a, b2) => a.pos.distanceTo(SELP.g.position) - b2.pos.distanceTo(SELP.g.position))[0]; if (c){ c.ordre = { k: 'coloniser', P: SELP }; bulle('EN ROUTE POUR ' + SELP.nom); } return; }
   if (b.dataset.act === 'liste'){ LISTE_REPLIE = !LISTE_REPLIE; sigListe = ''; try { localStorage.setItem('strategieciel.liste', LISTE_REPLIE ? '1' : '0'); } catch (x){} majListe(); return; }
   if (b.dataset.perso){ const now = performance.now(); rappelGroupe(b.dataset.perso, dernierGroupe.n === b.dataset.perso && now - dernierGroupe.t < 400); dernierGroupe = { n: b.dataset.perso, t: now }; return; }
@@ -156,7 +158,7 @@ const ic = (n, s = 18) => ICONES[n] ? `<img class="ico" src="${ICONES[n]}" width
 function fabriquerIcones(){ try {
   const T = 96, r = new THREE.WebGLRenderer({ alpha: true, antialias: true, preserveDrawingBuffer: true }); r.setSize(T, T); r.setClearColor(0, 0);
   const s = new THREE.Scene(); s.add(new THREE.HemisphereLight('#dfe8ff', '#30304a', 1.1)); const d = new THREE.DirectionalLight('#ffffff', .9); d.position.set(-1, 3, -1); s.add(d);
-  for (const t of ['pv', ...PRODUITS]){ const Ty = TYPES[t], k = cleModele(Ty, 0), g = importe(k, Ty.rot, 10), long = Ty.gros; s.add(g);
+  for (const t of ['pv', ...PRODUITS, 'colon']){ const Ty = TYPES[t], k = cleModele(Ty, 0), g = importe(k, Ty.rot, 10), long = Ty.gros; s.add(g);
     /* vus d'un peu de biais (on voit le volume) ; les longs (AURORE, destroyer) en diagonale, pour remplir le carré */
     g.rotation.y = long ? -PI / 4 : 0; g.updateMatrixWorld(true); const c = new THREE.OrthographicCamera(-1, 1, 1, -1, .1, 200);
     c.position.set(0, 40, 22); c.up.set(0, 1, 0); c.lookAt(0, 0, 0); c.updateMatrixWorld(true);

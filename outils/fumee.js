@@ -153,8 +153,8 @@ const shots = process.argv[2];
         // session 2 : une recherche finie propose des cartes, un colon s'installe sur DUNE, un labo s'y construit
         J.U().filter(u => u.camp === 1).forEach(u => J.meurt(u)); J.S.prochaine = 1e6; J.S.cristal = 3000; J.avance(200); if (!J.S.rech.fait.includes('colonisation')) return 'la recherche COLONISATION ne finit pas';
         for (const d in J.S.rech.dom){ const D = J.S.rech.dom[d]; if (!D.cur && D.choix.length) J.choisirRecherche(D.choix[0]); }
-        if (!J.produire('colon')) return 'le colon ne se produit pas'; J.avance(30); const c = J.U().find(u => u.type === 'colon'), P = J.PLANETES.find(P => P.nom === 'DUNE'); if (!c) return 'pas de colon';
-        c.ordre = { k: 'coloniser', P }; J.avance(240); if (P.camp !== 0) return "DUNE n'est pas colonisée"; if (!J.construire(P, 'labo')) return 'pas de labo sur DUNE'; J.avance(30); if (!P.col.bat.includes('labo')) return 'le labo ne se termine pas';
+        const P = J.PLANETES.find(P => P.nom === 'DUNE'), pv = J.U().find(u => u.type === 'pv'); if (J.fonderColonie(P)) return 'colonie fondée avec AURORE trop loin';
+        pv.pos.set(P.x + P.r + 300, pv.pos.y, P.z); pv.ordre = { k: 'rien' }; if (!J.fonderColonie(P)) return 'le colon ne part pas d\'AURORE'; if (!J.U().find(u => u.type === 'colon')) return 'pas de colon'; J.avance(240); if (P.camp !== 0) return "DUNE n'est pas colonisée"; if (!J.construire(P, 'labo')) return 'pas de labo sur DUNE'; J.avance(30); if (!P.col.bat.includes('labo')) return 'le labo ne se termine pas';
         J.meurt(J.U().find(u => u.type === 'pv'));
         for (let i = 0; i < 60 && J.etat() !== 'fin'; i++) await wait(250); if (J.etat() !== 'fin' || document.getElementById('eFin').hidden) return "pas d'écran de fin quand le porte-vaisseaux tombe";
         return 'ok';

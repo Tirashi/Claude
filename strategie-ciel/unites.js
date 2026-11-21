@@ -7,8 +7,8 @@ const PI = Math.PI;
 // cle : touche physique de production (ligne du bas : W X C V en AZERTY, Z X C V en QWERTY)
 // L : longueur affichée (m) ; v : vitesse (m/s) ; portee, deg (dégâts par tir), cad (secondes entre deux tirs) ; alt : altitude de vol
 const TYPES = {
-  pv:         { nom: 'PORTE-VAISSEAUX', mod: 'fga_croiseur1', rot: -PI / 2, L: 470, vie: 3000, v: 6, portee: 380, deg: 12, cad: .5, alt: 110, gros: 1 },
-  collecteur: { nom: 'COLLECTEUR', mod: 'py16', rot: PI, L: 26, vie: 60, v: 48, alt: 60, prix: 30, temps: 8, cap: 20, mine: 5, cle: 'KeyZ' },
+  pv:         { nom: 'PORTE-VAISSEAUX', mod: 'fga_croiseur1', rot: -PI / 2, L: 470, vie: 3000, v: 6, portee: 520, deg: 12, cad: .5, alt: 110, gros: 1 },
+  collecteur: { nom: 'COLLECTEUR', mod: 'py16', rot: PI, L: 26, vie: 60, v: 48, alt: 60, prix: 30, temps: 8, cap: 15, mine: 3, cle: 'KeyZ' },
   chasseur:   { nom: 'CHASSEUR', mod: 'py2', rot: PI, L: 14, vie: 60, v: 90, portee: 150, deg: 4, cad: .35, alt: 80, prix: 40, temps: 10, vole: 1, cle: 'KeyX' },
   bombardier: { nom: 'BOMBARDIER', mod: 'py35', rot: PI, L: 34, vie: 120, v: 58, portee: 210, deg: 20, cad: 1.6, alt: 72, prix: 80, temps: 16, antigros: 1, vole: 1, cle: 'KeyC' },
   intercepteur: { nom: 'INTERCEPTEUR', mod: 'py26', rot: PI, L: 13, vie: 35, v: 130, portee: 140, deg: 3, cad: .2, alt: 84, prix: 50, temps: 9, vole: 1, antichasse: 1.5, cle: 'KeyM' },
@@ -22,7 +22,7 @@ const TYPES = {
   r_corvette: { nom: 'CORVETTE', mod: 'fga_corvette1_r', rot: -PI / 2, L: 40, vie: 170, v: 42, portee: 210, deg: 14, cad: 1, alt: 70, antigros: 1, camp: 1 },
   r_fregate:  { nom: 'FREGATE', mod: 'fga_fregate1_r', rot: -PI / 2, L: 60, vie: 420, v: 24, portee: 300, deg: 13, cad: .6, alt: 88, camp: 1 },
   r_destroyer:{ nom: 'DESTROYER ROUGE', mod: 'fga_destroyer1', rot: -PI / 2, L: 115, vie: 1300, v: 14, portee: 360, deg: 15, cad: .55, alt: 96, gros: 1, camp: 1 }};
-const PRODUITS = ['collecteur', 'chasseur', 'intercepteur', 'bombardier', 'torpilleur', 'corvette', 'fregate', 'destroyer', 'cuirasse', 'colon'];
+const PRODUITS = ['collecteur', 'chasseur', 'intercepteur', 'bombardier', 'torpilleur', 'corvette', 'fregate', 'destroyer', 'cuirasse']; // le colon part d'AURORE depuis le volet d'une planète (fonderColonie)
 // le modèle d'un type : chasseurs polyyai repeints selon le camp, vaisseaux du pack repeints en bleu (peint), les autres tels quels
 const cleModele = (T, camp) => T.mod + (T.mod.startsWith('py') ? (camp ? '_r' : '_b') : T.peint && !camp ? '_b' : '');
 // vagues : composition, et temps avant leur arrivée par la porte (secondes de jeu)
@@ -90,8 +90,10 @@ function majUnite(u, dt, adv){
   // tir : les grands vaisseaux tirent de leurs tourelles, qui pivotent vers leur cible ; les autres, droit devant
   u.cd -= dt;
   if (u.tours.length){ posee(u, dt); tourelles(u, dt, adv); }
-  else if (u.cible && u.cd <= 0 && u.pos.distanceTo(u.cible.pos) <= T.portee){ u.cd = T.cad * (.85 + Math.random() * .3);
-    degats(u, u.cible, T.gros ? u.pos.clone().add(V3((Math.random() - .5) * T.L * .5, 6, (Math.random() - .5) * T.L * .3)) : u.pos); }
+  else { if (!u.cible && T.portee && u.ordre.k === 'aller'){ u.tc = (u.tc || 0) - dt; if (u.tc <= 0 || !vivant(u.cTir) || u.cTir.pos.distanceTo(u.pos) > T.portee){ u.tc = .4; u.cTir = plusProche(u, adv, T.portee); } } else u.cTir = null;
+    const ct = u.cible || u.cTir;
+    if (ct && u.cd <= 0 && u.pos.distanceTo(ct.pos) <= T.portee){ u.cd = T.cad * (.85 + Math.random() * .3);
+    degats(u, ct, T.gros ? u.pos.clone().add(V3((Math.random() - .5) * T.L * .5, 6, (Math.random() - .5) * T.L * .3)) : u.pos); } }
   if (T.soin && u.camp === 0){ u.sd = (u.sd || 0) - dt; if (u.sd <= 0){ u.sd = 1; let n = 0; for (const v of U) if (v.camp === 0 && v.vie > 0 && v !== u && v.vie < v.vmax && v.pos.distanceTo(u.pos) < 220){ v.vie = Math.min(v.vmax, v.vie + T.soin); n++; } if (n && Math.random() < .3) ping(u.pos.clone(), false); } }
   posee(u, dt);
   // flammes : plus longues en vitesse, elles vacillent
@@ -118,8 +120,10 @@ function tourelles(u, dt, adv){ const T = u.T, n = u.tours.length; u.g.updateMat
 function minage(u, dt){ const o = u.ordre, pv = PV();
   if (!o.gis || o.gis.reste <= 0){ if (u.charge < u.T.cap * (S.mod ? S.mod.cap : 1)) o.gis = gisementProche(u.pos); if (!o.gis && !u.charge){ u.ordre = { k: 'rien' }; return null; } }
   const cap = u.T.cap * (S.mod ? S.mod.cap : 1);
-  if (u.charge >= cap || (!o.gis && u.charge)){ if (!pv) return null; const d = u.pos.distanceTo(pv.pos);
-    if (d < 120){ S.cristal += u.charge; S.mine += u.charge; u.charge = 0; u.rayon = 0; return null; } u.rayon = 0; return pv.pos; }
+  if (u.charge >= cap || (!o.gis && u.charge)){ /* dépôt le plus proche : AURORE ou une colonie */
+    const deps = (pv ? [[pv.pos, 120]] : []).concat(S.deb ? colonies().map(P => [V3(P.x, u.T.alt, P.z), P.r + 160]) : []); if (!deps.length) return null;
+    let m = deps[0], dm = 1e18; for (const q of deps){ const d = Math.hypot(q[0].x - u.pos.x, q[0].z - u.pos.z) - q[1]; if (d < dm){ dm = d; m = q; } }
+    if (dm < 0){ S.cristal += u.charge; S.mine += u.charge; u.charge = 0; u.rayon = 0; return null; } u.rayon = 0; return m[0]; }
   const h = o.gis.haut(), d = u.pos.distanceTo(h);
   if (d < 46){ const m = Math.min(u.T.mine * dt, o.gis.reste, cap - u.charge); u.charge += m; o.gis.reste -= m; u.rayon = 1; majGisement(o.gis); u.a += dt * .8; u.rt = (u.rt || 0) - dt; if (u.rt < 0){ u.rt = .3; tir(u.pos, h.clone().setY(h.y - 18), 0, 5, 240); } return V3(h.x + Math.cos(u.a) * 26, h.y + 10, h.z + Math.sin(u.a) * 26); }
   u.rayon = 0; return h; }

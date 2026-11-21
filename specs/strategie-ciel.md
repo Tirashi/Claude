@@ -120,3 +120,11 @@ Nouveau fichier `strategie-ciel/colonies.js` (chargé entre `unites.js` et `inte
 - **Interface** : clic sur une planète = son volet (type, richesse, emplacements, + pour construire, rendement) ; partie COLONIES dans la liste de la flotte ; icônes des bâtiments sous le nom des colonies sur la carte ; ligne COLONS dans la liste. Tutoriel : deux étapes de plus (LA RECHERCHE, LES COLONIES).
 - Équilibre (joueur automatique qui recherche et construit sur GAIA) : gagne 2 fois sur 2 ; joueur passif : perd. Test de fumée : recherche, colon sur DUNE, labo.
 - **Plus de vaisseaux à débloquer** (demande du 21/11) : cinq nouveaux, chacun avec sa carte de recherche (domaine VAISSEAUX) : INTERCEPTEUR (polyyai 26 : très rapide, fragile, ×1,5 contre les chasseurs ; 50◆), TORPILLEUR (polyyai 30 : torpilles à 380 m, 55 de dégâts, ×2,6 contre les gros ; après BOMBARDIERS ; 140◆), CORVETTE (corvette 2 du pack repeinte en bleu : tir rapide, ×1,8 contre les chasseurs ; 120◆), FREGATE DE SOUTIEN (frégate 3 repeinte : répare de 6 PV par seconde les alliés à moins de 220 m ; après CORVETTES ; 180◆), CUIRASSE (destroyer 4 bleu, 160 m, 1 800 PV, six tourelles ; après DESTROYERS ; 420◆). Le chantier passe à dix boutons (deux rangées) ; touches de la ligne du bas en AZERTY : W X C V N , ; : ! < (`cleModele` choisit le modèle repeint).
+
+### Retours du 21/11 (après la session 2)
+- **Ressources moins rapides** : collecteur 3◆/s et 15 par voyage (au lieu de 5 et 20) ; MINE de colonie +25◆ par minute (au lieu de 40).
+- **Tir en route** : un vaisseau envoyé quelque part (ordre « aller ») tire sur l'ennemi le plus proche à sa portée sans quitter son trajet.
+- **Planètes fixes** (plus d'orbite) : une planète près d'une porte devient un point stratégique.
+- **AURORE** : portée 520 m (au lieu de 380).
+- **Colonisation revue** : le colon n'est plus au chantier (il ne suit plus le ralliement) ; dans le volet d'une planète libre, AMENER AURORE l'envoie près de la planète, puis FONDER UNE COLONIE · 150◆ (AURORE à moins de rayon + 650 m) fait partir un colon d'AURORE qui s'y pose (`fonderColonie`, `amenerAurore`).
+- **Dépôts** : les collecteurs déchargent à AURORE ou à la colonie la plus proche (à moins de rayon + 160 m de la planète).

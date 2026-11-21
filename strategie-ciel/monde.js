@@ -68,7 +68,7 @@ function stationCode(camp){ const g = new THREE.Group(), gris = new THREE.MeshPh
   for (let i = 0; i < 4; i++){ const b = new THREE.Mesh(new THREE.BoxGeometry(5, 4, 48), gris); b.rotation.y = i * Math.PI / 2; b.position.set(Math.sin(i * Math.PI / 2) * 24, 0, Math.cos(i * Math.PI / 2) * 24); g.add(b); }
   for (let i = 0; i < 2; i++){ const q = new THREE.Mesh(new THREE.BoxGeometry(64, 2, 24), new THREE.MeshPhongMaterial({ color: '#2a3a6a', emissive: '#14204a', flatShading: true })); q.position.set(i ? 82 : -82, 22, 0); g.add(q); }
   const t = new THREE.Mesh(new THREE.ConeGeometry(10, 16, 8), coul); t.position.y = 38; g.add(t); g.scale.setScalar(1.4); return g; }
-PLANETES.forEach((P, i) => { PLN[P.nom] = P; P.w = .004 * Math.pow(1300 / P.orb, 1.5) * (P.autour ? 6 : 1); P.g = new THREE.Group(); sc.add(P.g);
+PLANETES.forEach((P, i) => { PLN[P.nom] = P; P.w = 0; /* planètes fixes (retour du 21/11) : une planète près d'une porte est un point stratégique */ P.g = new THREE.Group(); sc.add(P.g);
   if (DFOK){ P.df = new PlanetesDF.Planete(DF_T[P.t], DF_PX, { decalage: i * 37 }); P.dfT = 0; P.ct = texNet(new THREE.CanvasTexture(P.df.canvas));
     const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: P.ct, transparent: true })); s.scale.setScalar(2 * P.r * P.df.taille / DF_PX); P.g.add(s); }
   else P.g.add(new THREE.Mesh(new THREE.IcosahedronGeometry(P.r, 2), new THREE.MeshPhongMaterial({ color: COUL_PLA[P.t], flatShading: true })));
