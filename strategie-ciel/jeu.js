@@ -71,5 +71,5 @@ function boucle(now){ requestAnimationFrame(boucle); const dtr = Math.min(.05, (
 
 // ---------- démarrage : modèles, puis écran titre (la bataille tourne au ralenti derrière) ----------
 redim();
-Promise.all(MODELES.map(charger)).then(() => { $('#charge').remove(); nouvellePartie(); centrer(BASE); CA.dist = 2300; ETAT = 'titre'; ecran('eTitre'); majTitre(); requestAnimationFrame(boucle); });
+Promise.all(MODELES.map(charger)).then(() => { fabriquerIcones(); $('#charge').remove(); nouvellePartie(); centrer(BASE); CA.dist = 2300; ETAT = 'titre'; ecran('eTitre'); majTitre(); requestAnimationFrame(boucle); });
 window.StrategieCiel = { tutoFin, tutoEtape, TU, S, U: () => U, TYPES, VAGUES, GIS, CA, jouer, produire, ordonner, groupe, lancerVague, vitesse, finPartie, meurt, etat: () => ETAT, avance(s){ const n = Math.ceil(s / .034); for (let i = 0; i < n; i++) majUnites(s / n); TEMPS.t += s; } };

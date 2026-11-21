@@ -154,3 +154,4 @@ Maquettes de la carte 2 à 4 (isométrique, puis papier à l'encre validée), é
 - **20/11 — Stratégie spatiale** : 7 réacteurs sur AURORE, point de ralliement, destroyers plus rapides et chasseurs plus résistants, station de Viktor Hahn (CC BY 4.0) autour de GAIA ; `sw.js` v118.
 - **20/11 — Stratégie spatiale, maquette d'interface** : trois directions plus fines (barre de commande, tiroirs, liste de flotte), polices Rajdhani / Share Tech Mono / Michroma, icônes ; [maquette](https://claude.ai/artifact/3qGuYnokCt3hUXBzH9J6vz) en attente du choix.
 - **20/11 — Stratégie spatiale, interface « liste de flotte »** (direction C de la maquette) : barre fine, liste de la flotte à droite avec le chantier d'AURORE, ordres en bas, nouvelles polices et icônes.
+- **21/11 — Stratégie spatiale** : boutons de caméra qui suivent la liste repliée (téléphone), icônes faites à partir des vrais modèles 3D.

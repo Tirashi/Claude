@@ -139,7 +139,21 @@ function dessineMini(){ const x = mini.getContext('2d'), w = mini.width, h = min
   if (pts.length === 4){ x.strokeStyle = 'rgba(255,255,255,.8)'; x.lineWidth = 1; x.beginPath(); pts.forEach((q, i) => i ? x.lineTo(X(q.x), Z(q.z)) : x.moveTo(X(q.x), Z(q.z))); x.closePath(); x.stroke(); } }
 
 // ---------- panneaux (interface « liste de flotte », maquette d'interface du 20/11, direction C) ----------
-const ic = (n, s = 18) => `<svg width="${s}" height="${s}" class="ico"><use href="#i-${n}"/></svg>`;
+// icônes : les vaisseaux eux-mêmes, photographiés vus de dessus au chargement (fabriquerIcones) ; sinon les dessins de index.html
+const ICONES = {};
+const ic = (n, s = 18) => ICONES[n] ? `<img class="ico" src="${ICONES[n]}" width="${Math.round(s * 1.25)}" height="${Math.round(s * 1.25)}" alt="">` : `<svg width="${s}" height="${s}" class="ico"><use href="#i-${n}"/></svg>`;
+function fabriquerIcones(){ try {
+  const T = 96, r = new THREE.WebGLRenderer({ alpha: true, antialias: true, preserveDrawingBuffer: true }); r.setSize(T, T); r.setClearColor(0, 0);
+  const s = new THREE.Scene(); s.add(new THREE.HemisphereLight('#dfe8ff', '#30304a', 1.1)); const d = new THREE.DirectionalLight('#ffffff', .9); d.position.set(-1, 3, -1); s.add(d);
+  for (const t of ['pv', 'collecteur', 'chasseur', 'bombardier', 'destroyer']){ const Ty = TYPES[t], k = Ty.mod + (Ty.mod.startsWith('py') ? '_b' : ''), g = importe(k, Ty.rot, 10), long = Ty.gros; s.add(g);
+    /* vus d'un peu de biais (on voit le volume) ; les longs (AURORE, destroyer) en diagonale, pour remplir le carré */
+    g.rotation.y = long ? -PI / 4 : 0; g.updateMatrixWorld(true); const c = new THREE.OrthographicCamera(-1, 1, 1, -1, .1, 200);
+    c.position.set(0, 40, 22); c.up.set(0, 1, 0); c.lookAt(0, 0, 0); c.updateMatrixWorld(true);
+    // cadrage : la boîte du modèle vue depuis la caméra
+    const b = new THREE.Box3().setFromObject(g), coins = []; for (const x of [b.min.x, b.max.x]) for (const y of [b.min.y, b.max.y]) for (const z of [b.min.z, b.max.z]) coins.push(V3(x, y, z).applyMatrix4(c.matrixWorldInverse));
+    let m = 0; for (const q of coins) m = Math.max(m, Math.abs(q.x), Math.abs(q.y)); m *= long ? .6 : 1.04; Object.assign(c, { left: -m, right: m, top: m, bottom: -m }); c.updateProjectionMatrix();
+    r.render(s, c); ICONES[t] = r.domElement.toDataURL('image/png'); s.remove(g); }
+  ICONES.pv = ICONES.pv; r.dispose(); r.forceContextLoss && r.forceContextLoss(); sigListe = sigOrdres = ''; } catch (e){ console.warn('icônes', e); } }
 const pvb = (v, c = '') => `<div class="pv ${c || (v < .3 ? 'f' : v < .6 ? 'm' : '')}"><i style="width:${Math.round(clamp(v, 0, 1) * 100)}%"></i></div>`;
 function annonce(t, long){ const b = $('#bandeau'); b.innerHTML = t; b.style.opacity = 1; clearTimeout(annonce.t); annonce.t = setTimeout(() => { b.style.opacity = 0; }, long ? 4200 : 2200); }
 function annonceVague(n){ annonce(`VAGUE ${n} / ${VAGUES.length}<b>FLOTTE ROUGE</b>ELLE ENTRE PAR LA PORTE D'ALTAIR`, 1); }
@@ -156,18 +170,18 @@ function majListe(){ const L = $('#liste'), pv = PV(), sel = SEL(), seul = t => 
   const persos = LIGNE.filter(c => PERSO[c]).map(c => [c, U.filter(u => PERSO[c].has(u.id) && u.vie > 0)]).filter(([, l]) => l.length);
   const sig = [LISTE_REPLIE, pv ? Math.round(pv.vie / pv.T.vie * 20) : -1, seul('pv'), groupes.map(([t, l]) => t + l.length + Math.round(vieM(l) * 10) + resume(l) + seul(t)).join(), persos.map(([c, l]) => c + l.length).join(),
     PRODUITS.map(t => S.cristal >= TYPES[t].prix ? 1 : 0).join(''), S.file.join(), !!S.ralliement, modeRallier, sigProd].join('|');
-  if (sig !== sigListe){ sigListe = sig; sigProd = sigProd || 'x'; L.classList.toggle('replie', LISTE_REPLIE);
+  if (sig !== sigListe){ sigListe = sig; sigProd = sigProd || 'x'; L.classList.toggle('replie', LISTE_REPLIE); ECRAN.style.setProperty('--liste', LISTE_REPLIE ? '52px' : ''); /* les boutons de caméra, les ordres et les annonces suivent la largeur de la liste */
     if (LISTE_REPLIE){ L.innerHTML = `<div class="tete"><span class="b" data-act="liste" title="Déplier la liste">◂</span></div>` + (pv ? `<span class="b ligne${seul('pv') ? ' on' : ''}" data-gr="pv">${ic('pv', 20)}${pvb(pv.vie / pv.T.vie)}</span>` : '')
       + groupes.map(([t, l]) => `<span class="b ligne${seul(t) ? ' on' : ''}" data-gr="${t}">${ic(t, 18)}<span class="n" style="font-size:11px">${l.length}</span></span>`).join('')
       + persos.map(([c, l]) => `<span class="b ligne" data-perso="${c}"><span class="or">${LAB(c)}</span><span class="n" style="font-size:11px">${l.length}</span></span>`).join(''); }
     else { let h = `<div class="tete"><span>FLOTTE DE SOL-7</span><span class="b" data-act="liste" title="Replier la liste">▸</span></div>`;
-      if (pv){ h += `<div class="b ligne${seul('pv') ? ' on' : ''}" data-gr="pv"><div class="h">${ic('pv', 20)}<span>AURORE</span>${TACTILE ? '' : '<span class="k">H</span>'}</div>${pvb(pv.vie / pv.T.vie)}<div class="o"><span>${S.file.length ? 'CHANTIER · ' + TYPES[S.file[0]].nom : 'CHANTIER LIBRE'}</span><span class="n" id="lProdT"></span></div></div>`;
-        h += `<div class="prods">${PRODUITS.map(t => `<span class="b${S.cristal < TYPES[t].prix ? ' cher' : ''}" data-prod="${t}" title="${TYPES[t].nom} · ${TYPES[t].prix} cristaux">${ic(t, 18)}<span class="n">${TYPES[t].prix}</span>${TACTILE ? '' : `<span class="k">${LAB(TYPES[t].cle)}</span>`}</span>`).join('')}</div>`;
+      if (pv){ h += `<div class="b ligne${seul('pv') ? ' on' : ''}" data-gr="pv"><div class="h">${ic('pv', 24)}<span>AURORE</span>${TACTILE ? '' : '<span class="k">H</span>'}</div>${pvb(pv.vie / pv.T.vie)}<div class="o"><span>${S.file.length ? 'CHANTIER · ' + TYPES[S.file[0]].nom : 'CHANTIER LIBRE'}</span><span class="n" id="lProdT"></span></div></div>`;
+        h += `<div class="prods">${PRODUITS.map(t => `<span class="b${S.cristal < TYPES[t].prix ? ' cher' : ''}" data-prod="${t}" title="${TYPES[t].nom} · ${TYPES[t].prix} cristaux">${ic(t, 22)}<span class="n">${TYPES[t].prix}</span>${TACTILE ? '' : `<span class="k">${LAB(TYPES[t].cle)}</span>`}</span>`).join('')}</div>`;
         h += `<div id="lProdB"></div>`;
         if (S.file.length > 1) h += `<div class="file">${S.file.slice(1).map((t, i) => `<span class="b" data-file="${i + 1}" title="Annuler">${ic(t, 14)}</span>`).join('')}<span class="dx" style="font-size:11px">ENSUITE</span></div>`;
         h += `<div class="ralli"><span class="b${modeRallier ? ' on' : ''}" data-act="rallier" title="Point de ralliement des nouveaux vaisseaux">${ic('drapeau', 14)} RALLIEMENT${TACTILE ? '' : ' <span class="k">B</span>'}</span>${S.ralliement ? '<span class="b" data-act="sansrallier" style="flex:0 0 28px" title="Retirer le point de ralliement">✕</span>' : ''}</div>`; }
       else h += `<div class="b ligne" style="opacity:.6"><div class="h">${ic('pv', 20)}<span class="rg">AURORE DETRUITE</span></div></div>`;
-      for (const [t, l] of groupes) h += `<div class="b ligne${seul(t) ? ' on' : ''}" data-gr="${t}"><div class="h">${ic(t, 18)}<span>${NOMS_PL[t]}</span>${TACTILE ? '' : `<span class="k">${TOUCHE_GR[t]}</span>`}<span class="n">${l.length}</span></div>${pvb(vieM(l))}<div class="o"><span>${resume(l)}</span></div></div>`;
+      for (const [t, l] of groupes) h += `<div class="b ligne${seul(t) ? ' on' : ''}" data-gr="${t}"><div class="h">${ic(t, 22)}<span>${NOMS_PL[t]}</span>${TACTILE ? '' : `<span class="k">${TOUCHE_GR[t]}</span>`}<span class="n">${l.length}</span></div>${pvb(vieM(l))}<div class="o"><span>${resume(l)}</span></div></div>`;
       for (const [c, l] of persos){ const ty = [...new Set(l.map(u => u.type))]; h += `<div class="b ligne" data-perso="${c}"><div class="h"><span class="or">GROUPE ${LAB(c)}</span>${ty.map(t => ic(t, 13)).join('')}<span class="n">${l.length}</span></div>${pvb(vieM(l))}</div>`; }
       h += `<span class="b" data-act="garder" style="height:28px;flex:none;color:var(--or)" title="Garder la sélection dans un groupe${TACTILE ? '' : ' (Maj + une lettre de la première ligne)'}">${ic('groupe', 14)} NOUVEAU GROUPE</span>`;
       L.innerHTML = h; } }

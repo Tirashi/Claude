@@ -20,6 +20,7 @@ html,body{margin:0;height:100%;background:#0b0a1e;overflow:hidden;overscroll-beh
 .b{display:inline-flex;align-items:center;justify-content:center;gap:4px;background:var(--verre2);border:1px solid var(--ligne);border-radius:5px;color:#e8eaf6;font:600 var(--fs) var(--ui);letter-spacing:.03em;cursor:pointer;white-space:nowrap;padding:0 6px;pointer-events:auto}
 .b:hover{background:rgba(44,56,110,.92)}.b.on{background:#25407a;border-color:var(--bleu)}.b.cher{opacity:.42}
 .ico{fill:currentColor;flex:none}
+img.ico{object-fit:contain;filter:drop-shadow(0 0 1px rgba(0,0,0,.9))}
 .k{font:11px var(--chiffres);color:var(--or);opacity:.9}
 .pv{height:3px;background:rgba(0,0,0,.5);border-radius:2px;overflow:hidden}.pv i{display:block;height:100%;background:var(--vert)}.pv.m i{background:#ffd060}.pv.f i{background:#ff6a50}.pv.c i{background:var(--cyan)}
 /* étiquettes posées sur la carte */
@@ -41,7 +42,7 @@ html,body{margin:0;height:100%;background:#0b0a1e;overflow:hidden;overscroll-beh
 .ligne .h{display:flex;align-items:center;gap:6px}.ligne .h .n{margin-left:auto}
 .ligne .o{font:500 12px var(--ui);color:var(--doux);display:flex;justify-content:space-between}
 .prods{display:grid;grid-template-columns:repeat(4,1fr);gap:3px}
-.prods .b{height:40px;flex-direction:column;gap:0;position:relative;padding:0}.prods .b .n{font-size:11px;color:var(--cyan)}.prods .b .k{position:absolute;right:3px;top:1px;font-size:9px}
+.prods .b{height:46px;flex-direction:column;gap:0;position:relative;padding:0}.prods .b .n{font-size:11px;color:var(--cyan)}.prods .b .k{position:absolute;right:3px;top:1px;font-size:9px}
 .file{display:flex;gap:3px;flex-wrap:wrap;align-items:center}.file .b{height:24px;padding:0 4px}
 .ralli{display:flex;gap:3px}.ralli .b{height:26px;flex:1}
 #liste.replie{width:50px;align-items:stretch}#liste.replie .ligne{align-items:center;padding:4px 0}
@@ -76,7 +77,7 @@ html,body{margin:0;height:100%;background:#0b0a1e;overflow:hidden;overscroll-beh
   :root{--haut:28px;--liste:196px;--mini:96px;--ordre:40px;--fs:13px}
   .k{display:none}
   #barre{gap:10px}
-  .prods .b{height:36px}
+  .prods .b{height:42px}
   .ligne{padding:2px 6px}.ligne .o{font-size:11px}#liste{gap:3px}
   #hCam{left:auto;right:calc(var(--liste) + 8px);bottom:auto;top:calc(var(--haut) + 6px);flex-direction:column}
 }
