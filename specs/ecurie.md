@@ -74,6 +74,9 @@ Idée de l'utilisateur (18/11) : un petit jeu de **gestion d'écurie de course**
 - **Sons** synthétisés (`sons.js`) : moteur de la voiture filmée (hauteur selon la vitesse, plus discret en diorama et à la télé), bips des feux, souffle à chaque dépassement, foule à l'arrivée ; bouton son dans les commandes de course (`ecurie.son`).
 - Mesuré : 7 à 10 dépassements par course selon le circuit.
 
+## Retour du 21/11 : la semaine
+- « On dirait qu'une activité se met au hasard » : toucher un jour faisait défiler les activités. Désormais, toucher un jour ouvre la liste des 5 activités avec leur effet ; on choisit, le jour se met à jour (message de confirmation).
+
 ## Questions ouvertes
 - Durée d'une partie (une saison, une carrière ?), classement ou non.
 - Comment l'écurie grandit (niveaux ? réputation ?) et ce que ça débloque (places de pilotes, garage plus grand, goodies, convention).

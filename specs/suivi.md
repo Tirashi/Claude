@@ -146,3 +146,4 @@ Maquettes de la carte 2 à 4 (isométrique, puis papier à l'encre validée), é
 - **19/11 — Les Bannis** : contour sombre autour des textes (l'ombre décalée n'était pas lisible), stats de l'écran d'équipement sur deux colonnes.
 - **21/11 — Écurie miniature habillée « la télé »** : style.css et jeu.js réécrits d'après la maquette 9 (Titillium Web copiée dans `polices/`, crédits), textes en français normal, vitrine transparente, podium, confirmations dans la page ; cache v118 ; artefact republié.
 - **21/11 — Écurie miniature, session 2** : virages à droite (tuile à l'envers, `SENS`), 5 circuits (Collines et Canal cherchés par programme), tours selon la longueur, sons synthétisés (`sons.js`) ; cache v119 ; main mis à jour avant (7facd47).
+- **21/11 — Écurie miniature, semaine** : toucher un jour ouvre la liste des activités (au lieu de les faire défiler) ; artefact republié.

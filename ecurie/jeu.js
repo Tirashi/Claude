@@ -66,7 +66,7 @@
   }
 
   /* ---------- la gestion ---------- */
-  const U = {onglet: 'ecurie', choix: 0, vue: 0, occ: false, ouvert: null};
+  const U = {onglet: 'ecurie', choix: 0, vue: 0, occ: false, ouvert: null, jour: null};
   const places = () => R.PLACES[E.niveau - 1];
   const barres = L => `<div class="barres">${L.map(([nom, v]) => `<div class="barre"><span>${nom}</span><i><b style="width:${v * 10}%"></b></i><em>${v}</em></div>`).join('')}</div>`;
   const etatTxt = x => x.repar ? `<span class="etat">En réparation · ${x.repar} sem.</span>` : x.etat < 60 ? `<span class="etat">État ${x.etat} %</span>` : `<span class="ok">État ${x.etat} %</span>`;
@@ -112,8 +112,10 @@
         <div class="doux">Touche un contrat pour le signer ou le résilier.</div></section>`; },
     semaine() { const J = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven'], tot = {}; E.semaine.forEach(a => tot[a] = (tot[a] || 0) + 1); const cl = R.classement(E);
       return `${prochainGP(false)}
-        <section class="bloc"><h4>La semaine</h4><div class="jours">${E.semaine.map((a, i) => `<button data-jour="${i}"><b>${J[i]}</b>${ic(R.ACTIVITES[a].k)}${R.ACTIVITES[a].n}</button>`).join('')}</div><div class="doux">Touche un jour pour changer son activité.</div></section>
-        <section class="bloc"><h4>Effets</h4>${Object.entries(tot).map(([a, n]) => `<div class="ligne fixe"><span>${R.ACTIVITES[a].n} ×${n}</span><small>${R.ACTIVITES[a].e}</small></div>`).join('')}</section>
+        <section class="bloc"><h4>La semaine</h4><div class="jours">${E.semaine.map((a, i) => `<button class="${U.jour === i ? 'choisi' : ''}" data-jour="${i}"><b>${J[i]}</b>${ic(R.ACTIVITES[a].k)}${R.ACTIVITES[a].n}</button>`).join('')}</div>
+          ${U.jour != null ? `<div class="liste-choix"><div class="doux">Que fait l'écurie le ${['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi'][U.jour]} ?</div>${R.ACTIVITES.map((x, k) => `<button class="ligne ${E.semaine[U.jour] === k ? 'on' : ''}" data-activite="${k}"><span>${x.n}</span><em>${E.semaine[U.jour] === k ? 'Choisi' : 'Choisir'}</em><small>${x.e}</small></button>`).join('')}</div>`
+            : '<div class="doux">Chaque jour, l\'écurie fait une activité. Touche un jour pour la choisir.</div>'}</section>
+        <section class="bloc"><h4>Ce que la semaine apporte</h4>${Object.entries(tot).map(([a, n]) => `<div class="ligne fixe"><span>${R.ACTIVITES[a].n} ×${n}</span><small>${R.ACTIVITES[a].e}</small></div>`).join('')}</section>
         <button class="cta" data-gp="1">Lancer le grand prix</button>
         <section class="bloc"><h4>Championnat<em>${R.DIVISIONS[E.division].nom}</em></h4><table>${cl.map((c, i) => `<tr class="${c.joueur ? 'moi' : ''}"><td>${i + 1}</td><td>${c.nom}</td><td>${c.pts} pts</td></tr>`).join('')}</table>
           <div class="doux">Les 3 premiers montent de division en fin de saison.</div></section>`; },
@@ -148,7 +150,7 @@
   }
   function actionGestion(d) {
     const x = E.parc[Math.min(U.choix, E.parc.length - 1)];
-    if (d.o) { U.onglet = d.o; U.ouvert = null; app.querySelector('.corps').scrollTop = 0; }
+    if (d.o) { U.onglet = d.o; U.ouvert = null; U.jour = null; app.querySelector('.corps').scrollTop = 0; }
     else if (d.donner) { const i = Number(d.donner), dispo = E.parc.filter(v => !R.empechement(E, v) && !R.piloteDe(E, v.id));
       if (U.ouvert === i) U.ouvert = null; else { if (!dispo.length) toast('Aucune voiture disponible'); U.ouvert = i; } }
     else if (d.prendre) { const p = E.pilotes[U.ouvert]; p.voiture = Number(d.prendre); U.ouvert = null; toast(p.nom + ' : ' + R.VOITURES[R.voitureDe(E, p.voiture).v].nom); }
@@ -177,7 +179,8 @@
       if (E.signes.includes(i)) { E.signes = E.signes.filter(y => y !== i); toast('Contrat résilié'); }
       else if (s.niv > E.niveau) { toast('Il faut le niveau ' + s.niv); return; } else if (E.rompus.includes(i)) { toast('Contrat rompu cette saison'); return; }
       else if (E.signes.length < 2) { E.signes.push(i); toast('Contrat signé'); } else { toast('Plus de place'); return; } }
-    else if (d.jour) { const i = Number(d.jour); E.semaine[i] = (E.semaine[i] + 1) % R.ACTIVITES.length; }
+    else if (d.jour) { const i = Number(d.jour); U.jour = U.jour === i ? null : i; }
+    else if (d.activite) { E.semaine[U.jour] = Number(d.activite); toast(['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi'][U.jour] + ' : ' + R.ACTIVITES[E.semaine[U.jour]].n.toLowerCase()); U.jour = null; }
     else if (d.revenu) { const rv = R.REVENUS.find(y => y.k === d.revenu); if (E.revenus[rv.k]) return; if (E.fans < rv.seuil) { toast('Il faut ' + nombre(rv.seuil) + ' fans'); return; }
       if (E.argent < rv.prix) { toast('Pas assez d\'argent'); return; } E.argent -= rv.prix; E.revenus[rv.k] = true; toast(rv.nom + ' : ouvert !'); }
     else if (d.gp) { lancer(); return; }
