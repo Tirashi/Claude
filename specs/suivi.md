@@ -147,3 +147,4 @@ Maquettes de la carte 2 à 4 (isométrique, puis papier à l'encre validée), é
 - **21/11 — Écurie miniature habillée « la télé »** : style.css et jeu.js réécrits d'après la maquette 9 (Titillium Web copiée dans `polices/`, crédits), textes en français normal, vitrine transparente, podium, confirmations dans la page ; cache v118 ; artefact republié.
 - **21/11 — Écurie miniature, session 2** : virages à droite (tuile à l'envers, `SENS`), 5 circuits (Collines et Canal cherchés par programme), tours selon la longueur, sons synthétisés (`sons.js`) ; cache v119 ; main mis à jour avant (7facd47).
 - **21/11 — Écurie miniature, semaine** : toucher un jour ouvre la liste des activités (au lieu de les faire défiler) ; artefact republié.
+- **21/11 — Écurie miniature, fin de course** : « Dernier tour » au bon moment, puis « Arrivée » ; voitures classées à leur passage de ligne après le vainqueur (+1 tour).

@@ -77,6 +77,10 @@ Idée de l'utilisateur (18/11) : un petit jeu de **gestion d'écurie de course**
 ## Retour du 21/11 : la semaine
 - « On dirait qu'une activité se met au hasard » : toucher un jour faisait défiler les activités. Désormais, toucher un jour ouvre la liste des 5 activités avec leur effet ; on choisit, le jour se met à jour (message de confirmation).
 
+## Retour du 21/11 : « un tour de trop ? »
+- Le bandeau affichait « Dernier tour » une fois le vainqueur arrivé (on croyait à un tour de plus) : il affiche maintenant « Dernier tour » pendant le vrai dernier tour, puis « Arrivée ».
+- Après le vainqueur, chaque voiture est classée à son prochain passage de la ligne (une voiture prise d'un tour finit à « +1 tour »), comme en vrai ; la course se termine environ 6 s après le vainqueur.
+
 ## Questions ouvertes
 - Durée d'une partie (une saison, une carrière ?), classement ou non.
 - Comment l'écurie grandit (niveaux ? réputation ?) et ce que ça débloque (places de pilotes, garage plus grand, goodies, convention).

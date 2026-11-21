@@ -230,8 +230,8 @@
     const b = app.querySelector('[data-a=camera]'); if (b) b.innerHTML = ic('camera') + nom; const v = app.querySelector('[data-a=vitesse]'); if (v) v.innerHTML = ic('vite') + '×' + G.vitesse; }
   function majHud(hud) {
     const C = G.C, O = C.ordre, L0 = O[0];
-    hud.querySelector('.tourN').textContent = C.fin ? 'Arrivée' : C.arrivee.length ? 'Dernier tour' : 'Tour ' + Course.tour(C) + '/' + C.tours;
-    hud.querySelector('.tour').innerHTML = O.map((v, i) => `<div class="${v.joueur ? 'moi' : ''} ${v.abandon ? 'ab' : ''}"><span>${i + 1}</span><i style="background:${v.c}"></i><span>${v.pil}</span><small>${i ? (v.abandon ? 'AB' : v.fini ? '+' + (v.temps - L0.temps).toFixed(1) : '+' + ((L0.s - v.s) / Math.max(10, v.v)).toFixed(1)) : '—'}</small></div>`).join('');
+    const n = Course.tour(C); hud.querySelector('.tourN').textContent = C.arrivee.length ? 'Arrivée' : n === C.tours ? 'Dernier tour' : 'Tour ' + n + '/' + C.tours;
+    hud.querySelector('.tour').innerHTML = O.map((v, i) => `<div class="${v.joueur ? 'moi' : ''} ${v.abandon ? 'ab' : ''}"><span>${i + 1}</span><i style="background:${v.c}"></i><span>${v.pil}</span><small>${i ? (v.abandon ? 'AB' : v.fini ? (v.toursFaits < C.tours ? '+1 T' : '+' + (v.temps - L0.temps).toFixed(1)) : '+' + ((L0.s - v.s) / Math.max(10, v.v)).toFixed(1)) : '—'}</small></div>`).join('');
     hud.querySelector('.fil').innerHTML = C.EV.filter(e => C.t - e.t < 8).map(e => `<div>${e.x}</div>`).join('');
     const tele = G.S && G.S.mode === 2; hud.querySelector('.cam').textContent = tele ? '● Cam ' + G.S.tele.num : ''; hud.querySelector('.duel').textContent = tele ? G.S.tele.duel : '';
   }
@@ -242,7 +242,7 @@
     const marche = (v, k) => v ? `<div class="p${k}"><b>${v.pil}</b><div class="marche" style="${v.joueur ? 'background:#ff6a13' : ''}">${k}</div></div>` : '<div></div>';
     app.innerHTML = `${enTete('Résultats', `<span class="arg">${argent(E.argent)}</span>`)}<div class="corps">
       <section class="bloc"><h4>${K.nom}</h4><div class="podium">${marche(O[1], 2)}${marche(O[0], 1)}${marche(O[2], 3)}</div></section>
-      <section class="bloc"><h4>Arrivée</h4><table>${O.map((v, i) => `<tr class="${v.joueur ? 'moi' : ''}"><td>${i + 1}</td><td>${pastille(v.c)}${v.nom}</td><td class="petit-txt">${v.abandon ? 'abandon' : i ? '+' + (v.fini ? (v.temps - L0.temps).toFixed(1) + ' s' : '1 tour') : (L0.temps / 60 | 0) + ':' + String((L0.temps % 60).toFixed(1)).padStart(4, '0')}</td><td>${v.abandon ? 0 : R.POINTS[i] || 0} pts</td></tr>`).join('')}</table></section>
+      <section class="bloc"><h4>Arrivée</h4><table>${O.map((v, i) => `<tr class="${v.joueur ? 'moi' : ''}"><td>${i + 1}</td><td>${pastille(v.c)}${v.nom}</td><td class="petit-txt">${v.abandon ? 'abandon' : i ? (v.fini && v.toursFaits === C.tours ? '+' + (v.temps - L0.temps).toFixed(1) + ' s' : '+' + Math.max(1, C.tours - (v.toursFaits || 0)) + ' tour') : (L0.temps / 60 | 0) + ':' + String((L0.temps % 60).toFixed(1)).padStart(4, '0')}</td><td>${v.abandon ? 0 : R.POINTS[i] || 0} pts</td></tr>`).join('')}</table></section>
       <section class="bloc"><h4>Bilan de la semaine</h4>${b.lignes.map(([t, v]) => `<div class="ligne fixe"><span>${t}</span><em class="${typeof v === 'number' ? (v < 0 ? 'moins' : 'plus') : ''}">${typeof v === 'number' ? signe(v) : ''}</em></div>`).join('')}
         <div class="ligne fixe"><span>Total</span><em class="${total < 0 ? 'moins' : 'plus'}">${signe(total)}</em></div></section>
       ${b.monte ? `<section class="prochain bloc"><small>L'écurie grandit</small><b>Niveau ${b.niveau} !</b><span>${b.places} places de pilotes, de nouveaux sponsors.</span></section>` : ''}

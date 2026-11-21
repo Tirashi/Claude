@@ -52,8 +52,11 @@
           const c = virage && ok(virage * COTE) ? virage * COTE : ok(cote1) ? cote1 : ok(-cote1) ? -cote1 : 0;
           if (c) { b.cibleLat = c; b.mem = 4; if (a.bloque <= 0 && !a.fini && R() < a.agr * .3) { a.cibleLat = c * .7; a.bloque = 2.5; evenement(C, `${a.nom} ferme la porte à ${b.nom}`); } } }
         if (Math.abs(a.dec - b.dec) < LARG) b.v = Math.min(b.v, a.v + (e - 6.5) * .8); } }
-    for (const v of V) { v.mem -= dt; v.bloque -= dt; v.s += v.v * dt;
-      if (!v.fini && !v.abandon && v.s >= fin) { v.fini = true; v.temps = t; C.arrivee.push(v);
+    const ligne = s => Math.floor((s - K.DEPART) / K.TOT); // nombre de passages de la ligne
+    for (const v of V) { v.mem -= dt; v.bloque -= dt; const avant = v.s; v.s += v.v * dt;
+      // arrivée : au bout des tours, ou, une fois le vainqueur arrivé, au prochain passage de la ligne (voiture prise d'un tour)
+      if (!v.fini && !v.abandon && (v.s >= fin || (C.tFin != null && ligne(v.s) > ligne(avant)))) { v.fini = true; v.temps = t; v.toursFaits = Math.min(C.tours, ligne(v.s)); C.arrivee.push(v);
+        C.arrivee.sort((x, y) => y.toursFaits - x.toursFaits || x.temps - y.temps);
         if (C.arrivee.length === 1) { C.tFin = t; evenement(C, `${v.nom} gagne le ${K.nom} !`); } } }
     // pas de voitures qui se traversent
     const P2 = V.filter(enPiste).sort((a, b) => b.s - a.s);
@@ -77,7 +80,7 @@
     if (t > 3) ordre.forEach((v, i) => { const j = avant.indexOf(v); if (j === i + 1 && !v.fini && !avant[i].abandon) { v.depass++; evenement(C, `Dépassement ! ${v.nom} passe ${avant[i].nom} (P${i + 1})`); } });
     C.ordre = ordre;
     const restants = V.filter(v => !v.fini && !v.abandon).length;
-    if (C.tFin != null && (restants === 0 || t > C.tFin + 40)) C.fin = true;
+    if (C.tFin != null && (restants === 0 || t > C.tFin + 60)) C.fin = true; // sécurité : 60 s après le vainqueur
     if (t > 900) C.fin = true; // sécurité
   }
   function finir(C) { let n = 0; while (!C.fin && n++ < 200000) pas(C, DT); return C; }
