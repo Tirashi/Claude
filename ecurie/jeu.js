@@ -1,3 +1,4 @@
+/* global Regles, Scene3D, Circuits, Course, Modeles */
 /* Écurie miniature : les écrans (titre, gestion en six onglets, grille de départ, course 3D, résultats, fin de saison).
    Style A de la maquette 8. Partie sauvée dans localStorage « ecurie.partie », records dans « ecurie.record ». */
 (function () {

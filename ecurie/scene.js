@@ -1,3 +1,4 @@
+/* global Modeles */
 /* Écurie miniature : la course en 3D (circuit en tuiles, décor, voitures) et ses trois caméras : suivie, diorama, télé.
    Scene3D.creer(canvas, circuit, course) ; .image(dt) dessine l'état de la course ; .mode : 0 suivie, 1 diorama, 2 télé ; .suivi : index de la voiture suivie. */
 (function (W) {
