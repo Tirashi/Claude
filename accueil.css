@@ -216,6 +216,8 @@ body.lock .rack .c3 .body, body.lock .rack .c3 .front::after, body.lock .rack .c
 .sE .trou{position:absolute; left:6%; bottom:4%; width:8%; height:7%; background:#1a1a24}
 .sE .lab{position:absolute; left:9%; right:9%; top:36%; bottom:13%; background:var(--lb); border:2px solid var(--ink);
   display:flex; align-items:center; justify-content:center; gap:calc(4px * var(--k)); padding:2px}
+.sE .lab.photo{padding:0; overflow:hidden; background:#0b0f1a}
+.sE .lab.photo img{width:100%; height:100%; object-fit:cover; display:block}
 .sE .lab canvas{width:calc(26px * var(--k)); height:calc(26px * var(--k)); flex:none; filter:drop-shadow(2px 2px 0 rgba(0,0,0,.45))}
 .sE .lab b{font-family:var(--f-display); font-weight:400; font-size:calc(5px * var(--k)); line-height:1.5; color:var(--lt); text-shadow:1px 1px 0 rgba(0,0,0,.6)}
 .sE .tagpc{position:absolute; right:7%; bottom:3%; font-family:var(--f-display); font-size:calc(4px * var(--k)); color:rgba(255,255,255,.7)}

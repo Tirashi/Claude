@@ -81,6 +81,9 @@ Idée de l'utilisateur (18/11) : un petit jeu de **gestion d'écurie de course**
 - Le bandeau affichait « Dernier tour » une fois le vainqueur arrivé (on croyait à un tour de plus) : il affiche maintenant « Dernier tour » pendant le vrai dernier tour, puis « Arrivée ».
 - Après le vainqueur, chaque voiture est classée à son prochain passage de la ligne (une voiture prise d'un tour finit à « +1 tour »), comme en vrai ; la course se termine environ 6 s après le vainqueur.
 
+## Disquette de l'accueil (21/11)
+- Demande de l'utilisateur : le jeu sur une **disquette**, étiquette faite **avec des éléments du jeu** (pas une image en pixels inventée). `ecurie/etiquette.jpg` est rendue par le jeu lui-même (vitrine 3D de la Brava Italia, bandeau « Écurie / Miniature » en Titillium Web) avec `outils/ecurie-etiquette.js` ; l'accueil sait afficher une étiquette en image (`carte.img`).
+
 ## Questions ouvertes
 - Durée d'une partie (une saison, une carrière ?), classement ou non.
 - Comment l'écurie grandit (niveaux ? réputation ?) et ce que ça débloque (places de pilotes, garage plus grand, goodies, convention).

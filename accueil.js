@@ -202,7 +202,9 @@ function cart(g, i){
   const body = el("div", "body"), front = el("div", "f front"), lab = el("div", "lab");
   if (st === "A"){ lab.append(art(g), el("b", "", g.s)); front.append(el("i", "rid"), lab, el("i", "notch")); }
   else if (st === "B"){ body.append(el("div", "f pcb")); lab.append(art(g), el("b", "", g.s)); front.append(el("span", "emb", "LUDO"), lab, el("span", "arw", "▼")); }
-  else if (st === "E"){ lab.append(art(g), el("b", "", g.s)); front.append(el("i", "volet"), el("i", "trou"), lab, el("span", "tagpc", "PC")); }
+  else if (st === "E"){ if (g.img){ const im = new Image(); im.src = ROOT + g.img; im.alt = ""; lab.classList.add("photo"); lab.append(im); }   // carte.img : une étiquette faite avec les images du jeu
+    else lab.append(art(g), el("b", "", g.s));
+    front.append(el("i", "volet"), el("i", "trou"), lab, el("span", "tagpc", "PC")); }
   else if (st === "D"){ lab.append(art(g), el("b", "", g.s)); front.append(el("i", "disc"), el("i", "spine"), lab, el("span", "tag3d", "3D")); }
   else { lab.append(art(g)); front.append(lab, el("div", "ttl chrome", g.s), el("i", "grip")); }
   ["back", "left", "right", "top", "bottom"].forEach(f => body.append(el("div", "f " + f)));
