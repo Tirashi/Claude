@@ -86,10 +86,14 @@ function initColonies(){
 let SELP = null, sigRech = '', sigVolet = '', RECH_OUVERT = false, VOLET_CHOIX = false;
 const ICB = { mine: 'mine', labo: 'labo', chantier: 'chantier', defense: 'defense' };
 function ouvrirPlanete(P){ SELP = P; VOLET_CHOIX = false; sigVolet = ''; choisir([], false); }
-function visePlanete(x, y){ let m = null, dm = 1e9; for (const P of PLANETES){ const e = ecranDe(P.g.position); if (!e.ok) continue; const d = Math.hypot(e.x - x, e.y - y), r = Math.max(24, rayonEcran(P.g.position, P.r)); if (d < r && d < dm){ dm = d; m = P; } } return m; }
+/* planète visée : le disque (au moins 34 px au doigt) ou son étiquette ; renvoie aussi la proximité relative (d / r) pour départager avec un vaisseau */
+let VISE_P = 1;
+function visePlanete(x, y){ let m = null, dm = 1e9; for (const P of PLANETES){ const e = ecranDe(P.g.position); if (!e.ok) continue; const d = Math.hypot(e.x - x, e.y - y), r = Math.max(TACTILE ? 34 : 24, rayonEcran(P.g.position, P.r)); let q = d / r;
+    if (q >= 1){ const t = ecranDe(V3(P.x, P.y + P.r + 30, P.z)); if (t.ok && Math.abs(x - t.x) < 50 && y < t.y + 6 && y > t.y - (TACTILE ? 30 : 22)) q = .5; }
+    if (q < 1 && q < dm){ dm = q; m = P; } } VISE_P = dm; return m; }
 const mmss = s => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
 function majVolet(){ const v = $('#volet'), P = SELP; if (!P){ v.hidden = true; sigVolet = ''; return; } v.hidden = false;
-  const c = P.col, sig = [P.nom, c ? c.bat.join() + (c.file ? c.file.b : '') : '-', VOLET_CHOIX, Object.keys(BAT).map(b => S.cristal >= BAT[b].prix ? 1 : 0).join(''), S.deb.defense, S.deb.colon, P.camp === 0 ? 1 : aurorePres(P), P.colon && vivant(P.colon), S.cristal >= PRIX_COLONIE, places(P)].join('|');
+  const c = P.col, sig = [P.nom, c ? c.bat.join() + (c.file ? c.file.b : '') : '-', VOLET_CHOIX, S.deb.defense, S.deb.colon, P.camp === 0 ? 1 : aurorePres(P), P.colon && vivant(P.colon), places(P)].join('|'); /* sans le cristal : refaire le volet en plein toucher perdait le clic */
   if (sig !== sigVolet){ sigVolet = sig; const type = { terre: 'TERRESTRE', desert: 'DESERT', glace: 'GLACE', lave: 'LAVE', roche: 'ROCHE', gaz: 'GAZEUSE' }[P.t];
     let h = `<div class="vt"><i style="background:${COUL_PLA[P.t]}"></i><b>${P.nom}</b><span class="dx">${type}${P.riche ? ' · <span class="cr">◆◆ RICHE</span>' : ''}</span><span class="b" data-act="fermerP" title="Fermer">✕</span></div>`;
     if (c){ const n = places(P); h += `<div class="dx" style="font-size:12px">COLONIE · <span class="n cr">+${Math.round(cristalMinute(P))}◆</span>/MIN</div><div class="places">`;
@@ -98,11 +102,12 @@ function majVolet(){ const v = $('#volet'), P = SELP; if (!P){ v.hidden = true; 
         else if (i === c.bat.length && c.file) h += `<span class="b place en">${ic(ICB[c.file.b], 18)}<span>${BAT[c.file.b].nom}</span><span class="n" id="vT"></span></span>`;
         else h += `<span class="b place vide${VOLET_CHOIX && i === c.bat.length ? ' on' : ''}" data-act="${c.file ? '' : 'placer'}" title="Construire">+</span>`; }
       h += `</div>`;
-      if (VOLET_CHOIX && !c.file) h += `<div class="choix">${Object.entries(BAT).map(([k, B]) => { const ver = B.req && !S.deb[B.req]; return `<span class="b${S.cristal < B.prix || ver ? ' cher' : ''}" data-bat="${k}" title="${B.txt}${ver ? ' (à rechercher)' : ''}">${ic(ICB[k], 18)}<span>${B.nom}</span><span class="n cr">${ver ? ic('verrou', 11) : B.prix}</span></span>`; }).join('')}</div>`; }
+      if (VOLET_CHOIX && !c.file) h += `<div class="choix">${Object.entries(BAT).map(([k, B]) => { const ver = B.req && !S.deb[B.req]; return `<span class="b${S.cristal < B.prix || ver ? ' cher' : ''}" data-bat="${k}" data-prix="${ver ? 1e9 : B.prix}" title="${B.txt}${ver ? ' (à rechercher)' : ''}">${ic(ICB[k], 18)}<span>${B.nom}</span><span class="n cr">${ver ? ic('verrou', 11) : B.prix}</span></span>`; }).join('')}</div>`; }
     else { const pb = peutColoniser(P), pres = aurorePres(P), enRoute = P.colon && vivant(P.colon);
       h += `<div style="font-size:13px">PLANETE LIBRE · ${places(P)} EMPLACEMENT${places(P) > 1 ? 'S' : ''}</div><div class="dx" style="font-size:12px">${pb || (!S.deb.colon ? 'IL FAUT LA RECHERCHE COLONISATION' : enRoute ? 'UN COLON EST EN ROUTE' : pres ? 'AURORE EST ASSEZ PROCHE POUR FONDER UNE COLONIE' : 'AMENE AURORE PRES DE LA PLANETE POUR Y FONDER UNE COLONIE')}</div>`;
-      if (!pb && S.deb.colon && !enRoute) h += pres ? `<span class="b${S.cristal < PRIX_COLONIE ? ' cher' : ''}" data-act="fonder" style="height:30px;margin-top:4px">${ic('colon', 16)} FONDER UNE COLONIE · <span class="n cr">${PRIX_COLONIE}◆</span></span>` : `<span class="b" data-act="amener" style="height:30px;margin-top:4px">${ic('pv', 16)} AMENER AURORE</span>`; }
+      if (!pb && S.deb.colon && !enRoute) h += pres ? `<span class="b${S.cristal < PRIX_COLONIE ? ' cher' : ''}" data-act="fonder" data-prix="${PRIX_COLONIE}" style="height:30px;margin-top:4px">${ic('colon', 16)} FONDER UNE COLONIE · <span class="n cr">${PRIX_COLONIE}◆</span></span>` : `<span class="b" data-act="amener" style="height:30px;margin-top:4px">${ic('pv', 16)} AMENER AURORE</span>`; }
     v.innerHTML = h; }
+  for (const b of v.querySelectorAll('[data-prix]')) b.classList.toggle('cher', S.cristal < +b.dataset.prix);
   const t = $('#vT'); if (t && c && c.file) t.textContent = Math.ceil(BAT[c.file.b].temps - c.file.t) + ' S'; }
 function majRechPanneau(){ const b = $('#rBadge'), n = enAttente(); b.textContent = n || ''; b.hidden = !n; $('#bRech').classList.toggle('alerte', n > 0);
   const o = $('#recherche'); o.hidden = !RECH_OUVERT; if (!RECH_OUVERT) return; const pm = pointsMinute() / 3;

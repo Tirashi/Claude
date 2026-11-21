@@ -159,3 +159,4 @@ Maquettes de la carte 2 à 4 (isométrique, puis papier à l'encre validée), é
 - **21/11 — Stratégie spatiale, session 2** : recherche continue en trois domaines à cartes tirées (19 projets), colon et colonies (DUNE, BOREA, BRASIER, ECHO), bâtiments (mine, labo, chantier, défense), volet des planètes, bouton RECHERCHE ; `sw.js` v119.
 - **21/11 — Stratégie spatiale** : cinq vaisseaux de plus à rechercher (intercepteur, torpilleur, corvette, frégate de soutien qui répare, cuirassé à six tourelles).
 - **21/11 — Stratégie spatiale** : retours d'essai : ressources ralenties, tir en route, planètes fixes, AURORE à 520 m, colonie fondée depuis AURORE amenée près de la planète, colonies servant de dépôts aux collecteurs.
+- **21/11 — Stratégie spatiale** : choix des planètes plus fiable (étiquette, AURORE garée dessus), volet qui ne perd plus les touchers, volet lisible sur téléphone.

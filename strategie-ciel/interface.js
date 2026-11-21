@@ -20,8 +20,9 @@ function ecranDe(v){ _p.copy(v).project(cam); return { x: (_p.x + 1) / 2 * ECRAN
 function rayonEcran(v, r){ const d = v.distanceTo(cam.position); return r * cam.projectionMatrix.elements[5] / d * ECRAN.clientHeight / 2; }
 function pointSol(x, y, h = 80){ const rc = new THREE.Raycaster(); rc.setFromCamera({ x: x / ECRAN.clientWidth * 2 - 1, y: 1 - y / ECRAN.clientHeight * 2 }, cam);
   const q = V3(); return rc.ray.intersectPlane(new THREE.Plane(V3(0, 1, 0), -h), q) ? q : null; }
+let VISE_U = 1;
 function viseUnite(x, y){ let m = null, dm = 1e9; for (const u of U){ if (u.vie <= 0) continue; const e = ecranDe(u.pos); if (!e.ok) continue;
-    const d = Math.hypot(e.x - x, e.y - y), r = Math.max(TACTILE ? 22 : 14, rayonEcran(u.pos, u.T.L * .5)); if (d < r && d < dm){ dm = d; m = u; } } return m; }
+    const d = Math.hypot(e.x - x, e.y - y), r = Math.max(TACTILE ? 22 : 14, rayonEcran(u.pos, u.T.L * .5)); if (d < r && d / r < dm){ dm = d / r; m = u; } } VISE_U = dm; return m; }
 function viseGisement(x, y){ for (const G of GIS){ if (G.reste <= 0) continue; const h = G.haut(), e = ecranDe(h); if (e.ok && Math.hypot(e.x - x, e.y - y) < Math.max(24, rayonEcran(h, G.r * 1.3))) return G; } return null; }
 
 // ---------- sélection ----------
@@ -39,7 +40,9 @@ function ordre(x, y){ const sel = SEL(); if (!sel.length) return false; const u 
   if (P && colons.length){ const pb = peutColoniser(P); if (pb){ bulle(pb); return true; } for (const c of colons){ c.ordre = { k: 'coloniser', P }; c.cible = null; } const reste = sel.filter(v => v.type !== 'colon'); if (reste.length) ordonner(reste, 'aller', null, V3(P.x, 0, P.z)); ping(V3(P.x, 40, P.z), 0); bulle('EN ROUTE POUR ' + P.nom); return true; }
   const p = pointSol(x, y); if (!p) return false; ordonner(sel, 'aller', null, p); ping(p); return true; }
 let selModif = true, dernierClic = { t: 0, u: null };
-function clicSur(x, y, ajouter){ const u = viseUnite(x, y), now = performance.now();
+function clicSur(x, y, ajouter){ let u = viseUnite(x, y), now = performance.now(); const qu = VISE_U;
+  /* AURORE garée près d'une planète la recouvre : le plus centré des deux l'emporte */
+  if (u && visePlanete(x, y) && VISE_P < qu) u = null;
   if (u && u.camp === 0){ if (dernierClic.u === u && now - dernierClic.t < 380){ const l = U.filter(v => v.camp === 0 && v.vie > 0 && v.type === u.type && ecranDe(v.pos).ok); choisir(l, false); } else choisir([u], ajouter); dernierClic = { t: now, u }; return true; }
   /* une planète : sans colon choisi, on ouvre son volet ; avec un colon, c'est un ordre (au doigt) ou rien (à la souris : clic droit) */
   const P = visePlanete(x, y); if (P && !(TACTILE && SEL().some(v => v.type === 'colon'))){ ouvrirPlanete(P); return true; }

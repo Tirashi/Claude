@@ -73,9 +73,9 @@ img.ico{object-fit:contain;filter:drop-shadow(0 0 1px rgba(0,0,0,.9))}
 .carte-r.en{border-color:var(--bleu)}.carte-r .dx{font-size:12px;font-weight:500}.carte-r b{font-weight:700}span.carte-r:hover{border-color:var(--or)}
 .faits{font-size:11px;color:var(--doux);font-weight:500}
 #volet{left:calc(var(--mini) + 16px);bottom:calc(var(--ordre) + 22px);width:min(360px,calc(100vw - var(--mini) - var(--liste) - 32px));padding:7px 9px;display:flex;flex-direction:column;gap:5px}
-.places{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}.places .place{height:34px;justify-content:flex-start;padding:0 6px;font-size:13px}.places .vide{justify-content:center;border-style:dashed;color:var(--doux);font-size:18px}
+.places{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px}.places .place>span,.choix .b>span:not(.n){overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}#volet .vt{min-width:0}#volet .vt .dx{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}.places .place{height:34px;justify-content:flex-start;padding:0 6px;font-size:13px}.places .vide{justify-content:center;border-style:dashed;color:var(--doux);font-size:18px}
 .places .en{border-color:var(--or)}.places .en .n{margin-left:auto;font-size:11px;color:var(--or)}
-.choix{display:grid;grid-template-columns:repeat(2,1fr);gap:4px}.choix .b{height:32px;justify-content:flex-start}.choix .b .n{margin-left:auto}
+.choix{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px}.choix .b{height:32px;justify-content:flex-start}.choix .b .n{margin-left:auto}
 .pastille{width:10px;height:10px;border-radius:50%;display:inline-block;flex:none}.ibat{display:inline-flex;gap:2px;align-items:center}
 #ips{position:absolute;left:calc((100% - var(--liste)) / 2);bottom:1px;transform:translateX(-50%);font:10px var(--chiffres);color:#b8f080;opacity:.6}
 /* écrans */
@@ -106,3 +106,6 @@ img.ico{object-fit:contain;filter:drop-shadow(0 0 1px rgba(0,0,0,.9))}
   #barre .dx.rev,#hDate{display:none}
   #barre{gap:6px}#hAl{font-size:11px;line-height:1.1}#barre .vits .b{min-width:24px}
 }
+
+/* écran étroit (téléphone en portrait) : le volet de la planète passe en haut à gauche, sur toute la largeur libre (21/11) */
+@media (max-width:700px){#volet{left:8px;top:calc(var(--haut) + 8px);bottom:auto;width:calc(100vw - var(--liste) - 84px);max-height:calc(100vh - var(--haut) - var(--mini) - var(--ordre) - 40px);overflow-y:auto}.places{grid-template-columns:repeat(2,minmax(0,1fr))}.choix{grid-template-columns:1fr}}
