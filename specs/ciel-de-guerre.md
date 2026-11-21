@@ -84,16 +84,50 @@ Historique des directions : *Escadrille pixel* (gros pixels, sprite dessiné), p
 
   Désormais, plus de capture : le curseur (caché) est le viseur, et le réticule est dessous. Les balles, le verrouillage et le rayon de la caméra passent par lui, dans un cône de 35° autour du nez. Éloigner le curseur du centre de l'écran fait tourner, monter ou descendre (zone morte au centre, comme le joystick). Un point marque le curseur quand le réticule est bloqué au bord du cône. Si la souris sort de la fenêtre, l'appareil vole droit.
 - **Traînées des ailes** (18/11, retour de l'utilisateur : « pas au bon endroit suivant le vaisseau ») : elles partaient d'un point fixe (largeur du modèle, mi-hauteur) ; elles partent maintenant des vrais bouts d'ailes de chaque modèle (`bouts()` : moyenne des points les plus à gauche et à droite).
+- **Effets et commandes** (18/11, demande de l'utilisateur) :
+  - les traînées blanches n'apparaissent que pendant un looping, un tonneau ou une accélération (fondu à l'apparition et à la disparition, elles repartent de l'aile) ;
+  - au boost, la caméra recule de 6 m, puis revient en douceur ;
+  - sur téléphone, deux boutons ronds au-dessus de LOOP, **BOOST** et **FREIN**, à garder appuyés (comme Z et S sur PC), masqués sur PC.
 - **Artefact** : le jeu remplace la maquette au même lien (copie de 12,9 Mo avec les modèles en base64).
+
+## Session 2 (18/11) : les missions et le boss, fait
+- **Écran MISSIONS** sur le titre ; les **vagues sans fin** restent comme second mode. Chaque mission réussie ouvre la suivante. De 1 à 3 étoiles : 1 pour la victoire, 2 et 3 selon les appareils perdus et l'objectif (ou le temps). +1000 points par étoile. Sauvegarde `cieldeguerre.missions` = {id: {e: étoiles, s: score}}.
+  1. **La côte** (défendre le port) : un port bâti sur la côte la plus proche (maisons, phare), 100 points de vie. 3 vagues de corvettes rouges arrivent de la mer, avec leurs chasseurs d'escorte (qui s'en prennent au joueur) et des frégates à la 3e vague. Le joueur part au-dessus de la mer, face au large. ★★ port ≥ 50 %, ★★★ port ≥ 80 % sans perdre d'appareil.
+  2. **L'escorte** (protéger le destroyer Albatros) : 1 500 m à 14 m/s, vers une balise de lumière. Des attaques de chasseurs toutes les 16 à 20 s, puis aussi des bombardiers. Le destroyer tire aussi. ★★ ≥ 50 %, ★★★ ≥ 80 % sans perte.
+  3. **La survie** (tenir 3 minutes) : des escadres de plus en plus fréquentes, toutes familles, des as, des bombardiers. ★★ au plus 1 appareil perdu, ★★★ aucun.
+  4. **L'amiral** (le croiseur amiral Tempête) : un destroyer rouge de 170 m, 6 tourelles à 10 points de vie ; il appelle des renforts toutes les 26 s. Victoire quand il tombe. ★★★ sans perte en moins de 3 min 20.
+  5. **La forteresse** (le boss, le vaisseau-mère Léviathan) : un destroyer rouge de 300 m. 4 générateurs bleus (15 points de vie, verrouillables) protègent ses 6 tourelles (12 points de vie, étincelles bleues tant que le bouclier tient). Des chasseurs décollent de ses flancs (intercepteurs, puis furtifs). ★★★ sans perte en moins de 5 min.
+- **Moteur** : `navire()` crée les grands vaisseaux (flotte de fond et vaisseaux de mission `fixe`, sans retour devant le joueur). `ennemi(pos, dir, o)` prend des options (`bomb`, `escorte`, `fam`, `as`, `obj`) ; un ennemi qui a un objectif (`obj`) tourne autour et le vise, une salve toutes les 3 à 5 s (les chasseurs reviennent sur le joueur quand il passe à moins de 70 m). `escadre(n, o)` lance une formation. `objectif()` = une cible qui encaisse. `OBJ` = les objectifs montrés en bleu dans le viseur (cadre et nom, ou flèche au bord).
+- Équilibrage vérifié : le port laissé sans défense tient environ 45 s.
+- **Lisibilité** (18/11, retours de l'utilisateur : « le carré de verrouillage et son texte sont flous », « HUD sur PC à revoir », « missions et objectifs pas assez clairs ») :
+  - le calque du viseur est dessiné à la résolution de l'écran (`K` pixels par unité, `txt()` dans la police Silkscreen) : cadres, LOCK, MISSILE PRET et noms d'objectifs nets ;
+  - la tête d'écran passe en panneaux HTML : score, appareils et barre de blindage (verte, jaune, rouge) ; objectif (mission, consigne, jauge, info) ; canon et missiles (sur PC). Sur PC, l'objectif est en haut au centre et tout grandit avec l'écran ;
+  - **bug corrigé** : un clic droit pendant que le gauche est tenu ne lançait pas de missile (le navigateur n'envoie pas de nouveau `pointerdown` pour un second bouton, seulement un `pointermove` dont `e.buttons` change) ; le jeu suit maintenant l'état des boutons (`boutonsSouris`).
+  - un **briefing** avant chaque mission (but, objectifs en liste, règle des étoiles, DECOLLER) ; les annonces sont plus grandes, au centre ; les objectifs dans le viseur affichent leur distance.
+
+
+## Session 3 (18/11) : son et sensations, fait
+- **Sons** (`sons.js`, `window.CDGSons`), tout synthétisé en Web Audio : rien à télécharger, rien à citer.
+  - Bruitages : tir, missile, explosions (selon la taille et la distance), coups reçus, bip de verrouillage, annonce, victoire et défaite.
+  - Le **réacteur** est un souffle continu qui monte avec la vitesse et le boost (seulement en partie).
+  - **Musique** : boucle de combat en la mineur (basse, arpège, nappe, batterie), mixée sous les bruitages.
+  - Réglages BRUITAGES et MUSIQUE sur le titre et en pause (`cieldeguerre.son`). L'AudioContext ne démarre qu'après un geste, et jamais si tout est coupé.
+- **Explosions et réacteur refaits** (18/11, retour de l'utilisateur : « revoir le bruit des explosions et du réacteur ; les balles sont parfaites »). Trois variantes de chacun (`CDGSons.variantes`), à choisir sur le [banc des sons](../maquettes/ciel-de-guerre-sons.html) :
+  - explosions : A tonnerre (claquement, corps saturé, boum grave), B sourde, C crépitante ; les lointaines sont étouffées ;
+  - réacteur : A turbine (grondement grave et doux, léger sifflement), B grondement qui pulse, C réacteur plus présent ; une poussée qui rugit au boost.
+  - Niveaux mesurés dans le navigateur (analyseur branché sur la sortie, `niveaux.js` du scratchpad), comparés aux rafales du canon : le réacteur est ramené sous elles (moyenne 0,012 contre 0,026 avant), les explosions baissées de 20 %. A est la variante par défaut en attendant le choix.
+- **Secousses** de la caméra : coup reçu, appareil abattu, explosion à moins de 80 m.
+- **Épaves** : un ennemi abattu tombe en tournoyant dans une traînée de fumée (feu au début), puis explose au sol (`abattre`, `EPAVES`).
+- **Vitesse** en km/h dans le panneau de gauche ; **énergie du boost** (jauge bleue) : 100, le boost en consomme 28 par seconde, elle revient à 14 par seconde ; vide, il faut attendre 30. Le bouton BOOST du téléphone se grise quand elle est vide.
 
 ## Plan des sessions (proposition)
 | Session | Contenu | Modèle |
 |---|---|---|
 | 1 · socle | Dossier `ciel-de-guerre/` en scripts classiques. Three.js r128 et GLTFLoader de `lib/`. Modèles en fichiers `.glb` dans `ciel-de-guerre/modeles/` (plus de base64 ; mis en cache par `sw.js`), pour les seuls avions retenus. Moteur, avions, flottes et commandes repris de la maquette. Écran titre avec retour au menu, fiche, accueil, service worker, crédits. | Opus |
-| 2 · missions | Les 4 missions, l'écran de fin, les étoiles, le boss | Opus |
-| 3 · sensations | Son, secousses, fumée, jauge de boost, vitesse | opusplan |
-| 4 · monde | Ailiers, cibles au sol, décors (nuit, orage, désert, neige) | opusplan |
-| 5 · progression | Réglages par avion, déblocages, classements, défi du jour éventuel | opusplan |
+| 2 · missions | Les 4 missions, l'écran de fin, les étoiles, le boss | Opus — **fait le 18/11** |
+| 3 · sensations | Son, secousses, fumée, jauge de boost, vitesse | opusplan — **fait le 18/11** |
+| 4 · monde | Ailiers, cibles au sol, décors (nuit, orage, désert, neige) | opusplan — **faite le 19/11** (ailiers, raid, cinq ambiances, feux de position) |
+| 5 · progression | Réglages par avion, déblocages, classements, défi du jour éventuel | opusplan — **faite le 19/11** (sans défi du jour) |
 
 ## Décision du 17/11 : des vaisseaux, pas d'avions
 Le joueur et les ennemis volent sur des **vaisseaux**. Les avions à hélices sont retirés : les 6 monogon voxel plane et le Corsaire. On garde ce qui ressemble à des avions de chasse : Faucon, Hirondelle, Vipère et Spectre, construits dans le code. Le hangar de la maquette est mis à jour. Les outils des hélices (`vox_glb.py`, `helices.py`) restent dans `outils/escadrille-pixel/conversion/`.
@@ -161,3 +195,38 @@ L'utilisateur n'arrive pas à choisir (« ils sont tous cool ») : on garde les 
 - Modèles des ennemis : nos chasseurs construits dans le code, ou des modèles des packs ?
 - Ordre des missions.
 - Faut-il un défi du jour ?
+
+## Sons enregistrés (18/11)
+Les sons synthétisés (bancs A, B, C) ne plaisaient pas ; banc de vrais sons (`maquettes/ciel-de-guerre-sons.html`, [artefact](https://claude.ai/artifact/5SpJFreiEez5ndnmn47ZSo)). Choix de l'utilisateur : explosions NIIIEMAND 1, 4 et 7 de près (`sons/expl-1`, `-4`, `-7`), la 3 « gros canon » étouffée pour les explosions lointaines (`expl-3`), Matthew Flat explosion-large_1 étouffée quand un grand vaisseau s'écrase (seulement eux depuis le 18/11 : sur les épaves des chasseurs, trop souvent ; elles gardent une explosion ordinaire) (`crash`, fichier entier : licence ND). La rafale synthétisée du canon est gardée. Réacteurs : aucun des trois premiers ; banc de 7 réacteurs d'OpenGameArt (D à J) : D (« Rocket Engine », theminesareshakin) et I (« Underwater or space engine rumble », gmason), CC0, gardés et mêlés (`sons/reacteur-d`, `-i`, bouclés sans couture par fondu de la fin sur le début) ; la vitesse monte la hauteur, le boost met I en avant ; volume discret (moyenne 0,026 contre 0,046 pour la rafale). Le réacteur synthétisé est retiré.
+
+## Hangar refait (18/11)
+Demande de l'utilisateur : un onglet par famille (INTERCEPTEURS, POLYVALENTS, LOURDS, FURTIFS ; abrégés sur un écran étroit), la liste des appareils de l'onglet, et l'aperçu en 3D de l'appareil regardé (il tourne, rendu en gros pixels dans un second WebGLRenderer, `hangarApercu`), avec ses barres VITESSE, VIRAGE, BLINDAGE et ses missiles. Toucher un nom le montre ; CHOISIR CET APPAREIL le prend. Côte à côte en paysage, l'un sous l'autre en portrait.
+
+## Tuyères des chasseurs relevées à la main (19/11)
+Le repérage automatique (points les plus en arrière, puis un essai par les faces tournées vers l'arrière) plaçait mal les flammes de plusieurs appareils (polyyai 2, 3, 7, 28… : flammes au bout des ailes, tuyères fusionnées). Les 35 positions sont maintenant dans `TUY_PY` (`jeu.js`) : [x, y] en fractions de la largeur, lues sur une vue orthographique de l'arrière avec une grille ; `tuyeres(g, force)` trouve la profondeur. `CielDeGuerre.outils` (`construire`, `chargerModele`, `COULEURS`, `NOMS`) sert aux planches de contrôle.
+
+## Mission 1 adoucie (18 et 19/11)
+Retours de l'utilisateur (« trop dur », puis « encore difficile ») : vagues plus petites et plus espacées, port moins fragile (`deg` 0,9), dégâts reçus × 0,6 (`S.degJ`) ; puis **pas de grands vaisseaux rouges** pendant la mission (`sansRouges` dans la définition : la flotte rouge de fond se retire) et **le Héron**, destroyer bleu allié invulnérable, qui tourne autour du port (rayon 130) : ses tourelles tirent sur les chasseurs et bombardiers rouges. Autre piste proposée par l'utilisateur, gardée pour la session 4 : 3 intercepteurs ailiers.
+
+## Session 4 (19/11) : ailiers et cibles au sol
+- **Ailiers** (`AILIERS`, `creerAiliers`, `majAiliers`) : chasseurs bleus en formation à côté du joueur (`PLACES`, devant = −z), qui prennent pour cible les rouges à moins de 300 du joueur en se répartissant les cibles ; invulnérables, balles à 0,5 de dégât (+50 au score). `def.ailiers = {n, fam}` : mission 1 trois intercepteurs ; sinon deux polyvalents (vagues aussi). Créés 0,3 s après le départ (une fois le joueur placé).
+- **Le raid** (mission 3, `id: 'raid'`) : `trouverBase()` cherche une île devant le joueur ; `cibleSol(type, x, z)` : 3 batteries de DCA (tourelle qui suit le joueur, rafales de 3 traçantes à moins de 230 m), 2 dépôts, 1 radar ; poussées chaque image dans `TOURS` (balles, missiles, verrouillage comme les tourelles des grands vaisseaux) ; `cibleDetruite` : carcasse noircie qui fume, +400. Trois patrouilles de chasseurs. Étoiles : en moins de 3 minutes, puis sans perdre d'appareil. Six missions : la fiche compte sur 18 étoiles.
+- Reste de la session 4 : les décors (nuit, orage, désert, neige).
+
+## Retours du 19/11 : ailiers à l'envers, demi-tour, lenteur
+- Les ailiers volaient en marche arrière : `lookAt` tourne le groupe vers +z, le modèle doit être retourné (`rotation.y = π`, comme les ennemis).
+- **Demi-tour** (`demiTour`, `S.demiT`, `S.demiP`, `S.demiR`) : deux appuis rapides sur S (souris) ou sur FREIN (téléphone) ; demi-looping en 1,35 s, puis à mi-parcours l'orientation est réécrite (lacet + π, tangage π − tangage, roulis + π : même attitude) et un demi-tonneau de 0,55 s remet à l'endroit ; on repart dans l'autre sens environ 35 m plus haut.
+- **« Ça lag un peu »** : impossible à mesurer ici (navigateur sans carte graphique). Qualité qui s'adapte (`QUAL`, `redim`) : en vol, si les images arrivent à plus de 27 ms en moyenne pendant 4 s, la résolution interne baisse de 20 % (deux fois au plus). Repeinture des textures par couleur (palette) et chargement de fond étalé (un modèle tous les 0,25 s).
+
+- 19/11 : le gros son d'écrasement (Matthew Flat, `sons/crash.mp3`) est **retiré** à la demande de l'utilisateur (trop fort, il détonnait) : un grand vaisseau qui coule fait une grosse explosion ordinaire (`boomGros`).
+
+## Décors : maquette du 19/11
+Moteur des ambiances (`AMBS`, `ambiance(k)`, `meteo(dt)`, `CielDeGuerre.ambiance`) : couleurs du ciel (uniformes, étoiles, éclair, couverture nuageuse), du sol (`desert`, `neige`, teintes `tSol` et `tEau`), des nuages, lumières, brume, mer, arbres (cachés au désert, feuillus cachés à la neige), pluie (traits) et flocons (points) qui suivent la caméra, éclairs suivis du tonnerre (la grosse explosion étouffée). Cinq ambiances : crépuscule (d'origine), nuit, orage, désert, neige. [Maquette](https://claude.ai/artifact/51D1vRdeVNJMCFWTkbApSd) (`maquettes/ciel-de-guerre-decors.html`, captures du moteur) : proposition crépuscule pour la côte et la forteresse, désert pour l'escorte, nuit pour le raid, orage pour la survie, neige pour l'amiral ; **validée le 19/11** (« elles sont toutes pas mal ») et branchée : `def.amb` par mission (côte et forteresse crépuscule, escorte désert, raid nuit, survie orage, amiral neige) ; vagues sans fin : une autre ambiance toutes les 5 vagues (`CYCLE_AMB`) ; écran titre au crépuscule. **Feux de position** (demande du 19/11) : rouge au bout de l'aile gauche, vert à droite, double flash blanc toutes les 1,3 s, sur tous les chasseurs et bombardiers, seulement de nuit et sous l'orage (`AMB.feux`, `feuxNav`, `majFeux`, matériaux partagés).
+
+- 19/11 : **fluide sur le téléphone** (essai de l'utilisateur après la qualité adaptative, les ailiers et les ambiances).
+
+## Session 5 (19/11) : progression
+- **Profils** (`PROFILS`, `STATS`) : dans chaque famille, les appareils prennent à tour de rôle le profil RAPIDE (vitesse × 1,08, blindage × 0,9), AGILE (virage × 1,12, vitesse × 0,95), ROBUSTE (blindage × 1,15, virage × 0,94) ou ARME (+1 missile, vitesse × 0,96). Le hangar montre les barres de l'appareil regardé et son profil.
+- **Déblocages** : le premier appareil de chaque famille et l'appareil de départ (polyyai 7) sont ouverts ; les autres coûtent 60 (rangs 1 à 3), 120 (4 à 7) ou 200 (8 et plus) de **solde**. La solde : score / 150 à la fin de chaque partie ou mission, + 15 par nouvelle étoile. Un joueur qui avait déjà choisi un appareil le garde. Clé `cieldeguerre.hangar` {solde, ouverts}, transférée (la plus grosse solde, l'union des appareils).
+- **Classements** `cieldeguerre` : `vagues` (meilleur score en vagues sans fin, envoyé en fin de partie), `etoiles` (total des étoiles, envoyé à chaque nouveau record d'étoiles) ; volet de l'accueil, couronne (`rank`) ; `SYNC` 30. Le jeu n'est plus en démo.
+- Défi du jour : pas fait (à décider).

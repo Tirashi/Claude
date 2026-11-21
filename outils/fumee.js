@@ -5,7 +5,7 @@
    node outils/fumee.js [dossier-captures]   (code de sortie 1 en cas d'erreur) */
 const { BASE, phone } = require('./pw');
 const PAGES = ['index.html', 'classements/index.html#sudoku-1', 'queens/index.html', 'picross/index.html', 'lignee/index.html', 'injagility/index.html', 'injagility/parcours.html',
-  'touche-coule/index.html', 'amiral/index.html', 'club/index.html', 'orbite/index.html', 'lune-rover/index.html', 'pont-stellaire/index.html', 'sudoku/index.html', 'calculator/index.html', 'alunissage/index.html', 'nebula/index.html', 'ile/index.html', 'empilage/index.html', 'odyssee/index.html', 'yams/index.html', 'escadrille/index.html', 'capitaine-du-port/index.html', 'magasinier/index.html', 'ciel-de-guerre/index.html', 'ecurie/index.html', 'tank-arena/index.html', 'romet/index.html', 'dragon-simulator/index.html', 'bastion/index.html', 'terres-franches/index.html', 'duche/index.html', 'bannieres/index.html', 'boutique/index.html', 'mineur-de-l-espace/index.html', 'the-des-jarls/index.html', 'doggy-saga/index.html',
+  'touche-coule/index.html', 'amiral/index.html', 'club/index.html', 'orbite/index.html', 'lune-rover/index.html', 'pont-stellaire/index.html', 'sudoku/index.html', 'calculator/index.html', 'alunissage/index.html', 'nebula/index.html', 'ile/index.html', 'empilage/index.html', 'odyssee/index.html', 'yams/index.html', 'escadrille/index.html', 'capitaine-du-port/index.html', 'magasinier/index.html', 'ciel-de-guerre/index.html', 'ecurie/index.html', 'tank-arena/index.html', 'bannis/index.html', 'romet/index.html', 'dragon-simulator/index.html', 'bastion/index.html', 'terres-franches/index.html', 'duche/index.html', 'bannieres/index.html', 'boutique/index.html', 'mineur-de-l-espace/index.html', 'the-des-jarls/index.html', 'doggy-saga/index.html',
   'mot-d-or/index.html', 'lanterne/index.html', 'tetris/index.html', 'snake/index.html', 'asteroids/index.html', 'solitaire/index.html', 'jeu-de-la-vie/index.html', 'pokedex/index.html'];
 const shots = process.argv[2];
 (async () => {
@@ -121,6 +121,13 @@ const shots = process.argv[2];
         C.pause(); if (C.mode !== 'pause' || document.getElementById('ePause').hidden) return "pas d'écran de pause";
         C.reprendre(); C.abattu(); C.abattu(); C.abattu(); if (C.mode !== 'fin') return 'pas de fin de partie après 3 appareils abattus';
         await wait(1800); if (document.getElementById('eFin').hidden) return "pas d'écran de fin";
+        // missions : la première démarre avec son port et ses objectifs ; une victoire forcée donne des étoiles, ouvre la suivante et se sauvegarde
+        await wait(300); C.nouvellePartie(0); if (!C.mission || C.mission.def.id !== 'cote' || !C.mission.ville) return 'la mission 1 ne démarre pas';
+        C.finMission(true); await wait(3000); if (document.getElementById('eFin').hidden || document.getElementById('fSuivante').hidden) return "pas d'écran de victoire avec MISSION SUIVANTE";
+        const m = JSON.parse(localStorage.getItem('cieldeguerre.missions') || '{}'); if (!(m.cote && m.cote.e >= 1)) return "la mission réussie n'est pas sauvegardée";
+        // le raid (session 4) : une base de 6 cibles au sol ; des ailiers volent avec le joueur
+        const ir = C.missions.findIndex(d => d.id === 'raid'); C.nouvellePartie(ir); if (!C.mission || !C.mission.cibles || C.mission.cibles.length !== 6) return 'le raid ne pose pas ses 6 cibles au sol';
+        for (let i = 0; i < 20 && !C.ailiers.length; i++) await wait(250); if (!C.ailiers.length) return "pas d'ailiers";
         return 'ok';
       });
       if (r !== 'ok') errs.push('Ciel de guerre : ' + r);
@@ -183,6 +190,24 @@ const shots = process.argv[2];
       });
       if (r !== 'ok') errs.push('Tank Arena : ' + r);
       if (shots) await p.screenshot({ path: `${shots}/fumee-tank-arena.png` });
+    }
+    if (url === 'bannis/index.html') {
+      // Les Bannis : une nuit commence (3 recrues), la vague 1 se joue jusqu'au bout, le butin s'ouvre, la nuit sauvegardée se recharge, la fin de nuit s'enregistre
+      const r = await p.evaluate(async () => {
+        const B = window.Bannis, wait = ms => new Promise(r => setTimeout(r, ms));
+        B.J.nouvelleNuit(); const G = B.G; if (G.ecran !== 'recrutement' || G.recrues.length !== 3) return 'pas de recrutement';
+        G.run.heros = G.recrues.slice(0, 3); B.R.placerParDefaut(G.run); B.R.preparerVague(G.run); B.J.allerPlacement();
+        if (!B.R.charger(localStorage.getItem('bannis.run'))) return "la nuit n'est pas sauvegardée";
+        B.J.lancerCombat(); G.vitesse = 2;
+        for (let i = 0; i < 400 && G.ecran === 'combat'; i++){ B.R.etape(G.C, 0.1); await wait(10); }
+        for (let i = 0; i < 40 && G.ecran === 'combat'; i++) await wait(100);
+        if (G.ecran !== 'butin') return 'la vague 1 ne se termine pas par le butin (' + G.ecran + ')';
+        B.J.finDeNuit(false); await wait(100);
+        if (G.ecran !== 'fin' || !(JSON.parse(localStorage.getItem('bannis.stats') || '{}').nuits >= 1)) return "la fin de nuit ne s'enregistre pas";
+        return 'ok';
+      });
+      if (r !== 'ok') errs.push('Les Bannis : ' + r);
+      if (shots) await p.screenshot({ path: `${shots}/fumee-bannis.png` });
     }
     if (url === 'bastion/index.html') {
       // Bastion : BAC A SABLE ; un cercle du village ouvre l'anneau, une maison se paie ; le château ouvre son anneau ; le robot tient la première vague ;

@@ -48,6 +48,7 @@ const ORDRE = [
   "nebula/index.html",
   "ciel-de-guerre/index.html",
   "ecurie/index.html",
+  "bannis/index.html",
   "tetris/index.html",
   "snake/index.html",
   "asteroids/index.html",
@@ -69,6 +70,8 @@ const META = {};   // rempli par les fiches (meta)
 // Un numéro du journal par mois ; la plus récente nouveauté du mois fait la couverture.
 const NEWS = [
   ["2026-11-20", "neuf", "ecurie", "Nouveau : Écurie miniature, un jeu de gestion d'écurie de course. Pilotes, voitures, pièces, sponsors et fans se gèrent dans le paddock ; la course, elle, se regarde en 3D sur un circuit de ville, derrière tes pilotes, en diorama ou à la télé. Première version : saisons de 8 grands prix et trois divisions."],
+  ["2026-11-19", "neuf", "bannis", "Nouveau : Les Bannis, un autobattler rogue-lite. Le Mage instable, banni pour ses sorts imprévisibles, tient la Muraille avec trois condamnés tirés au sort : place ton escouade, regarde-la se battre contre les hordes de la Gueule, lance les dés du Mage, équipe le butin, et fais évoluer tes héros en classes légendaires. Douze vagues jusqu'au matin. Première version, en démo."],
+  ["2026-11-18", "maj", "ciel-de-guerre", "Ciel de guerre a ses missions : défendre un port contre les bombardiers, escorter le destroyer Albatros, tenir trois minutes seul contre l'escadre rouge, abattre le croiseur amiral Tempête, puis affronter la forteresse volante Léviathan, ses boucliers et ses chasseurs. Jusqu'à trois étoiles par mission. Et sur ordinateur, le curseur est maintenant ton viseur."],
   ["2026-11-18", "neuf", "ciel-de-guerre", "Nouveau : Ciel de guerre, du combat aérien en 3D au-dessus d'un archipel, au milieu d'une bataille de grands vaisseaux bleus et rouges. Loopings, tonneaux, missiles à verrouiller, tourelles à abattre, et 35 chasseurs en 4 familles au hangar. Au doigt sur téléphone, à la souris sur ordinateur. Première version : des vagues sans fin, les missions viendront."],
   ["2026-11-18", "maj", "tank-arena", "Tank Arena a son mode survie : des vagues d'ennemis de plus en plus forts (soldats, chasseurs petits et rapides, blindés solides, tireurs qui visent de loin) et 3 vies pour tenir le plus longtemps possible. Nouveau classement : la vague atteinte."],
   ["2026-11-17", "neuf", "tank-arena", "Une petite arène de tanks en 3D. Toi contre trois tanks de l'ordinateur, chacun pour soi, en manches de 90 secondes : glisse le doigt pour rouler, ton tank tire tout seul sur le plus proche. La caisse du centre répare, triple tes tirs, te protège d'un bouclier ou te donne de la vitesse."],

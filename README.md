@@ -11,6 +11,7 @@ Des jeux jouables dans le navigateur, sans build ni dépendance. La page [`index
 - [`pont-stellaire/index.html`](pont-stellaire/index.html) : **Pont stellaire**, un puzzle de logique en 32 bits (les règles du Hashi) : relier les étoiles par des faisceaux de lumière pour dessiner une constellation, avec un Ciel du jour.
 - [`mot-d-or/index.html`](mot-d-or/index.html) : **Le Mot d'or**, un mot de 6 lettres par jour à trouver en 6 essais, sur un bureau à la lueur de la lampe, en pixel art 32 bits.
 - [`capitaine-du-port/index.html`](capitaine-du-port/index.html) : **Capitaine du port**, un casse-tête de bateaux en pixel art 32 bits : déplacer les bateaux du bassin pour ouvrir la passe au navire doré.
+- [`bannis/index.html`](bannis/index.html) : **Les Bannis** (démo), un autobattler rogue-lite : le Mage instable et trois condamnés tiennent la Muraille contre les hordes de la Gueule.
 - [`tank-arena/index.html`](tank-arena/index.html) : **Tank Arena**, une petite arène de tanks en 3D : toi contre trois tanks de l'ordinateur, en manches de 90 secondes.
 - [`magasinier/index.html`](magasinier/index.html) : **Le Magasinier**, un Sokoban en HD-2D façon Octopath Traveler : pousser les caisses sur les marques dans un entrepôt baigné de soleil.
 - [`lune-rover/index.html`](lune-rover/index.html) : **Lune-Rover**, un puzzle de programmation en 32 bits : écrire à l'avance le programme d'un petit robot lunaire pour ramasser tous les cristaux, en 30 niveaux.
@@ -173,6 +174,15 @@ Un casse-tête façon « Rush Hour » dans un port vu du dessus, en pixel art 32
 - **Étoiles** : 3 étoiles jusqu'à 10 % de coups de plus que le minimum (toujours au moins un coup de marge), 2 jusqu'à 50 % de plus, sinon 1 (180 en tout). Chaque bassin a été vérifié par un solveur, qui connaît le minimum.
 - **Bassin du jour** : le même pour toute la famille, tiré de la date. **Une seule tentative classée** : le moins de coups gagne, et chaque coup compte, même ceux qu'on annule ou d'avant un recommencement. La tentative est sauvegardée ; une fois réussi, le bassin se rejoue hors classement. Lien direct : `capitaine-du-port/index.html#jour`.
 - **Sons** : moteur du remorqueur, clapotis, mouettes, corne de brume et cloche du port, et une musique d'ambiance discrète ; bruitages et musique réglables au titre et dans la pause.
+
+## Les Bannis (démo)
+Un autobattler rogue-lite : le Mage instable, banni pour ses sorts imprévisibles, tient la Muraille de l'Île des Bannis avec trois condamnés tirés au sort.
+
+- **Une nuit** : douze vagues de monstres sortent de la Gueule, avec un boss toutes les quatre vagues. Si la Muraille tombe, ou si toute l'escouade tombe, la nuit est perdue.
+- **Avant chaque vague** : on place les héros devant la Muraille. Pendant le combat, ils se déplacent et se battent tout seuls.
+- **Les dés du Mage** : quand sa jauge est pleine, on lance un d6, un d8 et un d20 (combos, une relance) pour déclencher un sort instable.
+- **Entre les vagues** : expérience et bonus de niveau au choix, butin à équiper, marchand ; au niveau 5, un héros évolue en classe légendaire.
+- Six classes (guerrière, mercenaire, illusionniste, magicienne, prêtresse, barde), chacune avec un trait qui change son comportement.
 
 ## Tank Arena
 Une petite arène de tanks en 3D (pack Low Poly Tank Assets de dani567) : un damier entouré de rochers et de sapins, une plateforme au centre.
@@ -460,13 +470,16 @@ Minage spatial, gestion et batailles automatiques : une grande partie de 3 à 5 
 
 ## Ciel de guerre
 
-Combat aérien en 3D low poly au-dessus d'un archipel, au crépuscule, au milieu d'une bataille entre deux flottes de grands vaisseaux (première version).
+Combat aérien en 3D low poly au-dessus d'un archipel, au crépuscule, au milieu d'une bataille entre deux flottes de grands vaisseaux 
 
 - **Le vol** : vue de derrière l'appareil, loopings, tonneaux, boost ; canon et missiles qui se verrouillent sur la cible dans l'axe.
-- **Les vagues** : des escadrilles de chasseurs rouges arrivent de face, par derrière, sur les flancs, par le dessus ; des corvettes et des frégates bombardent. Trois appareils par partie.
+- **Les missions** : défendre un port contre les bombardiers, escorter le destroyer Albatros, raser une base au sol (batteries de DCA, dépôts, radar), tenir trois minutes, abattre le croiseur amiral, puis la forteresse volante (boucliers à détruire avant les tourelles, chasseurs qui décollent de ses flancs). Jusqu'à trois étoiles par mission ; chaque réussite ouvre la suivante.
+- **Les vagues sans fin** : des escadrilles de chasseurs rouges arrivent de face, par derrière, sur les flancs, par le dessus ; des corvettes et des frégates bombardent. Trois appareils par partie.
 - **La bataille** : les grands vaisseaux bleus et rouges se canonnent ; les tourelles rouges tirent aussi sur toi, et se détruisent (un vaisseau sans tourelles tombe en flammes).
-- **Le hangar** : 35 chasseurs en 4 familles (intercepteurs, polyvalents, lourds, furtifs), chacune avec sa vitesse, son virage, son blindage et ses missiles.
-- Au téléphone : un joystick sous le pouce et des boutons ronds ; au PC : la souris dirige l'appareil, clic gauche pour le feu, clic droit pour les missiles. À venir : des missions, un boss, des sons, des décors.
+- **Les ailiers** : des chasseurs bleus volent en formation avec toi et attaquent les rouges qui approchent.
+- **Le hangar** : 35 chasseurs en 4 familles (intercepteurs, polyvalents, lourds, furtifs), chacune avec sa vitesse, son virage, son blindage et ses missiles ; chaque appareil a en plus son profil (rapide, agile, robuste ou armé). Au départ, un appareil par famille est ouvert : la solde gagnée en jouant débloque les autres.
+- **Les classements** : meilleur score en vagues sans fin, et total des étoiles des missions.
+- Au téléphone : un joystick sous le pouce et des boutons ronds ; au PC : la souris dirige l'appareil, clic gauche pour le feu, clic droit pour les missiles. Explosions et réacteur enregistrés, musique synthétisée, secousses, épaves qui tombent en fumée, jauge d'énergie du boost. - **Les décors** : crépuscule, nuit étoilée, orage (pluie, éclairs), désert, neige ; chaque mission a le sien, et le temps change toutes les 5 vagues. La nuit et sous l'orage, les appareils allument leurs feux de position.
 
 ## Écurie miniature
 

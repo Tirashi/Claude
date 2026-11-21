@@ -13,20 +13,29 @@
 </head>
 <body>
 <div class="tel" id="t"><div class="charge" id="charge">CHARGEMENT…</div>
-<div class="hud" id="hud"></div>
+<div class="hud" id="hud">
+  <div class="colG">
+  <div class="pan" id="hG"><div class="l"><span>SCORE</span><b id="hScore">000000</b></div><div class="l"><span>APPAREILS</span><b id="hVies"></b></div><div class="barre vie"><i id="hBlind"></i></div><div class="l vit"><span>VITESSE</span><b id="hVit"></b></div><div class="barre boost"><i id="hBoost"></i></div></div>
+  <div class="pan obj" id="hObj"><span id="hObjNom"></span><b id="hObjTxt"></b><div class="barre" id="hObjB"><i id="hObjBar"></i></div><small id="hObjInfo"></small></div>
+  </div>
+  <div class="pan armes" id="hArmes"><div class="l"><span>CANON</span><b id="hCanon"></b></div><div class="l"><span>MISSILES</span><b id="hMis"></b></div></div>
+</div>
 <div class="bandeau" id="bandeau"></div>
 <div class="joy" id="joy"><i></i></div><div class="aidejoy" id="aidejoy">POUCE GAUCHE :<br>PILOTER</div>
 <div class="clavier" id="clavier"></div>
 <div class="hangar" id="hangar"></div>
-<button class="rond" id="bPause" aria-label="Pause">❚❚</button><button class="rond" id="bAvion">AVION</button><button class="rond" id="bVue">VUE</button><button class="rond" id="bLoop">LOOP</button><button class="rond" id="bRoll">TON-<br>NEAU</button><button class="rond" id="bMis">MIS.<small id="nMis">▮▮▮▮▮</small></button><button class="rond" id="bTir">FEU<small id="nTir">300</small></button>
+<button class="rond" id="bPause" aria-label="Pause">❚❚</button><button class="rond" id="bAvion">AVION</button><button class="rond" id="bVue">VUE</button><button class="rond" id="bBoost">BOOST</button><button class="rond" id="bFrein">FREIN</button><button class="rond" id="bLoop">LOOP</button><button class="rond" id="bRoll">TON-<br>NEAU</button><button class="rond" id="bMis">MIS.<small id="nMis">▮▮▮▮▮</small></button><button class="rond" id="bTir">FEU<small id="nTir">300</small></button>
 
 <div class="ecran" id="eTitre">
   <div class="carte">
     <h1>CIEL<br>DE GUERRE</h1>
     <p class="sous">Combat aérien au-dessus de l'archipel, au milieu de la bataille des grands vaisseaux.</p>
-    <button id="tJouer" class="grand">JOUER</button>
+    <button id="tMissions" class="grand">MISSIONS</button>
+    <p class="record" id="tEtoiles"></p>
+    <button id="tJouer">VAGUES SANS FIN</button>
     <button id="tHangar">HANGAR</button>
     <button id="tAide">COMMANDES</button>
+    <div class="duo"><button id="tSon" class="petit">BRUITAGES</button><button id="tMus" class="petit">MUSIQUE</button></div>
     <p class="record" id="tRecord"></p>
     <a class="lien ludo-retour" href="../index.html">◀ LUDOTHEQUE</a>
   </div>
@@ -37,25 +46,50 @@
     <button id="pReprendre" class="grand">REPRENDRE</button>
     <button id="pHangar">HANGAR</button>
     <button id="pAide">COMMANDES</button>
+    <div class="duo"><button id="pSon" class="petit">BRUITAGES</button><button id="pMus" class="petit">MUSIQUE</button></div>
     <button id="pQuitter">ABANDONNER</button>
     <a class="lien ludo-retour" href="../index.html">◀ LUDOTHEQUE</a>
   </div>
 </div>
 <div class="ecran" id="eFin" hidden>
   <div class="carte">
-    <h2>FIN DE MISSION</h2>
+    <h2 id="fTitre">FIN DE MISSION</h2>
+    <p class="etoiles" id="fEtoiles"></p>
     <p class="score" id="fScore"></p>
     <p class="sous" id="fDetail"></p>
     <p class="record" id="fRecord"></p>
-    <button id="fRejouer" class="grand">REJOUER</button>
+    <p class="solde" id="fSolde"></p>
+    <p class="rang" id="fRang"></p>
+    <button id="fSuivante" class="grand" hidden>MISSION SUIVANTE</button>
+    <button id="fRejouer">REJOUER</button>
     <button id="fMenu">MENU</button>
+  </div>
+</div>
+<div class="ecran" id="eMissions" hidden>
+  <div class="carte missions">
+    <h2>MISSIONS</h2>
+    <p class="sous">Chaque mission réussie ouvre la suivante. Trois étoiles : sans perdre d'appareil, et l'objectif bien tenu.</p>
+    <div id="mListe"></div>
+    <button id="mRetour">RETOUR</button>
+  </div>
+</div>
+<div class="ecran" id="eBrief" hidden>
+  <div class="carte brief">
+    <p class="num" id="bNum"></p>
+    <h2 id="bNom"></h2>
+    <p class="titre-mission" id="bTitre"></p>
+    <p class="sous" id="bTxt"></p>
+    <ul id="bButs"></ul>
+    <p class="regle" id="bEt"></p>
+    <button id="bGo" class="grand">DECOLLER</button>
+    <button id="bRetour">RETOUR</button>
   </div>
 </div>
 <div class="ecran" id="eAide" hidden>
   <div class="carte aide">
     <h2>COMMANDES</h2>
-    <p><b>TELEPHONE</b><br>Pose le pouce gauche n'importe où : un joystick apparaît (vers le haut : on monte). Boutons ronds à droite : FEU, MISSILE, LOOP, TONNEAU.</p>
-    <p><b>PC, A LA SOURIS</b><br>Le curseur est ton viseur : les balles partent vers lui. Éloigne-le du centre de l'écran pour tourner, monter ou descendre ; au centre, l'appareil vole droit. Clic gauche : feu ; clic droit : missile. Z accélère, S freine, Q et D font un écart ; deux appuis rapides sur Z : looping, sur Q ou D : tonneau. Échap : pause.</p>
+    <p><b>TELEPHONE</b><br>Pose le pouce gauche n'importe où : un joystick apparaît (vers le haut : on monte). Boutons ronds à droite : FEU, MISSILE, LOOP, TONNEAU, et BOOST ou FREIN à garder appuyés ; deux appuis rapides sur FREIN : demi-tour. Le boost vide sa jauge bleue (sous le blindage) ; elle se recharge toute seule.</p>
+    <p><b>PC, A LA SOURIS</b><br>Le curseur est ton viseur : les balles partent vers lui. Éloigne-le du centre de l'écran pour tourner, monter ou descendre ; au centre, l'appareil vole droit. Clic gauche : feu ; clic droit : missile. Z accélère, S freine, Q et D font un écart ; deux appuis rapides sur Z : looping, sur S : demi-tour (demi-looping puis demi-tonneau), sur Q ou D : tonneau. Échap : pause.</p>
     <p><b>PC, AU CLAVIER</b><br>Flèches : piloter. Espace : feu ; E : missile ; R : looping ; F : tonneau ; V : vue ; C : appareil suivant ; P : pause.</p>
     <p class="sous">Le missile se verrouille sur la cible dans l'axe (cadre jaune puis LOCK). Les tourelles rouges des grands vaisseaux se détruisent aussi.</p>
     <button id="aRetour" class="grand">RETOUR</button>
@@ -65,6 +99,8 @@
 <script src="../lib/three.min.js"></script>
 <script src="../lib/GLTFLoader.js"></script>
 <script src="catalogue.js"></script>
+<script src="../ludo-scores.js"></script>
+<script src="sons.js"></script>
 <script src="jeu.js"></script>
 <script>
 /* Ludothèque : mode hors connexion. Pas de bouton « ◀ MENU » ajouté par-dessus le jeu :
