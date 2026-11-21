@@ -29,7 +29,9 @@ const TUTO = [
   { t: 'LA PAUSE', pc: "METS LE JEU EN PAUSE (ESPACE, OU ❚❚ EN HAUT A DROITE). EN PAUSE, TU PEUX TOUJOURS CHOISIR ET DONNER DES ORDRES.", tel: "METS LE JEU EN PAUSE (❚❚ EN HAUT A DROITE). EN PAUSE, TU PEUX TOUJOURS CHOISIR ET DONNER DES ORDRES.", guide: '[data-vit="0"]',
     fait: () => VIT === 0 },
   { t: 'LES VITESSES', pc: "RELANCE LE TEMPS : ▶, OU ▶▶ ET ▶▶▶ POUR ALLER PLUS VITE QUAND TOUT EST CALME.", guide: '#barre .vits', fait: () => VIT > 0 },
-  { t: 'LA FLOTTE ROUGE', pc: "ELLE ARRIVERA PAR LA PORTE D'ALTAIR (LE ROND ROUGE DE LA MINI-CARTE), EN 8 VAGUES. PRODUIS DES CHASSEURS, DES BOMBARDIERS (CONTRE LES GROS VAISSEAUX) ET DES DESTROYERS, ET GARDE-LES PRES D'AURORE. BONNE CHANCE !", fin: 1 }];
+  { t: 'LA RECHERCHE', pc: "OUVRE LA RECHERCHE (EN HAUT). TROIS DOMAINES AVANCENT EN MEME TEMPS ; QUAND UN PROJET FINIT, TU CHOISIS LE SUIVANT PARMI TROIS CARTES. LES BOMBARDIERS, LES DESTROYERS ET LES COLONS S'Y DEBLOQUENT.", guide: '#bRech', fait: () => RECH_OUVERT },
+  { t: 'LES COLONIES', pc: "FERME LA RECHERCHE, PUIS CLIQUE SUR GAIA (OU SA LIGNE DANS LA LISTE) : C'EST TA COLONIE. SES EMPLACEMENTS ACCUEILLENT MINES, LABOS, CHANTIERS ET DEFENSES. UN COLON PEUT S'INSTALLER SUR D'AUTRES PLANETES.", tel: "FERME LA RECHERCHE, PUIS TOUCHE GAIA (OU SA LIGNE DANS LA LISTE) : C'EST TA COLONIE. SES EMPLACEMENTS ACCUEILLENT MINES, LABOS, CHANTIERS ET DEFENSES.", guide: '[data-planete="GAIA"]', fait: () => SELP === PLN.GAIA },
+  { t: 'LA FLOTTE ROUGE', pc: "ELLE ARRIVERA PAR LA PORTE D'ALTAIR (LE ROND ROUGE DE LA MINI-CARTE), EN 8 VAGUES. PRODUIS DES CHASSEURS, PUIS DES BOMBARDIERS (CONTRE LES GROS VAISSEAUX) ET DES DESTROYERS QUAND TU LES AURAS TROUVES, ET GARDE-LES PRES D'AURORE. BONNE CHANCE !", fin: 1 }];
 const TU = { i: -1, st: {} };
 function tutoDebut(){ S.tuto = true; TU.i = -1; tutoEtape(0); }
 function tutoEtape(i){ document.querySelectorAll('.guide').forEach(e => e.classList.remove('guide')); TU.i = i; TU.st = {}; const E = TUTO[i];
@@ -72,4 +74,4 @@ function boucle(now){ requestAnimationFrame(boucle); const dtr = Math.min(.05, (
 // ---------- démarrage : modèles, puis écran titre (la bataille tourne au ralenti derrière) ----------
 redim();
 Promise.all(MODELES.map(charger)).then(() => { fabriquerIcones(); $('#charge').remove(); nouvellePartie(); centrer(BASE); CA.dist = 2300; ETAT = 'titre'; ecran('eTitre'); majTitre(); requestAnimationFrame(boucle); });
-window.StrategieCiel = { tutoFin, tutoEtape, TU, S, U: () => U, TYPES, VAGUES, GIS, CA, jouer, produire, ordonner, groupe, lancerVague, vitesse, finPartie, meurt, etat: () => ETAT, avance(s){ const n = Math.ceil(s / .034); for (let i = 0; i < n; i++) majUnites(s / n); TEMPS.t += s; } };
+window.StrategieCiel = { RECH, PLANETES, choisirRecherche, construire, coloniser, ouvrirPlanete, colonies, tutoFin, tutoEtape, TU, S, U: () => U, TYPES, VAGUES, GIS, CA, jouer, produire, ordonner, groupe, lancerVague, vitesse, finPartie, meurt, etat: () => ETAT, avance(s){ const n = Math.ceil(s / .034); for (let i = 0; i < n; i++) majUnites(s / n); TEMPS.t += s; } };

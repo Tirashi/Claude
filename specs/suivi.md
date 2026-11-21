@@ -156,3 +156,4 @@ Maquettes de la carte 2 à 4 (isométrique, puis papier à l'encre validée), é
 - **20/11 — Stratégie spatiale, interface « liste de flotte »** (direction C de la maquette) : barre fine, liste de la flotte à droite avec le chantier d'AURORE, ordres en bas, nouvelles polices et icônes.
 - **21/11 — Stratégie spatiale** : boutons de caméra qui suivent la liste repliée (téléphone), icônes faites à partir des vrais modèles 3D.
 - **21/11 — Stratégie spatiale** : petite bulle pour les messages mineurs (le ralliement ne cache plus la vue), icônes tactiques de taille fixe quand les vaisseaux deviennent minuscules.
+- **21/11 — Stratégie spatiale, session 2** : recherche continue en trois domaines à cartes tirées (19 projets), colon et colonies (DUNE, BOREA, BRASIER, ECHO), bâtiments (mine, labo, chantier, défense), volet des planètes, bouton RECHERCHE ; `sw.js` v119.

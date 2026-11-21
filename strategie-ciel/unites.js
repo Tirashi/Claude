@@ -11,12 +11,13 @@ const TYPES = {
   collecteur: { nom: 'COLLECTEUR', mod: 'py16', rot: PI, L: 26, vie: 60, v: 48, alt: 60, prix: 30, temps: 8, cap: 20, mine: 5, cle: 'KeyZ' },
   chasseur:   { nom: 'CHASSEUR', mod: 'py2', rot: PI, L: 14, vie: 60, v: 90, portee: 150, deg: 4, cad: .35, alt: 80, prix: 40, temps: 10, vole: 1, cle: 'KeyX' },
   bombardier: { nom: 'BOMBARDIER', mod: 'py35', rot: PI, L: 34, vie: 120, v: 58, portee: 210, deg: 20, cad: 1.6, alt: 72, prix: 80, temps: 16, antigros: 1, vole: 1, cle: 'KeyC' },
+  colon:      { nom: 'COLON', mod: 'py34', rot: PI, L: 32, vie: 90, v: 40, alt: 66, prix: 150, temps: 20, cle: 'KeyN' },
   destroyer:  { nom: 'DESTROYER', mod: 'fga_destroyer2', rot: -PI / 2, L: 110, vie: 900, v: 22, portee: 340, deg: 15, cad: .6, alt: 92, prix: 220, temps: 32, gros: 1, cle: 'KeyV' },
   r_chasseur: { nom: 'CHASSEUR ROUGE', mod: 'py13', rot: PI, L: 16, vie: 40, v: 85, portee: 150, deg: 4, cad: .35, alt: 82, vole: 1, camp: 1 },
   r_corvette: { nom: 'CORVETTE', mod: 'fga_corvette1_r', rot: -PI / 2, L: 40, vie: 170, v: 42, portee: 210, deg: 14, cad: 1, alt: 70, antigros: 1, camp: 1 },
   r_fregate:  { nom: 'FREGATE', mod: 'fga_fregate1_r', rot: -PI / 2, L: 60, vie: 420, v: 24, portee: 300, deg: 13, cad: .6, alt: 88, camp: 1 },
   r_destroyer:{ nom: 'DESTROYER ROUGE', mod: 'fga_destroyer1', rot: -PI / 2, L: 115, vie: 1300, v: 14, portee: 360, deg: 15, cad: .55, alt: 96, gros: 1, camp: 1 }};
-const PRODUITS = ['collecteur', 'chasseur', 'bombardier', 'destroyer'];
+const PRODUITS = ['collecteur', 'chasseur', 'bombardier', 'destroyer', 'colon'];
 // vagues : composition, et temps avant leur arrivée par la porte (secondes de jeu)
 const VAGUES = [{ r_chasseur: 4 }, { r_chasseur: 6 }, { r_chasseur: 5, r_corvette: 2 }, { r_chasseur: 6, r_corvette: 3 }, { r_chasseur: 6, r_corvette: 2, r_fregate: 1 },
   { r_chasseur: 8, r_corvette: 3, r_fregate: 2 }, { r_chasseur: 8, r_corvette: 4, r_fregate: 2 }, { r_chasseur: 10, r_corvette: 4, r_fregate: 2, r_destroyer: 1 }];
@@ -30,7 +31,8 @@ const ennemis = c => U.filter(u => u.camp !== c && u.vie > 0);
 const yawVers = (dx, dz) => Math.atan2(-dx, -dz);
 function cree(type, pos, o = {}){ const T = TYPES[type], camp = T.camp || 0;
   const k = T.mod + (T.mod.startsWith('py') ? (camp ? '_r' : '_b') : '');
-  const u = Object.assign({ id: ++ID, type, T, camp, vie: T.vie, pos: pos.clone(), yaw: camp ? PI / 2 : -PI / 2, cd: Math.random() * (T.cad || 1), ordre: { k: 'rien' }, cible: null, charge: 0, ph: Math.random() * 6.283, a: Math.random() * 6.283, sel: false, g: importe(k, T.rot, T.L) }, o);
+  const vm = T.vie * (camp || !S.mod ? 1 : type === 'pv' ? S.mod.viePv : type === 'chasseur' ? S.mod.vieCh : 1);
+  const u = Object.assign({ id: ++ID, type, T, camp, vie: vm, vmax: vm, pos: pos.clone(), yaw: camp ? PI / 2 : -PI / 2, cd: Math.random() * (T.cad || 1), ordre: { k: 'rien' }, cible: null, charge: 0, ph: Math.random() * 6.283, a: Math.random() * 6.283, sel: false, g: importe(k, T.rot, T.L) }, o);
   Object.assign(u, equipe(u.g, k, T.L, camp)); u.dep = 0; u.ic = iconeStrat(type);
   u.pos.y = T.alt + (Math.random() - .5) * 16; u.g.position.copy(u.pos); sc.add(u.g);
   u.anneau = new THREE.Mesh(geoAnneau, matSel[0]); u.anneau.renderOrder = 3; u.anneau.scale.setScalar(Math.max(18, T.L * .62)); u.anneau.visible = false; sc.add(u.anneau);
@@ -52,7 +54,7 @@ function gisementProche(p){ let m = null, dm = 1e18; for (const G of GIS) if (G.
 // ---------- une unité, à chaque image ----------
 const _d = V3();
 function majUnite(u, dt, adv){
-  const T = u.T; let but = null, vmax = T.v;
+  const T = u.T; let but = null, vmax = T.v * (u.camp || !S.mod ? 1 : S.mod.vit);
   // cible : celle de l'ordre, sinon la plus proche à portée d'alerte (sauf en déplacement ordonné)
   if (u.cible && !vivant(u.cible)) u.cible = null;
   if (u.ordre.k === 'attaquer' && !vivant(u.ordre.cible)) u.ordre = { k: 'rien' };
@@ -67,6 +69,7 @@ function majUnite(u, dt, adv){
     else { const d = u.pos.distanceTo(c); if (d > T.portee * .85) but = c.clone(); }
   } else if (u.ordre.k === 'aller' || u.ordre.k === 'assaut'){ but = u.ordre.p; if (u.ordre.k === 'aller' && _d.copy(u.ordre.p).setY(0).distanceTo(V3(u.pos.x, 0, u.pos.z)) < (T.gros ? 40 : 14)) u.ordre = { k: 'rien' }; }
   else if (u.ordre.k === 'miner') but = minage(u, dt);
+  else if (u.ordre.k === 'coloniser'){ const P = u.ordre.P; but = V3(P.x, T.alt, P.z); if (Math.hypot(u.pos.x - P.x, u.pos.z - P.z) < P.r + 140){ coloniser(P, u); return; } }
   else if (T.vole){ // en attente : tourne en rond sur place
     if (!u.centre) u.centre = u.pos.clone(); u.a += dt * .7; but = V3(u.centre.x + Math.cos(u.a) * 30, u.centre.y, u.centre.z + Math.sin(u.a) * 30); vmax = T.v * .45; }
   if (u.ordre.k !== 'rien' || u.cible) u.centre = null;
@@ -91,7 +94,7 @@ function posee(u, dt){ const T = u.T;
   if (T.gros) u.g.rotation.z = Math.sin(TEMPS.t * .5 + u.ph) * .02; }
 // chaque tourelle choisit sa cible (celle du vaisseau si elle est à portée, sinon l'ennemi le plus proche), pivote vers elle et tire quand elle est alignée
 const _loc = V3(), _bout = V3();
-function degats(tireur, cv, de){ const T = tireur.T; let deg = T.deg; if (T.antigros && (cv.T.gros || cv.T.L > 30)) deg *= 2.6; if (T.gros && cv.T.vole) deg *= .4; /* tourelles lourdes : peu efficaces contre les petits */
+function degats(tireur, cv, de){ const T = tireur.T; let deg = T.deg * (tireur.camp || !S.mod ? 1 : T.vole ? S.mod.degCh : T.gros ? S.mod.degLourd : 1) * (cv.camp || !S.mod ? 1 : S.mod.bouclier); if (T.antigros && (cv.T.gros || cv.T.L > 30)) deg *= 2.6; if (T.gros && cv.T.vole) deg *= .4; /* tourelles lourdes : peu efficaces contre les petits */
   tir(de, cv.pos.clone().add(V3((Math.random() - .5) * 6, 0, (Math.random() - .5) * 6)), tireur.camp, T.gros ? 26 : T.antigros ? 18 : 9, T.gros ? 600 : 480);
   cv.vie -= deg; cv.touche = TEMPS.t; if (cv.vie <= 0) meurt(cv); }
 function tourelles(u, dt, adv){ const T = u.T, n = u.tours.length; u.g.updateMatrixWorld(true);
@@ -105,24 +108,25 @@ function tourelles(u, dt, adv){ const T = u.T, n = u.tours.length; u.g.updateMat
     if (t.c && t.cd <= 0 && Math.abs(da) < .2){ t.cd = T.cad * n * (.85 + Math.random() * .3); t.o.localToWorld(_bout.fromArray(t.o.userData.bout)); degats(u, t.c, _bout.clone()); } } }
 // collecteur : va au gisement, mine jusqu'à être plein, rapporte au porte-vaisseaux
 function minage(u, dt){ const o = u.ordre, pv = PV();
-  if (!o.gis || o.gis.reste <= 0){ if (u.charge < u.T.cap) o.gis = gisementProche(u.pos); if (!o.gis && !u.charge){ u.ordre = { k: 'rien' }; return null; } }
-  if (u.charge >= u.T.cap || (!o.gis && u.charge)){ if (!pv) return null; const d = u.pos.distanceTo(pv.pos);
+  if (!o.gis || o.gis.reste <= 0){ if (u.charge < u.T.cap * (S.mod ? S.mod.cap : 1)) o.gis = gisementProche(u.pos); if (!o.gis && !u.charge){ u.ordre = { k: 'rien' }; return null; } }
+  const cap = u.T.cap * (S.mod ? S.mod.cap : 1);
+  if (u.charge >= cap || (!o.gis && u.charge)){ if (!pv) return null; const d = u.pos.distanceTo(pv.pos);
     if (d < 120){ S.cristal += u.charge; S.mine += u.charge; u.charge = 0; u.rayon = 0; return null; } u.rayon = 0; return pv.pos; }
   const h = o.gis.haut(), d = u.pos.distanceTo(h);
-  if (d < 46){ const m = Math.min(u.T.mine * dt, o.gis.reste, u.T.cap - u.charge); u.charge += m; o.gis.reste -= m; u.rayon = 1; majGisement(o.gis); u.a += dt * .8; u.rt = (u.rt || 0) - dt; if (u.rt < 0){ u.rt = .3; tir(u.pos, h.clone().setY(h.y - 18), 0, 5, 240); } return V3(h.x + Math.cos(u.a) * 26, h.y + 10, h.z + Math.sin(u.a) * 26); }
+  if (d < 46){ const m = Math.min(u.T.mine * dt, o.gis.reste, cap - u.charge); u.charge += m; o.gis.reste -= m; u.rayon = 1; majGisement(o.gis); u.a += dt * .8; u.rt = (u.rt || 0) - dt; if (u.rt < 0){ u.rt = .3; tir(u.pos, h.clone().setY(h.y - 18), 0, 5, 240); } return V3(h.x + Math.cos(u.a) * 26, h.y + 10, h.z + Math.sin(u.a) * 26); }
   u.rayon = 0; return h; }
 const PV = () => U.find(u => u.type === 'pv' && u.vie > 0);
 
 // ---------- production au porte-vaisseaux ----------
-function produire(type){ const T = TYPES[type]; if (S.cristal < T.prix || S.file.length >= 6) return false; S.cristal -= T.prix; S.file.push(type); return true; }
+function produire(type){ const T = TYPES[type]; if (S.deb && S.deb[type] === false) return false; if (S.cristal < T.prix || S.file.length >= 6) return false; S.cristal -= T.prix; S.file.push(type); return true; }
 function annuler(i){ const t = S.file[i]; if (!t) return; S.cristal += TYPES[t].prix; S.file.splice(i, 1); if (i === 0) S.fileT = 0; }
 // l'hologramme se place à l'avant d'AURORE, entre ses fourches (repère du porte-vaisseaux : l'avant est vers -z)
 const HOLO_POS = L => V3(0, 6, -L * .34);
 let HOLO = null;
 function majProduction(dt){ const pv = PV(); if (!pv || !S.file.length){ if (HOLO){ retireHolo(HOLO); HOLO = null; } return; } S.fileT += dt; const t = S.file[0], T = TYPES[t];
   if (!HOLO || HOLO.type !== t){ retireHolo(HOLO); const k = T.mod + (T.mod.startsWith('py') ? '_b' : ''); HOLO = holo(k, T.rot, T.L); HOLO.type = t; HOLO.g.position.copy(HOLO_POS(pv.T.L)); pv.g.add(HOLO.g); }
-  majHolo(HOLO, Math.min(1, S.fileT / T.temps));
-  if (S.fileT >= T.temps){ S.fileT = 0; S.file.shift();
+  const duree = T.temps * (S.mod ? facteurChantier() : 1); majHolo(HOLO, Math.min(1, S.fileT / duree));
+  if (S.fileT >= duree){ S.fileT = 0; S.file.shift();
     const p0 = HOLO.g.getWorldPosition(V3()); retireHolo(HOLO); HOLO = null;
     const u = cree(t, p0); u.pos.copy(p0); u.yaw = pv.yaw; eclat(p0, T.L * 2.2); eclat(p0, T.L * 1.2);
     const avant = V3(-Math.sin(pv.yaw), 0, -Math.cos(pv.yaw));
@@ -143,10 +147,11 @@ function majVagues(dt){ if (S.fin || S.tuto) return; if (S.prochaine !== null){ 
 function majUnites(dt){ const bleus = U.filter(u => u.camp === 0 && u.vie > 0), rouges = U.filter(u => u.camp === 1 && u.vie > 0);
   for (const u of U) if (u.vie > 0) majUnite(u, dt, u.camp ? bleus : rouges);
   U = U.filter(u => !u.mort);
-  majProduction(dt); majVagues(dt); }
+  majProduction(dt); majVagues(dt); majColonies(dt); }
 function nouvellePartie(){ for (const u of U){ sc.remove(u.g); sc.remove(u.anneau); sc.remove(u.ic); } U = []; ID = 0; retireHolo(HOLO); HOLO = null;
   Object.assign(S, { cristal: 300, vague: 0, prochaine: PREMIERE_VAGUE, file: [], fileT: 0, detruits: 0, perdus: 0, mine: 0, fin: null, ralliement: null });
   for (const G of GIS){ G.reste = G.max; majGisement(G); }
+  initColonies();
   const pv = cree('pv', BASE); pv.yaw = yawVers(1, -.3);
   for (let i = 0; i < 2; i++){ const c = cree('collecteur', BASE.clone().add(V3(80 + i * 30, 0, 90))); c.ordre = { k: 'miner', gis: gisementProche(c.pos) }; }
   for (let i = 0; i < 4; i++) cree('chasseur', BASE.clone().add(V3(220 + (i % 2) * 30, 0, -40 + (i >> 1) * 30)));

@@ -73,8 +73,11 @@ PLANETES.forEach((P, i) => { PLN[P.nom] = P; P.w = .004 * Math.pow(1300 / P.orb,
     const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: P.ct, transparent: true })); s.scale.setScalar(2 * P.r * P.df.taille / DF_PX); P.g.add(s); }
   else P.g.add(new THREE.Mesh(new THREE.IcosahedronGeometry(P.r, 2), new THREE.MeshPhongMaterial({ color: COUL_PLA[P.t], flatShading: true })));
   P.orbL = orbite(P.orb); sc.add(P.orbL);
-  if (P.camp >= 0 || P.riche){ const rr = P.r + 90; P.an = new THREE.Mesh(new THREE.RingGeometry(rr - 8, rr, 96).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: P.camp >= 0 ? COUL_CAMP[P.camp] : '#9ff0ff', transparent: true, opacity: .5, depthTest: false, fog: false })); P.an.renderOrder = 2; sc.add(P.an); }
+  anneauPlanete(P);
   if (P.camp >= 0){ P.st = station(P.camp); sc.add(P.st); } });
+// anneau autour d'une planète : bleu pour une colonie, cyan pour une planète riche libre, rien sinon
+function anneauPlanete(P){ const on = P.camp === 0 || P.riche; if (!P.an && on){ const rr = P.r + 90; P.an = new THREE.Mesh(new THREE.RingGeometry(rr - 8, rr, 96).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ transparent: true, opacity: .5, depthTest: false, fog: false })); P.an.renderOrder = 2; sc.add(P.an); }
+  if (P.an){ P.an.visible = on; P.an.material.color.set(P.camp === 0 ? COUL_CAMP[0] : '#9ff0ff'); if (P.x !== undefined) P.an.position.set(P.x, 2, P.z); } }
 function placerPlanetes(){ for (const P of PLANETES){ const c = P.autour ? PLN[P.autour] : { x: 0, z: 0 }; P.x = c.x + Math.cos(P.ang) * P.orb; P.z = c.z + Math.sin(P.ang) * P.orb; P.y = -P.r * .6; P.g.position.set(P.x, P.y, P.z);
   P.orbL.position.set(c.x, 0, c.z); if (P.an) P.an.position.set(P.x, 2, P.z); } }
 placerPlanetes();
@@ -190,7 +193,7 @@ function prepare(k, s){ dequantifie(s); s.traverse(o => { if (!o.isMesh) return;
   MOD[k] = s; if (k.startsWith('py')){ MOD[k + '_b'] = repeint(s, .6); MOD[k + '_r'] = repeint(s, 0); } }
 function charger(k){ return new Promise(ok => { const L = new THREE.GLTFLoader(), fin = g => { try { prepare(k, g.scene); } catch (e){ console.warn(k, e); } ok(); }, err = e => { console.warn(k, e); ok(); };
   if (window.SC_B64 && window.SC_B64[k]) L.parse(b64(window.SC_B64[k]), '', fin, err); else L.load('../ciel-de-guerre/modeles/' + k + '.glb', fin, undefined, err); }); }
-const MODELES = ['fga_croiseur1', 'fga_destroyer2', 'fga_destroyer1', 'fga_fregate1_r', 'fga_corvette1_r', 'py2', 'py13', 'py16', 'py35']; // chasseur, chasseur rouge, collecteur, bombardier : silhouettes et tailles bien différentes (planche du 20/11)
+const MODELES = ['fga_croiseur1', 'fga_destroyer2', 'fga_destroyer1', 'fga_fregate1_r', 'fga_corvette1_r', 'py2', 'py13', 'py16', 'py35', 'py34']; // chasseur, chasseur rouge, collecteur, bombardier : silhouettes et tailles bien différentes (planche du 20/11)
 // un vaisseau : groupe dont l'avant regarde vers -z, de longueur L
 function importe(k, rot, L){ const g = new THREE.Group(), piv = new THREE.Group(); g.add(piv);
   const m = MOD[k] ? MOD[k].clone() : new THREE.Mesh(new THREE.ConeGeometry(.3, 1, 5).rotateX(-Math.PI / 2), new THREE.MeshPhongMaterial({ color: k.endsWith('_r') ? '#c84a3a' : '#5a8ac8' })); piv.add(m); piv.rotation.y = rot;
@@ -254,7 +257,7 @@ const TEX_STRAT = {};
     collecteur: x => { x.rect(18, 14, 28, 36); x.rect(8, 22, 8, 22); x.rect(48, 22, 8, 22); },
     pv: x => { x.moveTo(12, 4); x.lineTo(24, 4); x.lineTo(24, 26); x.lineTo(40, 26); x.lineTo(40, 4); x.lineTo(52, 4); x.lineTo(52, 50); x.lineTo(42, 62); x.lineTo(22, 62); x.lineTo(12, 50); x.closePath(); } };
   for (const k in forme){ TEX_STRAT[k] = tex2d(64, 64, x => { x.beginPath(); forme[k](x); x.lineJoin = 'round'; x.lineWidth = 7; x.strokeStyle = 'rgba(0,0,0,.85)'; x.stroke(); x.fillStyle = '#fff'; x.fill(); }); } }
-const FORME_STRAT = { chasseur: 'chasseur', r_chasseur: 'chasseur', bombardier: 'bombardier', r_corvette: 'bombardier', destroyer: 'destroyer', r_destroyer: 'destroyer', r_fregate: 'destroyer', collecteur: 'collecteur', pv: 'pv' };
+const FORME_STRAT = { chasseur: 'chasseur', r_chasseur: 'chasseur', bombardier: 'bombardier', r_corvette: 'bombardier', destroyer: 'destroyer', r_destroyer: 'destroyer', r_fregate: 'destroyer', collecteur: 'collecteur', colon: 'collecteur', pv: 'pv' };
 const PX_STRAT = { chasseur: 16, bombardier: 20, destroyer: 24, collecteur: 17, pv: 34 };
 function iconeStrat(type){ const f = FORME_STRAT[type] || 'chasseur', s = new THREE.Sprite(new THREE.SpriteMaterial({ map: TEX_STRAT[f], sizeAttenuation: false, depthTest: false, transparent: true, fog: false }));
   s.renderOrder = 8; s.visible = false; s.userData.px = PX_STRAT[f] * (type === 'r_fregate' ? .8 : 1); sc.add(s); return s; }

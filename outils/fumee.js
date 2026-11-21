@@ -141,15 +141,20 @@ const shots = process.argv[2];
         const J = window.StrategieCiel; if (!J || J.etat() !== 'titre') return "pas d'écran titre";
         // tutoriel : il s'affiche, chaque étape se valide par l'action demandée, puis les vagues reprennent leur compte
         J.jouer(true); if (document.getElementById('tuto').hidden || !J.S.tuto) return 'pas de tutoriel';
-        const clic = () => document.querySelector('#tuto [data-tuto="suivant"]').click(), att = async () => { await wait(400); };
+        const clic = () => document.querySelector('#tuto [data-tuto="suivant"]').click(), att = async () => { await wait(1000); };
         clic(); J.CA.c.x += 600; await att(); J.groupe('chasseur'); await att(); J.ordonner(J.U().filter(u => u.type === 'chasseur'), 'aller', null, J.CA.c.clone()); await att();
-        J.produire('collecteur'); await att(); J.avance(60); await att(); J.vitesse(0); await att(); J.vitesse(1); await att();
-        if (J.TU.i !== 8) return "le tutoriel n'avance pas (étape " + (J.TU.i + 1) + ')'; clic(); if (J.S.tuto || !document.getElementById('tuto').hidden) return 'le tutoriel ne finit pas';
+        J.produire('collecteur'); await att(); J.avance(60); await att(); J.vitesse(0); await att(); J.vitesse(1); await att(); document.getElementById('bRech').click(); await att(); document.getElementById('bRech').click(); J.ouvrirPlanete(J.PLANETES.find(P => P.nom === 'GAIA')); await att();
+        if (J.TU.i !== 10) return "le tutoriel n'avance pas (étape " + (J.TU.i + 1) + ')'; clic(); if (J.S.tuto || !document.getElementById('tuto').hidden) return 'le tutoriel ne finit pas';
         J.jouer(false); if (J.etat() !== 'jeu') return 'la partie ne démarre pas';
         J.produire('chasseur'); const n0 = J.U().length; J.avance(40);
         if (!(J.S.mine > 0)) return 'les collecteurs ne minent pas'; if (J.U().length <= n0) return 'le chantier ne produit pas';
         J.lancerVague(); if (!J.U().some(u => u.camp === 1)) return 'pas de vague ennemie';
         const d0 = J.S.detruits + J.S.perdus; J.avance(120); if (J.S.detruits + J.S.perdus <= d0) return 'pas de combat';
+        // session 2 : une recherche finie propose des cartes, un colon s'installe sur DUNE, un labo s'y construit
+        J.U().filter(u => u.camp === 1).forEach(u => J.meurt(u)); J.S.prochaine = 1e6; J.S.cristal = 3000; J.avance(200); if (!J.S.rech.fait.includes('colonisation')) return 'la recherche COLONISATION ne finit pas';
+        for (const d in J.S.rech.dom){ const D = J.S.rech.dom[d]; if (!D.cur && D.choix.length) J.choisirRecherche(D.choix[0]); }
+        if (!J.produire('colon')) return 'le colon ne se produit pas'; J.avance(30); const c = J.U().find(u => u.type === 'colon'), P = J.PLANETES.find(P => P.nom === 'DUNE'); if (!c) return 'pas de colon';
+        c.ordre = { k: 'coloniser', P }; J.avance(240); if (P.camp !== 0) return "DUNE n'est pas colonisée"; if (!J.construire(P, 'labo')) return 'pas de labo sur DUNE'; J.avance(30); if (!P.col.bat.includes('labo')) return 'le labo ne se termine pas';
         J.meurt(J.U().find(u => u.type === 'pv'));
         for (let i = 0; i < 60 && J.etat() !== 'fin'; i++) await wait(250); if (J.etat() !== 'fin' || document.getElementById('eFin').hidden) return "pas d'écran de fin quand le porte-vaisseaux tombe";
         return 'ok';

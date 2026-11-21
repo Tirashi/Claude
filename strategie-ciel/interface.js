@@ -26,7 +26,7 @@ function viseGisement(x, y){ for (const G of GIS){ if (G.reste <= 0) continue; c
 
 // ---------- sélection ----------
 const SEL = () => U.filter(u => u.sel && u.vie > 0 && u.camp === 0);
-function choisir(liste, ajouter){ if (!ajouter) for (const u of U) u.sel = false; for (const u of liste) if (u.camp === 0) u.sel = ajouter && liste.length === 1 ? !u.sel : true; selModif = true; }
+function choisir(liste, ajouter){ if (liste.length) SELP = null; if (!ajouter) for (const u of U) u.sel = false; for (const u of liste) if (u.camp === 0) u.sel = ajouter && liste.length === 1 ? !u.sel : true; selModif = true; }
 const GROUPES = { tout: u => u.T.portee && u.type !== 'pv', chasseur: u => u.type === 'chasseur', bombardier: u => u.type === 'bombardier', destroyer: u => u.type === 'destroyer', collecteur: u => u.type === 'collecteur', pv: u => u.type === 'pv' };
 function groupe(k, centre){ const l = U.filter(u => u.camp === 0 && u.vie > 0 && GROUPES[k](u)); choisir(l, false); if (centre && l.length){ const m = V3(); l.forEach(u => m.add(u.pos)); centrer(m.divideScalar(l.length)); } }
 function dansBoite(b, ajouter){ const x0 = Math.min(b.x0, b.x1), x1 = Math.max(b.x0, b.x1), y0 = Math.min(b.y0, b.y1), y1 = Math.max(b.y0, b.y1);
@@ -35,10 +35,14 @@ function dansBoite(b, ajouter){ const x0 = Math.min(b.x0, b.x1), x1 = Math.max(b
 function ordre(x, y){ const sel = SEL(); if (!sel.length) return false; const u = viseUnite(x, y);
   if (u && u.camp === 1){ ordonner(sel, 'attaquer', u); ping(u.pos.clone().setY(u.pos.y), true); return true; }
   const G = viseGisement(x, y); if (G && sel.some(v => v.type === 'collecteur')){ ordonner(sel.filter(v => v.type === 'collecteur'), 'miner', G); const reste = sel.filter(v => v.type !== 'collecteur'); if (reste.length) ordonner(reste, 'aller', null, G.p); ping(G.haut(), 0); return true; }
+  const P = visePlanete(x, y), colons = sel.filter(v => v.type === 'colon');
+  if (P && colons.length){ const pb = peutColoniser(P); if (pb){ bulle(pb); return true; } for (const c of colons){ c.ordre = { k: 'coloniser', P }; c.cible = null; } const reste = sel.filter(v => v.type !== 'colon'); if (reste.length) ordonner(reste, 'aller', null, V3(P.x, 0, P.z)); ping(V3(P.x, 40, P.z), 0); bulle('EN ROUTE POUR ' + P.nom); return true; }
   const p = pointSol(x, y); if (!p) return false; ordonner(sel, 'aller', null, p); ping(p); return true; }
 let selModif = true, dernierClic = { t: 0, u: null };
 function clicSur(x, y, ajouter){ const u = viseUnite(x, y), now = performance.now();
   if (u && u.camp === 0){ if (dernierClic.u === u && now - dernierClic.t < 380){ const l = U.filter(v => v.camp === 0 && v.vie > 0 && v.type === u.type && ecranDe(v.pos).ok); choisir(l, false); } else choisir([u], ajouter); dernierClic = { t: now, u }; return true; }
+  /* une planète : sans colon choisi, on ouvre son volet ; avec un colon, c'est un ordre (au doigt) ou rien (à la souris : clic droit) */
+  const P = visePlanete(x, y); if (P && !(TACTILE && SEL().some(v => v.type === 'colon'))){ ouvrirPlanete(P); return true; }
   return false; }
 
 // ---------- pointeur : souris (gauche : choisir et cadre ; droit : ordre, glisser = pivoter) et doigts (un : déplacer la carte ; deux : zoom et rotation) ----------
@@ -93,7 +97,7 @@ addEventListener('keydown', e => { if (!enJeu()) return; const k = e.key.toLower
   else if (e.code === 'KeyH'){ groupe('pv', true); }
   else if (e.code === 'KeyB'){ rallier(); }
   else if (e.code === 'KeyS'){ for (const u of SEL()){ u.ordre = { k: 'rien' }; u.cible = null; } }
-  else { const t = PRODUITS.find(t => TYPES[t].cle === e.code); if (t) produire(t) || bulle('PAS ASSEZ DE CRISTAL'); }
+  else { const t = PRODUITS.find(t => TYPES[t].cle === e.code); if (t) produire(t) || bulle(S.deb && S.deb[t] === false ? 'A RECHERCHER D\'ABORD' : 'PAS ASSEZ DE CRISTAL'); }
   if (e.key.startsWith('Arrow')) e.preventDefault(); });
 addEventListener('keyup', e => TOUCHES.delete(e.key));
 function majClavier(dtr){ const v = -900 * dtr; /* deplacer() suit un doigt qui tire la carte (la vue part du côté opposé) : ici on veut aller du côté de la flèche ou du bord */ if (TOUCHES.has('ArrowLeft')) deplacer(-v, 0); if (TOUCHES.has('ArrowRight')) deplacer(v, 0); if (TOUCHES.has('ArrowUp')) deplacer(0, -v); if (TOUCHES.has('ArrowDown')) deplacer(0, v);
@@ -103,14 +107,21 @@ function majClavier(dtr){ const v = -900 * dtr; /* deplacer() suit un doigt qui 
 // ---------- boutons du tableau de bord ----------
 function vitesse(v){ VIT = v; document.querySelectorAll('[data-vit]').forEach(b => b.classList.toggle('on', +b.dataset.vit === VIT)); }
 function majCadreBtn(){ sigOrdres = ''; }
-$('#hud').addEventListener('click', e => { const b = e.target.closest('[data-vit],[data-cam],[data-gr],[data-prod],[data-file],[data-act],[data-perso],#bCadre'); if (!b) return;
+$('#hud').addEventListener('click', e => { const b = e.target.closest('[data-vit],[data-cam],[data-gr],[data-prod],[data-file],[data-act],[data-perso],[data-rech],[data-bat],[data-planete],#bCadre'); if (!b) return;
+  if (b.dataset.rech){ choisirRecherche(b.dataset.rech); majRechPanneau(); return; }
+  if (b.dataset.bat){ if (SELP && construire(SELP, b.dataset.bat)){ VOLET_CHOIX = false; } sigVolet = ''; majVolet(); return; }
+  if (b.dataset.planete){ const P = PLN[b.dataset.planete]; ouvrirPlanete(P); const now = performance.now(); if (dernierGroupe.n === P.nom && now - dernierGroupe.t < 400) centrer(V3(P.x, 0, P.z)); dernierGroupe = { n: P.nom, t: now }; return; }
+  if (b.dataset.act === 'recherche'){ RECH_OUVERT = !RECH_OUVERT; sigRech = ''; majRechPanneau(); return; }
+  if (b.dataset.act === 'fermerP'){ SELP = null; majVolet(); sigListe = ''; return; }
+  if (b.dataset.act === 'placer'){ VOLET_CHOIX = !VOLET_CHOIX; sigVolet = ''; majVolet(); return; }
+  if (b.dataset.act === 'envoyerColon' && SELP){ const c = U.filter(u => u.type === 'colon' && u.vie > 0).sort((a, b2) => a.pos.distanceTo(SELP.g.position) - b2.pos.distanceTo(SELP.g.position))[0]; if (c){ c.ordre = { k: 'coloniser', P: SELP }; bulle('EN ROUTE POUR ' + SELP.nom); } return; }
   if (b.dataset.act === 'liste'){ LISTE_REPLIE = !LISTE_REPLIE; sigListe = ''; try { localStorage.setItem('strategieciel.liste', LISTE_REPLIE ? '1' : '0'); } catch (x){} majListe(); return; }
   if (b.dataset.perso){ const now = performance.now(); rappelGroupe(b.dataset.perso, dernierGroupe.n === b.dataset.perso && now - dernierGroupe.t < 400); dernierGroupe = { n: b.dataset.perso, t: now }; return; }
   if (b.dataset.act === 'garder'){ const c = LIGNE.find(c => !PERSO[c] || ![...PERSO[c]].some(id => U.some(u => u.id === id && u.vie > 0))) || LIGNE[0]; garderGroupe(c); return; }
   if (b.dataset.vit) vitesse(+b.dataset.vit);
   else if (b.dataset.cam){ const v = b.dataset.cam; if (v === '+') zoom(.75); if (v === '-') zoom(1.33); if (v === 'r') CA.yaw += PI / 4; if (v === 'n'){ CA.yaw = 0; CA.tilt = 0; const pv = PV(); if (pv) centrer(pv.pos); } }
   else if (b.dataset.gr){ const now = performance.now(); groupe(b.dataset.gr, dernierGroupe.n === b.dataset.gr && now - dernierGroupe.t < 400); dernierGroupe = { n: b.dataset.gr, t: now }; sigListe = ''; }
-  else if (b.dataset.prod){ if (!produire(b.dataset.prod)) bulle(S.file.length >= 6 ? 'LA FILE EST PLEINE' : 'PAS ASSEZ DE CRISTAL'); }
+  else if (b.dataset.prod){ if (!produire(b.dataset.prod)) bulle(S.deb && S.deb[b.dataset.prod] === false ? 'A RECHERCHER D\'ABORD' : S.file.length >= 6 ? 'LA FILE EST PLEINE' : 'PAS ASSEZ DE CRISTAL'); }
   else if (b.dataset.file) annuler(+b.dataset.file);
   else if (b.dataset.act === 'stop'){ for (const u of SEL()){ u.ordre = { k: 'rien' }; u.cible = null; } }
   else if (b.dataset.act === 'miner'){ for (const u of SEL()) if (u.type === 'collecteur') u.ordre = { k: 'miner', gis: gisementProche(u.pos) }; }
@@ -145,7 +156,7 @@ const ic = (n, s = 18) => ICONES[n] ? `<img class="ico" src="${ICONES[n]}" width
 function fabriquerIcones(){ try {
   const T = 96, r = new THREE.WebGLRenderer({ alpha: true, antialias: true, preserveDrawingBuffer: true }); r.setSize(T, T); r.setClearColor(0, 0);
   const s = new THREE.Scene(); s.add(new THREE.HemisphereLight('#dfe8ff', '#30304a', 1.1)); const d = new THREE.DirectionalLight('#ffffff', .9); d.position.set(-1, 3, -1); s.add(d);
-  for (const t of ['pv', 'collecteur', 'chasseur', 'bombardier', 'destroyer']){ const Ty = TYPES[t], k = Ty.mod + (Ty.mod.startsWith('py') ? '_b' : ''), g = importe(k, Ty.rot, 10), long = Ty.gros; s.add(g);
+  for (const t of ['pv', 'collecteur', 'chasseur', 'bombardier', 'destroyer', 'colon']){ const Ty = TYPES[t], k = Ty.mod + (Ty.mod.startsWith('py') ? '_b' : ''), g = importe(k, Ty.rot, 10), long = Ty.gros; s.add(g);
     /* vus d'un peu de biais (on voit le volume) ; les longs (AURORE, destroyer) en diagonale, pour remplir le carré */
     g.rotation.y = long ? -PI / 4 : 0; g.updateMatrixWorld(true); const c = new THREE.OrthographicCamera(-1, 1, 1, -1, .1, 200);
     c.position.set(0, 40, 22); c.up.set(0, 1, 0); c.lookAt(0, 0, 0); c.updateMatrixWorld(true);
@@ -161,29 +172,31 @@ function annonceVague(n){ annonce(`VAGUE ${n} / ${VAGUES.length}<b>FLOTTE ROUGE<
 function annonceProd(){}
 let sigSel = '', sigProd = '', sigListe = '', sigOrdres = '', LISTE_REPLIE = false; const REV = [];
 try { LISTE_REPLIE = localStorage.getItem('strategieciel.liste') === '1'; } catch (e){}
-const NOMS_PL = { chasseur: 'CHASSEURS', bombardier: 'BOMBARDIERS', destroyer: 'DESTROYERS', collecteur: 'COLLECTEURS' }, TOUCHE_GR = { chasseur: '2', bombardier: '3', destroyer: '4', collecteur: '5' };
-const ORDRE_TXT = u => u.type === 'collecteur' ? (u.ordre.k === 'miner' ? (u.charge >= u.T.cap ? 'RAPPORTENT' : 'MINENT') : 'EN ATTENTE') : u.cible ? 'ATTAQUE' : u.ordre.k === 'aller' ? 'EN ROUTE' : 'EN GARDE';
+const NOMS_PL = { chasseur: 'CHASSEURS', bombardier: 'BOMBARDIERS', destroyer: 'DESTROYERS', collecteur: 'COLLECTEURS', colon: 'COLONS' }, TOUCHE_GR = { chasseur: '2', bombardier: '3', destroyer: '4', collecteur: '5' };
+const ORDRE_TXT = u => u.type === 'colon' ? (u.ordre.k === 'coloniser' ? 'EN ROUTE POUR ' + u.ordre.P.nom : 'EN ATTENTE') : u.type === 'collecteur' ? (u.ordre.k === 'miner' ? (u.charge >= u.T.cap ? 'RAPPORTENT' : 'MINENT') : 'EN ATTENTE') : u.cible ? 'ATTAQUE' : u.ordre.k === 'aller' ? 'EN ROUTE' : 'EN GARDE';
 function resume(l){ const c = {}; l.forEach(u => { const o = ORDRE_TXT(u); c[o] = (c[o] || 0) + 1; }); const t = Object.entries(c).sort((a, b) => b[1] - a[1])[0]; return t ? t[0] : ''; }
-const vieM = l => l.reduce((a, u) => a + u.vie, 0) / Math.max(1, l.reduce((a, u) => a + u.T.vie, 0));
+const vieM = l => l.reduce((a, u) => a + u.vie, 0) / Math.max(1, l.reduce((a, u) => a + u.vmax, 0));
 function majGroupesPerso(){ sigListe = ''; }
 function majListe(){ const L = $('#liste'), pv = PV(), sel = SEL(), seul = t => sel.length > 0 && sel.every(u => u.type === t);
-  const groupes = ['chasseur', 'bombardier', 'destroyer', 'collecteur'].map(t => [t, U.filter(u => u.camp === 0 && u.vie > 0 && u.type === t)]).filter(([, l]) => l.length);
+  const groupes = ['chasseur', 'bombardier', 'destroyer', 'collecteur', 'colon'].map(t => [t, U.filter(u => u.camp === 0 && u.vie > 0 && u.type === t)]).filter(([, l]) => l.length);
   const persos = LIGNE.filter(c => PERSO[c]).map(c => [c, U.filter(u => PERSO[c].has(u.id) && u.vie > 0)]).filter(([, l]) => l.length);
-  const sig = [LISTE_REPLIE, pv ? Math.round(pv.vie / pv.T.vie * 20) : -1, seul('pv'), groupes.map(([t, l]) => t + l.length + Math.round(vieM(l) * 10) + resume(l) + seul(t)).join(), persos.map(([c, l]) => c + l.length).join(),
-    PRODUITS.map(t => S.cristal >= TYPES[t].prix ? 1 : 0).join(''), S.file.join(), !!S.ralliement, modeRallier, sigProd].join('|');
+  const sig = [LISTE_REPLIE, pv ? Math.round(pv.vie / pv.vmax * 20) : -1, seul('pv'), groupes.map(([t, l]) => t + l.length + Math.round(vieM(l) * 10) + resume(l) + seul(t)).join(), persos.map(([c, l]) => c + l.length).join(),
+    PRODUITS.map(t => S.cristal >= TYPES[t].prix ? 1 : 0).join(''), S.file.join(), !!S.ralliement, modeRallier, sigProd, S.deb ? Object.values(S.deb).join() : '', colonies().map(P => P.nom + P.col.bat.join() + (P.col.file ? P.col.file.b : '') + Math.round(cristalMinute(P))).join(), SELP ? SELP.nom : ''].join('|');
   if (sig !== sigListe){ sigListe = sig; sigProd = sigProd || 'x'; L.classList.toggle('replie', LISTE_REPLIE); ECRAN.style.setProperty('--liste', LISTE_REPLIE ? '52px' : ''); /* les boutons de caméra, les ordres et les annonces suivent la largeur de la liste */
-    if (LISTE_REPLIE){ L.innerHTML = `<div class="tete"><span class="b" data-act="liste" title="Déplier la liste">◂</span></div>` + (pv ? `<span class="b ligne${seul('pv') ? ' on' : ''}" data-gr="pv">${ic('pv', 20)}${pvb(pv.vie / pv.T.vie)}</span>` : '')
+    if (LISTE_REPLIE){ L.innerHTML = `<div class="tete"><span class="b" data-act="liste" title="Déplier la liste">◂</span></div>` + (pv ? `<span class="b ligne${seul('pv') ? ' on' : ''}" data-gr="pv">${ic('pv', 20)}${pvb(pv.vie / pv.vmax)}</span>` : '')
       + groupes.map(([t, l]) => `<span class="b ligne${seul(t) ? ' on' : ''}" data-gr="${t}">${ic(t, 18)}<span class="n" style="font-size:11px">${l.length}</span></span>`).join('')
       + persos.map(([c, l]) => `<span class="b ligne" data-perso="${c}"><span class="or">${LAB(c)}</span><span class="n" style="font-size:11px">${l.length}</span></span>`).join(''); }
     else { let h = `<div class="tete"><span>FLOTTE DE SOL-7</span><span class="b" data-act="liste" title="Replier la liste">▸</span></div>`;
-      if (pv){ h += `<div class="b ligne${seul('pv') ? ' on' : ''}" data-gr="pv"><div class="h">${ic('pv', 24)}<span>AURORE</span>${TACTILE ? '' : '<span class="k">H</span>'}</div>${pvb(pv.vie / pv.T.vie)}<div class="o"><span>${S.file.length ? 'CHANTIER · ' + TYPES[S.file[0]].nom : 'CHANTIER LIBRE'}</span><span class="n" id="lProdT"></span></div></div>`;
-        h += `<div class="prods">${PRODUITS.map(t => `<span class="b${S.cristal < TYPES[t].prix ? ' cher' : ''}" data-prod="${t}" title="${TYPES[t].nom} · ${TYPES[t].prix} cristaux">${ic(t, 22)}<span class="n">${TYPES[t].prix}</span>${TACTILE ? '' : `<span class="k">${LAB(TYPES[t].cle)}</span>`}</span>`).join('')}</div>`;
+      if (pv){ h += `<div class="b ligne${seul('pv') ? ' on' : ''}" data-gr="pv"><div class="h">${ic('pv', 24)}<span>AURORE</span>${TACTILE ? '' : '<span class="k">H</span>'}</div>${pvb(pv.vie / pv.vmax)}<div class="o"><span>${S.file.length ? 'CHANTIER · ' + TYPES[S.file[0]].nom : 'CHANTIER LIBRE'}</span><span class="n" id="lProdT"></span></div></div>`;
+        h += `<div class="prods">${PRODUITS.map(t => { const ver = S.deb && S.deb[t] === false; return `<span class="b${S.cristal < TYPES[t].prix || ver ? ' cher' : ''}${ver ? ' verrou' : ''}" data-prod="${t}" title="${TYPES[t].nom} · ${ver ? 'à rechercher' : TYPES[t].prix + ' cristaux'}">${ic(t, 22)}<span class="n">${ver ? ic('verrou', 11) : TYPES[t].prix}</span>${TACTILE || ver ? '' : `<span class="k">${LAB(TYPES[t].cle)}</span>`}</span>`; }).join('')}</div>`;
         h += `<div id="lProdB"></div>`;
         if (S.file.length > 1) h += `<div class="file">${S.file.slice(1).map((t, i) => `<span class="b" data-file="${i + 1}" title="Annuler">${ic(t, 14)}</span>`).join('')}<span class="dx" style="font-size:11px">ENSUITE</span></div>`;
         h += `<div class="ralli"><span class="b${modeRallier ? ' on' : ''}" data-act="rallier" title="Point de ralliement des nouveaux vaisseaux">${ic('drapeau', 14)} RALLIEMENT${TACTILE ? '' : ' <span class="k">B</span>'}</span>${S.ralliement ? '<span class="b" data-act="sansrallier" style="flex:0 0 28px" title="Retirer le point de ralliement">✕</span>' : ''}</div>`; }
       else h += `<div class="b ligne" style="opacity:.6"><div class="h">${ic('pv', 20)}<span class="rg">AURORE DETRUITE</span></div></div>`;
-      for (const [t, l] of groupes) h += `<div class="b ligne${seul(t) ? ' on' : ''}" data-gr="${t}"><div class="h">${ic(t, 22)}<span>${NOMS_PL[t]}</span>${TACTILE ? '' : `<span class="k">${TOUCHE_GR[t]}</span>`}<span class="n">${l.length}</span></div>${pvb(vieM(l))}<div class="o"><span>${resume(l)}</span></div></div>`;
+      for (const [t, l] of groupes) h += `<div class="b ligne${seul(t) ? ' on' : ''}" data-gr="${t}"><div class="h">${ic(t, 22)}<span>${NOMS_PL[t]}</span>${TACTILE || !TOUCHE_GR[t] ? '' : `<span class="k">${TOUCHE_GR[t]}</span>`}<span class="n">${l.length}</span></div>${pvb(vieM(l))}<div class="o"><span>${resume(l)}</span></div></div>`;
       for (const [c, l] of persos){ const ty = [...new Set(l.map(u => u.type))]; h += `<div class="b ligne" data-perso="${c}"><div class="h"><span class="or">GROUPE ${LAB(c)}</span>${ty.map(t => ic(t, 13)).join('')}<span class="n">${l.length}</span></div>${pvb(vieM(l))}</div>`; }
+      const cols = colonies(); if (cols.length){ h += `<div class="tete" style="margin-top:4px"><span>COLONIES</span></div>`;
+        for (const P of cols) h += `<div class="b ligne${SELP === P ? ' on' : ''}" data-planete="${P.nom}"><div class="h"><i class="pastille" style="background:${COUL_PLA[P.t]}"></i><span>${P.nom}</span><span class="n cr" style="margin-left:auto">+${Math.round(cristalMinute(P))}◆</span></div><div class="o"><span class="ibat">${P.col.bat.map(b => ic(ICB[b], 13)).join('')}${P.col.file ? ' <span class="dx">+ ' + BAT[P.col.file.b].nom + '</span>' : ''}</span><span class="n">${P.col.bat.length}/${places(P)}</span></div></div>`; }
       h += `<span class="b" data-act="garder" style="height:28px;flex:none;color:var(--or)" title="Garder la sélection dans un groupe${TACTILE ? '' : ' (Maj + une lettre de la première ligne)'}">${ic('groupe', 14)} NOUVEAU GROUPE</span>`;
       L.innerHTML = h; } }
   const pb = $('#lProdB'); if (pb){ if (S.file.length){ const T = TYPES[S.file[0]]; pb.innerHTML = pvb(S.fileT / T.temps, 'c'); $('#lProdT').textContent = Math.ceil(T.temps - S.fileT) + ' S'; } else pb.innerHTML = ''; } }
@@ -202,7 +215,7 @@ function majPanneaux(){ const bleus = U.filter(u => u.camp === 0 && u.vie > 0), 
   $('#hNb').innerHTML = `${ic('chasseur', 13)} <span class="n">${bleus.length}</span>`; $('#hDate').textContent = 'J ' + (1 + Math.floor(TEMPS.t / 2));
   const al = $('#hAl'); al.classList.toggle('alerte', rouges > 0);
   al.innerHTML = S.prochaine !== null ? `VAGUE ${S.vague + 1}/${VAGUES.length} DANS <span class="n">${Math.floor(S.prochaine / 60)}:${String(Math.floor(S.prochaine % 60)).padStart(2, '0')}</span>${rouges ? ` · <span class="n">${rouges}</span> ENNEMIS` : ''}` : `DERNIERE VAGUE · <span class="n">${rouges}</span> ENNEMIS`;
-  majListe(); majOrdres(); }
+  majListe(); majOrdres(); majVolet(); majRechPanneau(); }
 // anneaux de sélection (couleur selon la vie), étiquettes des planètes et des portes
 // icônes tactiques : visibles quand le vaisseau fait moins de ~12 px à l'écran, en fondu jusqu'à ~22 px ; taille fixe ; pointe dans le sens de la marche
 const _av = V3();
@@ -211,9 +224,9 @@ function majIconesStrat(){ const H = ECRAN.clientHeight, k = 2 / (cam.projection
     const m = u.ic.material; m.opacity = op; m.color.set(u.sel ? '#a8ffb0' : u.camp ? '#ff6a4a' : '#7fd0ff'); u.ic.position.copy(u.pos); u.ic.scale.setScalar(u.ic.userData.px * k);
     const a = ecranDe(u.pos); _av.set(-Math.sin(u.yaw), 0, -Math.cos(u.yaw)).multiplyScalar(u.T.L).add(u.pos); const b = ecranDe(_av); m.rotation = Math.atan2(b.x - a.x, a.y - b.y) * -1; } }
 function majMarques(){ majIconesStrat(); for (const u of U){ if (u.vie <= 0) continue; const on = u.sel || (u.camp === 0 && u.type === 'pv'); u.anneau.visible = u.sel;
-    if (u.sel){ const f = u.vie / u.T.vie; u.anneau.material = matSel[f > .6 ? 0 : f > .3 ? 1 : 2]; u.anneau.position.copy(u.pos); } }
+    if (u.sel){ const f = u.vie / u.vmax; u.anneau.material = matSel[f > .6 ? 0 : f > .3 ? 1 : 2]; u.anneau.position.copy(u.pos); } }
   let h = '';
-  for (const P of PLANETES){ const e = ecranDe(V3(P.x, P.y + P.r + 30, P.z)); if (e.ok) h += `<div class="tag ${P.camp === 0 ? 'b' : 'n'}" style="left:${e.x | 0}px;top:${e.y | 0}px">${P.nom}${P.riche ? ' <span class="cr">◆◆</span>' : ''}${P.camp === 0 ? '<br>COLONIE' : ''}</div>`; }
+  for (const P of PLANETES){ const e = ecranDe(V3(P.x, P.y + P.r + 30, P.z)); if (e.ok) h += `<div class="tag ${P.camp === 0 ? 'b' : 'n'}" style="left:${e.x | 0}px;top:${e.y | 0}px">${P.nom}${P.riche ? ' <span class="cr">◆◆</span>' : ''}${tagColonie(P)}</div>`; }
   for (const G of PORTES){ const e = ecranDe(G.p.clone().setY(220)); if (e.ok) h += `<div class="tag ${G.alerte ? 'r' : 'n'}" style="left:${e.x | 0}px;top:${e.y | 0}px">PORTE · ${G.nom}</div>`; }
   if (CA.dist < 2600) for (const G of GIS){ const e = ecranDe(G.haut().setY(G.r + 40)); if (e.ok) h += `<div class="tag cr" style="left:${e.x | 0}px;top:${e.y | 0}px">◆ ${Math.ceil(G.reste)}</div>`; }
   $('#tags').innerHTML = h; }
