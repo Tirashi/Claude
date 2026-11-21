@@ -4,7 +4,7 @@ Gestion d'écurie de course, courses regardées en 3D. Cahier des charges : [`sp
 ## Fichiers (scripts classiques, dans cet ordre)
 - `donnees.js` : modèles (`ENTETE`, `BLOB` gzip base64, `GLB` des 3 tuiles de route) ; ne pas éditer à la main.
 - `modeles.js` (`Modeles`) : décodage, `maillage(nom, teinte)` repeint ; `voiture()` : roues qui tournent, feux stop (`feu`) ; tuiles GLB ; `createImageBitmap` à `undefined` (artefact).
-- `circuit.js` (`Circuits`) : circuits « à la tortue » (`plan` : 'S' = 12 m, 18 / 42 = virage à gauche, −18 / −42 = à droite, la même tuile à l'envers ; `SENS`), trajectoire, départ, `tours` (≈ 3 km). Un plan doit se refermer (`ferme`) ; nouveaux plans : chercher par programme (fermés, sans croisement).
+- `circuit.js` (`Circuits`) : circuits « à la tortue » (`plan` : 'S' = 12 m, 18 / 42 = virage à gauche, −18 / −42 = à droite, la même tuile à l'envers ; `SENS`), trajectoire, départ, `tours` (≈ 3 km). Un plan doit se refermer (`ferme`) (chercher les nouveaux par programme).
 - `course.js` (`Course`) : simulation pure (`creer`, `pas`, `finir`) ; qualifications, arrivée, abandons (accident, casse tirée d'avance).
 - `regles.js` (`Regles`) : données et logique (`preparer`, `resultats`, fin de saison).
 - `sons.js` (`EcurieSons`) : sons synthétisés (moteur, bips, foule, passage) ; `ecurie.son`.
