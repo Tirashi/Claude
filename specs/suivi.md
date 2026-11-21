@@ -155,3 +155,4 @@ Maquettes de la carte 2 à 4 (isométrique, puis papier à l'encre validée), é
 - **20/11 — Stratégie spatiale, maquette d'interface** : trois directions plus fines (barre de commande, tiroirs, liste de flotte), polices Rajdhani / Share Tech Mono / Michroma, icônes ; [maquette](https://claude.ai/artifact/3qGuYnokCt3hUXBzH9J6vz) en attente du choix.
 - **20/11 — Stratégie spatiale, interface « liste de flotte »** (direction C de la maquette) : barre fine, liste de la flotte à droite avec le chantier d'AURORE, ordres en bas, nouvelles polices et icônes.
 - **21/11 — Stratégie spatiale** : boutons de caméra qui suivent la liste repliée (téléphone), icônes faites à partir des vrais modèles 3D.
+- **21/11 — Stratégie spatiale** : petite bulle pour les messages mineurs (le ralliement ne cache plus la vue), icônes tactiques de taille fixe quand les vaisseaux deviennent minuscules.

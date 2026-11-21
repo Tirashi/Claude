@@ -31,11 +31,11 @@ const yawVers = (dx, dz) => Math.atan2(-dx, -dz);
 function cree(type, pos, o = {}){ const T = TYPES[type], camp = T.camp || 0;
   const k = T.mod + (T.mod.startsWith('py') ? (camp ? '_r' : '_b') : '');
   const u = Object.assign({ id: ++ID, type, T, camp, vie: T.vie, pos: pos.clone(), yaw: camp ? PI / 2 : -PI / 2, cd: Math.random() * (T.cad || 1), ordre: { k: 'rien' }, cible: null, charge: 0, ph: Math.random() * 6.283, a: Math.random() * 6.283, sel: false, g: importe(k, T.rot, T.L) }, o);
-  Object.assign(u, equipe(u.g, k, T.L, camp)); u.dep = 0;
+  Object.assign(u, equipe(u.g, k, T.L, camp)); u.dep = 0; u.ic = iconeStrat(type);
   u.pos.y = T.alt + (Math.random() - .5) * 16; u.g.position.copy(u.pos); sc.add(u.g);
   u.anneau = new THREE.Mesh(geoAnneau, matSel[0]); u.anneau.renderOrder = 3; u.anneau.scale.setScalar(Math.max(18, T.L * .62)); u.anneau.visible = false; sc.add(u.anneau);
   U.push(u); return u; }
-function meurt(u){ if (u.mort) return; u.mort = 1; u.vie = 0; explosion(u.pos, u.T.L); sc.remove(u.g); sc.remove(u.anneau); u.sel = false;
+function meurt(u){ if (u.mort) return; u.mort = 1; u.vie = 0; explosion(u.pos, u.T.L); sc.remove(u.g); sc.remove(u.anneau); sc.remove(u.ic); u.sel = false;
   if (u.camp) S.detruits++; else S.perdus++;
   if (u.type === 'pv' && !S.fin) S.fin = { gagne: false, raison: 'LE PORTE-VAISSEAUX AURORE EST DETRUIT' }; }
 
@@ -144,7 +144,7 @@ function majUnites(dt){ const bleus = U.filter(u => u.camp === 0 && u.vie > 0), 
   for (const u of U) if (u.vie > 0) majUnite(u, dt, u.camp ? bleus : rouges);
   U = U.filter(u => !u.mort);
   majProduction(dt); majVagues(dt); }
-function nouvellePartie(){ for (const u of U){ sc.remove(u.g); sc.remove(u.anneau); } U = []; ID = 0; retireHolo(HOLO); HOLO = null;
+function nouvellePartie(){ for (const u of U){ sc.remove(u.g); sc.remove(u.anneau); sc.remove(u.ic); } U = []; ID = 0; retireHolo(HOLO); HOLO = null;
   Object.assign(S, { cristal: 300, vague: 0, prochaine: PREMIERE_VAGUE, file: [], fileT: 0, detruits: 0, perdus: 0, mine: 0, fin: null, ralliement: null });
   for (const G of GIS){ G.reste = G.max; majGisement(G); }
   const pv = cree('pv', BASE); pv.yaw = yawVers(1, -.3);

@@ -43,8 +43,8 @@ function clicSur(x, y, ajouter){ const u = viseUnite(x, y), now = performance.no
 
 // ---------- pointeur : souris (gauche : choisir et cadre ; droit : ordre, glisser = pivoter) et doigts (un : déplacer la carte ; deux : zoom et rotation) ----------
 const PTR = new Map(); let boite = null, modeCadre = false, souris = null, modeRallier = false;
-function poserRalliement(x, y){ const p = pointSol(x, y); modeRallier = false; sigProd = ''; ECRAN.classList.remove('vise'); if (!p) return; S.ralliement = p.setY(0); ping(V3(p.x, 40, p.z), 0); annonce('POINT DE RALLIEMENT<b>POSE</b>LES NOUVEAUX VAISSEAUX S\'Y RENDRONT'); }
-function rallier(){ modeRallier = !modeRallier; sigProd = ''; ECRAN.classList.toggle('vise', modeRallier); if (modeRallier) annonce(TACTILE ? 'TOUCHE L\'ENDROIT DU RALLIEMENT' : 'CLIQUE L\'ENDROIT DU RALLIEMENT'); }
+function poserRalliement(x, y){ const p = pointSol(x, y); modeRallier = false; sigProd = ''; ECRAN.classList.remove('vise'); if (!p) return; S.ralliement = p.setY(0); ping(V3(p.x, 40, p.z), 0); bulle('POINT DE RALLIEMENT POSE'); }
+function rallier(){ modeRallier = !modeRallier; sigProd = ''; ECRAN.classList.toggle('vise', modeRallier); if (modeRallier) bulle(TACTILE ? 'TOUCHE L\'ENDROIT DU RALLIEMENT' : 'CLIQUE L\'ENDROIT DU RALLIEMENT'); }
 const cadreDiv = $('#cadreSel');
 function majBoite(){ if (!boite){ cadreDiv.hidden = true; return; } cadreDiv.hidden = false; Object.assign(cadreDiv.style, { left: Math.min(boite.x0, boite.x1) + 'px', top: Math.min(boite.y0, boite.y1) + 'px', width: Math.abs(boite.x1 - boite.x0) + 'px', height: Math.abs(boite.y1 - boite.y0) + 'px' }); }
 const cv = R.domElement;
@@ -81,7 +81,7 @@ const LAB = code => NOMS_TOUCHES[code] || code.replace('Key', '');
 try { navigator.keyboard && navigator.keyboard.getLayoutMap && navigator.keyboard.getLayoutMap().then(m => { for (const c in NOMS_TOUCHES){ const v = m.get(c); if (v && /^[a-z]$/i.test(v)) NOMS_TOUCHES[c] = v.toUpperCase(); } sigProd = ''; majGroupesPerso(); }).catch(() => {}); } catch (e){}
 // groupes personnels sur la première ligne de lettres : Maj + lettre = garder la sélection, lettre = la rappeler (deux fois : y aller)
 const LIGNE = ['KeyQ', 'KeyW', 'KeyE', 'KeyR', 'KeyT', 'KeyY', 'KeyU', 'KeyI', 'KeyO', 'KeyP'], PERSO = {};
-function garderGroupe(code){ const l = SEL(); if (!l.length){ annonce('CHOISIS D\'ABORD DES VAISSEAUX'); return; } PERSO[code] = new Set(l.map(u => u.id)); majGroupesPerso(); annonce(`GROUPE ${LAB(code)} : ${l.length} VAISSEAU${l.length > 1 ? 'X' : ''}`); }
+function garderGroupe(code){ const l = SEL(); if (!l.length){ bulle('CHOISIS D\'ABORD DES VAISSEAUX'); return; } PERSO[code] = new Set(l.map(u => u.id)); majGroupesPerso(); bulle(`GROUPE ${LAB(code)} : ${l.length} VAISSEAU${l.length > 1 ? 'X' : ''}`); }
 function rappelGroupe(code, centre){ const ids = PERSO[code]; if (!ids) return; const l = U.filter(u => ids.has(u.id) && u.vie > 0); choisir(l, false); if (centre && l.length){ const m = V3(); l.forEach(u => m.add(u.pos)); centrer(m.divideScalar(l.length)); } }
 /* groupes personnels : affichés dans la liste de la flotte (majListe) */
 addEventListener('keydown', e => { if (!enJeu()) return; const k = e.key.toLowerCase(); TOUCHES.add(e.key);
@@ -93,7 +93,7 @@ addEventListener('keydown', e => { if (!enJeu()) return; const k = e.key.toLower
   else if (e.code === 'KeyH'){ groupe('pv', true); }
   else if (e.code === 'KeyB'){ rallier(); }
   else if (e.code === 'KeyS'){ for (const u of SEL()){ u.ordre = { k: 'rien' }; u.cible = null; } }
-  else { const t = PRODUITS.find(t => TYPES[t].cle === e.code); if (t) produire(t) || annonce('PAS ASSEZ DE CRISTAL'); }
+  else { const t = PRODUITS.find(t => TYPES[t].cle === e.code); if (t) produire(t) || bulle('PAS ASSEZ DE CRISTAL'); }
   if (e.key.startsWith('Arrow')) e.preventDefault(); });
 addEventListener('keyup', e => TOUCHES.delete(e.key));
 function majClavier(dtr){ const v = -900 * dtr; /* deplacer() suit un doigt qui tire la carte (la vue part du côté opposé) : ici on veut aller du côté de la flèche ou du bord */ if (TOUCHES.has('ArrowLeft')) deplacer(-v, 0); if (TOUCHES.has('ArrowRight')) deplacer(v, 0); if (TOUCHES.has('ArrowUp')) deplacer(0, -v); if (TOUCHES.has('ArrowDown')) deplacer(0, v);
@@ -110,7 +110,7 @@ $('#hud').addEventListener('click', e => { const b = e.target.closest('[data-vit
   if (b.dataset.vit) vitesse(+b.dataset.vit);
   else if (b.dataset.cam){ const v = b.dataset.cam; if (v === '+') zoom(.75); if (v === '-') zoom(1.33); if (v === 'r') CA.yaw += PI / 4; if (v === 'n'){ CA.yaw = 0; CA.tilt = 0; const pv = PV(); if (pv) centrer(pv.pos); } }
   else if (b.dataset.gr){ const now = performance.now(); groupe(b.dataset.gr, dernierGroupe.n === b.dataset.gr && now - dernierGroupe.t < 400); dernierGroupe = { n: b.dataset.gr, t: now }; sigListe = ''; }
-  else if (b.dataset.prod){ if (!produire(b.dataset.prod)) annonce(S.file.length >= 6 ? 'LA FILE EST PLEINE' : 'PAS ASSEZ DE CRISTAL'); }
+  else if (b.dataset.prod){ if (!produire(b.dataset.prod)) bulle(S.file.length >= 6 ? 'LA FILE EST PLEINE' : 'PAS ASSEZ DE CRISTAL'); }
   else if (b.dataset.file) annuler(+b.dataset.file);
   else if (b.dataset.act === 'stop'){ for (const u of SEL()){ u.ordre = { k: 'rien' }; u.cible = null; } }
   else if (b.dataset.act === 'miner'){ for (const u of SEL()) if (u.type === 'collecteur') u.ordre = { k: 'miner', gis: gisementProche(u.pos) }; }
@@ -156,6 +156,7 @@ function fabriquerIcones(){ try {
   ICONES.pv = ICONES.pv; r.dispose(); r.forceContextLoss && r.forceContextLoss(); sigListe = sigOrdres = ''; } catch (e){ console.warn('icônes', e); } }
 const pvb = (v, c = '') => `<div class="pv ${c || (v < .3 ? 'f' : v < .6 ? 'm' : '')}"><i style="width:${Math.round(clamp(v, 0, 1) * 100)}%"></i></div>`;
 function annonce(t, long){ const b = $('#bandeau'); b.innerHTML = t; b.style.opacity = 1; clearTimeout(annonce.t); annonce.t = setTimeout(() => { b.style.opacity = 0; }, long ? 4200 : 2200); }
+function bulle(t){ const b = $('#bulle'); b.textContent = t; b.style.opacity = 1; clearTimeout(bulle.t); bulle.t = setTimeout(() => { b.style.opacity = 0; }, 1500); }
 function annonceVague(n){ annonce(`VAGUE ${n} / ${VAGUES.length}<b>FLOTTE ROUGE</b>ELLE ENTRE PAR LA PORTE D'ALTAIR`, 1); }
 function annonceProd(){}
 let sigSel = '', sigProd = '', sigListe = '', sigOrdres = '', LISTE_REPLIE = false; const REV = [];
@@ -203,7 +204,13 @@ function majPanneaux(){ const bleus = U.filter(u => u.camp === 0 && u.vie > 0), 
   al.innerHTML = S.prochaine !== null ? `VAGUE ${S.vague + 1}/${VAGUES.length} DANS <span class="n">${Math.floor(S.prochaine / 60)}:${String(Math.floor(S.prochaine % 60)).padStart(2, '0')}</span>${rouges ? ` · <span class="n">${rouges}</span> ENNEMIS` : ''}` : `DERNIERE VAGUE · <span class="n">${rouges}</span> ENNEMIS`;
   majListe(); majOrdres(); }
 // anneaux de sélection (couleur selon la vie), étiquettes des planètes et des portes
-function majMarques(){ for (const u of U){ if (u.vie <= 0) continue; const on = u.sel || (u.camp === 0 && u.type === 'pv'); u.anneau.visible = u.sel;
+// icônes tactiques : visibles quand le vaisseau fait moins de ~12 px à l'écran, en fondu jusqu'à ~22 px ; taille fixe ; pointe dans le sens de la marche
+const _av = V3();
+function majIconesStrat(){ const H = ECRAN.clientHeight, k = 2 / (cam.projectionMatrix.elements[5] * H);
+  for (const u of U){ if (u.vie <= 0 || !u.ic) continue; const r = rayonEcran(u.pos, u.T.L * .5), op = clamp((22 - r) / 10, 0, 1); u.ic.visible = op > .02; if (!u.ic.visible) continue;
+    const m = u.ic.material; m.opacity = op; m.color.set(u.sel ? '#a8ffb0' : u.camp ? '#ff6a4a' : '#7fd0ff'); u.ic.position.copy(u.pos); u.ic.scale.setScalar(u.ic.userData.px * k);
+    const a = ecranDe(u.pos); _av.set(-Math.sin(u.yaw), 0, -Math.cos(u.yaw)).multiplyScalar(u.T.L).add(u.pos); const b = ecranDe(_av); m.rotation = Math.atan2(b.x - a.x, a.y - b.y) * -1; } }
+function majMarques(){ majIconesStrat(); for (const u of U){ if (u.vie <= 0) continue; const on = u.sel || (u.camp === 0 && u.type === 'pv'); u.anneau.visible = u.sel;
     if (u.sel){ const f = u.vie / u.T.vie; u.anneau.material = matSel[f > .6 ? 0 : f > .3 ? 1 : 2]; u.anneau.position.copy(u.pos); } }
   let h = '';
   for (const P of PLANETES){ const e = ecranDe(V3(P.x, P.y + P.r + 30, P.z)); if (e.ok) h += `<div class="tag ${P.camp === 0 ? 'b' : 'n'}" style="left:${e.x | 0}px;top:${e.y | 0}px">${P.nom}${P.riche ? ' <span class="cr">◆◆</span>' : ''}${P.camp === 0 ? '<br>COLONIE' : ''}</div>`; }

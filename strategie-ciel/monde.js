@@ -244,3 +244,17 @@ const DRAPEAU = new THREE.Group(); { const m = new THREE.MeshBasicMaterial({ col
   const a = new THREE.Mesh(geoAnneau, new THREE.MeshBasicMaterial({ color: '#9ff0ff', transparent: true, opacity: .7, depthTest: false, fog: false })); a.scale.setScalar(40); a.renderOrder = 4; DRAPEAU.add(a);
   DRAPEAU.visible = false; sc.add(DRAPEAU); }
 function majDrapeau(p){ DRAPEAU.visible = !!p; if (p){ DRAPEAU.position.set(p.x, 40, p.z); DRAPEAU.fanion.rotation.y = Math.sin(TEMPS.r * 2) * .4; } }
+
+// ---------- icônes tactiques : un symbole de taille fixe à l'écran quand le vaisseau devient trop petit (façon zoom stratégique de Supreme Commander) ----------
+// formes blanches (teintées par vaisseau : bleu, rouge, vert si choisi), pointe vers l'avant
+const TEX_STRAT = {};
+{ const forme = { chasseur: x => { x.moveTo(32, 6); x.lineTo(54, 54); x.lineTo(32, 42); x.lineTo(10, 54); x.closePath(); },
+    bombardier: x => { x.moveTo(32, 8); x.lineTo(60, 50); x.lineTo(4, 50); x.closePath(); x.rect(24, 50, 16, 8); },
+    destroyer: x => { x.moveTo(32, 2); x.lineTo(44, 30); x.lineTo(32, 62); x.lineTo(20, 30); x.closePath(); },
+    collecteur: x => { x.rect(18, 14, 28, 36); x.rect(8, 22, 8, 22); x.rect(48, 22, 8, 22); },
+    pv: x => { x.moveTo(12, 4); x.lineTo(24, 4); x.lineTo(24, 26); x.lineTo(40, 26); x.lineTo(40, 4); x.lineTo(52, 4); x.lineTo(52, 50); x.lineTo(42, 62); x.lineTo(22, 62); x.lineTo(12, 50); x.closePath(); } };
+  for (const k in forme){ TEX_STRAT[k] = tex2d(64, 64, x => { x.beginPath(); forme[k](x); x.lineJoin = 'round'; x.lineWidth = 7; x.strokeStyle = 'rgba(0,0,0,.85)'; x.stroke(); x.fillStyle = '#fff'; x.fill(); }); } }
+const FORME_STRAT = { chasseur: 'chasseur', r_chasseur: 'chasseur', bombardier: 'bombardier', r_corvette: 'bombardier', destroyer: 'destroyer', r_destroyer: 'destroyer', r_fregate: 'destroyer', collecteur: 'collecteur', pv: 'pv' };
+const PX_STRAT = { chasseur: 16, bombardier: 20, destroyer: 24, collecteur: 17, pv: 34 };
+function iconeStrat(type){ const f = FORME_STRAT[type] || 'chasseur', s = new THREE.Sprite(new THREE.SpriteMaterial({ map: TEX_STRAT[f], sizeAttenuation: false, depthTest: false, transparent: true, fog: false }));
+  s.renderOrder = 8; s.visible = false; s.userData.px = PX_STRAT[f] * (type === 'r_fregate' ? .8 : 1); sc.add(s); return s; }

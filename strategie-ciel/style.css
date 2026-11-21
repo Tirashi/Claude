@@ -59,6 +59,7 @@ img.ico{object-fit:contain;filter:drop-shadow(0 0 1px rgba(0,0,0,.9))}
 #tuto[hidden]{display:none}#tuto b{font:400 11px var(--titre);letter-spacing:.1em;color:var(--or)}#tuto p{margin:5px 0 8px;line-height:1.4;font-weight:500}#tuto .l{display:flex;justify-content:space-between;align-items:center;gap:8px}#tuto .b{height:28px;padding:0 10px}
 .guide{outline:2px solid #ffd060;outline-offset:1px;animation:guide 1s ease-in-out infinite}
 @keyframes guide{50%{outline-color:rgba(255,208,96,.2)}}
+#bulle{position:absolute;left:calc((100% - var(--liste)) / 2);bottom:calc(var(--ordre) + 26px);transform:translateX(-50%);background:var(--verre2);border:1px solid var(--ligne);border-radius:14px;padding:4px 12px;font:600 13px var(--ui);letter-spacing:.06em;color:#e8eaf6;pointer-events:none;opacity:0;transition:opacity .3s;white-space:nowrap}
 #ips{position:absolute;left:calc((100% - var(--liste)) / 2);bottom:1px;transform:translateX(-50%);font:10px var(--chiffres);color:#b8f080;opacity:.6}
 /* écrans */
 .ecran{position:absolute;inset:0;z-index:4;display:grid;place-items:center;padding:16px;background:linear-gradient(rgba(11,10,30,.1),rgba(11,10,30,.6));overflow:auto}
@@ -76,6 +77,7 @@ img.ico{object-fit:contain;filter:drop-shadow(0 0 1px rgba(0,0,0,.9))}
 @media (pointer:coarse){
   :root{--haut:28px;--liste:196px;--mini:96px;--ordre:40px;--fs:13px}
   .k{display:none}
+  .bandeau{font-size:12px;padding:6px 12px;top:16%;width:min(70vw,420px)}.bandeau b{font-size:14px;margin:2px 0}
   #barre{gap:10px}
   .prods .b{height:42px}
   .ligne{padding:2px 6px}.ligne .o{font-size:11px}#liste{gap:3px}
