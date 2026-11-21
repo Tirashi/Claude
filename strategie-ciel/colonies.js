@@ -9,6 +9,11 @@ const DOMAINES = { vaisseaux: 'VAISSEAUX', colonies: 'COLONIES', armement: 'ARME
 const RECH = {
   bombardiers:   { d: 'vaisseaux', nom: 'BOMBARDIERS', txt: 'Débloque le bombardier, fort contre les gros vaisseaux.', c: 40, f(){ S.deb.bombardier = true; } },
   destroyers:    { d: 'vaisseaux', nom: 'DESTROYERS', txt: 'Débloque le destroyer et ses tourelles.', c: 90, f(){ S.deb.destroyer = true; } },
+  intercepteurs: { d: 'vaisseaux', nom: 'INTERCEPTEURS', txt: 'Débloque l\'intercepteur : très rapide, fragile, fort contre les chasseurs.', c: 50, f(){ S.deb.intercepteur = true; } },
+  corvettes:     { d: 'vaisseaux', nom: 'CORVETTES', txt: 'Débloque la corvette d\'escorte : tir rapide, redoutable contre les chasseurs.', c: 60, f(){ S.deb.corvette = true; } },
+  fregates:      { d: 'vaisseaux', nom: 'FREGATES DE SOUTIEN', txt: 'Débloque la frégate, qui répare les vaisseaux autour d\'elle.', c: 90, req: 'corvettes', f(){ S.deb.fregate = true; } },
+  torpilleurs:   { d: 'vaisseaux', nom: 'TORPILLEURS', txt: 'Débloque le torpilleur : grosses torpilles tirées de très loin contre les grands vaisseaux.', c: 90, req: 'bombardiers', f(){ S.deb.torpilleur = true; } },
+  cuirasses:     { d: 'vaisseaux', nom: 'CUIRASSES', txt: 'Débloque le cuirassé : énorme, lent, six tourelles.', c: 160, req: 'destroyers', f(){ S.deb.cuirasse = true; } },
   moteurs:       { d: 'vaisseaux', nom: 'MOTEURS', txt: '+15 % de vitesse pour toute la flotte.', c: 60, f(){ S.mod.vit *= 1.15; } },
   coll_lourd:    { d: 'vaisseaux', nom: 'COLLECTEUR LOURD', txt: 'Les collecteurs emportent deux fois plus de cristal.', c: 60, f(){ S.mod.cap *= 2; } },
   blindage_ch:   { d: 'vaisseaux', nom: 'BLINDAGE DES CHASSEURS', txt: '+30 % de vie pour les chasseurs.', c: 50, f(){ renforcer('chasseur', 1.3); } },
@@ -64,7 +69,7 @@ function majColonies(dt){ if (!S.rech) return; majRecherche(dt); const rouges = 
     majDefense(P, dt, rouges); }
   if (S.mod.repar){ const pv = PV(); if (pv && pv.vie < pv.vmax) pv.vie = Math.min(pv.vmax, pv.vie + S.mod.repar * dt); } }
 function initColonies(){
-  S.deb = { collecteur: true, chasseur: true, bombardier: false, destroyer: false, colon: false, glace: false, lave: false, defense: false };
+  S.deb = { collecteur: true, chasseur: true, bombardier: false, destroyer: false, colon: false, intercepteur: false, corvette: false, fregate: false, torpilleur: false, cuirasse: false, glace: false, lave: false, defense: false };
   S.mod = { vit: 1, cap: 1, vieCh: 1, viePv: 1, degCh: 1, degLourd: 1, bouclier: 1, mine: 1, labo: 1, prod: 1, places: 0, repar: 0 };
   S.rech = { fait: [], dom: {} }; for (const d in DOMAINES) S.rech.dom[d] = { cur: DEPART_RECH[d], pts: 0, choix: [] };
   for (const P of PLANETES){ P.col = null; if (P.camp === 0 && P.nom !== 'GAIA') P.camp = undefined; anneauPlanete(P); }

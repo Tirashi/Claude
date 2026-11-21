@@ -190,10 +190,11 @@ function prepare(k, s){ dequantifie(s); s.traverse(o => { if (!o.isMesh) return;
   const n = mm.map(m => { if (m.map){ m.map.encoding = THREE.LinearEncoding; if (m.map.image && m.map.image.height <= 4) texNet(m.map); } return new THREE.MeshPhongMaterial({ color: m.color, map: m.map || null, vertexColors: !!m.vertexColors, flatShading: true, shininess: 0, specular: 0, side: THREE.DoubleSide }); });
   o.material = Array.isArray(o.material) ? n : n[0]; });
   if (CAT[k] && CAT[k].tour) decoupe(s, CAT[k].tour);
-  MOD[k] = s; if (k.startsWith('py')){ MOD[k + '_b'] = repeint(s, .6); MOD[k + '_r'] = repeint(s, 0); } }
+  MOD[k] = s; if (k.startsWith('py')){ MOD[k + '_b'] = repeint(s, .6); MOD[k + '_r'] = repeint(s, 0); } else if (k.endsWith('_r') && A_REPEINDRE.includes(k)) MOD[k + '_b'] = repeint(s, .6); }
+const A_REPEINDRE = ['fga_corvette2_r', 'fga_fregate3_r']; // vaisseaux rouges du pack repeints en bleu (corvette et frégate du joueur)
 function charger(k){ return new Promise(ok => { const L = new THREE.GLTFLoader(), fin = g => { try { prepare(k, g.scene); } catch (e){ console.warn(k, e); } ok(); }, err = e => { console.warn(k, e); ok(); };
   if (window.SC_B64 && window.SC_B64[k]) L.parse(b64(window.SC_B64[k]), '', fin, err); else L.load('../ciel-de-guerre/modeles/' + k + '.glb', fin, undefined, err); }); }
-const MODELES = ['fga_croiseur1', 'fga_destroyer2', 'fga_destroyer1', 'fga_fregate1_r', 'fga_corvette1_r', 'py2', 'py13', 'py16', 'py35', 'py34']; // chasseur, chasseur rouge, collecteur, bombardier : silhouettes et tailles bien différentes (planche du 20/11)
+const MODELES = ['fga_croiseur1', 'fga_destroyer2', 'fga_destroyer1', 'fga_fregate1_r', 'fga_corvette1_r', 'py2', 'py13', 'py16', 'py35', 'py34', 'py26', 'py30', 'fga_corvette2_r', 'fga_fregate3_r', 'fga_destroyer4']; // chasseur, chasseur rouge, collecteur, bombardier : silhouettes et tailles bien différentes (planche du 20/11)
 // un vaisseau : groupe dont l'avant regarde vers -z, de longueur L
 function importe(k, rot, L){ const g = new THREE.Group(), piv = new THREE.Group(); g.add(piv);
   const m = MOD[k] ? MOD[k].clone() : new THREE.Mesh(new THREE.ConeGeometry(.3, 1, 5).rotateX(-Math.PI / 2), new THREE.MeshPhongMaterial({ color: k.endsWith('_r') ? '#c84a3a' : '#5a8ac8' })); piv.add(m); piv.rotation.y = rot;
@@ -257,7 +258,7 @@ const TEX_STRAT = {};
     collecteur: x => { x.rect(18, 14, 28, 36); x.rect(8, 22, 8, 22); x.rect(48, 22, 8, 22); },
     pv: x => { x.moveTo(12, 4); x.lineTo(24, 4); x.lineTo(24, 26); x.lineTo(40, 26); x.lineTo(40, 4); x.lineTo(52, 4); x.lineTo(52, 50); x.lineTo(42, 62); x.lineTo(22, 62); x.lineTo(12, 50); x.closePath(); } };
   for (const k in forme){ TEX_STRAT[k] = tex2d(64, 64, x => { x.beginPath(); forme[k](x); x.lineJoin = 'round'; x.lineWidth = 7; x.strokeStyle = 'rgba(0,0,0,.85)'; x.stroke(); x.fillStyle = '#fff'; x.fill(); }); } }
-const FORME_STRAT = { chasseur: 'chasseur', r_chasseur: 'chasseur', bombardier: 'bombardier', r_corvette: 'bombardier', destroyer: 'destroyer', r_destroyer: 'destroyer', r_fregate: 'destroyer', collecteur: 'collecteur', colon: 'collecteur', pv: 'pv' };
+const FORME_STRAT = { chasseur: 'chasseur', r_chasseur: 'chasseur', bombardier: 'bombardier', r_corvette: 'bombardier', destroyer: 'destroyer', r_destroyer: 'destroyer', r_fregate: 'destroyer', collecteur: 'collecteur', colon: 'collecteur', pv: 'pv', intercepteur: 'chasseur', torpilleur: 'bombardier', corvette: 'destroyer', fregate: 'destroyer', cuirasse: 'destroyer' };
 const PX_STRAT = { chasseur: 16, bombardier: 20, destroyer: 24, collecteur: 17, pv: 34 };
 function iconeStrat(type){ const f = FORME_STRAT[type] || 'chasseur', s = new THREE.Sprite(new THREE.SpriteMaterial({ map: TEX_STRAT[f], sizeAttenuation: false, depthTest: false, transparent: true, fog: false }));
   s.renderOrder = 8; s.visible = false; s.userData.px = PX_STRAT[f] * (type === 'r_fregate' ? .8 : 1); sc.add(s); return s; }

@@ -157,3 +157,4 @@ Maquettes de la carte 2 à 4 (isométrique, puis papier à l'encre validée), é
 - **21/11 — Stratégie spatiale** : boutons de caméra qui suivent la liste repliée (téléphone), icônes faites à partir des vrais modèles 3D.
 - **21/11 — Stratégie spatiale** : petite bulle pour les messages mineurs (le ralliement ne cache plus la vue), icônes tactiques de taille fixe quand les vaisseaux deviennent minuscules.
 - **21/11 — Stratégie spatiale, session 2** : recherche continue en trois domaines à cartes tirées (19 projets), colon et colonies (DUNE, BOREA, BRASIER, ECHO), bâtiments (mine, labo, chantier, défense), volet des planètes, bouton RECHERCHE ; `sw.js` v119.
+- **21/11 — Stratégie spatiale** : cinq vaisseaux de plus à rechercher (intercepteur, torpilleur, corvette, frégate de soutien qui répare, cuirassé à six tourelles).

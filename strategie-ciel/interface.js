@@ -80,7 +80,7 @@ cv.addEventListener('pointerleave', e => { if (e.pointerType === 'mouse') souris
 // ---------- clavier ----------
 const TOUCHES = new Set(); let dernierGroupe = { n: 0, t: 0 };
 // noms des touches selon la disposition du clavier (AZERTY par défaut si le navigateur ne la donne pas)
-const NOMS_TOUCHES = { KeyQ: 'A', KeyW: 'Z', KeyE: 'E', KeyR: 'R', KeyT: 'T', KeyY: 'Y', KeyU: 'U', KeyI: 'I', KeyO: 'O', KeyP: 'P', KeyZ: 'W', KeyX: 'X', KeyC: 'C', KeyV: 'V', KeyS: 'S', KeyH: 'H' };
+const NOMS_TOUCHES = { KeyN: 'N', KeyM: ',', Comma: ';', Period: ':', Slash: '!', IntlBackslash: '<', KeyQ: 'A', KeyW: 'Z', KeyE: 'E', KeyR: 'R', KeyT: 'T', KeyY: 'Y', KeyU: 'U', KeyI: 'I', KeyO: 'O', KeyP: 'P', KeyZ: 'W', KeyX: 'X', KeyC: 'C', KeyV: 'V', KeyS: 'S', KeyH: 'H' };
 const LAB = code => NOMS_TOUCHES[code] || code.replace('Key', '');
 try { navigator.keyboard && navigator.keyboard.getLayoutMap && navigator.keyboard.getLayoutMap().then(m => { for (const c in NOMS_TOUCHES){ const v = m.get(c); if (v && /^[a-z]$/i.test(v)) NOMS_TOUCHES[c] = v.toUpperCase(); } sigProd = ''; majGroupesPerso(); }).catch(() => {}); } catch (e){}
 // groupes personnels sur la première ligne de lettres : Maj + lettre = garder la sélection, lettre = la rappeler (deux fois : y aller)
@@ -156,7 +156,7 @@ const ic = (n, s = 18) => ICONES[n] ? `<img class="ico" src="${ICONES[n]}" width
 function fabriquerIcones(){ try {
   const T = 96, r = new THREE.WebGLRenderer({ alpha: true, antialias: true, preserveDrawingBuffer: true }); r.setSize(T, T); r.setClearColor(0, 0);
   const s = new THREE.Scene(); s.add(new THREE.HemisphereLight('#dfe8ff', '#30304a', 1.1)); const d = new THREE.DirectionalLight('#ffffff', .9); d.position.set(-1, 3, -1); s.add(d);
-  for (const t of ['pv', 'collecteur', 'chasseur', 'bombardier', 'destroyer', 'colon']){ const Ty = TYPES[t], k = Ty.mod + (Ty.mod.startsWith('py') ? '_b' : ''), g = importe(k, Ty.rot, 10), long = Ty.gros; s.add(g);
+  for (const t of ['pv', ...PRODUITS]){ const Ty = TYPES[t], k = cleModele(Ty, 0), g = importe(k, Ty.rot, 10), long = Ty.gros; s.add(g);
     /* vus d'un peu de biais (on voit le volume) ; les longs (AURORE, destroyer) en diagonale, pour remplir le carré */
     g.rotation.y = long ? -PI / 4 : 0; g.updateMatrixWorld(true); const c = new THREE.OrthographicCamera(-1, 1, 1, -1, .1, 200);
     c.position.set(0, 40, 22); c.up.set(0, 1, 0); c.lookAt(0, 0, 0); c.updateMatrixWorld(true);
@@ -172,13 +172,13 @@ function annonceVague(n){ annonce(`VAGUE ${n} / ${VAGUES.length}<b>FLOTTE ROUGE<
 function annonceProd(){}
 let sigSel = '', sigProd = '', sigListe = '', sigOrdres = '', LISTE_REPLIE = false; const REV = [];
 try { LISTE_REPLIE = localStorage.getItem('strategieciel.liste') === '1'; } catch (e){}
-const NOMS_PL = { chasseur: 'CHASSEURS', bombardier: 'BOMBARDIERS', destroyer: 'DESTROYERS', collecteur: 'COLLECTEURS', colon: 'COLONS' }, TOUCHE_GR = { chasseur: '2', bombardier: '3', destroyer: '4', collecteur: '5' };
+const NOMS_PL = { chasseur: 'CHASSEURS', bombardier: 'BOMBARDIERS', destroyer: 'DESTROYERS', collecteur: 'COLLECTEURS', colon: 'COLONS', intercepteur: 'INTERCEPTEURS', torpilleur: 'TORPILLEURS', corvette: 'CORVETTES', fregate: 'FREGATES', cuirasse: 'CUIRASSES' }, TOUCHE_GR = { chasseur: '2', bombardier: '3', destroyer: '4', collecteur: '5' };
 const ORDRE_TXT = u => u.type === 'colon' ? (u.ordre.k === 'coloniser' ? 'EN ROUTE POUR ' + u.ordre.P.nom : 'EN ATTENTE') : u.type === 'collecteur' ? (u.ordre.k === 'miner' ? (u.charge >= u.T.cap ? 'RAPPORTENT' : 'MINENT') : 'EN ATTENTE') : u.cible ? 'ATTAQUE' : u.ordre.k === 'aller' ? 'EN ROUTE' : 'EN GARDE';
 function resume(l){ const c = {}; l.forEach(u => { const o = ORDRE_TXT(u); c[o] = (c[o] || 0) + 1; }); const t = Object.entries(c).sort((a, b) => b[1] - a[1])[0]; return t ? t[0] : ''; }
 const vieM = l => l.reduce((a, u) => a + u.vie, 0) / Math.max(1, l.reduce((a, u) => a + u.vmax, 0));
 function majGroupesPerso(){ sigListe = ''; }
 function majListe(){ const L = $('#liste'), pv = PV(), sel = SEL(), seul = t => sel.length > 0 && sel.every(u => u.type === t);
-  const groupes = ['chasseur', 'bombardier', 'destroyer', 'collecteur', 'colon'].map(t => [t, U.filter(u => u.camp === 0 && u.vie > 0 && u.type === t)]).filter(([, l]) => l.length);
+  const groupes = ['chasseur', 'intercepteur', 'bombardier', 'torpilleur', 'corvette', 'fregate', 'destroyer', 'cuirasse', 'collecteur', 'colon'].map(t => [t, U.filter(u => u.camp === 0 && u.vie > 0 && u.type === t)]).filter(([, l]) => l.length);
   const persos = LIGNE.filter(c => PERSO[c]).map(c => [c, U.filter(u => PERSO[c].has(u.id) && u.vie > 0)]).filter(([, l]) => l.length);
   const sig = [LISTE_REPLIE, pv ? Math.round(pv.vie / pv.vmax * 20) : -1, seul('pv'), groupes.map(([t, l]) => t + l.length + Math.round(vieM(l) * 10) + resume(l) + seul(t)).join(), persos.map(([c, l]) => c + l.length).join(),
     PRODUITS.map(t => S.cristal >= TYPES[t].prix ? 1 : 0).join(''), S.file.join(), !!S.ralliement, modeRallier, sigProd, S.deb ? Object.values(S.deb).join() : '', colonies().map(P => P.nom + P.col.bat.join() + (P.col.file ? P.col.file.b : '') + Math.round(cristalMinute(P))).join(), SELP ? SELP.nom : ''].join('|');

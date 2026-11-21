@@ -11,13 +11,20 @@ const TYPES = {
   collecteur: { nom: 'COLLECTEUR', mod: 'py16', rot: PI, L: 26, vie: 60, v: 48, alt: 60, prix: 30, temps: 8, cap: 20, mine: 5, cle: 'KeyZ' },
   chasseur:   { nom: 'CHASSEUR', mod: 'py2', rot: PI, L: 14, vie: 60, v: 90, portee: 150, deg: 4, cad: .35, alt: 80, prix: 40, temps: 10, vole: 1, cle: 'KeyX' },
   bombardier: { nom: 'BOMBARDIER', mod: 'py35', rot: PI, L: 34, vie: 120, v: 58, portee: 210, deg: 20, cad: 1.6, alt: 72, prix: 80, temps: 16, antigros: 1, vole: 1, cle: 'KeyC' },
+  intercepteur: { nom: 'INTERCEPTEUR', mod: 'py26', rot: PI, L: 13, vie: 35, v: 130, portee: 140, deg: 3, cad: .2, alt: 84, prix: 50, temps: 9, vole: 1, antichasse: 1.5, cle: 'KeyM' },
+  torpilleur: { nom: 'TORPILLEUR', mod: 'py30', rot: PI, L: 30, vie: 140, v: 45, portee: 380, deg: 55, cad: 4, alt: 76, prix: 140, temps: 22, antigros: 1, torpille: 1, cle: 'Comma' },
+  corvette:   { nom: 'CORVETTE', mod: 'fga_corvette2_r', peint: 1, rot: -PI / 2, L: 44, vie: 260, v: 34, portee: 240, deg: 6, cad: .3, alt: 78, prix: 120, temps: 20, antichasse: 1.8, cle: 'Period' },
+  fregate:    { nom: 'FREGATE', mod: 'fga_fregate3_r', peint: 1, rot: -PI / 2, L: 62, vie: 500, v: 26, portee: 260, deg: 8, cad: .8, alt: 86, prix: 180, temps: 28, soin: 6, cle: 'Slash' },
+  cuirasse:   { nom: 'CUIRASSE', mod: 'fga_destroyer4', rot: -PI / 2, L: 160, vie: 1800, v: 10, portee: 420, deg: 20, cad: .5, alt: 100, prix: 420, temps: 50, gros: 1, cle: 'IntlBackslash' },
   colon:      { nom: 'COLON', mod: 'py34', rot: PI, L: 32, vie: 90, v: 40, alt: 66, prix: 150, temps: 20, cle: 'KeyN' },
   destroyer:  { nom: 'DESTROYER', mod: 'fga_destroyer2', rot: -PI / 2, L: 110, vie: 900, v: 22, portee: 340, deg: 15, cad: .6, alt: 92, prix: 220, temps: 32, gros: 1, cle: 'KeyV' },
   r_chasseur: { nom: 'CHASSEUR ROUGE', mod: 'py13', rot: PI, L: 16, vie: 40, v: 85, portee: 150, deg: 4, cad: .35, alt: 82, vole: 1, camp: 1 },
   r_corvette: { nom: 'CORVETTE', mod: 'fga_corvette1_r', rot: -PI / 2, L: 40, vie: 170, v: 42, portee: 210, deg: 14, cad: 1, alt: 70, antigros: 1, camp: 1 },
   r_fregate:  { nom: 'FREGATE', mod: 'fga_fregate1_r', rot: -PI / 2, L: 60, vie: 420, v: 24, portee: 300, deg: 13, cad: .6, alt: 88, camp: 1 },
   r_destroyer:{ nom: 'DESTROYER ROUGE', mod: 'fga_destroyer1', rot: -PI / 2, L: 115, vie: 1300, v: 14, portee: 360, deg: 15, cad: .55, alt: 96, gros: 1, camp: 1 }};
-const PRODUITS = ['collecteur', 'chasseur', 'bombardier', 'destroyer', 'colon'];
+const PRODUITS = ['collecteur', 'chasseur', 'intercepteur', 'bombardier', 'torpilleur', 'corvette', 'fregate', 'destroyer', 'cuirasse', 'colon'];
+// le modèle d'un type : chasseurs polyyai repeints selon le camp, vaisseaux du pack repeints en bleu (peint), les autres tels quels
+const cleModele = (T, camp) => T.mod + (T.mod.startsWith('py') ? (camp ? '_r' : '_b') : T.peint && !camp ? '_b' : '');
 // vagues : composition, et temps avant leur arrivée par la porte (secondes de jeu)
 const VAGUES = [{ r_chasseur: 4 }, { r_chasseur: 6 }, { r_chasseur: 5, r_corvette: 2 }, { r_chasseur: 6, r_corvette: 3 }, { r_chasseur: 6, r_corvette: 2, r_fregate: 1 },
   { r_chasseur: 8, r_corvette: 3, r_fregate: 2 }, { r_chasseur: 8, r_corvette: 4, r_fregate: 2 }, { r_chasseur: 10, r_corvette: 4, r_fregate: 2, r_destroyer: 1 }];
@@ -30,7 +37,7 @@ const vivant = u => u && u.vie > 0;
 const ennemis = c => U.filter(u => u.camp !== c && u.vie > 0);
 const yawVers = (dx, dz) => Math.atan2(-dx, -dz);
 function cree(type, pos, o = {}){ const T = TYPES[type], camp = T.camp || 0;
-  const k = T.mod + (T.mod.startsWith('py') ? (camp ? '_r' : '_b') : '');
+  const k = cleModele(T, camp);
   const vm = T.vie * (camp || !S.mod ? 1 : type === 'pv' ? S.mod.viePv : type === 'chasseur' ? S.mod.vieCh : 1);
   const u = Object.assign({ id: ++ID, type, T, camp, vie: vm, vmax: vm, pos: pos.clone(), yaw: camp ? PI / 2 : -PI / 2, cd: Math.random() * (T.cad || 1), ordre: { k: 'rien' }, cible: null, charge: 0, ph: Math.random() * 6.283, a: Math.random() * 6.283, sel: false, g: importe(k, T.rot, T.L) }, o);
   Object.assign(u, equipe(u.g, k, T.L, camp)); u.dep = 0; u.ic = iconeStrat(type);
@@ -85,6 +92,7 @@ function majUnite(u, dt, adv){
   if (u.tours.length){ posee(u, dt); tourelles(u, dt, adv); }
   else if (u.cible && u.cd <= 0 && u.pos.distanceTo(u.cible.pos) <= T.portee){ u.cd = T.cad * (.85 + Math.random() * .3);
     degats(u, u.cible, T.gros ? u.pos.clone().add(V3((Math.random() - .5) * T.L * .5, 6, (Math.random() - .5) * T.L * .3)) : u.pos); }
+  if (T.soin && u.camp === 0){ u.sd = (u.sd || 0) - dt; if (u.sd <= 0){ u.sd = 1; let n = 0; for (const v of U) if (v.camp === 0 && v.vie > 0 && v !== u && v.vie < v.vmax && v.pos.distanceTo(u.pos) < 220){ v.vie = Math.min(v.vmax, v.vie + T.soin); n++; } if (n && Math.random() < .3) ping(u.pos.clone(), false); } }
   posee(u, dt);
   // flammes : plus longues en vitesse, elles vacillent
   for (const f of u.fl){ const k = (.45 + u.dep * .9) * (.82 + Math.random() * .36); f.scale.set(1, 1, k); }
@@ -94,8 +102,8 @@ function posee(u, dt){ const T = u.T;
   if (T.gros) u.g.rotation.z = Math.sin(TEMPS.t * .5 + u.ph) * .02; }
 // chaque tourelle choisit sa cible (celle du vaisseau si elle est à portée, sinon l'ennemi le plus proche), pivote vers elle et tire quand elle est alignée
 const _loc = V3(), _bout = V3();
-function degats(tireur, cv, de){ const T = tireur.T; let deg = T.deg * (tireur.camp || !S.mod ? 1 : T.vole ? S.mod.degCh : T.gros ? S.mod.degLourd : 1) * (cv.camp || !S.mod ? 1 : S.mod.bouclier); if (T.antigros && (cv.T.gros || cv.T.L > 30)) deg *= 2.6; if (T.gros && cv.T.vole) deg *= .4; /* tourelles lourdes : peu efficaces contre les petits */
-  tir(de, cv.pos.clone().add(V3((Math.random() - .5) * 6, 0, (Math.random() - .5) * 6)), tireur.camp, T.gros ? 26 : T.antigros ? 18 : 9, T.gros ? 600 : 480);
+function degats(tireur, cv, de){ const T = tireur.T; let deg = T.deg * (tireur.camp || !S.mod ? 1 : T.vole ? S.mod.degCh : T.gros ? S.mod.degLourd : 1) * (cv.camp || !S.mod ? 1 : S.mod.bouclier); if (T.antigros && (cv.T.gros || cv.T.L > 30)) deg *= 2.6; if (T.antichasse && cv.T.vole) deg *= T.antichasse; if (T.gros && cv.T.vole) deg *= .4; /* tourelles lourdes : peu efficaces contre les petits */
+  tir(de, cv.pos.clone().add(V3((Math.random() - .5) * 6, 0, (Math.random() - .5) * 6)), tireur.camp, T.torpille ? 34 : T.gros ? 26 : T.antigros ? 18 : 9, T.torpille ? 320 : T.gros ? 600 : 480);
   cv.vie -= deg; cv.touche = TEMPS.t; if (cv.vie <= 0) meurt(cv); }
 function tourelles(u, dt, adv){ const T = u.T, n = u.tours.length; u.g.updateMatrixWorld(true);
   for (const t of u.tours){ t.cd -= dt; t.tc -= dt;
@@ -124,7 +132,7 @@ function annuler(i){ const t = S.file[i]; if (!t) return; S.cristal += TYPES[t].
 const HOLO_POS = L => V3(0, 6, -L * .34);
 let HOLO = null;
 function majProduction(dt){ const pv = PV(); if (!pv || !S.file.length){ if (HOLO){ retireHolo(HOLO); HOLO = null; } return; } S.fileT += dt; const t = S.file[0], T = TYPES[t];
-  if (!HOLO || HOLO.type !== t){ retireHolo(HOLO); const k = T.mod + (T.mod.startsWith('py') ? '_b' : ''); HOLO = holo(k, T.rot, T.L); HOLO.type = t; HOLO.g.position.copy(HOLO_POS(pv.T.L)); pv.g.add(HOLO.g); }
+  if (!HOLO || HOLO.type !== t){ retireHolo(HOLO); const k = cleModele(T, 0); HOLO = holo(k, T.rot, T.L); HOLO.type = t; HOLO.g.position.copy(HOLO_POS(pv.T.L)); pv.g.add(HOLO.g); }
   const duree = T.temps * (S.mod ? facteurChantier() : 1); majHolo(HOLO, Math.min(1, S.fileT / duree));
   if (S.fileT >= duree){ S.fileT = 0; S.file.shift();
     const p0 = HOLO.g.getWorldPosition(V3()); retireHolo(HOLO); HOLO = null;
