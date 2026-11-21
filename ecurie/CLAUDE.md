@@ -8,7 +8,7 @@ Gestion d'écurie de course, courses regardées en 3D. Cahier des charges : [`sp
 - `course.js` (`Course`) : simulation pure (`creer`, `pas`, `finir`) ; qualifications, arrivée, abandons (accident, casse tirée d'avance).
 - `regles.js` (`Regles`) : données (voitures, pièces, rivaux par division, sponsors, activités, revenus) et logique (`preparer`, `resultats`, fin de saison).
 - `scene.js` (`Scene3D`) : la course en 3D et ses caméras ; la vitrine (plateau qui tourne).
-- `jeu.js` (`window.Ecurie`) : écrans en HTML (style A, unités `cqi` du conteneur `.boite`), une seule boucle `requestAnimationFrame` (`actif`) ; icônes en pixels 9 × 9 (`PIX`, masque SVG : couleur du texte).
+- `jeu.js` (`window.Ecurie`) : écrans en HTML, direction « la télé » (maquette 9 : Titillium Web dans `polices/ecurie.css`, bandeaux penchés en `clip-path`), unités `cqi` du conteneur `.boite`, une seule boucle `requestAnimationFrame` (`actif`) ; icônes SVG au trait (`ICO`) ; confirmation dans la page (`confirmer`, pas de `confirm()`).
 
 ## Tests
 - `node outils/ecurie-simulateur.js` (lancé par `verifications.js`) ; `… equilibre` : place moyenne selon division et voitures.
@@ -18,4 +18,4 @@ Gestion d'écurie de course, courses regardées en 3D. Cahier des charges : [`sp
 - `regles.js`/`course.js` ne doivent pas toucher à `THREE` ni au DOM (Node).
 - Chaque course crée un nouveau canevas et son `WebGLRenderer` ; `finCourse()` le libère (sinon trop de contextes WebGL).
 - Grille inversée : non (une voiture plus rapide partie derrière ne remontait pas).
-- Textes en Press Start 2P : majuscules sans accent.
+- Objets déclarés aussi en `window.X` (sinon `lint.js` ne les voit pas).

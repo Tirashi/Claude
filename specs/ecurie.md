@@ -64,6 +64,10 @@ Idée de l'utilisateur (18/11) : un petit jeu de **gestion d'écurie de course**
 - Les roues tournent (pièces séparées à la lecture du modèle ; vitesse de rotation plafonnée pour ne pas voir les jantes tourner à l'envers) ; feux stop posés sur l'arrière de chaque carrosserie (ils flottaient sur certaines voitures).
 - Interface retravaillée : boutons en relief 16 bits (biseau clair et sombre, enfoncés au toucher), icônes en pixels (onglets, en-tête, jours, commandes de course), titres soulignés, damier sur l'écran titre.
 
+## Habillage « la télé » (21/11)
+- Tout le jeu passe dans la direction A de la maquette 9 : Titillium Web (copiée dans `polices/`, SIL OFL), bandeau orange penché en haut, vitrine sur fond transparent (dégradé de la page, ombre au sol, projecteur orange), prochain grand prix en tête de l'onglet Écurie, pilotes avec leur numéro (7, 12…), listes à bandeaux de prix, podium sur l'écran des résultats, HUD de course de la maquette, confirmations dans la page.
+- Textes en français normal (accents, minuscules) ; les majuscules viennent du style.
+
 ## Questions ouvertes
 - Durée d'une partie (une saison, une carrière ?), classement ou non.
 - Comment l'écurie grandit (niveaux ? réputation ?) et ce que ça débloque (places de pilotes, garage plus grand, goodies, convention).

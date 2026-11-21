@@ -28,15 +28,15 @@
     for (const v of V) {
       if (v.abandon) { v.v = Math.max(0, v.v - 9 * dt); v.cibleV = 0; continue; }
       // casse mécanique
-      if (v.casse != null && !v.fini && (v.s - K.DEPART) / (C.tours * K.TOT) > v.casse) { v.abandon = 'CASSE'; v.casse = null; evenement(C, `ABANDON DE ${v.nom} : CASSE MECANIQUE`); continue; }
+      if (v.casse != null && !v.fini && (v.s - K.DEPART) / (C.tours * K.TOT) > v.casse) { v.abandon = 'CASSE'; v.casse = null; evenement(C, `Abandon de ${v.nom} : casse mécanique`); continue; }
       const g = v.grip * (.94 + .08 * v.tal) * (1 - .05 * Math.min(1, Math.abs(v.lat) / COTE)); let cible = v.vmax * (.97 + .03 * v.tal); const i0 = K.idx(v.s);
       for (let d = 0; d < 70; d += 3) { const vc = vVirage(K, i0 + d, g); cible = Math.min(cible, Math.sqrt(vc * vc + 2 * FREIN * (.9 + .1 * v.tal) * (v.mem > 0 ? 1 + .12 * v.agr : 1) * d)); }
       for (const o of V) if (o !== v && enPiste(o)) { const e = o.s - v.s; if (e > 0 && e < 20 && cote(o, v) && K.RAD[i0] > 1e8) cible *= 1.07; }
       if (v.erreur > 0) { v.erreur -= dt; cible *= v.sortie ? .45 : .6; if (v.erreur <= 0) v.sortie = false; }
       else if (t > 4 && !v.fini && R() < (1 - v.cst) * .035 * dt) { v.erreur = 1.2 + R(); let virage = false; for (let d = 0; d < 25; d += 5) if (K.RAD[(i0 + d) % NP] < 1e8) virage = true;
         v.sortie = virage && R() < .6;
-        if (v.sortie) { v.sorties++; if (R() < .12) { v.abandon = 'ACCIDENT'; evenement(C, `ACCIDENT ! ${v.nom} ABANDONNE`); continue; } evenement(C, `SORTIE DE PISTE DE ${v.nom} !`); }
-        else { v.erreurs++; evenement(C, `ERREUR DE ${v.nom} !`); } }
+        if (v.sortie) { v.sorties++; if (R() < .12) { v.abandon = 'ACCIDENT'; evenement(C, `Accident ! ${v.nom} abandonne`); continue; } evenement(C, `Sortie de piste de ${v.nom} !`); }
+        else { v.erreurs++; evenement(C, `Erreur de ${v.nom} !`); } }
       v.cibleV = cible; if (v.v < cible) v.v = Math.min(cible, v.v + v.acc * (1 - v.v / (v.vmax * 1.1)) * dt * 1.6); else v.v = Math.max(cible, v.v - FREIN * 1.3 * dt);
       v.cibleLat = v.mem > 0 || v.bloque > 0 ? v.cibleLat : 0;
     }
@@ -49,11 +49,11 @@
           const ok = c => Math.abs(l + c) <= BORD + .01 && O.every(o => o === b || Math.abs(o.s - b.s) > LONG + 1 || Math.abs(o.dec - (l + c)) >= LARG);
           let virage = false; { const ib = K.idx(b.s); for (let d = 15; d < 60; d += 5) if (K.RAD[(ib + d) % NP] < 1e8) virage = true; }
           const c = virage && ok(COTE) ? COTE : ok(cote1) ? cote1 : ok(-cote1) ? -cote1 : 0;
-          if (c) { b.cibleLat = c; b.mem = 4; if (a.bloque <= 0 && !a.fini && R() < a.agr * .3) { a.cibleLat = c * .7; a.bloque = 2.5; evenement(C, `${a.nom} FERME LA PORTE A ${b.nom}`); } } }
+          if (c) { b.cibleLat = c; b.mem = 4; if (a.bloque <= 0 && !a.fini && R() < a.agr * .3) { a.cibleLat = c * .7; a.bloque = 2.5; evenement(C, `${a.nom} ferme la porte à ${b.nom}`); } } }
         if (Math.abs(a.dec - b.dec) < LARG) b.v = Math.min(b.v, a.v + (e - 6.5) * .8); } }
     for (const v of V) { v.mem -= dt; v.bloque -= dt; v.s += v.v * dt;
       if (!v.fini && !v.abandon && v.s >= fin) { v.fini = true; v.temps = t; C.arrivee.push(v);
-        if (C.arrivee.length === 1) { C.tFin = t; evenement(C, `${v.nom} GAGNE LE ${K.nom} !`); } } }
+        if (C.arrivee.length === 1) { C.tFin = t; evenement(C, `${v.nom} gagne le ${K.nom} !`); } } }
     // pas de voitures qui se traversent
     const P2 = V.filter(enPiste).sort((a, b) => b.s - a.s);
     for (let i = 1; i < P2.length; i++) for (let j = 0; j < i; j++) { const a = P2[j], b = P2[i]; if (a.s - b.s < LONG && cote(a, b)) { b.s = a.s - LONG; b.v = Math.min(b.v, a.v); } }
@@ -73,7 +73,7 @@
     for (let p = 0; p < 3; p++) for (let i = 1; i < ordre.length; i++) if (ordre[i].s > ordre[i - 1].s + 2.5 && !ordre[i - 1].fini && !ordre[i].abandon) { const x = ordre[i]; ordre[i] = ordre[i - 1]; ordre[i - 1] = x; }
     // arrivés devant (dans l'ordre d'arrivée), abandons derrière
     ordre = C.arrivee.concat(ordre.filter(v => !v.fini && !v.abandon), ordre.filter(v => v.abandon && !v.fini));
-    if (t > 3) ordre.forEach((v, i) => { const j = avant.indexOf(v); if (j === i + 1 && !v.fini && !avant[i].abandon) { v.depass++; evenement(C, `DEPASSEMENT ! ${v.nom} PASSE ${avant[i].nom} (P${i + 1})`); } });
+    if (t > 3) ordre.forEach((v, i) => { const j = avant.indexOf(v); if (j === i + 1 && !v.fini && !avant[i].abandon) { v.depass++; evenement(C, `Dépassement ! ${v.nom} passe ${avant[i].nom} (P${i + 1})`); } });
     C.ordre = ordre;
     const restants = V.filter(v => !v.fini && !v.abandon).length;
     if (C.tFin != null && (restants === 0 || t > C.tFin + 40)) C.fin = true;

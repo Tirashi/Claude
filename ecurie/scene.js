@@ -72,13 +72,14 @@
   }
   // la vitrine : une voiture qui tourne sur un plateau, ou plusieurs côte à côte
   function vitrine(cv) {
-    const r = new THREE.WebGLRenderer({canvas: cv, antialias: true}); r.setPixelRatio(Math.min(2, W.devicePixelRatio || 1)); r.shadowMap.enabled = true; r.shadowMap.type = THREE.PCFSoftShadowMap;
-    const sc = new THREE.Scene(); sc.background = new THREE.Color(0x2d2448);
+    const r = new THREE.WebGLRenderer({canvas: cv, antialias: true, alpha: true}); r.setPixelRatio(Math.min(2, W.devicePixelRatio || 1)); r.shadowMap.enabled = true; r.shadowMap.type = THREE.PCFSoftShadowMap;
+    const sc = new THREE.Scene(); sc.background = null; // fond transparent : le dégradé de la page se voit derrière
     sc.add(new THREE.HemisphereLight(0xdfe8ff, 0x4a5a40, .62)); const d = new THREE.DirectionalLight(0xfff2dc, .85); d.position.set(60, 120, 40); d.castShadow = true; d.shadow.mapSize.set(1024, 1024);
     Object.assign(d.shadow.camera, {left: -4, right: 4, top: 4, bottom: -4, near: 1, far: 500}); sc.add(d, d.target);
     const cam = new THREE.PerspectiveCamera(30, 1, .1, 100);
-    const plat = new THREE.Mesh(new THREE.CylinderGeometry(.82, .82, .05, 40), new THREE.MeshStandardMaterial({color: 0x6a5c98, roughness: .8})); plat.position.y = -.025; plat.receiveShadow = true; sc.add(plat);
-    const fond = new THREE.Mesh(new THREE.PlaneGeometry(8, 4), new THREE.MeshStandardMaterial({color: 0x3a2f58})); fond.rotation.x = -Math.PI / 2; fond.position.y = -.03; fond.receiveShadow = true; sc.add(fond);
+    const plat = new THREE.Mesh(new THREE.CylinderGeometry(.82, .82, .05, 40), new THREE.MeshStandardMaterial({color: 0x18223a, roughness: .8})); plat.position.y = -.025; plat.receiveShadow = true; sc.add(plat);
+    const fond = new THREE.Mesh(new THREE.CircleGeometry(2.4, 48), new THREE.ShadowMaterial({opacity: .45})); fond.rotation.x = -Math.PI / 2; fond.position.y = -.03; fond.receiveShadow = true; sc.add(fond);
+    const spot = new THREE.SpotLight(0xff8a3a, 1.1, 8, .5, .6); spot.position.set(2, 2.5, -1); sc.add(spot);
     const pivot = new THREE.Group(); sc.add(pivot); let cle = '', cote = false;
     return {
       montrer(objets) { const k = JSON.stringify(objets); if (k === cle) return; cle = k; while (pivot.children.length) pivot.remove(pivot.children[0]);

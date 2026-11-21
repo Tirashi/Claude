@@ -2,9 +2,9 @@
    Pur calcul (pas de Three.js) : utilisable sous Node. 'S' = ligne droite de 12 m, 18 / 42 = virage de 90° de ce rayon. */
 (function (W) {
   const CIRCUITS = [
-    {k: 'ville', nom: 'GP DE LA VILLE', plan: ['S','S','S','S',42,'S','S',18,'S','S','S','S','S','S','S','S',18,'S','S',42]},
-    {k: 'port', nom: 'GP DU PORT', plan: ['S','S','S','S','S','S','S',42,'S',42,'S','S','S','S','S','S','S',18,'S','S','S','S','S',18]},
-    {k: 'parc', nom: 'GP DU PARC', plan: ['S','S','S','S','S','S',42,'S','S','S',18,'S','S','S','S','S','S',42,'S','S','S',18]}
+    {k: 'ville', nom: 'GP de la Ville', plan: ['S','S','S','S',42,'S','S',18,'S','S','S','S','S','S','S','S',18,'S','S',42]},
+    {k: 'port', nom: 'GP du Port', plan: ['S','S','S','S','S','S','S',42,'S',42,'S','S','S','S','S','S','S',18,'S','S','S','S','S',18]},
+    {k: 'parc', nom: 'GP du Parc', plan: ['S','S','S','S','S','S',42,'S','S','S',18,'S','S','S','S','S','S',42,'S','S','S',18]}
   ];
   const BORD = 3.7, LOC = {18: {e: [18, 12], R: 18}, 42: {e: [42, 36], R: 42}};
   const rot = (x, z, a) => [x * Math.cos(a) - z * Math.sin(a), x * Math.sin(a) + z * Math.cos(a)];
