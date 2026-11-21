@@ -195,3 +195,4 @@ nav button.on .ic{color:var(--accent)}
 .commandes button:first-child{background:var(--accent)}
 .commandes button .ic{width:4.4cqi;height:4.4cqi}
 .commandes button:active{filter:brightness(1.2)}
+.commandes button.son{flex:none;width:11cqi;background:rgba(11,15,26,.92)}

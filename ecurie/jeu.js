@@ -1,7 +1,7 @@
 /* Écurie miniature : les écrans (titre, gestion en six onglets, grille de départ, course 3D, résultats, fin de saison).
    Direction A « la télé » de la maquette 9 (21/11). Partie sauvée dans localStorage « ecurie.partie », records dans « ecurie.record ». */
 (function () {
-  const R = Regles, app = document.getElementById('app');
+  const R = Regles, app = document.getElementById('app'), SON = window.EcurieSons;
   const CLE = 'ecurie.partie', CLE_REC = 'ecurie.record';
   const lire = (k, d) => { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } };
   const ecrire = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
@@ -25,7 +25,7 @@
     achat: '<path d="M3 15l2.2-5h13.6L21 15v3H3z"/><circle cx="7" cy="18" r="1.6"/><circle cx="17" cy="18" r="1.6"/>', sponsors: '<path d="M12 3l2.6 5.4 5.9.8-4.3 4.1 1 5.8L12 16.4l-5.2 2.7 1-5.8-4.3-4.1 5.9-.8z"/>',
     semaine: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>', fans: '<path d="M12 20s-7-4.5-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 10c0 5.5-7 10-7 10z"/>',
     menu: '<path d="M4 7h16M4 12h16M4 17h16"/>', camera: '<path d="M3 8h4l2-3h6l2 3h4v11H3z"/><circle cx="12" cy="13" r="3.5"/>', vite: '<path d="M4 6l7 6-7 6zM13 6l7 6-7 6z"/>',
-    drapeau: '<path d="M5 21V4M5 4h13l-3 4 3 4H5"/>', trophee: '<path d="M8 4h8v5a4 4 0 0 1-8 0z"/><path d="M8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4M12 13v4M8 20h8"/>',
+    drapeau: '<path d="M5 21V4M5 4h13l-3 4 3 4H5"/>', son: '<path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16 9a4 4 0 0 1 0 6M18.5 6.5a8 8 0 0 1 0 11"/>', muet: '<path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16 9l5 6M21 9l-5 6"/>', trophee: '<path d="M8 4h8v5a4 4 0 0 1-8 0z"/><path d="M8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4M12 13v4M8 20h8"/>',
     essais: '<circle cx="12" cy="13" r="7"/><path d="M12 13l3-3M10 3h4"/>', atelier: '<path d="M14.5 5.5a4 4 0 0 0 4.9 4.9L11 18.8 8.2 16l8.4-8.4"/>',
     simu: '<rect x="3" y="4" width="18" height="12" rx="1.5"/><path d="M8 20h8M12 16v4"/>', repos: '<path d="M3 18V8M3 14h18v4M7 14v-3h6a3 3 0 0 1 3 3"/>',
     medias: '<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/>'};
@@ -73,7 +73,7 @@
   const prixVente = x => Math.round(R.VOITURES[x.v].prix * .45 * x.etat / 100 / 100) * 100;
   const pneusOfferts = () => E.signes.some(i => R.SPONSORS[i].cond === 'pneus');
   const prixPiece = q => q.k === 'pneus' && pneusOfferts() ? 0 : q.prix;
-  const prochainGP = cta => { const K = Circuits.get(R.calendrier(E.gp)); return `<section class="prochain bloc"><small>Prochain grand prix · ${E.gp + 1}/${R.GP_SAISON}</small><b>${K.nom}</b><span>8 tours · ${Math.round(K.TOT)} m · ${R.DIVISIONS[E.division].nom}</span>${cta ? '<button class="cta" data-gp="1">Lancer le grand prix</button>' : ''}</section>`; };
+  const prochainGP = cta => { const K = Circuits.get(R.calendrier(E.gp)); return `<section class="prochain bloc"><small>Prochain grand prix · ${E.gp + 1}/${R.GP_SAISON}</small><b>${K.nom}</b><span>${K.tours} tours · ${Math.round(K.TOT)} m · ${R.DIVISIONS[E.division].nom}</span>${cta ? '<button class="cta" data-gp="1">Lancer le grand prix</button>' : ''}</section>`; };
   const vues = {
     ecurie() { const pl = places(), libres = pl - E.pilotes.length, reserve = E.parc.filter(x => !R.piloteDe(E, x.id)), signes = new Set(E.pilotes.map(p => p.nom));
       return `${prochainGP(true)}
@@ -186,17 +186,17 @@
 
   /* ---------- grand prix : grille, course, résultats ---------- */
   let G = null; // {prep, C, K, S, vitesse, cams, cam, bilan}
-  function finCourse() { if (G && G.S) { G.S.liberer(); G.S = null; } }
+  function finCourse() { SON.moteurOff(); if (G && G.S) { G.S.liberer(); G.S = null; } }
   function lancer() {
     if (!E.pilotes.length) { toast('Il te faut un pilote'); return; }
     const prep = R.preparer(E), K = Circuits.get(prep.circuit);
     if (!prep.grille.some(g => g.joueur)) { toast('Aucun pilote ne peut courir'); E = lire(CLE, E); return; }
-    const C = Course.creer(K, prep.grille, {tours: 8});
+    const C = Course.creer(K, prep.grille, {tours: K.tours});
     G = {prep, C, K, vitesse: 1, cam: 0, bilan: null};
     const ordreDep = C.depart.map(k => C.V[k]);
     app.innerHTML = `${enTete(K.nom, `<span>GP ${E.gp + 1}/${R.GP_SAISON}</span>`)}<div class="corps">
       ${prep.msg.length ? `<section class="bloc"><h4>Ta semaine</h4>${prep.msg.map(m => `<div class="doux">${m}</div>`).join('')}</section>` : ''}
-      <section class="bloc"><h4>Grille de départ<em>8 tours</em></h4><table>${ordreDep.map((v, i) => `<tr class="${v.joueur ? 'moi' : ''}"><td>${i + 1}</td><td>${pastille(v.c)}${v.nom}</td><td class="petit-txt">${nomModele(v.m)}</td></tr>`).join('')}</table>
+      <section class="bloc"><h4>Grille de départ<em>${K.tours} tours</em></h4><table>${ordreDep.map((v, i) => `<tr class="${v.joueur ? 'moi' : ''}"><td>${i + 1}</td><td>${pastille(v.c)}${v.nom}</td><td class="petit-txt">${nomModele(v.m)}</td></tr>`).join('')}</table>
         <div class="doux">La grille vient des qualifications : voiture, talent et un peu de chance.</div></section>
       <button class="cta" data-a="depart">Départ !</button><button class="btn second" data-a="direct">Résultat direct</button></div><div class="toast"></div>`;
     actif = null;
@@ -205,18 +205,22 @@
     const {C, K} = G;
     app.innerHTML = `<div class="course"><canvas></canvas><div class="hud"><div class="haut"><span>${K.nom}</span><span class="tourN"></span></div><div class="tour"></div><div class="feux"></div>
       <div class="cam"></div><div class="duel"></div><div class="fil"></div><div class="flash"></div></div>
-      <div class="commandes"><button data-a="camera"></button><button data-a="vitesse"></button><button data-a="direct">${ic('drapeau')}Résultat</button></div></div>`;
+      <div class="commandes"><button data-a="camera"></button><button data-a="vitesse"></button><button data-a="direct">${ic('drapeau')}Résultat</button><button class="son" data-a="son" aria-label="Son">${ic(SON.actif() ? 'son' : 'muet')}</button></div></div>`;
     G.cams = []; C.V.forEach((v, i) => { if (v.joueur) G.cams.push(['Suivie ' + v.pil, 0, i]); }); G.cams.push(['Diorama', 1], ['Télé', 2]); G.cam = 0;
     G.S = Scene3D.creer(app.querySelector('canvas'), K, C); appliquerCam();
-    const hud = app.querySelector('.hud'); let acc = 1, feux = -1, coupe = 0, finVu = false;
+    const hud = app.querySelector('.hud'); let acc = 1, feux = -1, coupe = 0, finVu = false, nbEv = C.journal.length;
+    SON.moteurOn();
     actif = dt => {
       for (let k = 0; k < G.vitesse; k++) Course.pas(C, dt);
       G.S.image(dt);
       const etat = C.t < -3.5 ? 0 : C.t < 0 ? Math.min(5, Math.floor((C.t + 3.5) / .6) + 1) : C.t < 1.2 ? 6 : 7;
-      if (etat !== feux) { feux = etat; hud.querySelector('.feux').innerHTML = etat === 7 ? '' : Array.from({length: 5}, (_, i) => `<i class="${etat === 6 ? 'v' : i < etat ? 'r' : ''}"></i>`).join(''); }
+      if (etat !== feux) { if (etat >= 1 && etat <= 5) SON.bip(false); else if (etat === 6) SON.bip(true); feux = etat; hud.querySelector('.feux').innerHTML = etat === 7 ? '' : Array.from({length: 5}, (_, i) => `<i class="${etat === 6 ? 'v' : i < etat ? 'r' : ''}"></i>`).join(''); }
       if (G.S.mode === 2 && G.S.tele.coupe !== coupe) { coupe = G.S.tele.coupe; const f = hud.querySelector('.flash'); f.style.transition = 'none'; f.style.opacity = .8; requestAnimationFrame(() => { f.style.transition = 'opacity .3s'; f.style.opacity = 0; }); }
+      // le moteur de la voiture filmée (suivie), plus discret en diorama et à la télé ; un souffle à chaque dépassement
+      { const v = G.S.mode === 0 ? C.V[G.S.suivi] : C.ordre[0]; SON.moteurMaj(C.t < 0 ? 4 : v.v, G.S.mode === 0); }
+      while (nbEv < C.journal.length) { if (/^Dépassement/.test(C.journal[nbEv])) SON.passage(); nbEv++; }
       if ((acc += dt) > .25) { acc = 0; majHud(hud); }
-      if (C.fin && !finVu) { finVu = true; app.querySelector('.commandes').innerHTML = `<button data-a="resultats">${ic('trophee')}Voir les résultats</button>`; majHud(hud); }
+      if (C.fin && !finVu) { finVu = true; SON.foule(); SON.moteurOff(); app.querySelector('.commandes').innerHTML = `<button data-a="resultats">${ic('trophee')}Voir les résultats</button>`; majHud(hud); }
     };
   }
   function appliquerCam() { const [nom, mode, suivi] = G.cams[G.cam]; G.S.mode = mode; if (suivi != null) G.S.suivi = suivi;
@@ -279,6 +283,7 @@
     else if (d.a === 'direct') { Course.finir(G.C); resultats(); }
     else if (d.a === 'camera') { G.cam = (G.cam + 1) % G.cams.length; appliquerCam(); majHud(app.querySelector('.hud')); }
     else if (d.a === 'vitesse') { G.vitesse = G.vitesse === 1 ? 2 : G.vitesse === 2 ? 4 : 1; appliquerCam(); }
+    else if (d.a === 'son') { SON.regler(!SON.actif()); b.innerHTML = ic(SON.actif() ? 'son' : 'muet'); if (SON.actif()) SON.moteurOn(); }
     else if (d.a === 'resultats') resultats();
     else if (d.a === 'apres') apres();
     else if (E && app.querySelector('nav')) actionGestion(d);

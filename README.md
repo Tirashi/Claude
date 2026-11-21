@@ -488,7 +488,8 @@ Gestion d'une petite écurie de course (première version). On ne pilote pas : o
 - **Le paddock** : six onglets (écurie, garage, achat, sponsors, semaine, fans). Chaque pilote reçoit une voiture du parc, les autres restent en réserve et remplacent une voiture cassée.
 - **Le garage et la concession** : douze voitures neuves et des occasions qui changent chaque semaine ; six pièces (moteur, turbo, aileron, pneus, freins, allègement), peinture ; une voiture trop puissante pour la division ne peut pas courir.
 - **La course** : grille issue des qualifications, 8 tours, dépassements, erreurs, sorties de piste, accidents et casses ; caméra derrière ses pilotes, diorama ou télé ; course accélérée ou résultat direct.
-- **La saison** : 8 grands prix sur trois circuits ; les 3 premiers du championnat montent de division (Coupe 300 ch, Trophée 500 ch, Grand Prix illimité). La réputation ouvre des places de pilotes et des sponsors ; les fans finissent par rapporter (boutique de goodies, convention, fan club).
+- **Les circuits** : cinq circuits de ville (virages à gauche et à droite, chicanes), avec le bruit des moteurs, les bips du départ et la foule à l'arrivée.
+- **La saison** : 8 grands prix ; les 3 premiers du championnat montent de division (Coupe 300 ch, Trophée 500 ch, Grand Prix illimité). La réputation ouvre des places de pilotes et des sponsors ; les fans finissent par rapporter (boutique de goodies, convention, fan club).
 
 ## Les classiques passés en 16 bits
 

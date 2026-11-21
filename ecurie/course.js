@@ -33,7 +33,7 @@
       for (let d = 0; d < 70; d += 3) { const vc = vVirage(K, i0 + d, g); cible = Math.min(cible, Math.sqrt(vc * vc + 2 * FREIN * (.9 + .1 * v.tal) * (v.mem > 0 ? 1 + .12 * v.agr : 1) * d)); }
       for (const o of V) if (o !== v && enPiste(o)) { const e = o.s - v.s; if (e > 0 && e < 20 && cote(o, v) && K.RAD[i0] > 1e8) cible *= 1.07; }
       if (v.erreur > 0) { v.erreur -= dt; cible *= v.sortie ? .45 : .6; if (v.erreur <= 0) v.sortie = false; }
-      else if (t > 4 && !v.fini && R() < (1 - v.cst) * .035 * dt) { v.erreur = 1.2 + R(); let virage = false; for (let d = 0; d < 25; d += 5) if (K.RAD[(i0 + d) % NP] < 1e8) virage = true;
+      else if (t > 4 && !v.fini && R() < (1 - v.cst) * .035 * dt) { v.erreur = 1.2 + R(); let virage = false; for (let d = 0; d < 25; d += 5) if (K.RAD[(i0 + d) % NP] < 1e8) { virage = true; v.coteSortie = -K.SENS[(i0 + d) % NP]; break; }
         v.sortie = virage && R() < .6;
         if (v.sortie) { v.sorties++; if (R() < .12) { v.abandon = 'ACCIDENT'; evenement(C, `Accident ! ${v.nom} abandonne`); continue; } evenement(C, `Sortie de piste de ${v.nom} !`); }
         else { v.erreurs++; evenement(C, `Erreur de ${v.nom} !`); } }
@@ -47,8 +47,9 @@
         const plusVite = b.cibleV > a.v + .6 || b.v > a.v + .8;
         if (plusVite && !b.fini && b.mem <= 0 && R() < b.agr * dt * 4) { const l = K.ligne(b.s), cote1 = l > 0 ? -COTE : COTE;
           const ok = c => Math.abs(l + c) <= BORD + .01 && O.every(o => o === b || Math.abs(o.s - b.s) > LONG + 1 || Math.abs(o.dec - (l + c)) >= LARG);
-          let virage = false; { const ib = K.idx(b.s); for (let d = 15; d < 60; d += 5) if (K.RAD[(ib + d) % NP] < 1e8) virage = true; }
-          const c = virage && ok(COTE) ? COTE : ok(cote1) ? cote1 : ok(-cote1) ? -cote1 : 0;
+          let virage = 0; { const ib = K.idx(b.s); for (let d = 15; d < 60; d += 5) if (K.RAD[(ib + d) % NP] < 1e8) { virage = K.SENS[(ib + d) % NP]; break; } }
+          // un virage arrive : l'attaquant prend l'intérieur (à gauche pour un virage à gauche)
+          const c = virage && ok(virage * COTE) ? virage * COTE : ok(cote1) ? cote1 : ok(-cote1) ? -cote1 : 0;
           if (c) { b.cibleLat = c; b.mem = 4; if (a.bloque <= 0 && !a.fini && R() < a.agr * .3) { a.cibleLat = c * .7; a.bloque = 2.5; evenement(C, `${a.nom} ferme la porte à ${b.nom}`); } } }
         if (Math.abs(a.dec - b.dec) < LARG) b.v = Math.min(b.v, a.v + (e - 6.5) * .8); } }
     for (const v of V) { v.mem -= dt; v.bloque -= dt; v.s += v.v * dt;
@@ -60,7 +61,7 @@
     // déplacement latéral progressif, bloqué si la place est prise
     for (const v of V) { const l = K.ligne(v.s); let vise = Math.max(-BORD, Math.min(BORD, l + v.cibleLat));
       const parcouru = v.s - K.DEPART; if (parcouru < 110) { const w = Math.max(0, Math.min(1, (parcouru - 15) / 95)); vise = v.col * (1 - w) + vise * w; }
-      if (v.sortie) vise = -5.6; if (v.abandon) vise = -6.5;
+      if (v.sortie) vise = 5.6 * (v.coteSortie || -1); if (v.abandon) vise = -6.5;
       const pasL = Math.max(-VLAT * dt, Math.min(VLAT * dt, vise - v.dec)), nd = v.dec + pasL;
       const gene = !v.abandon && V.some(o => o !== v && enPiste(o) && Math.abs(o.s - v.s) < LONG + .4 && Math.abs(o.dec - nd) < LARG && Math.abs(o.dec - nd) < Math.abs(o.dec - v.dec));
       if (!gene) { v.lat = nd - l; v.dec = nd; } else v.lat = v.dec - l;

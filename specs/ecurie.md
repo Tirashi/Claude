@@ -68,6 +68,12 @@ Idée de l'utilisateur (18/11) : un petit jeu de **gestion d'écurie de course**
 - Tout le jeu passe dans la direction A de la maquette 9 : Titillium Web (copiée dans `polices/`, SIL OFL), bandeau orange penché en haut, vitrine sur fond transparent (dégradé de la page, ombre au sol, projecteur orange), prochain grand prix en tête de l'onglet Écurie, pilotes avec leur numéro (7, 12…), listes à bandeaux de prix, podium sur l'écran des résultats, HUD de course de la maquette, confirmations dans la page.
 - Textes en français normal (accents, minuscules) ; les majuscules viennent du style.
 
+## Session 2 (21/11) : circuits variés et sons
+- **Virages à droite** : la tuile de virage parcourue à l'envers (plan : −18, −42) ; la trajectoire, l'attaque par l'intérieur et les sorties de piste suivent le sens du virage (`SENS`).
+- **5 circuits** au calendrier : Ville, Port, Collines (un virage à droite), Parc, Canal (deux chicanes en S) ; les deux nouveaux ont été cherchés par programme (fermés, sans croisement, 380 à 560 m). Nombre de tours selon la longueur (≈ 3 km, 2 minutes : 6 à 8 tours).
+- **Sons** synthétisés (`sons.js`) : moteur de la voiture filmée (hauteur selon la vitesse, plus discret en diorama et à la télé), bips des feux, souffle à chaque dépassement, foule à l'arrivée ; bouton son dans les commandes de course (`ecurie.son`).
+- Mesuré : 7 à 10 dépassements par course selon le circuit.
+
 ## Questions ouvertes
 - Durée d'une partie (une saison, une carrière ?), classement ou non.
 - Comment l'écurie grandit (niveaux ? réputation ?) et ce que ça débloque (places de pilotes, garage plus grand, goodies, convention).

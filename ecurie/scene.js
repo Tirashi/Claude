@@ -18,8 +18,9 @@
     const pose = (nom, x, z, a, s = 1) => { const o = Modeles.maillage('deco-' + nom); o.position.set(x, 0, z); o.rotation.y = a; o.scale.setScalar(s); sc.add(o); return o; };
     for (let s = 6; s < TOT; s += 24) { const [x, z, h] = at(s, 8.2); pose('lamp_1', x, z, -h + Math.PI / 2); const [x2, z2, h2] = at(s + 12, -8.2); pose('lamp_1', x2, z2, -h2 + 3 * Math.PI / 2); }
     for (const t of K.tuiles) if (t.type === 'C') { const n = Math.round(t.R * Math.PI / 2 / 3.3);
-      for (let i = 0; i <= n; i++) { const a = t.th - Math.PI / 2 + i / n * Math.PI / 2, r = t.R + 8.6; pose('road_barier_2a', t.cx + r * Math.cos(a), t.cz + r * Math.sin(a), -(a + Math.PI / 2)); }
-      const a0 = t.th - Math.PI / 2; for (let k = 0; k < 3; k++) pose('traffic_barell_1', t.cx + (t.R + 11 + k * 2.2) * Math.cos(a0 - .05), t.cz + (t.R + 11 + k * 2.2) * Math.sin(a0 - .05), 0); }
+      // barrières à l'extérieur du virage, fûts juste avant l'entrée
+      for (let i = 0; i <= n; i++) { const a = t.a0 + (t.a1 - t.a0) * i / n, r = t.R + 8.6; pose('road_barier_2a', t.cx + r * Math.cos(a), t.cz + r * Math.sin(a), -(a + Math.PI / 2)); }
+      const a0 = t.a0 - .05 * t.sens; for (let k = 0; k < 3; k++) pose('traffic_barell_1', t.cx + (t.R + 11 + k * 2.2) * Math.cos(a0), t.cz + (t.R + 11 + k * 2.2) * Math.sin(a0), 0); }
     { const [x, z, h] = at(K.DEPART - 2, -8); pose('traffic_light_1', x, z, -h + 3 * Math.PI / 2); }
     for (let s = 0; s < TOT; s += 31) { const [x, z] = at(s, R() < .5 ? -10.5 : 10.5); pose('hazzard_cone_1', x, z, R() * 6); }
     const loin = (x, z, d) => K.pts.every(p => Math.hypot(p[0] - x, p[1] - z) > d);

@@ -116,7 +116,7 @@
       tal: r.p[0] / 10, cst: r.p[1] / 10, agr: r.p[2] / 10}, physique(r.n, 95, 0)));
     return {grille, msg, circuit: calendrier(E.gp)};
   }
-  const calendrier = gp => ['ville', 'port', 'parc'][gp % 3];
+  const calendrier = gp => ['ville', 'port', 'collines', 'parc', 'canal'][gp % 5];
 
   // la course est finie : points, argent, fans, usure ; renvoie le bilan à afficher
   function resultats(E, C, prep) {
