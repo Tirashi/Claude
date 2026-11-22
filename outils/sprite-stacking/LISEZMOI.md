@@ -41,3 +41,12 @@ Pour un jeu spatial perso de l'utilisateur (hors Ludothèque), à partir de sa d
 - Dans la page : `chargerBande(img, q)` (cellule = hauteur de l'image), `extruder(img, n, forme, q)` (hauteur par pixel : plaque, biseau = distance au bord × n/3, dôme ; flancs assombris vers le bas), `makeStack` (tranches + copies sombres + rayon pour les collisions). Une image dont la largeur est un multiple (≥ 2) de la hauteur est prise pour une bande, sinon elle est extrudée. Bouton « Voir la bande » : la pile courante en PNG au même format.
 - Hauteur d'une tranche : 1,5 px pour les tranches du code (8 couches pour 32 px), **1 px pour un .vox** (voxels cubiques).
 - Port vers GameMaker : la bande devient un sprite à N sous-images (« import strip ») avec l'origine au centre ; pour chaque tranche i, `draw_sprite_ext(spr, i, x, y - i * lz, 1, 1, angle, c_white, 1)`. `draw_sprite_ext` tourne après l'échelle, donc pas d'écrasement `sin(pitch)` : soit vue de dessus pure (pas d'écrasement, le relief vient du seul décalage), soit dessiner la pile dans une surface puis l'étirer en y, soit `matrix_set(matrix_world, …)` avec rotation puis échelle. Penser au cache par angle (voir la leçon de performance).
+
+### Packs essayés (22/11, retour « le sprite plat rend bizarre »)
+- **10+ Voxel Spaceships** (monogon, .vox ; CC BY-ND 4.0 d'après nos crédits, la page dit « tout usage, crédit apprécié ») : un zip par vaisseau sur la page, nez vers le bas → `--tourner 3`. Dual Striker contient deux modèles côte à côte (écarté). 24 à 90 voxels de long.
+- **Voxel Spaceships** (Texnist, CC BY 4.0) : un seul `Spaceships.vox` de 6 modèles, ~100 voxels, nez vers le bas.
+- **Pixel Shmup** (Kenney, CC0) : avions 32×32 à plat, nez en haut (pour comparer l'extrusion).
+- Pas trouvés : Moenen « Voxel Spaceships » (la page ne donne pas de lien de téléchargement direct), aucun pack de vaisseaux déjà en tranches.
+- `vox-bande.py --taille 32` : réduction par blocs (case pleine si 30 % du bloc l'est, couleur la plus fréquente) ; même facteur en hauteur, donc hauteur de tranche 1 px.
+- Extrusion : forme « lumière » ajoutée (les zones claires montent, bornée par le biseau).
+- Planche de vérification : vue de dessus de chaque bande (pixel le plus haut) pour trouver le sens du nez.
