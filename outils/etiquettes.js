@@ -3,14 +3,14 @@
 // et <dossier>/jaquette.jpg (boîte du volet, en hauteur). Le titre n'est pas dans l'image : l'accueil le pose par-dessus.
 // Lancer un serveur à la racine (python3 -m http.server 8765), puis : node outils/etiquettes.js [dossier…] [--brut <rép>]
 //   --brut <rép> : enregistre seulement la capture plein écran de chaque jeu (pour choisir les cadrages).
-// Chaque jeu : a = actions (["clic", texte] · ["xy", [x, y]] · ["touche", touche] · ["texte", lettres] · ["js", code] · ["attente", ms]), vue = [largeur, hauteur]
-// (390 × 760 par défaut), e et j = cadres [x, y, largeur, hauteur] en pixels CSS de la vue pour l'étiquette et la jaquette.
+// Chaque jeu : a = actions (["clic", texte] · ["xy", [x, y]] · ["touche", touche] · ["tenir", [touche, ms]] · ["texte", lettres] · ["js", code] · ["attente", ms]), vue = [largeur, hauteur]
+// (390 × 760 par défaut), net = agrandir sans lisser (pixel art), e et j = cadres [x, y, largeur, hauteur] en pixels CSS de la vue pour l'étiquette et la jaquette.
 const {chromium} = require('playwright');
 const path = require('path'), fs = require('fs');
 const RACINE = path.join(__dirname, '..');
 const E = [300, 210], J = [220, 290];   // tailles des images (étiquette, jaquette)
 const JEUX = {
-  alunissage: {a: [["xy", [195, 485]], ["attente", 3000]], e: [165, 45, 200, 140], j: [190, 30, 150, 198]},
+  alunissage: {a: [["attente", 500]], net: true, e: [190, 270, 130, 90], j: [210, 260, 90, 120]},
   amiral: {a: [["xy", [195, 454]], ["attente", 1500], ["xy", [293, 688]], ["attente", 2500]], e: [10, 120, 370, 259], j: [40, 100, 300, 395]},
   asteroids: {a: [["touche", "Space"], ["attente", 2500]], e: [0, 330, 390, 273], j: [60, 250, 270, 356]},
   bannieres: {a: [["xy", [195, 290]], ["attente", 1500], ["xy", [195, 386]], ["attente", 4000], ["js", "fermer()"], ["attente", 1200]], e: [0, 140, 390, 273], j: [40, 110, 310, 409]},
@@ -22,19 +22,19 @@ const JEUX = {
   'doggy-saga': {a: [["clic", "Jouer"], ["attente", 1500], ["clic", "C'est parti"], ["attente", 2000]], e: [10, 230, 370, 259], j: [40, 210, 300, 395]},
   'dragon-simulator': {a: [], e: [0, 30, 390, 273], j: [60, 10, 270, 356]},
   duche: {a: [["clic", "PARTIE LIBRE"], ["attente", 1200], ["clic", "FACILE"], ["attente", 3000]], e: [0, 200, 390, 273], j: [60, 150, 270, 356]},
-  empilage: {a: [["xy", [195, 549]], ["attente", 1500], ["xy", [195, 400]], ["attente", 1100], ["xy", [195, 400]], ["attente", 1100], ["xy", [195, 400]], ["attente", 1500]], e: [0, 250, 390, 273], j: [60, 170, 270, 356]},
+  empilage: {a: [["xy", [195, 549]], ["attente", 1200]].concat(Array(14).fill([["js", "cur.o = 0; placeCur(); lacher()"], ["attente", 250]]).flat(), [["attente", 1200]]), e: [0, 225, 390, 273], j: [0, 125, 390, 513]},
   escadrille: {a: [["xy", [195, 496]], ["attente", 1500]], e: [10, 120, 370, 259], j: [40, 100, 300, 395]},
   injagility: {a: [], e: [100, 215, 190, 133], j: [130, 200, 130, 170]},
   lanterne: {a: [["clic", "Nouvelle partie"], ["attente", 1500], ["clic", "Commencer"], ["attente", 4000]], e: [0, 200, 390, 273], j: [60, 150, 270, 356]},
   lignee: {a: [["clic", "FACILE"], ["attente", 1500]], e: [10, 90, 370, 259], j: [40, 80, 310, 409]},
   'lune-rover': {a: [], e: [40, 320, 310, 217], j: [70, 290, 250, 330]},
   magasinier: {a: [["xy", [195, 365]], ["attente", 1500], ["xy", [89, 357]], ["attente", 3500]], e: [0, 200, 390, 273], j: [60, 150, 270, 356]},
-  'mineur-de-l-espace': {vue: [760, 390], a: [["xy", [380, 200]], ["touche", "Space"], ["touche", "Enter"], ["attente", 4000]], e: [180, 60, 400, 280], j: [270, 40, 220, 290]},
+  'mineur-de-l-espace': {vue: [760, 390], a: [["xy", [208, 222]], ["attente", 3000], ["tenir", ["ArrowUp", 2500]]], net: true, e: [0, 220, 320, 170], j: [50, 190, 160, 200]},
   'mot-d-or': {a: [["touche", "Escape"], ["js", "document.querySelectorAll('.modal,.aide,.overlay,dialog').forEach(e=>e.remove())"], ["texte", "POMME"], ["touche", "Enter"], ["attente", 1800], ["texte", "TABLE"], ["touche", "Enter"], ["attente", 1800]], e: [20, 40, 350, 245], j: [40, 30, 310, 409]},
   nebula: {a: [], e: [0, 240, 390, 273], j: [60, 200, 270, 356]},
   odyssee: {a: [["clic", "JOUER"], ["attente", 3000]], e: [0, 150, 390, 273], j: [60, 120, 270, 356]},
   orbite: {a: [], e: [40, 150, 310, 217], j: [70, 100, 250, 330]},
-  picross: {a: [["xy", [111, 326]], ["attente", 2000]], e: [20, 150, 350, 245], j: [10, 20, 370, 488]},
+  picross: {a: [["js", "(async () => { const s = await (await fetch('jeu.js')).text(), i = s.indexOf('const PAL = ') + 12, PAL = eval('(' + s.slice(i, s.indexOf('};', i) + 1) + ')'); const d = document.createElement('div'); d.style.cssText = 'position:fixed;inset:0;z-index:99;background:#e8f0d8;display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:14px;align-content:start'; PUZZLES.filter(q => !q.legend).slice(0, 24).forEach(q => { const c = document.createElement('canvas'), H = q.art.length, W = q.art[0].length; c.width = W; c.height = H; const x = c.getContext('2d'); q.art.forEach((l, r) => [...l].forEach((ch, k) => { if (PAL[ch]){ x.fillStyle = PAL[ch]; x.fillRect(k, r, 1, 1); } })); c.style.cssText = 'width:100%;image-rendering:pixelated;background:#fff;border:3px solid #1a2a1a;border-radius:6px;padding:4px'; d.append(c); }); document.body.append(d); })()"], ["attente", 800]], net: true, e: [0, 0, 390, 273], j: [0, 0, 390, 513]},
   politique: {a: [["xy", [89, 421]], ["attente", 2000], ["xy", [195, 150]], ["attente", 2000], ["xy", [195, 240]], ["attente", 3000]], e: [0, 170, 390, 273], j: [60, 150, 270, 356]},
   'pont-stellaire': {a: [["xy", [195, 410]], ["attente", 1500]], e: [0, 200, 390, 273], j: [60, 150, 270, 356]},
   queens: {a: [["clic", "7×7"], ["attente", 800]], e: [20, 280, 350, 245], j: [40, 230, 310, 409]},
@@ -55,6 +55,7 @@ async function joue(p, a){
     if (t === "clic") await p.getByText(v).first().click({timeout: 2000}).catch(() => console.log("  pas trouvé :", v));
     else if (t === "xy") await p.mouse.click(v[0], v[1]);
     else if (t === "touche") await p.keyboard.press(v);
+    else if (t === "tenir"){ await p.keyboard.down(v[0]); await p.waitForTimeout(v[1]); await p.keyboard.up(v[0]); }
     else if (t === "texte") await p.keyboard.type(v, {delay: 60});
     else if (t === "js") await p.evaluate(v).catch(e => console.log("  js :", e.message.slice(0, 60)));
     else if (t === "attente") await p.waitForTimeout(v);
@@ -65,17 +66,17 @@ async function joue(p, a){
   }
 }
 // recadre la capture (cadre r, en pixels CSS) aux proportions de la sortie, réduit, et renvoie un JPEG
-async function decoupe(atelier, png, r, [w, h]){
-  const d = await atelier.evaluate(async ({src, r, w, h}) => {
+async function decoupe(atelier, png, r, [w, h], net){
+  const d = await atelier.evaluate(async ({src, r, w, h, net}) => {
     const im = new Image(); im.src = src; await im.decode();
     const k = im.width / window.__vue;   // échelle de la capture (deviceScaleFactor)
     let [x, y, cw, ch] = r; const f = w / h;
     if (cw / ch > f){ const n = ch * f; x += (cw - n) / 2; cw = n; } else { const n = cw / f; y += (ch - n) / 2; ch = n; }
     const c = document.createElement("canvas"); c.width = w; c.height = h;
-    const g = c.getContext("2d"); g.imageSmoothingQuality = "high";
+    const g = c.getContext("2d"); g.imageSmoothingEnabled = !net; g.imageSmoothingQuality = "high";
     g.drawImage(im, x * k, y * k, cw * k, ch * k, 0, 0, w, h);
     return c.toDataURL("image/jpeg", .84);
-  }, {src: "data:image/png;base64," + png.toString("base64"), r, w, h});
+  }, {src: "data:image/png;base64," + png.toString("base64"), r, w, h, net});
   return Buffer.from(d.split(",")[1], "base64");
 }
 (async () => {
@@ -94,8 +95,8 @@ async function decoupe(atelier, png, r, [w, h]){
       if (brut){ fs.mkdirSync(brut, {recursive: true}); fs.writeFileSync(path.join(brut, n + ".png"), png); }
       else {
         await atelier.evaluate(v => { window.__vue = v; }, vw);
-        fs.writeFileSync(path.join(RACINE, n, "etiquette.jpg"), await decoupe(atelier, png, c.e, E));
-        fs.writeFileSync(path.join(RACINE, n, "jaquette.jpg"), await decoupe(atelier, png, c.j, J));
+        fs.writeFileSync(path.join(RACINE, n, "etiquette.jpg"), await decoupe(atelier, png, c.e, E, c.net));
+        fs.writeFileSync(path.join(RACINE, n, "jaquette.jpg"), await decoupe(atelier, png, c.j, J, c.net));
       }
       console.log("ok", n);
     } catch (e){ console.log(n, e.message.slice(0, 100)); }
