@@ -1,7 +1,7 @@
 /* Le Mot d'or : fiche de l'accueil (voir accueil-outils.js) */
 Ludo.fiche({
   k: "mot-d-or/index.html",
-  carte: {n: "LE MOT D'OR", s: "MOT D'OR", ic: "motdor", fam: "32", lb: "linear-gradient(#7a2a20, #2a0e0a)", lt: "#ffd23f", sh: "#b0402c", rank: "motdor",
+  carte: {n: "LE MOT D'OR", img: "mot-d-or/etiquette.jpg", jaq: "mot-d-or/jaquette.jpg", s: "MOT D'OR", ic: "motdor", fam: "32", lb: "linear-gradient(#7a2a20, #2a0e0a)", lt: "#ffd23f", sh: "#b0402c", rank: "motdor",
     d: "Un mot de 6 lettres par jour à trouver en 6 essais, sur un bureau à la lueur de la lampe. Or : bien placée ; argent : mal placée. Le même mot pour toute la famille, et un entraînement pour rejouer.", tags: ["MOTS", "MOT DU JOUR"]},
   meta: {added: "2026-10-20", genres: ["LOGIQUE", "DU JOUR"]},
   enCours: () => { const j = rk("motdor.jour", null); return j && j.j === dayNum() && !j.fini && (j.rows || []).length ? "MOT DU JOUR" : null; },

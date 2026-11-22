@@ -1,0 +1,33 @@
+<!doctype html><script src="/js/three.min.js"></script><script src="/js/libs/fflate.min.js"></script>
+<script src="/js/loaders/GLTFLoader.js"></script><script src="/js/loaders/FBXLoader.js"></script><script src="/js/loaders/OBJLoader.js"></script><script src="/js/loaders/MTLLoader.js"></script>
+<script>
+window.createImageBitmap=undefined;
+function charger(url){return new Promise((ok,ko)=>{const ext=url.split('.').pop().toLowerCase();
+  if(ext==='glb'||ext==='gltf')new THREE.GLTFLoader().load(url,g=>ok(g.scene),null,ko);
+  else if(ext==='fbx')new THREE.FBXLoader().load(url,ok,null,ko);
+  else if(ext==='obj'){const mtl=url.replace(/\.obj$/i,'.mtl');new THREE.MTLLoader().load(mtl,m=>{m.preload();new THREE.OBJLoader().setMaterials(m).load(url,ok,null,ko);},null,()=>new THREE.OBJLoader().load(url,ok,null,ko));}});}
+const CAN={};
+function pixel(img,u,v,flip=true){let c=CAN[img.src];if(!c){const cv=document.createElement('canvas');cv.width=img.width;cv.height=img.height;const x=cv.getContext('2d');x.drawImage(img,0,0);c=CAN[img.src]={d:x.getImageData(0,0,img.width,img.height).data,w:img.width,h:img.height};}
+  if(u<0||u>1)u=u-Math.floor(u);if(v<0||v>1)v=v-Math.floor(v);const X=Math.max(0,Math.min(c.w-1,Math.floor(u*c.w))),Y=Math.max(0,Math.min(c.h-1,Math.floor((flip?1-v:v)*c.h)));const o=(Y*c.w+X)*4;return[c.d[o],c.d[o+1],c.d[o+2]];}
+async function cuire(url,rotY,ignorer,tex){const o=await charger(url);let TEX=null;if(tex){TEX=new Image();TEX.src=tex;await TEX.decode();}o.updateMatrixWorld(true);
+  const tris=[];// [x,y,z,r,g,b]*3
+  const attendre=[];o.traverse(m=>{if(m.isMesh){const mats=Array.isArray(m.material)?m.material:[m.material];for(const mt of mats)if(mt.map&&mt.map.image&&!mt.map.image.complete&&mt.map.image.decode)attendre.push(mt.map.image.decode().catch(()=>{}));}});
+  await Promise.all(attendre);
+  o.traverse(m=>{if(!m.isMesh)return;if(ignorer&&new RegExp(ignorer,'i').test(m.name))return;let g=m.geometry.index?m.geometry.toNonIndexed():m.geometry.clone();g.applyMatrix4(m.matrixWorld);
+    const P=g.attributes.position,U=g.attributes.uv,C=g.attributes.color;const mats=Array.isArray(m.material)?m.material:[m.material];
+    const groupes=g.groups&&g.groups.length?g.groups:[{start:0,count:P.count,materialIndex:0}];
+    for(const gr of groupes){const mt=mats[gr.materialIndex]||mats[0];const base=(TEX&&!(mt.map))?[255,255,255]:mt.color?[mt.color.r*255,mt.color.g*255,mt.color.b*255]:[200,200,200];const img=(mt.map&&mt.map.image)||TEX;
+      for(let i=gr.start;i<gr.start+gr.count;i+=3){let col;
+        if(img&&U){const u=(U.getX(i)+U.getX(i+1)+U.getX(i+2))/3,v=(U.getY(i)+U.getY(i+1)+U.getY(i+2))/3;const p=pixel(img,u,v,mt.map?mt.map.flipY!==false:true);col=p.map((x,k)=>x*base[k]/255);}
+        else if(C)col=[C.getX(i)*255,C.getY(i)*255,C.getZ(i)*255];else col=base;
+        tris.push([[P.getX(i),P.getY(i),P.getZ(i)],[P.getX(i+1),P.getY(i+1),P.getZ(i+1)],[P.getX(i+2),P.getY(i+2),P.getZ(i+2)],col.map(x=>Math.round(Math.max(0,Math.min(255,x))))]);}}});
+  // orientation : longueur sur X, nez vers +X (rotY en quarts de tour, appliqué autour de Y)
+  const c=Math.cos(rotY*Math.PI/2),s=Math.sin(rotY*Math.PI/2);for(const t of tris)for(let k=0;k<3;k++){const[x,y,z]=t[k];t[k]=[x*c+z*s,y,-x*s+z*c];}
+  let mn=[1e9,1e9,1e9],mx=[-1e9,-1e9,-1e9];for(const t of tris)for(let k=0;k<3;k++)for(let a=0;a<3;a++){mn[a]=Math.min(mn[a],t[k][a]);mx[a]=Math.max(mx[a],t[k][a]);}
+  const L=mx[0]-mn[0];// mise à l'échelle : longueur 1, posée au sol, centrée
+  const pal=[],palI={},pos=[],col=[],idx=[],vI={};
+  for(const t of tris){const key=t[3].join(',');if(!(key in palI)){palI[key]=pal.length;pal.push(t[3]);}const ci=palI[key];
+    for(let k=0;k<3;k++){const q=[Math.round(((t[k][0]-(mn[0]+mx[0])/2)/L)*32000),Math.round(((t[k][1]-mn[1])/L)*32000),Math.round(((t[k][2]-(mn[2]+mx[2])/2)/L)*32000)];const kk=q.join(',')+'|'+ci;
+      if(!(kk in vI)){vI[kk]=pos.length/3;pos.push(...q);col.push(ci);}idx.push(vI[kk]);}}
+  return{pos,col,idx,pal,dims:[1,(mx[1]-mn[1])/L,(mx[2]-mn[2])/L],L,tris:tris.length};}
+</script>

@@ -1,7 +1,7 @@
 /* Capitaine du port : fiche de l'accueil (voir accueil-outils.js) */
 Ludo.fiche({
   k: "capitaine-du-port/index.html",
-  carte: {n: "CAPITAINE DU PORT", s: "CAPITAINE", ic: "remorqueur", fam: "32", lb: "linear-gradient(#2a7c97, #163f66)", lt: "#ffd23f", sh: "#2a7c97", rank: "capitaine",
+  carte: {n: "CAPITAINE DU PORT", img: "capitaine-du-port/etiquette.jpg", jaq: "capitaine-du-port/jaquette.jpg", s: "CAPITAINE", ic: "remorqueur", fam: "32", lb: "linear-gradient(#2a7c97, #163f66)", lt: "#ffd23f", sh: "#2a7c97", rank: "capitaine",
     d: "Le port est encombré : glisse les bateaux dans leur longueur pour ouvrir la passe au navire doré. 60 bassins en 5 ports (pêche, commerce, marina, chantier naval, grand port), en pixel art 32 bits, et un bassin du jour pour toute la famille.", tags: ["PUZZLE", "60 BASSINS", "DU JOUR"]},
   meta: {added: "2026-10-20", genres: ["LOGIQUE", "DU JOUR"]},
   enCours: () => { const d = rk("capitaine.dailyRun", null), p = rk("capitaine.partie", null);

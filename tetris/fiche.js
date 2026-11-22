@@ -1,7 +1,7 @@
 /* Tetris : fiche de l'accueil (voir accueil-outils.js) */
 Ludo.fiche({
   k: "tetris/index.html",
-  carte: {n: "TETRIS", s: "TETRIS", ic: "blocks", fam: "rep", lb: "linear-gradient(#3b2a8a, #160f45)", lt: "#facc15", sh: "#6a4ad0", rank: "tetris",
+  carte: {n: "TETRIS", img: "tetris/etiquette.jpg", jaq: "tetris/jaquette.jpg", s: "TETRIS", ic: "blocks", fam: "rep", lb: "linear-gradient(#3b2a8a, #160f45)", lt: "#facc15", sh: "#6a4ad0", rank: "tetris",
     d: "Empile les pièces, complète des lignes, tiens le plus longtemps possible.", tags: ["NIVEAUX"]},
   meta: {genres: ["ARCADE"]},
   records: () => [["Meilleur score", num(rk("tetris16.best", 0))]],

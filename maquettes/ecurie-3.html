@@ -1,0 +1,269 @@
+<title>Écurie miniature 3</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Alegreya+Sans:wght@400;700&display=swap">
+<style>
+/* nouvelles voitures : salon (grande voiture qui tourne), course vue proche, course vue large */
+:root{--bg:#e6e2d8;--carte:#f5f1e8;--fg:#2a2830;--doux:#6a6474;--bord:#4e4a5e;--accent:#c4561c;
+  --titre:"Press Start 2P",monospace;--texte:"Alegreya Sans",system-ui,sans-serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#16161c;--carte:#202029;--fg:#ece8f2;--doux:#a8a2b4;--bord:#6c6888;--accent:#f0904a;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#16161c;--carte:#202029;--fg:#ece8f2;--doux:#a8a2b4;--bord:#6c6888;--accent:#f0904a;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:17px/1.5 var(--texte);padding-block:24px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+main{max-width:1180px;margin:0 auto;display:grid;gap:36px}
+h1,h2{font-family:var(--titre);font-weight:400;letter-spacing:.02em;text-wrap:balance}
+h1{font-size:18px;margin:0;color:var(--accent)} h2{font-size:12px;margin:0 0 14px;color:var(--bord)}
+p{margin:0;max-width:72ch}
+.tels{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:30px 24px}
+figure{margin:0;display:grid;gap:10px;min-width:0;justify-items:center;align-content:start}
+figcaption{display:grid;gap:4px;max-width:340px} figcaption b{font-family:var(--titre);font-size:10px;color:var(--accent);line-height:1.6}
+.idee{font-size:15px;color:var(--doux)}
+ul{margin:0;padding-left:22px;display:grid;gap:6px;max-width:76ch}
+.q{background:var(--carte);border-left:6px solid var(--accent);padding:14px 16px;display:grid;gap:8px}
+.tel{width:100%;max-width:340px;aspect-ratio:9/16;border:6px solid var(--bord);border-radius:24px;overflow:hidden;position:relative;background:#241d3a;
+  font-family:var(--titre);color:#fff;container-type:inline-size}
+.tel canvas.c{width:100%;height:100%;display:block;image-rendering:pixelated}
+.hud{position:absolute;inset:0;pointer-events:none}
+.haut{position:absolute;left:3cqi;top:3cqi;right:3cqi;display:flex;justify-content:space-between;font-size:2.6cqi;text-shadow:2px 2px 0 #000}
+.tour{position:absolute;left:3cqi;top:9cqi;display:grid;gap:1cqi;font-size:2.2cqi}
+.tour div{display:flex;gap:1.6cqi;align-items:center;background:rgba(18,14,30,.72);padding:.8cqi 1.6cqi .8cqi .8cqi}
+.tour i{width:2.4cqi;height:2.4cqi;display:block}
+.tour .moi{background:rgba(240,138,36,.9);color:#2b1606}
+.salon{position:absolute;left:3cqi;right:3cqi;bottom:3cqi;display:grid;gap:2cqi;pointer-events:auto}
+.cadre{background:rgba(28,22,48,.92);border:3px solid #120e1e;box-shadow:inset 0 0 0 2px #5b4d86;padding:2.2cqi;display:grid;gap:1.6cqi}
+.nomv{display:flex;justify-content:space-between;align-items:center;gap:2cqi}
+.nomv b{font-weight:400;color:#ffd166;font-size:3cqi} .nomv small{font-size:1.9cqi;color:#a99fd0}
+.fleches{display:flex;gap:1.4cqi}
+.fleches button{font:3cqi var(--titre);background:#5b4d86;color:#fff;border:0;border-bottom:3px solid #2b2440;padding:1.6cqi 2.6cqi;cursor:pointer}
+.livs{display:flex;gap:1.4cqi;flex-wrap:wrap}
+.livs button{font:1.8cqi var(--titre);background:#241d3a;color:#c9c0e8;border:2px solid #120e1e;padding:1.3cqi 1.6cqi;cursor:pointer;display:flex;gap:1.2cqi;align-items:center}
+.livs button.on{background:#f08a24;color:#2b1606}
+.livs i{width:2.4cqi;height:2.4cqi;display:block;border:1px solid #000}
+</style>
+<main>
+<header style="display:grid;gap:10px">
+<h1>ECURIE MINIATURE · LES VOITURES, VERSION 3</h1>
+<p>Nouvelles voitures, refaites de zéro avant de parler des mécanismes. Chaque voiture fait maintenant environ 44 voxels de long, 20 de large et 13 de haut (avant : 20 × 11 × 5). Elles ont des vitres avec un reflet, un bandeau de pare-brise, des jantes à branches, des phares, des feux arrière, des passages de roue et des lignes de portes, plus un contour sombre comme en pixel art. Elles sont affichées 1 à 4 fois plus grand. Tout est toujours fabriqué par le code, donc n'importe quelle livrée est possible.</p>
+</header>
+<section class="tels">
+<figure><div class="tel" id="t1"><canvas class="c" width="240" height="427"></canvas>
+  <div class="hud"><div class="haut"><span>SALON</span><span>×4</span></div>
+  <div class="salon"><div class="cadre"><div class="nomv"><div><b id="t1Nom"></b><br><small id="t1Type"></small></div>
+    <div class="fleches"><button id="t1Av">‹</button><button id="t1Ap">›</button></div></div>
+    <div class="livs" id="t1Livs"></div></div></div></div></div>
+<figcaption><b>1 · AU SALON</b><span>Une voiture à la fois, en très grand, sur son plateau. Les flèches changent de modèle, les boutons changent de livrée.</span><span class="idee">Six modèles : coupé, citadine, roadster décapotable, break de rallye, muscle car, supercar.</span></figcaption></figure>
+
+<figure><div class="tel" id="t2"><canvas class="c" width="270" height="480"></canvas>
+  <div class="hud"><div class="haut"><span>COUPE 300 CH</span><span class="tourN">TOUR 1/6</span></div><div class="tour"></div></div></div>
+<figcaption><b>2 · EN COURSE, VUE PROCHE</b><span>La caméra suit ta voiture. Une voiture fait environ un quart de la largeur de l'écran, comme la bleue de ton exemple.</span><span class="idee">Voxels affichés en 1,5 × 1,5 pixel.</span></figcaption></figure>
+
+<figure><div class="tel" id="t3"><canvas class="c" width="270" height="480"></canvas>
+  <div class="hud"><div class="haut"><span>COUPE 300 CH</span><span class="tourN">TOUR 1/6</span></div><div class="tour"></div></div></div>
+<figcaption><b>3 · EN COURSE, VUE LARGE</b><span>Le même circuit vu de plus haut : on voit plus de voitures et plus de virage, mais elles sont plus petites.</span><span class="idee">Voxels à 1 pixel : c'est la taille minimale avant de retomber dans la « bouillie ».</span></figcaption></figure>
+</section>
+<section class="q"><h2>A choisir</h2>
+<p>1. Les voitures sont-elles au niveau cette fois ? Lesquelles te plaisent le plus, et lesquelles sont à reprendre ?</p>
+<p>2. En course, vue proche (2) ou vue large (3) ? On peut aussi passer de l'une à l'autre avec un bouton.</p>
+<p>3. Les livrées : on peut en faire beaucoup (motifs, numéros, bandes, autocollants de sponsors). Le joueur choisit-il la sienne dans un petit atelier de peinture ?</p>
+</section>
+</main>
+<script>
+/* ---------- petit moteur de sprite stacking (repris de la maquette du 16/11) ---------- */
+function rnd(s){return()=>(s=(s*16807)%2147483647)/2147483647;}
+function ombrer(p,fort=.42){const c=document.createElement('canvas');c.width=p.w*p.n;c.height=p.h;const x=c.getContext('2d');x.drawImage(p.im,0,0);
+  for(let i=0;i<p.n;i++){const f=1-(i+1)/p.n;x.globalCompositeOperation='source-atop';x.fillStyle=`rgba(10,8,30,${(fort*f).toFixed(3)})`;x.fillRect(i*p.w,0,p.w,p.h);}return c;}
+function fabrique(w,h,n,f,fort){const c=document.createElement('canvas');c.width=w*n;c.height=h;const x=c.getContext('2d');const id=x.createImageData(w*n,h);
+  for(let i=0;i<n;i++)for(let b=0;b<h;b++)for(let a=0;a<w;a++){const col=f(i,a,b);if(!col)continue;const o=(b*w*n+i*w+a)*4;id.data[o]=col[0];id.data[o+1]=col[1];id.data[o+2]=col[2];id.data[o+3]=255;}
+  x.putImageData(id,0,0);const p={w,h,n,im:c,ok:true};p.c=ombrer(p,fort);return p;}
+const hex=h=>[parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)];
+const mix=(c,f)=>c.map(v=>Math.max(0,Math.min(255,v*f|0)));
+function hsl(h,s,l){h/=360;const q=l<.5?l*(1+s):l+s-l*s,p=2*l-q;const t=x=>{x=(x+1)%1;return x<1/6?p+(q-p)*6*x:x<.5?q:x<2/3?p+(q-p)*(2/3-x)*6:p;};return[t(h+1/3)*255|0,t(h)*255|0,t(h-1/3)*255|0];}
+function arbre(g,teinte){const r=rnd(g);const w=15,n=17;return fabrique(w,w,n,(i,a,b)=>{const dx=a-7,dy=b-7,d=dx*dx+dy*dy;
+  if(i<6&&Math.abs(dx)<=1&&Math.abs(dy)<=1)return hex(i<5?'#6b4426':'#563519');
+  const rr=i<5?0:5.6*Math.sin(Math.PI*(i-4.5)/12.5);if(i>=5&&d<=rr*rr+r()*3)return hsl(teinte+r()*14,.48,(40+i*2.2+r()*10-(d>rr*rr-6?8:0))*.0062);return null;});}
+const ARBRES=[arbre(7,95),arbre(31,108),arbre(77,82)];
+const PNEUS=fabrique(6,6,5,(i,a,b)=>{const d=Math.hypot(a-2.5,b-2.5);return d<3&&d>1?hex(i%2?'#1c1c22':'#e8e8e8'):null;});
+const TRIBUNE=fabrique(60,20,22,(i,a,b)=>{const r=rnd(a*31+b*7+i);const marche=Math.floor(b/3);const hm=4+marche*3;
+  if(i<hm&&b<18)return i===hm-1?(r()<.75?hsl(r()*360,.6,.55):hex('#3c4250')):hex('#5c6070');
+  if(b>=18&&i<22)return hex(i>18?'#c03a3a':'#d8d8d8');return null;});
+const STAND=fabrique(40,14,12,(i,a,b)=>{if(i<9)return b>11?(a%8<1?hex('#2a2a32'):null):hex(a%8<1?'#9aa0ac':(i===8?'#c9ced8':'#e4e6ea'));if(i<12&&b<=12)return hex(i===11?'#d8423a':'#f1ece2');return null;});
+function pile(ctx,p,x,y,ang,k,z=0){if(!p||!p.ok)return;const c=p.c||p.im;const co=Math.cos(ang),si=Math.sin(ang);
+  for(let i=0;i<p.n;i++){ctx.setTransform(co,si*k,-si,co*k,x,y-(z+i));ctx.drawImage(c,i*p.w,0,p.w,p.h,-p.w/2,-p.h/2,p.w,p.h);}ctx.setTransform(1,0,0,1,0,0);}
+const OMB=new WeakMap();
+function ombrePile(ctx,p,x,y,ang,k,a=.3){let o=OMB.get(p);if(!o){o=document.createElement('canvas');o.width=p.w;o.height=p.h;const g=o.getContext('2d');
+    for(let i=0;i<p.n;i+=1)g.drawImage(p.im,i*p.w,0,p.w,p.h,0,0,p.w,p.h);g.globalCompositeOperation='source-in';g.fillStyle='#000';g.fillRect(0,0,p.w,p.h);OMB.set(p,o);}
+  const co=Math.cos(ang),si=Math.sin(ang);ctx.globalAlpha=a;ctx.setTransform(co,si*k,-si,co*k,x,y);ctx.drawImage(o,-p.w/2,-p.h/2);ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;}
+function vers(cam,cx,cy,k,wx,wy,ox,oy){const c=Math.cos(cam),s=Math.sin(cam);const x=wx-ox,y=wy-oy;return[cx+x*c-y*s,cy+(x*s+y*c)*k,x*s+y*c];}
+function sol(ctx,cam,img,cx,cy,k,ox,oy){const c=Math.cos(cam),s=Math.sin(cam);ctx.setTransform(c,s*k,-s,c*k,cx,cy);ctx.drawImage(img,-ox,-oy);ctx.setTransform(1,0,0,1,0,0);}
+function chemin(P){const pts=[];const n=P.length;for(let i=0;i<n;i++){const[p0,p1,p2,p3]=[P[(i-1+n)%n],P[i],P[(i+1)%n],P[(i+2)%n]];
+    for(let t=0;t<1;t+=.05){const t2=t*t,t3=t2*t;const f=(a,b,c,d)=>.5*(2*b+(-a+c)*t+(2*a-5*b+4*c-d)*t2+(-a+3*b-3*c+d)*t3);pts.push([f(p0[0],p1[0],p2[0],p3[0]),f(p0[1],p1[1],p2[1],p3[1])]);}}
+  const L=[0];for(let i=1;i<=pts.length;i++){const a=pts[i-1],b=pts[i%pts.length];L.push(L[i-1]+Math.hypot(b[0]-a[0],b[1]-a[1]));}
+  return{pts,L,tot:L[L.length-1],at(s,dec=0){s=((s%this.tot)+this.tot)%this.tot;let i=0;while(this.L[i+1]<s)i++;const a=this.pts[i],b=this.pts[(i+1)%this.pts.length];const f=(s-this.L[i])/(this.L[i+1]-this.L[i]);
+    const h=Math.atan2(b[1]-a[1],b[0]-a[0]);return[a[0]+(b[0]-a[0])*f-Math.sin(h)*dec,a[1]+(b[1]-a[1])*f+Math.cos(h)*dec,h];}};}
+
+/* ---------- le circuit ---------- */
+const TRACE=[[90,300],[90,140],[150,80],[260,90],[300,160],[250,220],[330,280],[420,250],[470,330],[420,430],[260,450],[150,420]];
+function circuit(ech,herbe1,herbe2,graine,marge=36,lg=1){let P=TRACE.map(([x,y])=>[x*ech,y*ech]);let C=chemin(P);
+  const mx=Math.min(...C.pts.map(p=>p[0])),my=Math.min(...C.pts.map(p=>p[1]));P=P.map(([x,y])=>[x-mx+marge,y-my+marge]);C=chemin(P);
+  const W=Math.ceil(Math.max(...C.pts.map(p=>p[0]))+marge),H=Math.ceil(Math.max(...C.pts.map(p=>p[1]))+marge);
+  const c=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d');
+  const bande=Math.max(10,20*ech);for(let i=0;i*bande<W;i++){x.fillStyle=i%2?herbe1:herbe2;x.fillRect(i*bande,0,bande,H);}
+  const trace=(w,st,dash)=>{x.lineWidth=w;x.strokeStyle=st;x.lineJoin='round';x.setLineDash(dash||[]);x.beginPath();C.pts.forEach((p,i)=>i?x.lineTo(p[0],p[1]):x.moveTo(p[0],p[1]));x.closePath();x.stroke();};
+  trace(44*lg,'#d8c89a');trace(32*lg,'#ffffff');trace(32*lg,'#d33b30',[5*lg,5*lg]);trace(28*lg,'#55545e');trace(1,'rgba(255,255,255,.18)',[6,10]);
+  const r=rnd(graine);const d=x.getImageData(0,0,W,H).data;for(let i=0;i<W*H/5;i++){const a=r()*W|0,b=r()*H|0;if(d[(b*W+a)*4]===85){x.fillStyle=r()<.5?'#5d5c66':'#4d4c56';x.fillRect(a,b,1,1);}}
+  const[sx,sy,h]=C.at(6);x.save();x.translate(sx,sy);x.rotate(h);for(let i=0;i<14;i++)for(let j=0;j<2;j++){x.fillStyle=(i+j)%2?'#111':'#fff';x.fillRect(j*2,-14+i*2,2,2);}x.restore();
+  // cases de la grille
+  for(let k=0;k<8;k++){const[gx,gy,gh]=C.at(-14-k*17,(k%2?11:-11));x.save();x.translate(gx,gy);x.rotate(gh);x.strokeStyle='#e8e8e8';x.lineWidth=1;x.beginPath();x.moveTo(6,-4);x.lineTo(6,4);x.stroke();x.restore();}
+  const OBJ=[];for(let i=0;i<60*lg*lg;i++){const ox=r()*W,oy=r()*H;let près=false;for(const p of C.pts)if(Math.hypot(p[0]-ox,p[1]-oy)<36*lg){près=true;break;}if(!près&&ox>8&&oy>8&&ox<W-8&&oy<H-8)OBJ.push({p:ARBRES[i%3],x:ox,y:oy,a:0});}
+  for(let s=40;s<C.tot;s+=26){const[px,py]=C.at(s,26*lg);if(OBJ.every(o=>Math.hypot(o.x-px,o.y-py)>12))OBJ.push({p:PNEUS,x:px,y:py,a:0});}
+  {const[tx,ty,th]=C.at(40,-38*lg);OBJ.push({p:TRIBUNE,x:tx,y:ty,a:th});const[qx,qy,qh]=C.at(30,34*lg);OBJ.push({p:STAND,x:qx,y:qy,a:qh});}
+  return{C,img:c,W,H,OBJ};}
+
+function boucle(el,f){let vu=false,avant=performance.now();new IntersectionObserver(es=>{vu=es[0].isIntersecting;}).observe(el);
+  function b(m){const dt=Math.min(.05,(m-avant)/1000);avant=m;if(vu)f(dt);requestAnimationFrame(b);}requestAnimationFrame(b);}
+/* ---------- les voitures : un vrai modèle voxel, construit par le code ---------- */
+const MODELES={
+  coupe:{nom:'KAZE ZETA GT',type:'COUPE · 268 CH',L:44,hw:9,H:13,cab:[.22,.34,.56,.7],zr:7.5,zf:6.6,zn:4.6,toit:11.4,r:3.6,roues:[.2,.79],tumble:.45,aileron:true},
+  citadine:{nom:'KAZE PICO R',type:'CITADINE · 120 CH',L:36,hw:8.5,H:14,cab:[.05,.15,.54,.69],zr:7.5,zf:7.2,zn:5.6,toit:12.6,r:3.3,roues:[.18,.8],tumble:.35},
+  roadster:{nom:'KAZE LIBRE',type:'ROADSTER · 160 CH',L:38,hw:8.5,H:11,cab:[.27,.27,.56,.6],zr:6.6,zf:6,zn:4.4,ouvert:true,r:3.4,roues:[.18,.8],tumble:.4},
+  rallye:{nom:'NORD 4X',type:'BREAK DE RALLYE · 290 CH',L:44,hw:9,H:15,cab:[.04,.09,.58,.72],zr:8,zf:7.4,zn:5.8,toit:13.2,r:3.8,roues:[.19,.8],tumble:.32,galerie:true},
+  muscle:{nom:'STROM V8',type:'MUSCLE CAR · 420 CH',L:46,hw:9.5,H:13,cab:[.2,.34,.52,.64],zr:8,zf:8,zn:7,toit:12,r:3.8,roues:[.19,.81],tumble:.5},
+  super:{nom:'BRAVA 90',type:'SUPERCAR · 610 CH',L:46,hw:10,H:12,cab:[.3,.42,.58,.72],zr:7.4,zf:5.6,zn:3.4,toit:10.2,r:3.8,roues:[.2,.82],tumble:.6,aileron:true,prises:true}};
+const LIVREES=[
+  {nom:'JUNGLE',c1:'#efe1bf',c2:'#1f5a36',c3:'#3a9a4a',feuilles:true,jupe:true,jante:'#d0781e'},
+  {nom:'BANDES',c1:'#2456c8',c2:'#18181e',c3:'#f4f4f4',bandes:true,jante:'#d8dce4'},
+  {nom:'NUMERO',c1:'#f08a24',c2:'#1e2a44',c3:'#f4f4f4',num:7,jupe:true,jante:'#2a2a32'},
+  {nom:'DEUX TONS',c1:'#c8262c',c2:'#18181e',c3:'#f4f4f4',deuxTons:true,num:3,jante:'#c8ccd6'},
+  {nom:'RALLYE',c1:'#f4f4f4',c2:'#2a5ad0',c3:'#e8c43a',bandes:true,jupe:true,num:4,jante:'#e8e8ec'}];
+const CHIF={3:['111','001','011','001','111'],4:['101','101','111','001','001'],7:['111','001','010','010','010'],2:['111','001','111','100','111'],5:['111','100','111','001','111'],8:['111','101','111','101','111'],1:['010','110','010','010','111'],9:['111','101','111','001','111']};
+function voiture(cle,liv){const M=MODELES[cle];const L=M.L,hw=M.hw,W=Math.ceil(hw)*2+2,H=M.H,cy=(W-1)/2;
+  const I=(x,y,z)=>(z*W+y)*L+x,occ=new Uint8Array(L*W*H);
+  const ss=(e0,e1,v)=>{let t=(v-e0)/(e1-e0);t=t<0?0:t>1?1:t;return t*t*(3-2*t);},lerp=(a,b,t)=>a+(b-a)*t;
+  const[a,b,c,d]=M.cab;
+  const demi=t=>{let f=1;const er=.09,ef=.14;if(t<er){const u=1-t/er;f=Math.sqrt(1-u*u*.85);}else if(t>1-ef){const u=(t-1+ef)/ef;f=Math.sqrt(1-u*u*.8);}return hw*f;};
+  const ceinture=t=>lerp(M.zr,M.zf,ss(a,d,t));
+  const dessus=t=>{if(t<a)return M.zr-(t<.035?1:0);if(M.ouvert&&t<d)return ceinture(t);if(t<b)return lerp(M.zr,M.toit,ss(a,b,t));if(t<c)return M.toit;
+    if(t<d)return lerp(M.toit,M.zf,ss(c,d,t));return lerp(M.zf,M.zn,Math.pow((t-d)/(1-d),1.4))-(t>.97?.8:0);};
+  const limite=(t,zz)=>{const h=demi(t),zb=ceinture(t);return(!M.ouvert&&zz>zb&&t>a-.02&&t<d+.02)?h-1.2-(zz-zb)*M.tumble:h;};
+  const aile=M.aileron||liv.aileron,zAile=Math.round(M.zr+2.6);
+  const genre=new Uint8Array(L*W*H); // 1 caisse, 2 pneu, 3 jante, 4 vitre, 5 aileron, 6 siège, 7 galerie
+  for(let z=0;z<H;z++)for(let y=0;y<W;y++)for(let x=0;x<L;x++){const t=(x+.5)/L,yy=Math.abs(y-cy),zz=z+.5;let g=0;
+    if(z>=1){const lim=limite(t,zz),zt=dessus(t);const bombe=zt-1.2*Math.pow(Math.min(1,yy/Math.max(1,lim)),4);if(yy<=lim&&zz<=bombe)g=1;}
+    if(M.ouvert){const zb=ceinture(t);
+      if(t>a&&t<c-.02&&yy<demi(t)-1.6&&zz>3&&zz>zb-2)g=0;
+      if(t>a+.02&&t<a+.16&&yy>1&&yy<4.5&&zz>3&&zz<(t<a+.06?zb+1.8:zb-.6))g=6;
+      if(t>c-.035&&t<c&&zz>zb&&zz<zb+2.8&&yy<demi(t)-1.2)g=4;}
+    for(const tw of M.roues){const xw=tw*L,dd=Math.hypot(x+.5-xw,zz-M.r);
+      const sous=zz<M.r*1.6;
+      if(yy>hw-4.6&&dd<M.r+.7&&sous)g=0;
+      if(yy>hw-3.9&&yy<hw-.1&&dd<M.r+.15&&sous)g=(dd>M.r-1.3||yy<hw-3)?2:3;}
+    if(aile&&x>=1&&x<=3&&z===zAile&&yy<=hw-.3)g=5;
+    if(aile&&x===2&&yy>hw-5&&yy<hw-3.5&&zz>M.zr-.5&&z<zAile)g=5;
+    if(M.galerie&&z===Math.ceil(M.toit)&&t>b+.04&&t<c-.04&&((yy>hw-3.8&&yy<hw-2.6)||(x%5===0&&yy<hw-2.6)))g=7;
+    if(g)occ[I(x,y,z)]=g;}
+  const vide=(x,y,z)=>x<0||y<0||z<0||x>=L||y>=W||z>=H||!occ[I(x,y,z)];
+  const hx=h=>hex(h),C1=hx(liv.c1),C2=hx(liv.c2),C3=hx(liv.c3||liv.c2),VI=hx('#2c3a52'),VIc=hx('#9cc0e4'),JA=hx(liv.jante),PN=hx('#1c1c22'),BL=hx('#f4f4f4'),NO=hx('#18181e');
+  const bruit=(x,y,z)=>Math.sin(x*.32+Math.sin(y*.42)*1.8+z*.3)*Math.sin(y*.4+Math.sin(x*.21)*2.1+z*.33);
+  const chiffre=(n,u,v)=>{const g=CHIF[n];if(!g)return false;const r=g[v+2],cc=r&&r[u+1];return cc==='1';};
+  const sl=[];
+  for(let z=0;z<H;z++){const cv=document.createElement('canvas');cv.width=L;cv.height=W;const cx=cv.getContext('2d'),id=cx.createImageData(L,W);
+    for(let y=0;y<W;y++)for(let x=0;x<L;x++){const g=occ[I(x,y,z)];if(!g)continue;const t=(x+.5)/L,yy=Math.abs(y-cy),zz=z+.5,zb=ceinture(t),lim=limite(t,zz);
+      const haut=vide(x,y,z+1),cote=vide(x-1,y,z)||vide(x+1,y,z)||vide(x,y-1,z)||vide(x,y+1,z);if(!haut&&!cote)continue;
+      let col,vitre=false;
+      if(g===2)col=haut?hx('#2c2c34'):PN;
+      else if(g===3){const tw=M.roues.reduce((p,q)=>Math.abs(q*L-x)<Math.abs(p*L-x)?q:p);const an=Math.atan2(zz-M.r,x+.5-tw*L),dd=Math.hypot(zz-M.r,x+.5-tw*L);col=(dd<.9||Math.cos(an*5)>.2)?JA:mix(JA,.45);}
+      else if(g===4){col=VI;vitre=true;}
+      else if(g===5)col=C2;else if(g===6)col=hx('#3a2a2a');else if(g===7)col=hx('#2a2a32');
+      else{ // la caisse
+        if(!M.ouvert&&zz>zb+.7&&t>a&&t<d){vitre=true;
+          if(t>b+.015&&t<c-.015&&haut&&yy<lim-1.5)vitre=false;
+          if(Math.abs(x+.5-(b+c)/2*L)<1.1&&!haut)vitre=false;
+          if((t<b||t>c)&&yy>lim-1.3)vitre=false;
+          if(M.galerie&&t>b&&t<c&&haut)vitre=false;}
+        if(vitre){col=VI;if(haut&&t>c-.03&&t<c+.04)col=hx(liv.c2==='#18181e'?'#3c4250':liv.c2);}
+        else{col=C1;
+          if(liv.deuxTons&&zz>zb+.4)col=C2;
+          if(liv.feuilles){const n=bruit(x,y,z);if(n>.42)col=n>.62?mix(C3,.72):C3;}
+          if(liv.bandes&&haut&&yy>.6&&yy<2.6)col=C3;
+          if(liv.jupe&&zz<3.2)col=C2;
+          if(liv.num){const dx=x+.5-L*.5,dz=zz-(Math.min(zb,7)-2.6);if(!haut&&yy>lim-1.6&&dx*dx+dz*dz<9.5){col=chiffre(liv.num,Math.round(y>cy?dx:-dx),Math.round(-dz))?NO:BL;}
+            const hx2=x+.5-(d+(1-d)*.48)*L,hy=y-cy;if(haut&&t>d&&hx2*hx2+hy*hy<10.5)col=chiffre(liv.num,Math.round(hy),Math.round(hx2))?NO:BL;}
+          if(M.prises&&haut&&t>.06&&t<a-.02&&yy<4&&x%2===0)col=hx('#22222a');
+          // phares, calandre, feux, échappement
+          if(x>=L-2&&vide(x+1,y,z)){if(zz>M.zn-2.4&&zz<M.zn-.2&&yy>hw*.42&&yy<lim-.6)col=hx('#fff4c4');else if(zz<M.zn-2.2&&zz>1.4&&yy<hw*.42)col=NO;}
+          if(x<=1&&vide(x-1,y,z)){if(zz>M.zr-2.6&&zz<M.zr-.8&&yy>hw*.38&&yy<lim-.6)col=hx('#e0302a');else if(zz<2.6)col=hx('#2a2a32');}
+          if(!haut&&(x===Math.round(c*L+1)||x===Math.round(b*L-2))&&zz<zb)col=mix(col,.78);
+          if(haut&&x===Math.round(d*L+1)&&!M.ouvert)col=mix(col,.86);}
+      }
+      // lumière : dessus clair, arêtes plus claires, flancs plus sombres vers le bas
+      let f;if(haut)f=cote?1.14:1;else f=(.68+.22*(zz/H))*(vide(x,y,z-1)?.85:1);if(z<=1)f*=.8;
+      col=mix(col,f);
+      if(vitre&&haut&&((x+y*.7+z*1.3)%9)<1.6)col=col.map((v,k)=>v*.4+VIc[k]*.6|0);
+      const o=(y*L+x)*4;id.data[o]=col[0];id.data[o+1]=col[1];id.data[o+2]=col[2];id.data[o+3]=255;}
+    cx.putImageData(id,0,0);sl.push(cv);}
+  return{L,W,H,sl,M};}
+
+/* ---------- dessin : tranches agrandies, sans trous, contour sombre et ombre ---------- */
+const BUF=document.createElement('canvas'),BX=BUF.getContext('2d'),SIL=document.createElement('canvas'),SX=SIL.getContext('2d');
+function dessinerVoiture(ctx,v,x,y,ang,k,S,hv=.82){x=Math.round(x);y=Math.round(y);
+  const R=Math.ceil(Math.hypot(v.L,v.W)/2*S+v.H*S*hv+4),T=2*R;
+  if(BUF.width<T||BUF.height<T){BUF.width=BUF.height=SIL.width=SIL.height=T;}
+  BX.setTransform(1,0,0,1,0,0);BX.clearRect(0,0,T,T);BX.imageSmoothingEnabled=false;
+  const co=Math.cos(ang),si=Math.sin(ang),pas=Math.max(1,Math.ceil(S*hv));
+  for(let z=0;z<v.H;z++)for(let j=0;j<pas;j++){BX.setTransform(co*S,si*S*k,-si*S,co*S*k,R,R-(z*S*hv+j*S*hv/pas));BX.drawImage(v.sl[z],-v.L/2,-v.W/2);}
+  BX.setTransform(1,0,0,1,0,0);
+  SX.globalCompositeOperation='copy';SX.drawImage(BUF,0,0);SX.globalCompositeOperation='source-in';SX.fillStyle='#120f1a';SX.fillRect(0,0,T,T);SX.globalCompositeOperation='source-over';
+  ctx.globalAlpha=.3;ctx.setTransform(co*S,si*S*k,-si*S,co*S*k,x+S*1.5,y+S*1.5);ctx.fillStyle='#000';ctx.fillRect(-v.L/2+1,-v.W/2+1,v.L-2,v.W-2);ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;
+  for(const[dx,dy]of[[-1,0],[1,0],[0,-1],[0,1]])ctx.drawImage(SIL,0,0,T,T,x-R+dx,y-R+dy,T,T);
+  ctx.drawImage(BUF,0,0,T,T,x-R,y-R,T,T);}
+function pileZ(ctx,p,x,y,ang,k,S,hv=.82){if(!p||!p.ok)return;const c=p.c||p.im,co=Math.cos(ang),si=Math.sin(ang),pas=Math.max(1,Math.ceil(S*hv));
+  for(let i=0;i<p.n;i++)for(let j=0;j<pas;j++){ctx.setTransform(co*S,si*S*k,-si*S,co*S*k,x,y-(i*S*hv+j*S*hv/pas));ctx.drawImage(c,i*p.w,0,p.w,p.h,-p.w/2,-p.h/2,p.w,p.h);}ctx.setTransform(1,0,0,1,0,0);}
+
+/* ---------- 1 : le salon ---------- */
+{const el=document.getElementById('t1'),cv=el.querySelector('canvas'),ctx=cv.getContext('2d');ctx.imageSmoothingEnabled=false;
+  const cles=Object.keys(MODELES);let im=0,il=0,V=null,t=0;
+  function maj(){V=voiture(cles[im],LIVREES[il]);document.getElementById('t1Nom').textContent=MODELES[cles[im]].nom;document.getElementById('t1Type').textContent=MODELES[cles[im]].type;
+    document.querySelectorAll('#t1Livs button').forEach((b,i)=>b.classList.toggle('on',i===il));}
+  document.getElementById('t1Livs').innerHTML=LIVREES.map((l,i)=>`<button><i style="background:${l.c1}"></i>${l.nom}</button>`).join('');
+  document.querySelectorAll('#t1Livs button').forEach((b,i)=>b.onclick=()=>{il=i;maj();});
+  document.getElementById('t1Av').onclick=()=>{im=(im+cles.length-1)%cles.length;maj();};
+  document.getElementById('t1Ap').onclick=()=>{im=(im+1)%cles.length;maj();};
+  maj();
+  boucle(el,dt=>{t+=dt;const W=cv.width,H=cv.height;ctx.setTransform(1,0,0,1,0,0);
+    const g=ctx.createRadialGradient(W/2,H*.42,10,W/2,H*.42,W);g.addColorStop(0,'#4a3f70');g.addColorStop(1,'#16122a');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#2b2440';ctx.beginPath();ctx.ellipse(W/2,H*.44+6,W*.47,W*.2,0,0,7);ctx.fill();ctx.fillStyle='#6a5c98';ctx.beginPath();ctx.ellipse(W/2,H*.44,W*.47,W*.2,0,0,7);ctx.fill();
+    ctx.strokeStyle='#7d6fae';ctx.lineWidth=1;ctx.beginPath();ctx.ellipse(W/2,H*.44,W*.4,W*.17,0,0,7);ctx.stroke();
+    dessinerVoiture(ctx,V,W/2,H*.44,t*.45,.55,3.9);});}
+
+/* ---------- 2 et 3 : la course ---------- */
+const GRILLE=[['coupe',2],['muscle',1],['super',3],['rallye',4],['roadster',0],['coupe',1],['citadine',2],['muscle',3]];
+const COUL_G=GRILLE.map(([m,l])=>LIVREES[l].c1);
+const PILOTES=['TOI','OKA','BEL','LIN','SOU','HAY','RUI','NOV'];
+function course2(C,graine){const r=rnd(graine);
+  const V=GRILLE.map(([m,l],k)=>({k,v3:voiture(m,LIVREES[l]),s:-14-k*17,dec:k%2?11:-11,cible:k%2?11:-11,base:[1,1.012,1.018,.996,1.004,.99,.985,.98][k]*(.99+r()*.02),ph:r()*6,v:0,moi:k===0}));
+  const R={C,V,t:0,ordre:V.slice(),
+    maj(dt,vit){this.t+=dt;
+      for(const v of V){const h0=C.at(v.s)[2],h1=C.at(v.s+34)[2];let dh=Math.abs(h1-h0);if(dh>Math.PI)dh=2*Math.PI-dh;v.v=vit*v.base*(1-.38*Math.min(1,dh/1.3))*(1+.035*Math.sin(this.t*.6+v.ph));}
+      const O=V.slice().sort((a,b)=>b.s-a.s);
+      for(let i=1;i<O.length;i++){const v=O[i],av=O[i-1],e=av.s-v.s;
+        if(e<30&&Math.abs(av.dec-v.dec)<14){if(v.v>av.v*1.005)v.cible=-av.dec;else v.v=Math.min(v.v,av.v*.995);}
+        if(e<25&&Math.abs(av.dec-v.dec)<14)v.v=Math.min(v.v,av.v*.97);}
+      for(const v of V){v.s+=v.v*dt;v.dec+=(v.cible-v.dec)*Math.min(1,dt*2);}
+      this.ordre=V.slice().sort((a,b)=>b.s-a.s);},
+    tour(){return Math.min(6,Math.max(1,Math.floor(this.ordre[0].s/C.tot)+1));},place(k){return this.ordre.findIndex(v=>v.k===k)+1;}};
+  return R;}
+function vue(id,Z,graine){const el=document.getElementById(id),cv=el.querySelector('canvas'),ctx=cv.getContext('2d');ctx.imageSmoothingEnabled=false;
+  const T=circuit(1.6,'#4f9a3e','#59a646',4,58,1.6),R=course2(T.C,graine);let acc=0,cam=null;
+  boucle(el,dt=>{R.maj(dt,40);const W=cv.width,H=cv.height,J=R.V[0];const[jx,jy,jh]=T.C.at(J.s,J.dec);
+    const vise=-Math.PI/2-jh;if(cam===null)cam=vise;let d=vise-cam;while(d>Math.PI)d-=2*Math.PI;while(d<-Math.PI)d+=2*Math.PI;cam+=d*Math.min(1,dt*2.5);
+    const k=.7,cx=W/2,cy=H*.62,co=Math.cos(cam),si=Math.sin(cam);
+    ctx.setTransform(1,0,0,1,0,0);ctx.fillStyle='#4f9a3e';ctx.fillRect(0,0,W,H);
+    ctx.setTransform(co*Z,si*Z*k,-si*Z,co*Z*k,cx,cy);ctx.drawImage(T.img,-jx,-jy);ctx.setTransform(1,0,0,1,0,0);
+    const ecran=(wx,wy)=>{const x=wx-jx,y=wy-jy;return[cx+(x*co-y*si)*Z,cy+(x*si+y*co)*Z*k,x*si+y*co];};
+    const L=[];
+    for(const o of T.OBJ){const[sx,sy,dd]=ecran(o.x,o.y);if(sx>-90&&sx<W+90&&sy>-60&&sy<H+120)L.push({d:dd,f:()=>{if(o.p===PNEUS)ombrePile(ctx,o.p,sx+2,sy+2,o.a+cam,k,.25);pileZ(ctx,o.p,sx,sy,o.a+cam,k,Z*(o.p===PNEUS?.8:1));}});}
+    for(const v of R.V){const[x,y,h]=T.C.at(v.s,v.dec);const[sx,sy,dd]=ecran(x,y);if(sx>-80&&sx<W+80&&sy>-80&&sy<H+80)L.push({d:dd,f:()=>dessinerVoiture(ctx,v.v3,sx,sy,h+cam,k,Z/2)});}
+    L.sort((a,b)=>a.d-b.d);for(const e of L)e.f();
+    if((acc+=dt)>.3){acc=0;el.querySelector('.tourN').textContent=`TOUR ${R.tour()}/6`;
+      el.querySelector('.tour').innerHTML=R.ordre.slice(0,5).map((v,i)=>`<div class="${v.moi?'moi':''}"><span>${i+1}</span><i style="background:${COUL_G[v.k]}"></i>${PILOTES[v.k]}</div>`).join('')+(R.place(0)>5?`<div class="moi"><span>${R.place(0)}</span><i style="background:${COUL_G[0]}"></i>TOI</div>`:'');}});}
+vue('t2',3,11);vue('t3',2,11);
+</script>

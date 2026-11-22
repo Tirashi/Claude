@@ -159,6 +159,9 @@ catch (e) { bad('Terres franches : simulateur\n' + (e.stdout || '') + (e.stderr 
 try { execFileSync(process.execPath, [path.join(__dirname, 'politique-tests.js')], { stdio: 'pipe', encoding: 'utf8' }); ok('Politique : moteur (hasard, économie, lois, bâtiments, factions, diplomatie, guerre, parties reproductibles)'); }
 catch (e) { bad('Politique : moteur\n' + (e.stdout || '') + (e.stderr || '')); }
 
+// Écurie miniature : circuits, course reproductible, saison complète (outils/ecurie-simulateur.js)
+try { execFileSync(process.execPath, [path.join(__dirname, 'ecurie-simulateur.js')], { stdio: 'pipe', encoding: 'utf8' }); ok('Écurie miniature : simulateur (circuits fermés, course reproductible, saison complète)'); }
+catch (e) { bad('Écurie miniature : simulateur\n' + (e.stdout || '') + (e.stderr || '')); }
 try { execFileSync(process.execPath, [path.join(__dirname, 'politique-simulateur.js'), '--controle'], { stdio: 'pipe', encoding: 'utf8' }); ok('Politique : simulateur (7 bots sans action refusée, parties reproductibles)'); }
 catch (e) { bad('Politique : simulateur\n' + (e.stdout || '') + (e.stderr || '')); }
 

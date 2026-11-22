@@ -482,6 +482,16 @@ Combat aérien en 3D low poly au-dessus d'un archipel, au crépuscule, au milieu
 - **Les classements** : meilleur score en vagues sans fin, et total des étoiles des missions.
 - Au téléphone : un joystick sous le pouce et des boutons ronds ; au PC : la souris dirige l'appareil, clic gauche pour le feu, clic droit pour les missiles. Explosions et réacteur enregistrés, musique synthétisée, secousses, épaves qui tombent en fumée, jauge d'énergie du boost. - **Les décors** : crépuscule, nuit étoilée, orage (pluie, éclairs), désert, neige ; chaque mission a le sien, et le temps change toutes les 5 vagues. La nuit et sous l'orage, les appareils allument leurs feux de position.
 
+## Écurie miniature
+
+Gestion d'une petite écurie de course (première version). On ne pilote pas : on prépare la semaine, puis on regarde la course en 3D low poly sur un circuit de ville.
+
+- **Le paddock** : six onglets (écurie, garage, achat, sponsors, semaine, fans). Chaque pilote reçoit une voiture du parc, les autres restent en réserve et remplacent une voiture cassée.
+- **Le garage et la concession** : douze voitures neuves et des occasions qui changent chaque semaine ; six pièces (moteur, turbo, aileron, pneus, freins, allègement), peinture ; une voiture trop puissante pour la division ne peut pas courir.
+- **La course** : grille issue des qualifications, 8 tours, dépassements, erreurs, sorties de piste, accidents et casses ; caméra derrière ses pilotes, diorama ou télé ; course accélérée ou résultat direct.
+- **Les circuits** : cinq circuits de ville (virages à gauche et à droite, chicanes), avec le bruit des moteurs, les bips du départ et la foule à l'arrivée.
+- **La saison** : 8 grands prix ; les 3 premiers du championnat montent de division (Coupe 300 ch, Trophée 500 ch, Grand Prix illimité). La réputation ouvre des places de pilotes et des sponsors ; les fans finissent par rapporter (boutique de goodies, convention, fan club).
+
 ## Les classiques passés en 16 bits
 
 Touché Coulé était déjà en 16 bits : il n'a gagné que son record (victoire en le moins de tirs) et le classement. Les quatre autres ont gardé leurs règles et leurs commandes d'origine, avec une nouvelle direction artistique pixel art (police pixel, fenêtres façon RPG, scanlines, bruitages chiptune).

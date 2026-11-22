@@ -2,7 +2,7 @@
 Ludo.fiche({
   k: "nebula/index.html",
   // ic "img" : la capture nebula/cartouche.jpg (NEBULA_IMG d'accueil.js, remplacée par un data: dans l'artefact de l'accueil)
-  carte: {n: "NEBULA", s: "NEBULA", ic: "img", fam: "32", lb: "radial-gradient(circle at 75% 20%, #3a2a4a, #04060c 70%)", lt: "#f2b24a", sh: "#c07a20", rank: "nebula",
+  carte: {n: "NEBULA", img: "nebula/etiquette.jpg", jaq: "nebula/jaquette.jpg", s: "NEBULA", ic: "img", fam: "32", lb: "radial-gradient(circle at 75% 20%, #3a2a4a, #04060c 70%)", lt: "#f2b24a", sh: "#c07a20", rank: "nebula",
     d: "Mène ta flotte de balise en balise jusqu'à l'amiral pirate. Les pirates annoncent leurs tirs : esquive, riposte, survis.", tags: ["ROGUE-LITE"]},
   meta: {added: "2026-10-13", updated: "2026-10-15", genres: ["TACTIQUE", "ESPACE"]},
   nom: "Nebula",

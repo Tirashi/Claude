@@ -1,7 +1,7 @@
 /* Lignée : fiche de l'accueil (voir accueil-outils.js) */
 Ludo.fiche({
   k: "lignee/index.html",
-  carte: {n: "LIGNEE", s: "LIGNEE", ic: "tree", fam: "16", lb: "linear-gradient(#6b3f1f, #2f1a0c)", lt: "#e0a83a", sh: "#a0682e", rank: "lignee",
+  carte: {n: "LIGNEE", img: "lignee/etiquette.jpg", jaq: "lignee/jaquette.jpg", s: "LIGNEE", ic: "tree", fam: "16", lb: "linear-gradient(#6b3f1f, #2f1a0c)", lt: "#e0a83a", sh: "#a0682e", rank: "lignee",
     d: "Reconstitue un arbre généalogique grâce aux indices, avec 3 vies : familles françaises, dynasties royales ou familles de films et de séries.", tags: ["ARBRES INFINIS"]},
   meta: {genres: ["LOGIQUE", "DU JOUR"]},
   nom: "Lignée",

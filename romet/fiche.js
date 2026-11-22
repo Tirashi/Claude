@@ -1,7 +1,7 @@
 /* Romet : fiche de l'accueil (voir accueil-outils.js) */
 Ludo.fiche({
   k: "romet/index.html",
-  carte: {n: "ROMET", s: "ROMET", ic: "romet", fam: "3d", lb: "linear-gradient(#c0281c, #5a1a0e)", lt: "#ffe2a0", sh: "#e2b04a", rank: "romet",
+  carte: {n: "ROMET", img: "romet/etiquette.jpg", jaq: "romet/jaquette.jpg", s: "ROMET", ic: "romet", fam: "3d", lb: "linear-gradient(#c0281c, #5a1a0e)", lt: "#ffe2a0", sh: "#e2b04a", rank: "romet",
     d: "Un coin pusher en 3D, en hommage à Mynthos : lâche tes pièces, le poussoir fait tomber les autres dans le bac. Six machines à finir, de la foire à l'horloger, chacune avec sa règle (miel, courant, couloirs, clous, deux étages) et ses 6 trésors, et une machine secrète.", tags: ["3D", "7 MACHINES", "6 REGLES"]},
   meta: {added: "2026-10-22", genres: ["ARCADE", "HASARD"]},
   enCours: () => { const p = rk("romet.partie", {}) || {}, ids = Object.keys(p).filter(k => p[k] && !p[k].fini); return ids.length ? (ids.length > 1 ? ids.length + " PARTIES" : "PARTIE EN COURS") : null; },
