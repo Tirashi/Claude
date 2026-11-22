@@ -149,3 +149,4 @@ Maquettes de la carte 2 à 4 (isométrique, puis papier à l'encre validée), é
 - **21/11 — Écurie miniature, semaine** : toucher un jour ouvre la liste des activités (au lieu de les faire défiler) ; artefact republié.
 - **21/11 — Écurie miniature, fin de course** : « Dernier tour » au bon moment, puis « Arrivée » ; voitures classées à leur passage de ligne après le vainqueur (+1 tour).
 - **21/11 — Écurie miniature sur disquette** : étiquette rendue par le jeu (`ecurie/etiquette.jpg`, `outils/ecurie-etiquette.js`), nouvelle option `carte.img` de l'accueil pour les disquettes ; cache v120.
+- **22/11 — Écurie miniature, boîte du volet** : la boîte affichait encore l'icône en pixels ; `art()` prend l'étiquette (`carte.img`) partout (disquette, journal) et la boîte une jaquette en hauteur (`carte.jaq`, `ecurie/jaquette.jpg`, même outil) ; cache v121.

@@ -442,6 +442,7 @@ body.lock .rack .c3 .body, body.lock .rack .c3 .front::after, body.lock .rack .c
 .box3 .bf::before{content:""; position:absolute; top:0; bottom:0; right:calc(4px * var(--bk)); width:3px; background:var(--red)}
 .box3 .brand{font-family:var(--f-display); font-size:calc(5px * var(--bk)); letter-spacing:1px; color:#fff; background:var(--red); padding:calc(3px * var(--bk)) calc(4px * var(--bk)); align-self:flex-start}
 .box3 .art{flex:1; background:var(--lb); border:2px solid #000; display:flex; align-items:center; justify-content:center; overflow:hidden}
+.box3 .art img{width:100%; height:100%; object-fit:cover; display:block}
 .box3 .art canvas{width:calc(56px * var(--bk)); height:calc(56px * var(--bk)); image-rendering:pixelated; filter:drop-shadow(3px 3px 0 rgba(0,0,0,.5))}
 .box3 .art canvas.wide{width:calc(84px * var(--bk)); height:calc(58px * var(--bk))}
 .box3 .art img{width:100%; height:100%; object-fit:cover}

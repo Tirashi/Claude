@@ -174,6 +174,7 @@ for (const f of GAMES.map(g => FICHES[g.k])){
 // l'image d'un jeu : icône 16×16 (le chien est plus large), ou la capture de Nebula
 function art(g){
   if (g.ic === "img"){ const i = new Image(); i.src = ROOT + NEBULA_IMG; i.alt = ""; return i; }
+  if (g.img){ const i = new Image(); i.src = ROOT + g.img; i.alt = ""; return i; }   // étiquette faite avec les images du jeu (carte.img) : disquette, boîte du volet, journal
   const c = document.createElement("canvas");
   if (g.ic === "dog"){ c.width = 78; c.height = 54; c.className = "wide"; } else c.width = c.height = 16;
   LudoIcons.draw(c, g.ic);
@@ -202,7 +203,7 @@ function cart(g, i){
   const body = el("div", "body"), front = el("div", "f front"), lab = el("div", "lab");
   if (st === "A"){ lab.append(art(g), el("b", "", g.s)); front.append(el("i", "rid"), lab, el("i", "notch")); }
   else if (st === "B"){ body.append(el("div", "f pcb")); lab.append(art(g), el("b", "", g.s)); front.append(el("span", "emb", "LUDO"), lab, el("span", "arw", "▼")); }
-  else if (st === "E"){ if (g.img){ const im = new Image(); im.src = ROOT + g.img; im.alt = ""; lab.classList.add("photo"); lab.append(im); }   // carte.img : une étiquette faite avec les images du jeu
+  else if (st === "E"){ if (g.img){ lab.classList.add("photo"); lab.append(art(g)); }   // carte.img : une étiquette faite avec les images du jeu
     else lab.append(art(g), el("b", "", g.s));
     front.append(el("i", "volet"), el("i", "trou"), lab, el("span", "tagpc", "PC")); }
   else if (st === "D"){ lab.append(art(g), el("b", "", g.s)); front.append(el("i", "disc"), el("i", "spine"), lab, el("span", "tag3d", "3D")); }
@@ -469,7 +470,8 @@ const ovOpen = () => ov.classList.contains("on");
 function box(g, w, h, d){
   const wrap = el("div", "bwrap"), b = el("div", "box3");
   wrap.style.cssText = `--bw:${w}px; --bh:${h}px; --bd:${d}px; --bk:${w / 112}; --lb:${g.lb}; --lt:${g.lt}`;
-  const f = el("div", "bf"), a = el("div", "art"); a.append(art(g));
+  const f = el("div", "bf"), a = el("div", "art");
+  if (g.jaq){ const i = new Image(); i.src = ROOT + g.jaq; i.alt = ""; a.append(i); } else a.append(art(g));   // carte.jaq : jaquette en hauteur faite avec les images du jeu
   f.append(el("span", "brand", "LUDOTHEQUE"), a, el("div", "tt chrome", g.s), el("span", "gen", (metaOf(g).genres || [])[0] || "JEU"));
   const s = el("div", "bs"); s.append(el("i"), el("span", "chrome", g.s));
   b.append(el("div", "bb"), el("div", "br"), el("div", "bt"), el("div", "bo"), s, f);
