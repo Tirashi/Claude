@@ -169,7 +169,7 @@ function fabriquerIcones(){ try {
     const b = new THREE.Box3().setFromObject(g), coins = []; for (const x of [b.min.x, b.max.x]) for (const y of [b.min.y, b.max.y]) for (const z of [b.min.z, b.max.z]) coins.push(V3(x, y, z).applyMatrix4(c.matrixWorldInverse));
     let m = 0; for (const q of coins) m = Math.max(m, Math.abs(q.x), Math.abs(q.y)); m *= long ? .6 : 1.04; Object.assign(c, { left: -m, right: m, top: m, bottom: -m }); c.updateProjectionMatrix();
     r.render(s, c); ICONES[t] = r.domElement.toDataURL('image/png'); s.remove(g); }
-  ICONES.pv = ICONES.pv; r.dispose(); r.forceContextLoss && r.forceContextLoss(); sigListe = sigOrdres = ''; } catch (e){ console.warn('icônes', e); } }
+  r.dispose(); r.forceContextLoss && r.forceContextLoss(); sigListe = sigOrdres = ''; } catch (e){ console.warn('icônes', e); } }
 const pvb = (v, c = '') => `<div class="pv ${c || (v < .3 ? 'f' : v < .6 ? 'm' : '')}"><i style="width:${Math.round(clamp(v, 0, 1) * 100)}%"></i></div>`;
 function annonce(t, long){ const b = $('#bandeau'); b.innerHTML = t; b.style.opacity = 1; clearTimeout(annonce.t); annonce.t = setTimeout(() => { b.style.opacity = 0; }, long ? 4200 : 2200); }
 function bulle(t){ const b = $('#bulle'); b.textContent = t; b.style.opacity = 1; clearTimeout(bulle.t); bulle.t = setTimeout(() => { b.style.opacity = 0; }, 1500); }
