@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Labo sprite stacking</title>
+<style>
+:root{color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:#06070e;color:#cdd5ee;font:14px/1.45 system-ui,-apple-system,Segoe UI,sans-serif;display:flex;justify-content:center}
+.wrap{width:100%;max-width:680px;padding:12px 16px}
+h1{font-size:17px;margin:2px 0 10px;font-weight:600;letter-spacing:.2px}
+canvas#cv{display:block;width:100%;aspect-ratio:4/3;image-rendering:pixelated;background:#070914;border:1px solid #1d2442;border-radius:10px;touch-action:none;cursor:crosshair}
+.tabs{display:flex;gap:6px;margin:10px 0;flex-wrap:wrap}
+.tabs button,.tabs label.btn{flex:1 1 0;min-width:0;padding:9px 4px;border-radius:8px;border:1px solid #27305a;background:#0e1226;color:#9aa6d4;font:inherit;font-weight:600;font-size:13px;text-align:center;cursor:pointer;display:block}
+.tabs .on{background:#1f2c66;color:#fff;border-color:#4a63d6}
+.tabs.src button,.tabs.src label.btn{font-size:12px;font-weight:600}
+.ctl{display:grid;grid-template-columns:1fr;gap:8px;margin:6px 0 10px}
+.ctl label{display:grid;grid-template-columns:118px 1fr 44px;align-items:center;gap:8px;color:#aab4de}
+.ctl label output{text-align:right;color:#fff;font-variant-numeric:tabular-nums}
+.ctl select{grid-column:2/4;background:#0e1226;color:#dfe5ff;border:1px solid #27305a;border-radius:6px;padding:5px;font:inherit}
+input[type=range]{width:100%;accent-color:#6f8bff}
+.hint{color:#8d99c7;font-size:13px;margin:4px 0}
+.info{color:#5f6a95;font-size:12px;margin:6px 0 10px;font-variant-numeric:tabular-nums}
+.how{border-top:1px solid #182042;padding-top:10px;color:#9aa6d4;font-size:13px}
+.how b{color:#dfe5ff}
+.how code{color:#cfd8ff;font-size:12px}
+#bande{display:none;margin:8px 0;padding:8px;background:#0b0f22;border:1px solid #1d2442;border-radius:8px}
+#bande img{display:block;max-width:100%;image-rendering:pixelated;background:repeating-conic-gradient(#1a2040 0 25%,#12162c 0 50%) 0 0/8px 8px}
+#bande p{margin:6px 0 0;font-size:12px;color:#8d99c7}
+.row{display:flex;gap:8px}
+.row button{flex:1;padding:8px;border-radius:8px;border:1px solid #27305a;background:#0e1226;color:#9aa6d4;font:inherit;font-size:13px}
+.sep{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#5f6a95;margin:10px 0 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Labo sprite stacking : vaisseaux</h1>
+  <canvas id="cv" width="320" height="240"></canvas>
+  <div class="tabs">
+    <button id="m-demo" class="on">Plateau</button>
+    <button id="m-fly">Vol</button>
+  </div>
+  <div class="sep">Source des tranches</div>
+  <div class="tabs src">
+    <button data-src="code" class="on">Code (voxels)</button>
+    <button data-src="vox">.vox → bande</button>
+    <button data-src="plat">Sprite plat</button>
+    <label class="btn" data-src="fichier">Ton fichier…<input id="file" type="file" accept="image/png,image/*" hidden></label>
+  </div>
+  <div class="ctl">
+    <label>Inclinaison caméra <input id="pitch" type="range" min="25" max="90" value="55"><output id="o-pitch"></output></label>
+    <label>Éclaté <input id="spread" type="range" min="0" max="100" value="0"><output id="o-spread"></output></label>
+    <label id="l-spin">Rotation auto <input id="spin" type="range" min="-20" max="20" value="6"><output id="o-spin"></output></label>
+    <label>Hauteur d'une tranche <input id="lz" type="range" min="5" max="30" value="15"><output id="o-lz"></output></label>
+    <label id="l-nez">Nez du fichier <select id="nez"><option value="0">vers la droite</option><option value="1" selected>vers le haut</option><option value="2">vers la gauche</option><option value="3">vers le bas</option></select></label>
+    <label id="l-ep">Épaisseur (tranches) <input id="ep" type="range" min="2" max="14" value="6"><output id="o-ep"></output></label>
+    <label id="l-forme">Forme de l'extrusion <select id="forme"><option value="plaque">plaque (copie simple)</option><option value="biseau" selected>biseau (bords plus bas)</option><option value="dome">dôme (bombé au centre)</option></select></label>
+  </div>
+  <div class="row"><button id="voir">Voir la bande de tranches</button></div>
+  <div id="bande"><img id="bande-img" alt="bande de tranches"><p id="bande-txt"></p></div>
+  <div class="hint" id="hint"></div>
+  <div class="info" id="info"></div>
+  <div class="how">
+    <b>Les quatre sources.</b> <b>Code</b> : la démo d'origine, tranches calculées par des fonctions de voxels. <b>.vox → bande</b> : un chasseur et un astéroïde modélisés en .vox, convertis par <code>outils/sprite-stacking/vox-bande.py</code> en bandes PNG (tranches côte à côte, la plus basse à gauche, cellule carrée, pivot au centre), puis chargés comme des images. <b>Sprite plat</b> : un vaisseau 32×32 dessiné à plat, extrudé en pile. <b>Ton fichier</b> : une bande (largeur multiple de la hauteur) est chargée telle quelle ; toute autre image est extrudée.<br><br>
+    <b>L'extrusion.</b> Chaque pixel reçoit une hauteur : la même partout (plaque), croissante avec la distance au bord (biseau), ou en dôme. La tranche <i>z</i> garde les pixels plus hauts que <i>z</i> ; le dessus garde la couleur du sprite, les flancs sont assombris vers le bas. Ce n'est pas une vraie coupe : les détails peints (verrière, réacteurs) ne gagnent pas de relief propre.<br><br>
+    <b>Le rendu.</b> Chaque tranche est dessinée avec <code>translate</code>, <code>scale(1, sin(pitch))</code>, <code>rotate(angle)</code>, un cran plus haut que la précédente (<i>hauteur × cos(pitch)</i>). La tourelle et les flammes n'existent qu'avec la source Code.
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+  var W = 320, H = 240, GAP = 3.2;
+  var EXEMPLES = {"vaisseau": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAUQAAAAkCAYAAADxaUMoAAAFSUlEQVR4nO3cf2gWdRwH8PdTLYT9wj1bm0ooi3hGuaW0iZq6EpYEMVjCGhtUYmmyMtZPU1Q0BlLZsG3YNBUDQY1n+l/kH8ES2WiSMZcswnAE5VibqzGIxuO3Px7v2T3Pc889z/343t2ee7/+ut3dbh+eY+/n++sOICIiIiIiIqJMhOvLhds1qA00hzxVDxFlr/u0djIUiciPAok7mlo7YuFztrst6bjTtu05E6vnWHuL6/UQUfbSbCEq1OHoBepwJCKym24gAgxFIvKPtIEIMBSJyB90xxC1OD2u2LKzU7eeM5+/6Wg9O/af163n6IFGjnMSzVOGAxFwNhTTBSIgNxQ/WF4sACAcWaF7Xl3jtti2zFDcXVkiAODryErd8369ccmRe3S4ukwAwMnIat3zfr52kV8U5HkPmPmlptYOISsU33ksKADg4t0nAAADly5onrf62YbYdsvOTuF0S1HPjv3nhV9ain//FwEAzN791+VKoo7URAP6eGSt7nnDP/b64v6QMRmNIWrx2rhiJi1JJ6XrWhOR98S1EI2GXFNrh8jNX4gTh16x7dv28I2Je9f6znDIsaXovMIH7wcA5EQWuFxJ1FuDt+993r3uFkLzUtw/q52tPjuC0o5WX25+EQB7FnW/1PaF6XpyC6J12BmQW9770lA9uQXB2HbX3gbbg3rrrtMp68krDCbtO/Lh81K/LN7++NuU9Xz2/qas/qIic6QFohajISmzG5ybX2Q4JK0Eom4tBUWmgtJoIGZWS9B0WOoFolFKgFoJTavLszZueBLFpYvx19gfaNpUYTlAjQyjNDXWa+6vfXxBoPL73wUAXN/wsKWa3jjYm1RP3TOrUFK2JOnctY8GpH+BDI4Kzc+nZqn8v60wNali1sz0Hc88GjgzPZkUuG51t2f+mUwKW7Mhab2WCc2gPfXJq47Ucnn50rift+46LZ5etxLFDy2K2//cqhKp9fRVLUPf1AQwNQEACJ27EveZ/PLiU47em+0j1wEAFeFBMTt+O7atHB/ZXONoPVX9YwIAZsf/jNufUxK9T0NrSl35X1px9U7cffqpeqGhOhwNxETqcLR7LNIMdUC6PRaZGJJfdbzuaj2nLlwVwZK5UKpft8TWehKDUL3/8tQk9gJxofjND+NCVij2VS1Le07o3BVhdyi+9tu+2HZZ50ex7Y11J9P+bkV4UFgJxe0390Q3bgKL8nJ0z63qHxOJQahQ9lf1jwmjoVjxqf5SMj2JQZi4P9NgND3LTESUbVxtIXrhbTpqbrcK1dzqMqeypaFaai3rh0cBJLcU1w+Pwukuc+3QrbStRBld5uPlB2Pb6jHEHsx1mVOx2mXueaQdQHQMcVpjDBHdc5cfWlMakNFlHnn3mvaBzvSXUlqA86rL7IVuscLMpIosXgo/K5MqdlCCMTapcujlwAkX6qgdumX7pIoVPRWV0bpsnFSxwq0xwnSMBmAiaYHolfCzc9mNpTokLLsxXoPcZTd63Fh2k1dYnPJYJstujrXbWo6he3/0QOpjdgVh174Xkq7TZceFTXJyNjkVy8tuZAafmWU3dnd7zTzLrGZ3APJZZiJ54lqIZ7vbAkZCUcYYoPpZ5lTPMQPxzzIrvDQGCPjjzTd8lpmyielZZk6I6PNDGBJlG1NjiDLDUP0sM+D+67/M8FMY8llmyiZ8QaxBfEEsUfbKuIXoVhdZmSVO5NasMQOPKHtlNIbotfFCt5fQEFF2ShuIDEMi8gvdQGQYEpGvhevLRbi+3DOvvx9oDomB5pBn6iEiH/FSGALRQHS7BiIiIiIiIiIiIh/7H1+CClwcj8e1AAAAAElFTkSuQmCC", "asteroide": "data:image/png;base64,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", "plat": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABQUlEQVR4nGNgGAUUACERlf9CIir/B8zybSdf/c9v20yRI5jItXzJ1mNwfmxRPwO5jiDLAdQEow4g2QHo8Q8D5KYDikLgl5Yowx5DZUqMIN8Bv7RE4WxKHDH00sDIdgCuHAAD5OQEskJg596TDPsnb4HzXc7fJccYBgYGBgYWciyHgf2TtzC4kG01BDASowgWrLFF/UQZurivkIGBgYHh3Zs7BM0nqEBIROU/sRZjcwghR+BNA5RYzsBAXKJkxKbg3Zs7jJRajgxgIYHNLsabSdoYgpabfhId36Q44rgfO4Y41iigtuX4zBzwkhBrOXD9/HHa2MaLKTTgIYA1ZeICVQpf4GytqZcYGBgQJaPsulS4XNsDHqIdwEJMacXAwEByJUOsuSTXBTAQ422Fwq9SIM8colwJA8ihgO5DfHKjAB8AAGnVc5Q4GY4SAAAAAElFTkSuQmCC"};
+  var cv = document.getElementById('cv'), ctx = cv.getContext('2d');
+
+  // ---------------------------------------------------------------- matériaux : [côté ombré, côté, dessus]
+  var MAT = {
+    hull:   ['#46557a', '#6f86b3', '#b6c9ea'],
+    accent: ['#8c3418', '#d9622b', '#ffa94d'],
+    glass:  ['#14607a', '#2bb7d6', '#b0f3ff'],
+    dark:   ['#1b1f33', '#2b3150', '#454f7a'],
+    flame:  ['#c2300e', '#ff7a1f', '#ffc04a'],
+    core:   ['#ff9a3a', '#ffd35c', '#ffffff'],
+    rock:   ['#3d3733', '#6b5f56', '#a39382'],
+    pit:    ['#26211f', '#3a332f', '#574c44'],
+    ore:    ['#2a6a7a', '#3fb0c8', '#a5f2ff']
+  };
+
+  function hash(x, y, s) {
+    var h = Math.imul(x | 0, 374761393) + Math.imul(y | 0, 668265263) + Math.imul(s | 0, 1274126177);
+    h = Math.imul(h ^ (h >>> 13), 1103515245);
+    return ((h ^ (h >>> 16)) >>> 0) / 4294967295;
+  }
+  function toile(w, h) { var c = document.createElement('canvas'); c.width = w; c.height = h || w; return c; }
+
+  // ---------------------------------------------------------------- une pile = { sl: [{c, d}], cell, rad }
+  // c : la tranche ; d : la même en sombre (dessinée dessous en vue éclatée) ; rad : rayon du pixel le plus éloigné du pivot
+  function makeStack(canvases) {
+    var cell = canvases[0].width, rad = 1;
+    var sl = canvases.map(function (c) {
+      var g = c.getContext('2d'), px = g.getImageData(0, 0, cell, cell).data;
+      for (var y = 0; y < cell; y++) for (var x = 0; x < cell; x++)
+        if (px[(y * cell + x) * 4 + 3] > 0) rad = Math.max(rad, Math.hypot(x + 0.5 - cell / 2, y + 0.5 - cell / 2));
+      var d = toile(cell), dg = d.getContext('2d'); dg.drawImage(c, 0, 0);
+      dg.globalCompositeOperation = 'source-in'; dg.fillStyle = '#04050a'; dg.fillRect(0, 0, cell, cell);
+      return { c: c, d: d };
+    });
+    return { sl: sl, cell: cell, rad: rad };
+  }
+
+  // Source « code » : fn(x, y, z) dit quel matériau remplit ce point (depuis le centre de la cellule), ou null.
+  function buildStack(layers, fn) {
+    var CELL = 32, out = [];
+    function at(x, y, z) { return z < 0 || z >= layers ? null : fn(x, y, z); }
+    for (var z = 0; z < layers; z++) {
+      var c = toile(CELL), g = c.getContext('2d');
+      for (var py = 0; py < CELL; py++) for (var px = 0; px < CELL; px++) {
+        var x = px + 0.5 - CELL / 2, y = py + 0.5 - CELL / 2, m = at(x, y, z);
+        if (!m) continue;
+        g.fillStyle = MAT[m][!at(x, y, z + 1) ? 2 : (z < layers / 3 ? 0 : 1)]; g.fillRect(px, py, 1, 1);
+      }
+      out.push(c);
+    }
+    return makeStack(out);
+  }
+
+  // quarts de tour, sens horaire à l'écran (pour mettre le nez vers la droite)
+  function tourner(src, q) {
+    q = ((q % 4) + 4) % 4;
+    var w = src.width, h = src.height, c = toile(q % 2 ? h : w, q % 2 ? w : h), g = c.getContext('2d');
+    g.translate(c.width / 2, c.height / 2); g.rotate(q * Math.PI / 2); g.drawImage(src, -w / 2, -h / 2);
+    return c;
+  }
+
+  // Source « bande » : tranches côte à côte, la plus basse à gauche, cellule carrée = hauteur de l'image
+  function chargerBande(img, q) {
+    var cell = img.height, n = Math.floor(img.width / cell), out = [];
+    for (var i = 0; i < n; i++) {
+      var c = toile(cell); c.getContext('2d').drawImage(img, i * cell, 0, cell, cell, 0, 0, cell, cell);
+      out.push(q ? tourner(c, q) : c);
+    }
+    return makeStack(out);
+  }
+
+  // Source « sprite plat » : chaque pixel reçoit une hauteur, la tranche z garde les pixels plus hauts que z
+  function extruder(img, n, forme, q) {
+    var s = toile(img.width, img.height); s.getContext('2d').drawImage(img, 0, 0);
+    if (q) s = tourner(s, q);
+    var w = s.width, h = s.height, cell = Math.max(w, h) + (Math.max(w, h) & 1);
+    var src = s.getContext('2d').getImageData(0, 0, w, h).data, N = w * h, dist = new Int32Array(N), file = [], i, x, y;
+    // distance (en pas de 4-voisins) au pixel transparent le plus proche ; le bord de l'image compte comme transparent
+    for (i = 0; i < N; i++) {
+      x = i % w; y = (i / w) | 0;
+      if (src[i * 4 + 3] < 128) dist[i] = 0;
+      else if (x === 0 || y === 0 || x === w - 1 || y === h - 1) { dist[i] = 1; file.push(i); }
+      else dist[i] = -1;
+    }
+    for (i = 0; i < N; i++) if (dist[i] === 0) file.push(i);
+    for (var f = 0; f < file.length; f++) {
+      var p = file[f], px = p % w, py = (p / w) | 0, nb = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+      for (var k = 0; k < 4; k++) {
+        var nx = px + nb[k][0], ny = py + nb[k][1]; if (nx < 0 || ny < 0 || nx >= w || ny >= h) continue;
+        var j = ny * w + nx; if (dist[j] === -1) { dist[j] = dist[p] + 1; file.push(j); }
+      }
+    }
+    var maxd = 1; for (i = 0; i < N; i++) maxd = Math.max(maxd, dist[i]);
+    var hauteur = new Int32Array(N), pas = Math.max(1, Math.round(n / 3));
+    for (i = 0; i < N; i++) {
+      var d = dist[i]; if (d <= 0) continue;
+      hauteur[i] = forme === 'plaque' ? n : forme === 'biseau' ? Math.min(n, d * pas)
+        : Math.max(1, Math.round(n * Math.sqrt(1 - Math.pow(1 - d / maxd, 2))));
+    }
+    var ox = (cell - w) >> 1, oy = (cell - h) >> 1, out = [];
+    for (var z = 0; z < n; z++) {
+      var c = toile(cell), g = c.getContext('2d'), im = g.createImageData(cell, cell), o = im.data;
+      for (i = 0; i < N; i++) {
+        if (hauteur[i] <= z) continue;
+        var t = (((oy + ((i / w) | 0)) * cell) + ox + i % w) * 4, top = hauteur[i] === z + 1;
+        var m = top ? 1 : 0.5 + 0.35 * z / Math.max(1, n - 1);      // flancs assombris vers le bas
+        o[t] = src[i * 4] * m; o[t + 1] = src[i * 4 + 1] * m; o[t + 2] = src[i * 4 + 2] * m; o[t + 3] = 255;
+      }
+      g.putImageData(im, 0, 0); out.push(c);
+    }
+    return makeStack(out);
+  }
+
+  function ell(x, y, z, cx, cy, cz, rx, ry, rz) {
+    var a = (x - cx) / rx, b = (y - cy) / ry, c = (z - cz) / rz; return a * a + b * b + c * c <= 1;
+  }
+
+  // ---------------------------------------------------------------- le vaisseau en code (nez vers +x)
+  function shipFn(x, y, z) {
+    var ay = Math.abs(y), zc = z + 0.5;
+    if (ell(x, y, zc, 3, 0, 4.3, 3.8, 2.4, 2.7)) return 'glass';
+    if (x < -7 && x > -13.5) {
+      var dy = ay - 3.9, dz = zc - 2.6;
+      if (dy * dy + dz * dz <= 3.4) return x < -11.8 ? 'accent' : 'dark';
+    }
+    var t = (x + 10) / 24;
+    if (t >= 0 && t <= 1) {
+      var hw = 4.8 * (1 - Math.pow(t, 2.3)), zmax = 7.6 - 4.6 * t, k = 1 - z * 0.07;
+      if (ay <= hw * k && zc <= zmax) {
+        if (zc > zmax - 1 && ay < 0.9 && x < -1) return 'accent';
+        if (z === 1 && Math.abs(x - 6) < 0.6) return 'dark';
+        return 'hull';
+      }
+    }
+    if (x >= -10 + ay * 0.25 && x <= 3) {
+      var lim = 13.5 - (x + 10) * 0.88, maxz = ay < 6 ? 2 : ay < 9 ? 1 : 0;
+      if (ay <= lim && z <= maxz) return ay > 10.5 ? 'accent' : 'hull';
+    }
+    return null;
+  }
+  function turretFn(x, y, z) {
+    var r = Math.hypot(x, y), barrel = x > 2 && x < 10.5 && Math.abs(y) < 0.9;
+    if (z <= 1) return r <= 3.4 ? (z === 0 ? 'dark' : 'hull') : null;
+    if (z === 2) { if (r <= 2.6) return 'hull'; return barrel ? (x > 9 ? 'accent' : 'dark') : null; }
+    if (r <= 1.6) return 'accent';
+    return barrel ? 'dark' : null;
+  }
+  function flameFn(len) {
+    return function (x, y, z) {
+      var dy = Math.abs(Math.abs(y) - 3.9), lz = len * (1 - Math.abs(z - 1.5) * 0.28), u = (8 - x) / lz;
+      if (u < 0 || u > 1) return null;
+      var w = 1.6 * (1 - u * 0.85);
+      if (dy > w) return null;
+      return dy <= w * 0.5 && u < 0.7 ? 'core' : 'flame';
+    };
+  }
+  function rockFn(seed, R) {
+    return function (x, y, z) {
+      var zc = (z + 0.5 - 4) / 4.3, rz = R * Math.sqrt(Math.max(0, 1 - zc * zc));
+      if (rz <= 0.8) return null;
+      var a = Math.atan2(y, x);
+      var b = 1 + 0.16 * Math.sin(3 * a + seed) + 0.11 * Math.sin(5 * a + seed * 2.3) + 0.06 * Math.sin(9 * a + seed * 5.1);
+      if (Math.hypot(x, y) > rz * b) return null;
+      var h = hash(Math.floor(x / 1.5) + 40, Math.floor(y / 1.5) + 40, seed * 13 + z);
+      return h > 0.965 ? 'ore' : h > 0.86 ? 'pit' : 'rock';
+    };
+  }
+
+  var code = {
+    hull: buildStack(8, shipFn),
+    turret: buildStack(4, turretFn),
+    flames: [3, 5, 7, 9, 11, 13].map(function (l) { return buildStack(4, flameFn(l)); }),
+    rocks: [0, 1, 2].map(function (s) { return buildStack(8, rockFn(s * 7.3 + 1, 9 + s)); })
+  };
+  var images = {};            // exemples décodés : vaisseau (bande), astéroïde (bande), plat (sprite 32×32)
+  var fichier = null;         // l'image choisie par le joueur
+  var source = 'code', stacks = { hull: code.hull, rocks: code.rocks, extras: true };
+
+  // ---------------------------------------------------------------- rendu
+  var pitch = 55 * Math.PI / 180, spread = 0, LZ = 1.5, calls = 0;
+
+  // met en file les tranches d'une pile : (sx, sy) = pied de la pile à l'écran, z0 = hauteur de départ en couches
+  function pushStack(items, st, sx, sy, z0, ang, Z, lz) {
+    lz = lz || LZ;
+    var sl = st.sl, base = lz * Math.cos(pitch), rise = (base + spread * GAP) * Z, exp = spread > 0.02;
+    var rows = exp ? 1 : Math.max(1, Math.ceil(base * Z - 0.02));   // une tranche est répétée pour ne pas laisser de trous
+    for (var i = 0; i < sl.length; i++) {
+      var hz = z0 + i, up = Math.round(hz * rise);
+      if (exp) items.push({ img: sl[i].d, x: sx, y: sy - up + 2, ang: ang, Z: Z, h: hz - 0.0005, a: Math.min(1, spread * 3) });
+      for (var k = 0; k < rows; k++) items.push({ img: sl[i].c, x: sx, y: sy - up - k, ang: ang, Z: Z, h: hz + k * 0.001, a: 1 });
+    }
+  }
+  function flush(items) {
+    var ys = Math.sin(pitch);
+    items.sort(function (a, b) { return a.h - b.h; });
+    ctx.imageSmoothingEnabled = false;
+    for (var q = 0; q < items.length; q++) {
+      var it = items[q], s = it.img.width * it.Z;
+      ctx.setTransform(1, 0, 0, 1, Math.round(it.x), Math.round(it.y));
+      ctx.scale(1, ys); ctx.rotate(it.ang); ctx.globalAlpha = it.a;
+      ctx.drawImage(it.img, -s / 2, -s / 2, s, s);
+    }
+    ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1;
+    calls += items.length;
+  }
+  // le vaisseau : coque + (source code seulement) flammes qui suivent le cap et tourelle à son propre angle
+  function shipItems(items, sx, sy, Z, ang, turAng, th, flick) {
+    var ys = Math.sin(pitch), ca = Math.cos(ang), sa = Math.sin(ang);
+    function loc(ox, oy) { return [sx + Z * (ox * ca - oy * sa), sy + Z * ys * (ox * sa + oy * ca)]; }
+    pushStack(items, stacks.hull, sx, sy, 0, ang, Z);
+    if (!stacks.extras) return;
+    var f = loc(-21, 0), vi = Math.max(0, Math.min(5, Math.round(th * 4 + flick)));
+    pushStack(items, code.flames[vi], f[0], f[1], 1, ang, Z);
+    var t = loc(-5, 0);
+    pushStack(items, code.turret, t[0], t[1], 7, turAng, Z);
+  }
+  function blob(x, y, rx, ry, a) {
+    ctx.globalAlpha = a; ctx.fillStyle = '#000';
+    ctx.beginPath(); ctx.ellipse(Math.round(x), Math.round(y), rx, ry, 0, 0, 6.2832); ctx.fill(); ctx.globalAlpha = 1;
+  }
+
+  // ---------------------------------------------------------------- étoiles
+  var stars = [];
+  for (var s = 0; s < 90; s++) stars.push({ x: Math.random() * W, y: Math.random() * H, f: 0.2 + Math.random() * 0.8, c: ['#6c76a8', '#9aa6d8', '#dfe6ff'][(Math.random() * 3) | 0] });
+  function mod(a, m) { return ((a % m) + m) % m; }
+  function drawStars(camx, camy, ys) {
+    ctx.fillStyle = '#070914'; ctx.fillRect(0, 0, W, H);
+    for (var i = 0; i < stars.length; i++) {
+      var st = stars[i];
+      ctx.fillStyle = st.c;
+      ctx.fillRect(Math.floor(mod(st.x - camx * st.f * 0.6, W)), Math.floor(mod(st.y - camy * st.f * 0.6 * ys, H)), st.f > 0.7 ? 2 : 1, 1);
+    }
+  }
+
+  // ---------------------------------------------------------------- état
+  var mode = 'demo', t = 0, autoA = 0, dragA = 0, spin = 0.6;
+  var ptr = { x: 0, y: 0, down: false, inside: false }, keys = { left: false, right: false, up: false };
+  var ship = { x: 0, y: 0, vx: 0, vy: 0, ang: 0, tur: 0, th: 0, cool: 0 };
+  var rocks = [], bullets = [], sparks = [];
+  var CX = W / 2, CY_DEMO = 142, CY_FLY = 126;
+
+  function spawnRock(r, near) {
+    var a = Math.random() * 6.2832, d = near ? 45 + Math.random() * 110 : 140 + Math.random() * 100, sp = 5 + Math.random() * 10, b = Math.random() * 6.2832;
+    r.x = ship.x + Math.cos(a) * d; r.y = ship.y + Math.sin(a) * d;
+    r.vx = Math.cos(b) * sp; r.vy = Math.sin(b) * sp;
+    r.ang = Math.random() * 6.2832; r.sp = (Math.random() - 0.5) * 1.4;
+    r.v = (Math.random() * 3) | 0; r.hp = 3;
+    return r;
+  }
+  for (var n = 0; n < 9; n++) rocks.push(spawnRock({}, true));
+  function rockStack(r) { return stacks.rocks[r.v % stacks.rocks.length]; }
+
+  function turnTo(a, b, m) { var d = mod(b - a + Math.PI, 6.2832) - Math.PI; return a + Math.max(-m, Math.min(m, d)); }
+  function burst(x, y, n, big) {
+    for (var i = 0; i < n; i++) {
+      var a = Math.random() * 6.2832, sp = 15 + Math.random() * (big ? 55 : 30);
+      sparks.push({ x: x, y: y, z: 3 + Math.random() * 3, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, vz: 8 + Math.random() * 22, life: 0.5 + Math.random() * 0.5, c: ['#ffd35c', '#ff7a1f', '#fff1b0', '#a39382'][(Math.random() * 4) | 0] });
+    }
+  }
+
+  function updateFly(dt) {
+    var ys = Math.sin(pitch), i, r;
+    if (ptr.inside) {
+      var dx = ptr.x - CX, dy = (ptr.y - CY_FLY) / ys;
+      if (dx * dx + dy * dy > 100) ship.ang = turnTo(ship.ang, Math.atan2(dy, dx), 3.4 * dt);
+    }
+    if (keys.left) ship.ang -= 3 * dt;
+    if (keys.right) ship.ang += 3 * dt;
+    var thrust = ptr.down || keys.up;
+    ship.th += ((thrust ? 1 : 0.12) - ship.th) * Math.min(1, dt * 6);
+    if (thrust) { ship.vx += Math.cos(ship.ang) * 100 * dt; ship.vy += Math.sin(ship.ang) * 100 * dt; }
+    var dmp = Math.exp(-0.7 * dt); ship.vx *= dmp; ship.vy *= dmp;
+    var sp = Math.hypot(ship.vx, ship.vy); if (sp > 120) { ship.vx *= 120 / sp; ship.vy *= 120 / sp; }
+    ship.x += ship.vx * dt; ship.y += ship.vy * dt;
+
+    // tourelle (visible seulement avec la source code) : vise l'astéroïde le plus proche et tire
+    var tx = ship.x - 5 * Math.cos(ship.ang), ty = ship.y - 5 * Math.sin(ship.ang), best = null, bd = 170 * 170;
+    for (i = 0; i < rocks.length; i++) { r = rocks[i]; var d2 = (r.x - tx) * (r.x - tx) + (r.y - ty) * (r.y - ty); if (d2 < bd) { bd = d2; best = r; } }
+    ship.cool -= dt;
+    if (best) {
+      var want = Math.atan2(best.y - ty, best.x - tx);
+      ship.tur = turnTo(ship.tur, want, 7 * dt);
+      if (ship.cool <= 0 && Math.abs(mod(want - ship.tur + Math.PI, 6.2832) - Math.PI) < 0.12) {
+        ship.cool = 0.4;
+        bullets.push({ x: tx + Math.cos(ship.tur) * 10, y: ty + Math.sin(ship.tur) * 10, vx: Math.cos(ship.tur) * 190 + ship.vx, vy: Math.sin(ship.tur) * 190 + ship.vy, life: 1.1 });
+      }
+    } else ship.tur = turnTo(ship.tur, ship.ang, 4 * dt);
+
+    for (i = bullets.length - 1; i >= 0; i--) {
+      var b = bullets[i]; b.x += b.vx * dt; b.y += b.vy * dt; b.life -= dt;
+      var hit = false;
+      for (var j = 0; j < rocks.length && !hit; j++) {
+        r = rocks[j]; var rad = rockStack(r).rad * 0.95;
+        if ((r.x - b.x) * (r.x - b.x) + (r.y - b.y) * (r.y - b.y) < (rad + 1) * (rad + 1)) {
+          hit = true; r.hp--; burst(b.x, b.y, 5, false);
+          if (r.hp <= 0) { burst(r.x, r.y, 18, true); spawnRock(r); }
+        }
+      }
+      if (hit || b.life <= 0) bullets.splice(i, 1);
+    }
+    for (i = 0; i < rocks.length; i++) {
+      r = rocks[i]; r.x += r.vx * dt; r.y += r.vy * dt; r.ang += r.sp * dt;
+      var ex = r.x - ship.x, ey = r.y - ship.y, dd = Math.hypot(ex, ey);
+      if (dd > 300) spawnRock(r);
+      else if (dd < rockStack(r).rad * 0.95 + 9) { var nx = ex / dd, ny = ey / dd; ship.vx -= nx * 160 * dt; ship.vy -= ny * 160 * dt; r.vx += nx * 40 * dt; r.vy += ny * 40 * dt; }
+    }
+    for (i = sparks.length - 1; i >= 0; i--) {
+      var p = sparks[i]; p.x += p.vx * dt; p.y += p.vy * dt; p.z += p.vz * dt; p.vz -= 30 * dt; p.life -= dt;
+      if (p.life <= 0 || p.z < 0) sparks.splice(i, 1);
+    }
+  }
+
+  function drawFly() {
+    var Z = 2, ys = Math.sin(pitch), rise = (LZ * Math.cos(pitch) + spread * GAP) * Z, objs = [], i;
+    drawStars(ship.x, ship.y, ys);
+    objs.push({ y: CY_FLY, f: function (it) { shipItems(it, CX, CY_FLY, Z, ship.ang, ship.tur, ship.th, Math.random() * 1.4 - 0.4); } });
+    for (i = 0; i < rocks.length; i++) (function (r) {
+      var sx = CX + Z * (r.x - ship.x), sy = CY_FLY + Z * ys * (r.y - ship.y);
+      if (sx < -60 || sx > W + 60 || sy < -80 || sy > H + 80) return;
+      objs.push({ y: sy, f: function (it) { pushStack(it, rockStack(r), sx, sy, 0, r.ang, Z, stacks.rockLz); } });
+    })(rocks[i]);
+    objs.sort(function (a, b) { return a.y - b.y; });
+    for (i = 0; i < objs.length; i++) { var it = []; objs[i].f(it); flush(it); }
+    var hb = stacks.hull.sl.length * 0.9;
+    ctx.fillStyle = '#fff6c0';
+    for (i = 0; i < bullets.length; i++) {
+      var b = bullets[i], bx = CX + Z * (b.x - ship.x), by = CY_FLY + Z * ys * (b.y - ship.y) - hb * rise;
+      ctx.fillRect(Math.round(bx) - 1, Math.round(by) - 1, 3, 3);
+    }
+    for (i = 0; i < sparks.length; i++) {
+      var p = sparks[i]; ctx.fillStyle = p.c; ctx.globalAlpha = Math.min(1, p.life * 2.5);
+      ctx.fillRect(Math.round(CX + Z * (p.x - ship.x)), Math.round(CY_FLY + Z * ys * (p.y - ship.y) - p.z * rise), 2, 2);
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  function drawDemo() {
+    var Z = 3, ys = Math.sin(pitch), n = stacks.hull.sl.length, cell = stacks.hull.cell;
+    drawStars(t * 6, 0, ys);
+    ctx.fillStyle = '#10152c'; ctx.strokeStyle = '#2b3768'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.ellipse(CX, CY_DEMO, 25 * Z, 25 * Z * ys, 0, 0, 6.2832); ctx.fill(); ctx.stroke();
+    ctx.strokeStyle = '#1a2246'; ctx.beginPath(); ctx.ellipse(CX, CY_DEMO, 17 * Z, 17 * Z * ys, 0, 0, 6.2832); ctx.stroke();
+    blob(CX, CY_DEMO, 15 * Z, 8 * Z * ys, 0.35);
+    var it = [], ang = autoA + dragA, th = 0.6 + 0.4 * Math.sin(t * 1.7);
+    shipItems(it, CX, CY_DEMO, Z, ang, -t * 0.9, th, Math.random() * 1.4 - 0.4);
+    if (spread > 0.05) {                                    // axe de rotation
+      var rise = (LZ * Math.cos(pitch) + spread * GAP) * Z;
+      ctx.strokeStyle = 'rgba(160,185,255,' + (0.45 * Math.min(1, spread * 3)) + ')'; ctx.setLineDash([2, 3]);
+      ctx.beginPath(); ctx.moveTo(CX + 0.5, CY_DEMO); ctx.lineTo(CX + 0.5, CY_DEMO - (n + 3) * rise); ctx.stroke(); ctx.setLineDash([]);
+    }
+    flush(it);
+    if (spread > 0.05) {                                    // les vraies tranches de la coque, à plat, côte à côte
+      var k = Math.min(1, (W - 10) / (n * cell)), cw = cell * k, x0 = (W - n * cw) / 2, y0 = H - cw - 3;
+      ctx.globalAlpha = Math.min(1, spread * 3); ctx.imageSmoothingEnabled = false;
+      ctx.fillStyle = '#0b0f22'; ctx.fillRect(x0 - 3, y0 - 2, n * cw + 6, cw + 4);
+      for (var i = 0; i < n; i++) {
+        ctx.drawImage(stacks.hull.sl[i].c, x0 + i * cw, y0, cw, cw);
+        ctx.fillStyle = '#222b55'; ctx.fillRect(Math.round(x0 + (i + 1) * cw) - 1, y0, 1, cw);
+      }
+      ctx.globalAlpha = 1;
+    }
+  }
+
+  // ---------------------------------------------------------------- boucle
+  var last = 0, infoT = 0, infoEl = document.getElementById('info');
+  function frame(ts) {
+    var dt = Math.min(0.05, (ts - last) / 1000 || 0.016); last = ts; t += dt; calls = 0;
+    if (mode === 'demo') { autoA += spin * dt; drawDemo(); } else { updateFly(dt); drawFly(); }
+    infoT += dt;
+    if (infoT > 0.4) {
+      infoT = 0;
+      infoEl.textContent = calls + ' drawImage par image · ' + Math.round(pitch * 180 / Math.PI) + '° · coque : ' +
+        stacks.hull.sl.length + ' tranches de ' + stacks.hull.cell + '×' + stacks.hull.cell + ' px';
+    }
+    requestAnimationFrame(frame);
+  }
+
+  // ---------------------------------------------------------------- sources
+  function $(id) { return document.getElementById(id); }
+  function charger(nom, uri) {
+    return new Promise(function (ok, ko) { var im = new Image(); im.onload = function () { images[nom] = im; ok(); }; im.onerror = ko; im.src = uri; });
+  }
+  function estBande(im) { return im.width >= 2 * im.height && im.width % im.height === 0; }
+  var LZ_DEFAUT = { code: 1.5, vox: 1, plat: 1, fichier: 1 };
+
+  // reconstruit les piles de la source choisie (appelé aussi quand l'épaisseur, la forme ou le nez changent)
+  function appliquer(changeSource) {
+    var ep = +$('ep').value, forme = $('forme').value, q = +$('nez').value;   // nez « haut » = 1 → un quart de tour horaire
+    stacks = { hull: code.hull, rocks: code.rocks, extras: false, rockLz: 1.5 };
+    if (source === 'code') stacks.extras = true;
+    else if (source === 'vox') { stacks.hull = chargerBande(images.vaisseau, 0); stacks.rocks = [chargerBande(images.asteroide, 0)]; stacks.rockLz = 1; }
+    else if (source === 'plat') stacks.hull = extruder(images.plat, ep, forme, 1);
+    else if (source === 'fichier' && fichier) stacks.hull = estBande(fichier) ? chargerBande(fichier, q) : extruder(fichier, ep, forme, q);
+    if (changeSource) { $('lz').value = LZ_DEFAUT[source] * 10; readCtl(); }
+    var plat = source === 'plat' || (source === 'fichier' && fichier && !estBande(fichier));
+    $('l-ep').style.display = $('l-forme').style.display = plat ? '' : 'none';
+    $('l-nez').style.display = source === 'fichier' ? '' : 'none';
+    if ($('bande').style.display === 'block') montrerBande();
+  }
+  function choisir(src) {
+    if (src !== 'code' && !window.__pret) return;
+    source = src;
+    document.querySelectorAll('[data-src]').forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-src') === src); });
+    appliquer(true);
+  }
+  document.querySelectorAll('button[data-src]').forEach(function (b) { b.onclick = function () { choisir(b.getAttribute('data-src')); }; });
+  $('file').addEventListener('change', function () {
+    var f = this.files && this.files[0]; if (!f) return;
+    var url = URL.createObjectURL(f), im = new Image();
+    im.onload = function () {
+      if (Math.max(im.width, im.height) > 256 && !estBande(im)) {   // un sprite trop grand serait lent à extruder : on le réduit
+        var k = 64 / Math.max(im.width, im.height), c = toile(Math.round(im.width * k), Math.round(im.height * k)), g = c.getContext('2d');
+        g.imageSmoothingEnabled = false; g.drawImage(im, 0, 0, c.width, c.height); fichier = c;
+      } else fichier = im;
+      choisir('fichier');
+      $('hint').textContent = (estBande(im) ? 'Bande de ' + Math.floor(im.width / im.height) + ' tranches de ' + im.height + ' px chargée.'
+        : 'Image de ' + im.width + '×' + im.height + ' extrudée en pile.') + ' Règle « Nez du fichier » pour que l\'avant pointe dans le sens de la marche.';
+    };
+    im.src = url;
+  });
+  ['ep', 'forme', 'nez'].forEach(function (id) { $(id).addEventListener('change', function () { appliquer(false); }); $(id).addEventListener('input', function () { readCtl(); }); });
+
+  // la bande de la coque actuelle, au format du dépôt de loktar00 (la plus basse à gauche)
+  function montrerBande() {
+    var sl = stacks.hull.sl, c = stacks.hull.cell, b = toile(c * sl.length, c), g = b.getContext('2d');
+    sl.forEach(function (s, i) { g.drawImage(s.c, i * c, 0); });
+    var big = toile(b.width * 4, b.height * 4), bg = big.getContext('2d'); bg.imageSmoothingEnabled = false; bg.drawImage(b, 0, 0, big.width, big.height);
+    $('bande-img').src = big.toDataURL('image/png');
+    $('bande-img').dataset.vraie = b.toDataURL('image/png');
+    $('bande-txt').textContent = sl.length + ' tranches de ' + c + '×' + c + ' px, la plus basse à gauche (affichée ×4). Appui long ou clic droit pour l\'enregistrer ; la vraie taille s\'obtient en la réduisant au quart.';
+    $('bande').style.display = 'block';
+  }
+  $('voir').onclick = function () {
+    if ($('bande').style.display === 'block') { $('bande').style.display = 'none'; $('voir').textContent = 'Voir la bande de tranches'; }
+    else { montrerBande(); $('voir').textContent = 'Cacher la bande'; }
+  };
+
+  // ---------------------------------------------------------------- interface
+  function setMode(m) {
+    mode = m;
+    $('m-demo').className = m === 'demo' ? 'on' : ''; $('m-fly').className = m === 'fly' ? 'on' : '';
+    $('l-spin').style.display = m === 'demo' ? '' : 'none';
+    $('hint').textContent = m === 'demo'
+      ? 'Glisse sur l’image pour faire tourner le vaisseau. Monte « Éclaté » pour voir les couches et les tranches brutes.'
+      : 'Le cap suit ton doigt ou la souris ; maintiens appuyé (ou W / Espace) pour pousser. Les tirs partent seuls vers les astéroïdes.';
+  }
+  $('m-demo').onclick = function () { setMode('demo'); };
+  $('m-fly').onclick = function () { setMode('fly'); };
+  function readCtl() {
+    pitch = $('pitch').value * Math.PI / 180; spread = $('spread').value / 100; spin = $('spin').value / 10; LZ = $('lz').value / 10;
+    $('o-pitch').textContent = $('pitch').value + '°'; $('o-spread').textContent = $('spread').value + '%'; $('o-spin').textContent = spin.toFixed(1);
+    $('o-lz').textContent = LZ.toFixed(1); $('o-ep').textContent = $('ep').value;
+  }
+  ['pitch', 'spread', 'spin', 'lz'].forEach(function (id) { $(id).addEventListener('input', readCtl); });
+  readCtl(); setMode('demo');
+
+  function pos(e) { var r = cv.getBoundingClientRect(); return [(e.clientX - r.left) / r.width * W, (e.clientY - r.top) / r.height * H]; }
+  var lastX = 0;
+  cv.addEventListener('pointerdown', function (e) { var p = pos(e); ptr.x = p[0]; ptr.y = p[1]; ptr.down = ptr.inside = true; lastX = e.clientX; try { cv.setPointerCapture(e.pointerId); } catch (x) {} });
+  cv.addEventListener('pointermove', function (e) {
+    var p = pos(e); ptr.x = p[0]; ptr.y = p[1]; ptr.inside = true;
+    if (ptr.down && mode === 'demo') { dragA += (e.clientX - lastX) * 0.02; lastX = e.clientX; }
+  });
+  function up(e) { ptr.down = false; if (e.pointerType !== 'mouse' || e.type === 'pointerleave') ptr.inside = false; }
+  cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up); cv.addEventListener('pointerleave', up);
+  function key(e, v) {
+    if (mode !== 'fly' || /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
+    var k = e.key.toLowerCase(), hit = true;
+    if (k === 'arrowleft' || k === 'a' || k === 'q') keys.left = v;
+    else if (k === 'arrowright' || k === 'd') keys.right = v;
+    else if (k === 'arrowup' || k === 'w' || k === 'z' || k === ' ') keys.up = v;
+    else hit = false;
+    if (hit) e.preventDefault();
+  }
+  window.addEventListener('keydown', function (e) { key(e, true); });
+  window.addEventListener('keyup', function (e) { key(e, false); });
+
+  Promise.all(Object.keys(EXEMPLES).map(function (k) { return charger(k, EXEMPLES[k]); }))
+    .then(function () { window.__pret = true; }, function () { $('hint').textContent = 'Exemples illisibles.'; });
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
