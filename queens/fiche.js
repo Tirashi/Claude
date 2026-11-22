@@ -1,7 +1,7 @@
 /* Queens : fiche de l'accueil (voir accueil-outils.js) */
 Ludo.fiche({
   k: "queens/index.html",
-  carte: {n: "QUEENS", s: "QUEENS", ic: "crown", fam: "16", lb: "linear-gradient(#3a4cc8, #141a6a)", lt: "#ffd23f", sh: "#3a4cc8", rank: "queens",
+  carte: {n: "QUEENS", img: "queens/etiquette.jpg", jaq: "queens/jaquette.jpg", s: "QUEENS", ic: "crown", fam: "16", lb: "linear-gradient(#3a4cc8, #141a6a)", lt: "#ffd23f", sh: "#3a4cc8", rank: "queens",
     d: "Une reine par ligne, par colonne et par couleur, sans qu'elles se touchent.", tags: ["5×5 A 9×9"], more: [["GRILLE DU JOUR", "queens/index.html#jour"]]},
   meta: {updated: "2026-10-15", genres: ["LOGIQUE", "DU JOUR"]},
   nom: "Queens",

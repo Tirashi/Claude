@@ -1,7 +1,7 @@
 /* Doggy Saga : fiche de l'accueil (voir accueil-outils.js) */
 Ludo.fiche({
   k: "doggy-saga/index.html",
-  carte: {n: "DOGGY SAGA", s: "DOGGY", ic: "doggy", fam: "32", lb: "linear-gradient(#ffb48a, #e8784f)", lt: "#fff6ea", sh: "#e8784f", rank: "doggysaga",
+  carte: {n: "DOGGY SAGA", img: "doggy-saga/etiquette.jpg", jaq: "doggy-saga/jaquette.jpg", s: "DOGGY", ic: "doggy", fam: "32", lb: "linear-gradient(#ffb48a, #e8784f)", lt: "#fff6ea", sh: "#e8784f", rank: "doggysaga",
     d: "Trois en ligne au refuge : glisse les chiens pour en aligner 3 pareils et leur faire des câlins. Bandanas, nœuds et balles de tennis font de grosses cascades. Lave la boue, ouvre les niches, guide les chiots jusqu'à leur panier et trouve une famille aux 16 chiens dans 60 niveaux. Pour toute la famille, avec la journée du jour.", tags: ["60 NIVEAUX", "ALBUM", "DEFI DU JOUR"], more: [["JOURNEE DU JOUR", "doggy-saga/index.html#jour"]]},
   meta: {added: "2026-10-23", genres: ["LOGIQUE", "DU JOUR"]},
   duJour: () => rk("doggysaga.dailyTry", 0) === dayNum() || (rk("doggysaga.daily", {}) || {})[dayNum()] !== undefined,

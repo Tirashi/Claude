@@ -1,7 +1,7 @@
 /* Amiral ! : fiche de l'accueil (voir accueil-outils.js) */
 Ludo.fiche({
   k: "amiral/index.html",
-  carte: {n: "AMIRAL !", s: "AMIRAL !", ic: "anchor", fam: "32", lb: "linear-gradient(#1c579c, #0a1c40)", lt: "#ffd23f", sh: "#1c579c", rank: "amiral",
+  carte: {n: "AMIRAL !", img: "amiral/etiquette.jpg", jaq: "amiral/jaquette.jpg", s: "AMIRAL !", ic: "anchor", fam: "32", lb: "linear-gradient(#1c579c, #0a1c40)", lt: "#ffd23f", sh: "#1c579c", rank: "amiral",
     d: "La bataille navale où chaque navire a un pouvoir : compose ta flotte au chantier naval parmi 11 navires (avion, salve, torpille, sonar, mines, fumée, leurre...), et chaque jour une bataille imposée.", tags: ["3 NIVEAUX", "DU JOUR"]},
   meta: {updated: "2026-10-19", genres: ["TACTIQUE", "DU JOUR"]},
   duJour: () => rk("amiral.dailyTry", 0) === dayNum(),
