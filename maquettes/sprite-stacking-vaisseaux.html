@@ -55,6 +55,7 @@ input[type=range]{width:100%;accent-color:#6f8bff}
     <label>Hauteur d'une tranche <input id="lz" type="range" min="5" max="30" value="15"><output id="o-lz"></output></label>
     <label id="l-modele">Modèle <select id="modele"></select></label>
     <label id="l-nez">Nez du fichier <select id="nez"><option value="0">vers la droite</option><option value="1" selected>vers le haut</option><option value="2">vers la gauche</option><option value="3">vers le bas</option></select></label>
+    <label id="l-contour">Contour du sprite <select id="contour"><option value="pile" selected>retiré, retracé autour de la pile</option><option value="retire">retiré, sans contour</option><option value="garde">gardé sur chaque tranche</option></select></label>
     <label id="l-ep">Épaisseur (tranches) <input id="ep" type="range" min="2" max="14" value="6"><output id="o-ep"></output></label>
     <label id="l-forme">Forme de l'extrusion <select id="forme"><option value="plaque">plaque (copie simple)</option><option value="biseau" selected>biseau (bords plus bas)</option><option value="dome">dôme (bombé au centre)</option><option value="lumiere">lumière (zones claires plus hautes)</option></select></label>
   </div>
@@ -64,7 +65,7 @@ input[type=range]{width:100%;accent-color:#6f8bff}
   <div class="info" id="info"></div>
   <div class="how">
     <b>Les quatre sources.</b> <b>Code</b> : la démo d'origine, tranches calculées par des fonctions de voxels. <b>.vox → bande</b> : 14 vaisseaux voxel de packs gratuits d'itch.io (8 de monogon, 6 de Texnist) et un chasseur de test, réduits à 32 px et convertis par <code>outils/sprite-stacking/vox-bande.py</code> en bandes PNG (tranches côte à côte, la plus basse à gauche, cellule carrée, pivot au centre), puis chargés comme des images. <b>Sprite plat</b> : des sprites 32×32 dessinés à plat (5 avions du pack Pixel Shmup de Kenney et un vaisseau de test), extrudés en pile. <b>Ton fichier</b> : une bande (largeur multiple de la hauteur) est chargée telle quelle ; toute autre image est extrudée.<br><br>
-    <b>L'extrusion.</b> Chaque pixel reçoit une hauteur : la même partout (plaque), croissante avec la distance au bord (biseau), ou en dôme. La tranche <i>z</i> garde les pixels plus hauts que <i>z</i> ; le dessus garde la couleur du sprite, les flancs sont assombris vers le bas. Ce n'est pas une vraie coupe : les détails peints (verrière, réacteurs) ne gagnent pas de relief propre.<br><br>
+    <b>L'extrusion.</b> Chaque pixel reçoit une hauteur : la même partout (plaque), croissante avec la distance au bord (biseau), ou en dôme. La tranche <i>z</i> garde les pixels plus hauts que <i>z</i> ; le dessus garde la couleur du sprite, les flancs sont assombris vers le bas. Le contour sombre du sprite est d'abord retiré (sinon il est copié sur chaque tranche et fait des bandes noires dans le volume), puis retracé une seule fois autour de la pile finie. Ce n'est pas une vraie coupe : les détails peints (verrière, réacteurs) ne gagnent pas de relief propre.<br><br>
     <b>Le rendu.</b> Chaque tranche est dessinée avec <code>translate</code>, <code>scale(1, sin(pitch))</code>, <code>rotate(angle)</code>, un cran plus haut que la précédente (<i>hauteur × cos(pitch)</i>). La tourelle et les flammes n'existent qu'avec la source Code.<br><br>
     <b>Crédits.</b> 10+ Voxel Spaceships, par monogon (Max Parata), <a href="https://maxparata.itch.io/voxel-spaceships" style="color:#8fa6ff">maxparata.itch.io/voxel-spaceships</a> (CC BY-ND 4.0 : pas de version modifiée, à vérifier avant tout usage dans un jeu). Voxel Spaceships, par Texnist, <a href="https://technistguru.itch.io/voxel-spaceships" style="color:#8fa6ff">technistguru.itch.io/voxel-spaceships</a> (CC BY 4.0). Pixel Shmup, par Kenney, <a href="https://kenney-assets.itch.io/pixel-shmup" style="color:#8fa6ff">kenney-assets.itch.io/pixel-shmup</a> (CC0).
   </div>
@@ -147,11 +148,32 @@ input[type=range]{width:100%;accent-color:#6f8bff}
   }
 
   // Source « sprite plat » : chaque pixel reçoit une hauteur, la tranche z garde les pixels plus hauts que z
-  function extruder(img, n, forme, q) {
+  // Retire le contour d'un sprite : couleur la plus fréquente sur le bord (si elle est sombre), pelée depuis l'extérieur,
+  // au plus 3 pixels d'épaisseur. Renvoie la couleur du contour (pour le retracer autour de la pile) ou null.
+  function peler(src, w, h) {
+    var N = w * h, i, k, compte = {}, best = null, nb = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+    function plein(x, y) { return x >= 0 && y >= 0 && x < w && y < h && src[(y * w + x) * 4 + 3] >= 128; }
+    function bord(i) { var x = i % w, y = (i / w) | 0; if (!plein(x, y)) return false; for (k = 0; k < 4; k++) if (!plein(x + nb[k][0], y + nb[k][1])) return true; return false; }
+    for (i = 0; i < N; i++) if (bord(i)) { var cle = src[i * 4] + ',' + src[i * 4 + 1] + ',' + src[i * 4 + 2]; compte[cle] = (compte[cle] || 0) + 1; if (!best || compte[cle] > compte[best]) best = cle; }
+    if (!best) return null;
+    var c = best.split(',').map(Number);
+    if (0.3 * c[0] + 0.59 * c[1] + 0.11 * c[2] > 110) return null;          // bord clair : pas un contour
+    function proche(i) { return Math.abs(src[i * 4] - c[0]) + Math.abs(src[i * 4 + 1] - c[1]) + Math.abs(src[i * 4 + 2] - c[2]) < 40; }
+    for (var passe = 0; passe < 3; passe++) {
+      var aRetirer = [];
+      for (i = 0; i < N; i++) if (bord(i) && proche(i)) aRetirer.push(i);
+      if (!aRetirer.length) break;
+      aRetirer.forEach(function (j) { src[j * 4 + 3] = 0; });
+    }
+    return 'rgb(' + best + ')';
+  }
+
+  function extruder(img, n, forme, q, contour) {
     var s = toile(img.width, img.height); s.getContext('2d').drawImage(img, 0, 0);
     if (q) s = tourner(s, q);
     var w = s.width, h = s.height, cell = Math.max(w, h) + (Math.max(w, h) & 1);
     var src = s.getContext('2d').getImageData(0, 0, w, h).data, N = w * h, dist = new Int32Array(N), file = [], i, x, y;
+    var couleurContour = contour === 'garde' ? null : peler(src, w, h);
     // distance (en pas de 4-voisins) au pixel transparent le plus proche ; le bord de l'image compte comme transparent
     for (i = 0; i < N; i++) {
       x = i % w; y = (i / w) | 0;
@@ -189,7 +211,9 @@ input[type=range]{width:100%;accent-color:#6f8bff}
       }
       g.putImageData(im, 0, 0); out.push(c);
     }
-    return makeStack(out);
+    var st = makeStack(out);
+    if (contour === 'pile') st.contour = couleurContour || '#12141f';
+    return st;
   }
 
   function ell(x, y, z, cx, cy, cz, rx, ry, rz) {
@@ -271,18 +295,29 @@ input[type=range]{width:100%;accent-color:#6f8bff}
       for (var k = 0; k < rows; k++) items.push({ img: sl[i].c, x: sx, y: sy - up - k, ang: ang, Z: Z, h: hz + k * 0.001, a: 1 });
     }
   }
-  function flush(items) {
-    var ys = Math.sin(pitch);
+  // contour : la pile est d'abord dessinée hors écran, puis sa silhouette (décalée d'un pixel dans 4 directions)
+  // passe dessous, une seule fois pour toute la pile (un contour par tranche ferait des lignes dans le volume)
+  var hors = toile(W, H), hg = hors.getContext('2d'), sil = toile(W, H), sg = sil.getContext('2d');
+  function flush(items, contour, ep) {
+    var ys = Math.sin(pitch), g = contour ? hg : ctx;
+    if (contour) { hg.setTransform(1, 0, 0, 1, 0, 0); hg.clearRect(0, 0, W, H); }
     items.sort(function (a, b) { return a.h - b.h; });
-    ctx.imageSmoothingEnabled = false;
+    g.imageSmoothingEnabled = false;
     for (var q = 0; q < items.length; q++) {
       var it = items[q], s = it.img.width * it.Z;
-      ctx.setTransform(1, 0, 0, 1, Math.round(it.x), Math.round(it.y));
-      ctx.scale(1, ys); ctx.rotate(it.ang); ctx.globalAlpha = it.a;
-      ctx.drawImage(it.img, -s / 2, -s / 2, s, s);
+      g.setTransform(1, 0, 0, 1, Math.round(it.x), Math.round(it.y));
+      g.scale(1, ys); g.rotate(it.ang); g.globalAlpha = it.a;
+      g.drawImage(it.img, -s / 2, -s / 2, s, s);
     }
-    ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1;
+    g.setTransform(1, 0, 0, 1, 0, 0); g.globalAlpha = 1;
     calls += items.length;
+    if (contour) {
+      sg.globalCompositeOperation = 'copy'; sg.drawImage(hors, 0, 0);
+      sg.globalCompositeOperation = 'source-in'; sg.fillStyle = contour; sg.fillRect(0, 0, W, H);
+      sg.globalCompositeOperation = 'source-over';
+      for (var e = 1; e <= (ep || 1); e++) [[e, 0], [-e, 0], [0, e], [0, -e]].forEach(function (d) { ctx.drawImage(sil, d[0], d[1]); });
+      ctx.drawImage(hors, 0, 0); calls += 1 + 4 * (ep || 1);
+    }
   }
   // le vaisseau : coque + (source code seulement) flammes qui suivent le cap et tourelle à son propre angle
   function shipItems(items, sx, sy, Z, ang, turAng, th, flick) {
@@ -394,14 +429,14 @@ input[type=range]{width:100%;accent-color:#6f8bff}
   function drawFly() {
     var Z = 2, ys = Math.sin(pitch), rise = (LZ * Math.cos(pitch) + spread * GAP) * Z, objs = [], i;
     drawStars(ship.x, ship.y, ys);
-    objs.push({ y: CY_FLY, f: function (it) { shipItems(it, CX, CY_FLY, Z, ship.ang, ship.tur, ship.th, Math.random() * 1.4 - 0.4); } });
+    objs.push({ y: CY_FLY, contour: stacks.hull.contour, f: function (it) { shipItems(it, CX, CY_FLY, Z, ship.ang, ship.tur, ship.th, Math.random() * 1.4 - 0.4); } });
     for (i = 0; i < rocks.length; i++) (function (r) {
       var sx = CX + Z * (r.x - ship.x), sy = CY_FLY + Z * ys * (r.y - ship.y);
       if (sx < -60 || sx > W + 60 || sy < -80 || sy > H + 80) return;
       objs.push({ y: sy, f: function (it) { pushStack(it, rockStack(r), sx, sy, 0, r.ang, Z, stacks.rockLz); } });
     })(rocks[i]);
     objs.sort(function (a, b) { return a.y - b.y; });
-    for (i = 0; i < objs.length; i++) { var it = []; objs[i].f(it); flush(it); }
+    for (i = 0; i < objs.length; i++) { var it = []; objs[i].f(it); flush(it, objs[i].contour, Z); }
     var hb = stacks.hull.sl.length * 0.9;
     ctx.fillStyle = '#fff6c0';
     for (i = 0; i < bullets.length; i++) {
@@ -429,7 +464,7 @@ input[type=range]{width:100%;accent-color:#6f8bff}
       ctx.strokeStyle = 'rgba(160,185,255,' + (0.45 * Math.min(1, spread * 3)) + ')'; ctx.setLineDash([2, 3]);
       ctx.beginPath(); ctx.moveTo(CX + 0.5, CY_DEMO); ctx.lineTo(CX + 0.5, CY_DEMO - (n + 3) * rise); ctx.stroke(); ctx.setLineDash([]);
     }
-    flush(it);
+    flush(it, stacks.hull.contour, Z);
     if (spread > 0.05) {                                    // les vraies tranches de la coque, à plat, côte à côte
       var k = Math.min(1, (W - 10) / (n * cell)), cw = cell * k, x0 = (W - n * cw) / 2, y0 = H - cw - 3;
       ctx.globalAlpha = Math.min(1, spread * 3); ctx.imageSmoothingEnabled = false;
@@ -472,15 +507,15 @@ input[type=range]{width:100%;accent-color:#6f8bff}
 
   // reconstruit les piles de la source choisie (appelé aussi quand l'épaisseur, la forme ou le nez changent)
   function appliquer(changeSource) {
-    var ep = +$('ep').value, forme = $('forme').value, q = +$('nez').value;   // nez « haut » = 1 → un quart de tour horaire
+    var ep = +$('ep').value, forme = $('forme').value, ct = $('contour').value, q = +$('nez').value;   // nez « haut » = 1 → un quart de tour horaire
     stacks = { hull: code.hull, rocks: code.rocks, extras: false, rockLz: 1.5 };
     if (source === 'code') stacks.extras = true;
     else if (source === 'vox') { stacks.hull = chargerBande(images['vox/' + choixModele.vox], 0); stacks.rocks = [chargerBande(images.asteroide, 0)]; stacks.rockLz = 1; }
-    else if (source === 'plat') stacks.hull = extruder(images['plat/' + choixModele.plat], ep, forme, 1);
-    else if (source === 'fichier' && fichier) stacks.hull = estBande(fichier) ? chargerBande(fichier, q) : extruder(fichier, ep, forme, q);
+    else if (source === 'plat') stacks.hull = extruder(images['plat/' + choixModele.plat], ep, forme, 1, ct);
+    else if (source === 'fichier' && fichier) stacks.hull = estBande(fichier) ? chargerBande(fichier, q) : extruder(fichier, ep, forme, q, ct);
     if (changeSource) { $('lz').value = LZ_DEFAUT[source] * 10; readCtl(); }
     var plat = source === 'plat' || (source === 'fichier' && fichier && !estBande(fichier));
-    $('l-ep').style.display = $('l-forme').style.display = plat ? '' : 'none';
+    $('l-ep').style.display = $('l-forme').style.display = $('l-contour').style.display = plat ? '' : 'none';
     $('l-nez').style.display = source === 'fichier' ? '' : 'none';
     $('l-modele').style.display = source === 'vox' || source === 'plat' ? '' : 'none';
     if (changeSource) remplirModeles();
@@ -508,7 +543,7 @@ input[type=range]{width:100%;accent-color:#6f8bff}
     im.src = url;
   });
   $('modele').addEventListener('change', function () { choixModele[source] = this.value; appliquer(false); });
-  ['ep', 'forme', 'nez'].forEach(function (id) { $(id).addEventListener('change', function () { appliquer(false); }); $(id).addEventListener('input', function () { readCtl(); }); });
+  ['ep', 'forme', 'nez', 'contour'].forEach(function (id) { $(id).addEventListener('change', function () { appliquer(false); }); $(id).addEventListener('input', function () { readCtl(); }); });
 
   // la bande de la coque actuelle, au format du dépôt de loktar00 (la plus basse à gauche)
   function montrerBande() {
