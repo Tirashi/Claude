@@ -1,0 +1,86 @@
+/* Démineur : style Prairie (maquette 3 validée le 22/11) — interface moderne claire, tuiles d'herbe en pixel art,
+   chiffres en Outfit, textes en Sora. */
+:root{
+  --texte:#1f3326; --doux:#4d6a56; --panneau:#ffffffc8; --bord:#9cc7aa; --accent:#ff7a45; --terre:#4b3a2a;
+  --f-ui:"Sora", system-ui, sans-serif; --f-chiffres:"Outfit", system-ui, sans-serif;
+  color-scheme: light;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0;height:100%;background:#cfe9d8;color:var(--texte);font-family:var(--f-ui);-webkit-tap-highlight-color:transparent}
+body{overscroll-behavior:none}
+button{font-family:inherit;color:inherit}
+button:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+#app{height:100dvh;max-width:1100px;margin:0 auto;display:flex;flex-direction:column;
+  background:linear-gradient(180deg,#dff1e6,#c8e6d2);user-select:none;-webkit-user-select:none;position:relative;overflow:hidden;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+.ecran{flex:1;display:flex;flex-direction:column;min-height:0}
+i.spr{display:block;background-size:contain;background-repeat:no-repeat;background-position:center;image-rendering:pixelated}
+
+/* --- Menu --- */
+#menu{overflow-y:auto;padding:22px max(16px,env(safe-area-inset-left,0px)) 24px max(16px,env(safe-area-inset-right,0px));gap:14px}
+#menu>*{width:100%;max-width:560px;align-self:center}
+.logo{display:flex;align-items:center;gap:12px;margin:4px 0 4px}
+.logo i{width:44px;height:44px}
+.logo h1{margin:0;font-size:30px;font-weight:800;letter-spacing:-.03em}
+.logo p{margin:0;font-size:13px;color:var(--doux)}
+.carte{background:var(--panneau);border:1px solid var(--bord);border-radius:18px;padding:14px;display:flex;flex-direction:column;gap:10px}
+.carte h2{margin:0;font-size:17px;font-weight:800;display:flex;align-items:center;gap:8px}
+.carte h2 i{width:22px;height:22px}
+.carte p{margin:0;font-size:13px;color:var(--doux);line-height:1.45}
+.tailles{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.tailles button,.gros{border:1px solid var(--bord);background:#fff;border-radius:14px;padding:10px 6px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;box-shadow:0 3px 0 #b5d6c0}
+.tailles button:active,.gros:active{transform:translateY(2px);box-shadow:0 1px 0 #b5d6c0}
+.tailles b{font-size:14px}
+.tailles span,.gros span{font:600 12px var(--f-chiffres);color:var(--doux)}
+.tailles em,.gros em{font:800 15px var(--f-chiffres);font-style:normal;color:var(--texte)}
+.gros{flex-direction:row;justify-content:space-between;padding:12px 14px;text-align:left}
+.gros b{font-size:15px;display:block}
+.gros.accent{background:var(--accent);border-color:#e2602d;box-shadow:0 3px 0 #c74f22;color:#fff}
+.gros.accent span,.gros.accent em{color:#fff}
+.gros.fait{background:#eaf6ee}
+.liens{display:flex;gap:8px;justify-content:space-between;margin-top:4px}
+.liens a{flex:1;text-align:center;text-decoration:none;color:inherit;font-weight:600;font-size:14px;border:1px solid var(--bord);border-radius:12px;padding:10px;background:var(--panneau)}
+
+/* --- Jeu --- */
+.tete{display:flex;justify-content:space-between;align-items:center;padding:12px max(14px,env(safe-area-inset-right,0px)) 8px max(14px,env(safe-area-inset-left,0px));gap:8px}
+.tete .retour{border:1px solid var(--bord);background:var(--panneau);border-radius:12px;padding:7px 11px;font-weight:600;font-size:14px;cursor:pointer}
+.titre{font-weight:800;font-size:18px;letter-spacing:-.02em;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pastille{font:800 16px var(--f-chiffres);padding:5px 10px;border-radius:12px;background:var(--panneau);border:1px solid var(--bord);display:flex;align-items:center;gap:6px;font-variant-numeric:tabular-nums}
+.pastille i{width:18px;height:18px}
+.hud{display:flex;justify-content:space-between;align-items:center;padding:0 14px 8px;gap:8px}
+.coeurs{display:flex;gap:3px}
+.coeurs i{width:22px;height:20px}
+.coeurs i.vide{opacity:.25;filter:grayscale(1)}
+.panier{display:flex;gap:10px;font:800 14px var(--f-chiffres)}
+.panier span{display:flex;align-items:center;gap:3px}
+.panier i{width:18px;height:18px}
+.biome{margin:0 14px 8px;padding:5px 10px;border-radius:10px;background:var(--panneau);border:1px solid var(--bord);font-size:12px;font-weight:600;display:flex;justify-content:space-between;gap:8px}
+.zone{flex:1;display:flex;justify-content:center;align-items:center;min-height:0;padding:0 8px;touch-action:manipulation}
+.zone.defile{overflow-y:auto;align-items:flex-start;overscroll-behavior:contain;scrollbar-width:none;padding-bottom:12px}
+.zone.defile::-webkit-scrollbar{display:none}
+.grille{display:grid;gap:2px;padding:6px;border-radius:14px;background:var(--terre);box-shadow:0 6px 18px #0003}
+.c{display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;background-size:100% 100%;image-rendering:pixelated;border-radius:4px;
+  font-family:var(--f-chiffres);font-weight:800;text-shadow:0 1px 0 #fff8;line-height:1}
+.c i.spr{width:82%;height:82%}
+.c.boum{background:#e9806a!important}
+.c.faux::after{content:"";position:absolute;inset:18%;background:linear-gradient(45deg,transparent 45%,#c9352a 45% 55%,transparent 55%),linear-gradient(-45deg,transparent 45%,#c9352a 45% 55%,transparent 55%)}
+.c .pop{position:absolute;inset:8%;animation:pop .8s ease-out forwards;pointer-events:none}
+@keyframes pop{0%{transform:scale(.6);opacity:1}40%{transform:scale(1.25) translateY(-6px);opacity:1}100%{transform:scale(1) translateY(-22px);opacity:0}}
+.n1{color:#2457c9}.n2{color:#23782f}.n3{color:#c9352a}.n4{color:#6b34b0}.n5{color:#9a4a10}.n6{color:#0f6f75}.n7{color:#222}.n8{color:#5a5a5a}
+.journal{font-size:12.5px;text-align:center;min-height:32px;padding:4px 14px 0;color:var(--doux);display:flex;align-items:center;justify-content:center}
+.pied{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px max(14px,env(safe-area-inset-right,0px)) 14px max(14px,env(safe-area-inset-left,0px))}
+.pied button{font-weight:600;font-size:14px;border:1px solid var(--bord);border-radius:12px;padding:10px 13px;background:#fff;cursor:pointer;display:flex;align-items:center;gap:6px;min-width:112px;justify-content:center}
+.pied button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+.pied button i{width:16px;height:16px}
+.chrono{font:800 17px var(--f-chiffres);font-variant-numeric:tabular-nums}
+.msg{position:absolute;left:16px;right:16px;top:calc(env(safe-area-inset-top,0px) + 110px);padding:16px;text-align:center;border-radius:18px;opacity:0;transform:translateY(-8px);transition:.25s;
+  background:#1f3326;color:#eef8f1;font-weight:600;line-height:1.45;box-shadow:0 8px 24px #0004;z-index:5;pointer-events:none;max-width:420px;margin:0 auto}
+.msg.vu{opacity:1;transform:none}
+.msg.bloque{pointer-events:auto}
+.msg big{display:block;font:800 26px var(--f-chiffres);color:#ffd27a;margin-bottom:2px}
+.msg small{display:block;font-weight:400;opacity:.85;margin-top:4px}
+.msg .boutons{display:flex;gap:8px;justify-content:center;margin-top:12px}
+.msg .boutons button{border:0;border-radius:12px;padding:10px 14px;font-weight:700;cursor:pointer;background:#eef8f1;color:#1f3326}
+.msg .boutons button.accent{background:var(--accent);color:#fff}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
