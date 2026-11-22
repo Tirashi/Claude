@@ -36,6 +36,7 @@ Ici, seulement des idées courtes (un titre et quelques lignes). Dès qu'une id�
 1. 🟡 **RPG façon Dragon Quest 1 → La Dernière Lanterne** — chantier, détails déplacés dans [`specs/rpg.md`](specs/rpg.md).
 
 ## Jeux de réflexion à ajouter (idées du 14/10)
+- 🟡 **Démineur** (idée de l'utilisateur du 22/11) : classique à trois tailles en portrait + un **mode funky** qui croise les genres ; [maquette 1](https://claude.ai/artifact/1mopXAFRrRGjLZtiqToqs6) (`maquettes/demineur.html`) : habillages A Galets, B Carte d'état-major, C 16 bits ; pistes funky : Donjon des mines (jouable, monstres à niveaux), Mines farfelues, Sapeur pressé, La descente (roguelite), Duel des drapeaux ; en attente du choix.
 1. ✅ **Sudoku** (logique) — réalisé le 16/10 (`sudoku/`).  le classique 9×9 (et 4×4 / 6×6 pour débuter), niveaux de difficulté selon les techniques nécessaires, notes au crayon, surlignage des chiffres identiques, erreurs signalées ou non ; **grille du jour** (graine = date), temps + 30 s par indice, classement par niveau. Générateur + solveur d'unicité.
 
 ## Jeux de gestion (idées du 15/10)
