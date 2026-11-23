@@ -36,6 +36,7 @@ Ici, seulement des idées courtes (un titre et quelques lignes). Dès qu'une id�
 1. 🟡 **RPG façon Dragon Quest 1 → La Dernière Lanterne** — chantier, détails déplacés dans [`specs/rpg.md`](specs/rpg.md).
 
 ## Jeux de réflexion à ajouter (idées du 14/10)
+- ✅ **Démineur** (idée de l'utilisateur du 22/11) : maquettes 1 à 3, Prairie + Grande prairie validées ; jeu fait le 22/11 ([cdc](specs/demineur.md)).
 1. ✅ **Sudoku** (logique) — réalisé le 16/10 (`sudoku/`).  le classique 9×9 (et 4×4 / 6×6 pour débuter), niveaux de difficulté selon les techniques nécessaires, notes au crayon, surlignage des chiffres identiques, erreurs signalées ou non ; **grille du jour** (graine = date), temps + 30 s par indice, classement par niveau. Générateur + solveur d'unicité.
 
 ## Jeux de gestion (idées du 15/10)

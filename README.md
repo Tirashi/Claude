@@ -4,6 +4,7 @@ Des jeux jouables dans le navigateur, sans build ni dépendance. La page [`index
 
 **Réflexion et jeux du jour**
 
+- [`demineur/index.html`](demineur/index.html) : **Démineur**, dans une prairie en pixel art : trois tailles, la Grande prairie sans fin (trois cœurs, panier à remplir) et un défi du jour qui grandit du lundi au dimanche.
 - [`queens/index.html`](queens/index.html) : **Queens 16-Bit**, une reprise du jeu Queens de LinkedIn.
 - [`picross/index.html`](picross/index.html) : **Picross Dex**, un picross sur le thème des Pokémon (fan-game personnel, non officiel).
 - [`lignee/index.html`](lignee/index.html) : **Lignée**, un puzzle de généalogie : reconstituer un arbre grâce aux indices, en famille française ou en dynastie royale.

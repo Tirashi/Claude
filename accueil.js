@@ -13,6 +13,7 @@ const ORDRE = [
   "picross/index.html",
   "lignee/index.html",
   "queens/index.html",
+  "demineur/index.html",
   "injagility/index.html",
   "solitaire/index.html",
   "touche-coule/index.html",
@@ -70,6 +71,7 @@ const META = {};   // rempli par les fiches (meta)
 // genre "neuf" (nouveau jeu ou démo), "maj" (mise à jour d'un jeu) ou "acc" (accueil, classements : dossier vide).
 // Un numéro du journal par mois ; la plus récente nouveauté du mois fait la couverture.
 const NEWS = [
+  ["2026-11-22", "neuf", "demineur", "Nouveau : le Démineur, dans une prairie en pixel art. Trois tailles de grille, la Grande prairie sans fin (trois cœurs, des fleurs, des cerises et des œufs d'or à ramasser) et un défi du jour qui grandit du lundi au dimanche."],
   ["2026-11-21", "maj", "strategie-ciel", "La stratégie spatiale a ses colonies et sa recherche : un colon s'installe sur une planète libre, chaque colonie a ses emplacements de bâtiments (mine, labo, chantier, défense), et la recherche avance en trois domaines où l'on choisit la suite parmi trois cartes (bombardiers, destroyers, boucliers…). Nouvelle interface « liste de flotte » et icônes tactiques de loin."],
   ["2026-11-20", "neuf", "strategie-ciel", "Nouveau : une stratégie spatiale en temps réel avec pause, dans l'univers de Ciel de guerre (nom provisoire). Ton porte-vaisseaux Aurore fabrique collecteurs, chasseurs, bombardiers et destroyers ; mine le cristal de la ceinture d'astéroïdes et défends le système SOL-7 contre huit vagues de la flotte rouge. Première session, en démo."],
   ["2026-11-20", "neuf", "ecurie", "Nouveau : Écurie miniature, un jeu de gestion d'écurie de course. Pilotes, voitures, pièces, sponsors et fans se gèrent dans le paddock ; la course, elle, se regarde en 3D sur un circuit de ville, derrière tes pilotes, en diorama ou à la télé. Première version : saisons de 8 grands prix et trois divisions."],
@@ -591,6 +593,7 @@ function controls(v){
     if (c === "tcmode" || c === "tcai" || c === "amai" || c === "esai") box.append(chips(c === "tcmode" ? TCMODES : c === "amai" ? AMAI : c === "esai" ? ESAI : TCAI, k => st[c] === k, k => st[c] = k));
     if (c === "cclvl") box.append(chips(CCLVL.map(([k]) => [k, String(k)]), k => st.cclvl === k, k => st.cclvl = k));
     if (c === "ccop") box.append(chips(CCOP, k => st.ccop === k, k => st.ccop = k));
+    if (c === "dmsize") box.append(chips(DMSIZE, k => st.dmsize === k, k => st.dmsize = k));
     if (c === "sdk") box.append(chips(SDK, k => st.sdk === k, k => st.sdk = k));
     if (c === "pssize") box.append(chips([7, 9, 11].map(n => [n, `${n}×${n}`]), k => st.pssize === k, k => st.pssize = k));
     if (c === "size") box.append(chips([5, 6, 7, 8, 9].map(n => [n, `${n}×${n}`]), k => st.size === k, k => st.size = k));

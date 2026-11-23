@@ -20,6 +20,7 @@ const JEUX = {
   'capitaine-du-port': {a: [["xy", [84, 362]], ["attente", 3000]], e: [0, 200, 390, 273], j: [60, 150, 270, 356]},
   'ciel-de-guerre': {a: [["xy", [195, 371]], ["attente", 6000]], e: [0, 200, 390, 273], j: [60, 150, 270, 356]},
   club: {a: [], e: [10, 150, 370, 170], j: [100, 120, 190, 250]},
+  demineur: {a: [["js", "Demineur.nouvelleGrille({taille: 'moyen'}); Demineur.taper(9 * 12 + 6); const {F} = Demineur.etat(); F.cases.forEach((c, i) => { const y = (i / 12) | 0; if (!c.m && !c.n && y > 4 && y < 15) Demineur.taper(i); }); const ouv = i => F.cases[i] && F.cases[i].o; F.cases.forEach((c, i) => { const x = i % 12; if (c.m && [-13, -12, -11, -1, 1, 11, 12, 13].some(d => Math.abs((i + d) % 12 - x) <= 1 && ouv(i + d))) Demineur.marquer(i); })"], ["attente", 800]], e: [0, 200, 390, 273], j: [60, 150, 270, 356]},
   'doggy-saga': {a: [["clic", "Jouer"], ["attente", 1500], ["clic", "C'est parti"], ["attente", 2000]], e: [10, 230, 370, 259], j: [40, 210, 300, 395]},
   'dragon-simulator': {a: [], e: [0, 30, 390, 273], j: [60, 10, 270, 356]},
   duche: {a: [["clic", "PARTIE LIBRE"], ["attente", 1200], ["clic", "FACILE"], ["attente", 3000]], e: [0, 200, 390, 273], j: [60, 150, 270, 356]},

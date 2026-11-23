@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Démineur</title>
+<link rel="manifest" href="../manifest.webmanifest">
+<meta name="theme-color" content="#cfe9d8">
+<link rel="icon" type="image/png" sizes="32x32" href="../icons/favicon-32.png">
+<link rel="apple-touch-icon" href="../icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Ludothèque">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;800&family=Outfit:wght@600;800&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+  <!-- Menu -->
+  <section class="ecran" id="menu">
+    <div class="logo"><i class="spr mine"></i><div><h1>Démineur</h1><p>Creuse la prairie sans réveiller les mines.</p></div></div>
+    <div class="carte">
+      <h2><i class="spr drapeau"></i>Classique</h2>
+      <div class="tailles" id="tailles"></div>
+    </div>
+    <div class="carte">
+      <h2><i class="spr fleur"></i>Grande prairie</h2>
+      <p>Une prairie sans fin : trois cœurs, des fleurs, des cerises et des œufs d'or à ramasser. Le paysage change tous les 25 m.</p>
+      <button type="button" class="gros" id="b-prairie"></button>
+    </div>
+    <div class="carte">
+      <h2><i class="spr oeuf"></i>Défi du jour</h2>
+      <p>La même grille pour toute la famille, plus grande chaque jour de la semaine : du lundi tout doux au dimanche costaud. Une seule tentative classée.</p>
+      <button type="button" class="gros accent" id="b-jour"></button>
+    </div>
+    <div class="liens"><a href="../index.html#demineur" id="l-classement">Classements</a><a href="../index.html" class="ludo-retour">◀ Ludothèque</a></div>
+  </section>
+
+  <!-- Partie -->
+  <section class="ecran" id="jeu" hidden>
+    <div class="tete"><button type="button" class="retour" id="b-menu">◀ Menu</button><span class="titre" id="titre"></span><span class="pastille" id="pastille"></span></div>
+    <div class="hud" id="hud" hidden><div class="coeurs" id="coeurs"></div>
+      <div class="panier"><span><i class="spr fleur"></i><b id="pf">0</b></span><span><i class="spr cerises"></i><b id="pc">0</b></span><span><i class="spr oeuf"></i><b id="po">0</b></span></div></div>
+    <div class="biome" id="biome" hidden><span id="bnom"></span><span id="bsuite"></span></div>
+    <div class="zone" id="zone"><div class="grille" id="grille"></div></div>
+    <div class="journal" id="journal"></div>
+    <div class="pied"><button type="button" id="b-mode"></button><span class="chrono" id="chrono">0:00</span><button type="button" id="b-neuf">Rejouer</button></div>
+    <div class="msg" id="msg"></div>
+  </section>
+</div>
+
+<script src="../ludo-scores.js"></script>
+<script src="jeu.js"></script>
+<script>
+/* Ludothèque : mode hors connexion. Pas de bouton « ◀ MENU » ajouté par-dessus le jeu :
+   le retour à la Ludothèque est dans le menu du jeu. */
+(function () {
+  try {
+    if ("serviceWorker" in navigator && (location.protocol === "https:" || /^(localhost|127\.0\.0\.1)$/.test(location.hostname)))
+      navigator.serviceWorker.register("../sw.js").catch(function () {});
+  } catch (e) {}
+})();
+</script>
+</body>
+</html>
