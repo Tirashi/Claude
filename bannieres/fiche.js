@@ -1,7 +1,7 @@
 /* Bannières : fiche de l'accueil (voir accueil-outils.js) */
 Ludo.fiche({
   k: "bannieres/index.html",
-  carte: {n: "BANNIERES", s: "BANNIERES", ic: "banniere", fam: "3d", lb: "linear-gradient(#9fd4f2, #5a9a3a)", lt: "#fff6e0", sh: "#d0482c", rank: "bannieres",
+  carte: {n: "BANNIERES", img: "bannieres/etiquette.jpg", jaq: "bannieres/jaquette.jpg", s: "BANNIERES", ic: "banniere", fam: "3d", lb: "linear-gradient(#9fd4f2, #5a9a3a)", lt: "#fff6e0", sh: "#d0482c", rank: "bannieres",
     d: "Un jeu de conquête en 3D pour les enfants : choisis ta couleur, fais courir tes chevaliers, archers et mages sur les cases, construis et décore ton village autour du château, et regarde les batailles. Des pièces, des cœurs, des étoiles et des mots simples. Après 25 tours, on compte les drapeaux !", tags: ["3D", "POUR LES ENFANTS", "25 TOURS"]},
   meta: {added: "2026-10-22", genres: ["TACTIQUE"]},
   enCours: () => { const r = rk("bannieres.run", null); return r && r.tour && !r.fin ? `TOUR ${Math.min(r.tour, 25)}/25` : null; },

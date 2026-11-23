@@ -1,7 +1,7 @@
 /* Démineur : fiche de l'accueil (voir accueil-outils.js) */
 Ludo.fiche({
   k: "demineur/index.html",
-  carte: {n: "DEMINEUR", s: "DEMINEUR", ic: "mine", fam: "32", lb: "linear-gradient(#7ccb5c, #3d8532)", lt: "#fff6c2", sh: "#4fa33c", rank: "demineur",
+  carte: {n: "DEMINEUR", img: "demineur/etiquette.jpg", jaq: "demineur/jaquette.jpg", s: "DEMINEUR", ic: "mine", fam: "32", lb: "linear-gradient(#7ccb5c, #3d8532)", lt: "#fff6c2", sh: "#4fa33c", rank: "demineur",
     d: "Le démineur dans une prairie en pixel art : trois tailles, la Grande prairie sans fin et un défi du jour qui grandit au fil de la semaine.",
     tags: ["3 TAILLES", "PRAIRIE SANS FIN"], more: [["DEFI DU JOUR", "demineur/index.html#jour"], ["GRANDE PRAIRIE", "demineur/index.html#prairie"]]},
   meta: {added: "2026-11-22", genres: ["LOGIQUE", "DU JOUR"]},
