@@ -11,6 +11,7 @@ python3 -m http.server 8765
 | Script | Rôle |
 |---|---|
 | `captures.js <sortie> <page>...` | Captures sur un écran de téléphone (390×780). |
+| `etiquettes.js [dossier…] [--brut rép]` | Étiquettes des jeux pour l'accueil (serveur sur le port 8765) : joue un peu chaque jeu, capture une scène et en tire `<dossier>/etiquette.jpg` (cartouche) et `jaquette.jpg` (boîte du volet). Actions et cadres de chaque jeu dans son tableau `JEUX` ; `--brut` garde les captures plein écran pour choisir les cadres. |
 | `faux-classements.js <ancre> [records-json] [capture]` | Classements avec un faux serveur Supabase : ce qui part à l'inscription, quel tableau le volet du jeu demande (accueil ouvert sur l'ancre). |
 | `orbite-solveur.js [niveaux]` | Orbite : tirs gagnants et robustes par niveau. |
 | `lune-rover-niveaux.js` | Lune-Rover, **sous Node** : chaque niveau est gagné par sa solution de référence (dans le palier du niveau) ; sans répétitions, la solution est la plus courte. Lancé aussi par `verifications.js`. |

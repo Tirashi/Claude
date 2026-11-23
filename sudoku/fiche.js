@@ -1,7 +1,7 @@
 /* Sudoku : fiche de l'accueil (voir accueil-outils.js) */
 Ludo.fiche({
   k: "sudoku/index.html",
-  carte: {n: "SUDOKU", s: "SUDOKU", ic: "grid9", fam: "32", lb: "linear-gradient(#3a1a4a, #12082a)", lt: "#ffb8d0", sh: "#8a3aa8", rank: "sudoku",
+  carte: {n: "SUDOKU", img: "sudoku/etiquette.jpg", jaq: "sudoku/jaquette.jpg", s: "SUDOKU", ic: "grid9", fam: "32", lb: "linear-gradient(#3a1a4a, #12082a)", lt: "#ffb8d0", sh: "#8a3aa8", rank: "sudoku",
     d: "Un chiffre par ligne, par colonne et par bloc, sous la lune d'un jardin japonais. Notes au crayon et grille du jour.", tags: ["4×4 A 9×9"]},
   meta: {added: "2026-10-16", genres: ["LOGIQUE", "DU JOUR"]},
   nom: "le Sudoku",

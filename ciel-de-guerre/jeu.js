@@ -279,8 +279,17 @@ for(const k in COULEURS)delete COULEURS[k];
 const TUY_PY={1:[[-0.06,-0.025],[0.06,-0.025]],2:[[-0.075,0.02],[0.075,0.02]],3:[[-0.2,0.02],[0.2,0.02]],4:[[-0.08,-0.07],[0.08,-0.07]],5:[[-0.16,0],[0.16,0]],6:[[-0.38,-0.06],[0.38,-0.06],[-0.07,-0.07],[0.07,-0.07]],7:[[-0.13,0.04],[0.13,0.04],[-0.13,-0.11],[0.13,-0.11]],8:[[-0.26,-0.15],[0.26,-0.15],[-0.12,-0.155],[0.12,-0.155]],9:[[-0.175,-0.09],[0.175,-0.09],[-0.42,-0.125],[0.42,-0.125]],10:[[-0.05,0.02],[0.05,0.02]],11:[[-0.36,-0.12],[0.36,-0.12]],12:[[-0.19,-0.155],[0.19,-0.155],[0,-0.1]],13:[[-0.175,0],[0.175,0]],14:[[-0.4,-0.04],[0.4,-0.04]],15:[[-0.17,0.02],[0.17,0.02],[0,-0.09]],16:[[-0.04,0],[0.04,0],[-0.42,0.125],[0.42,0.125]],17:[[-0.16,-0.075],[0.16,-0.075]],18:[[-0.25,-0.09],[0.25,-0.09],[0,-0.05]],19:[[-0.32,-0.08],[0.32,-0.08]],20:[[-0.2,-0.075],[0.2,-0.075],[0,-0.07]],21:[[-0.22,-0.17],[0.22,-0.17],[0,-0.12]],22:[[-0.3,-0.1],[0.3,-0.1],[0,-0.07]],23:[[0,-0.05]],24:[[-0.055,-0.04],[0.055,-0.04],[-0.38,-0.14],[0.38,-0.14]],25:[[-0.2,-0.11],[0.2,-0.11],[0,-0.09]],26:[[-0.3,-0.125],[0.3,-0.125]],27:[[-0.05,-0.07],[0.05,-0.07]],28:[[-0.125,0.06],[0.125,0.06],[-0.125,-0.08],[0.125,-0.08]],29:[[-0.375,-0.09],[0.375,-0.09],[0,-0.025]],30:[[-0.33,-0.13],[0.33,-0.13],[0,-0.06]],31:[[-0.11,-0.04],[0.11,-0.04]],32:[[-0.19,-0.1],[0.19,-0.1]],33:[[-0.125,-0.06],[0.125,-0.06]],34:[[-0.4,-0.055],[0.4,-0.055],[0,-0.04]],35:[[-0.055,-0.075],[0.055,-0.075],[-0.42,-0.07],[0.42,-0.07]]};
 for(const f in FAMILLES)for(const i of FAMILLES[f].l)COULEURS['py'+i]={m:'import',cle:'py'+i,repeint:1,rot:Math.PI,fam:f,tuy:TUY_PY[i]};
 for(const k in COULEURS){const c=COULEURS[k];c.pack=FAMILLES[c.fam].nom;c.nom=CAT[c.cle].nom;}
-const FAM=()=>FAMILLES[COULEURS[NOMS[choix]].fam];
-const NOMS=Object.keys(COULEURS);let choix=NOMS.indexOf('py7');try{const i=NOMS.indexOf(localStorage.getItem('cieldeguerre.avion'));if(i>=0)choix=i;}catch(e){}
+// session 5 (19/11) : chaque appareil a son profil, qui modifie un peu les réglages de sa famille (dans l'ordre de la liste de la famille : rapide, agile, robuste, armé, puis on recommence)
+const PROFILS={rapide:{nom:'RAPIDE',txt:'plus vite, moins blindé',v:1.08,bli:.9},agile:{nom:'AGILE',txt:'vire plus serré, un peu plus lent',vir:1.12,v:.95},robuste:{nom:'ROBUSTE',txt:'plus blindé, vire moins bien',bli:1.15,vir:.94},arme:{nom:'ARME',txt:'un missile de plus, un peu plus lent',mis:1,v:.96}};
+const STATS={};for(const f in FAMILLES)FAMILLES[f].l.forEach((i,k)=>{const F=FAMILLES[f],P=PROFILS[['rapide','agile','robuste','arme'][k%4]];STATS['py'+i]=Object.assign({},F,{v:F.v*(P.v||1),vir:F.vir*(P.vir||1),bli:F.bli*(P.bli||1),mis:F.mis+(P.mis||0),profil:P,rang:k,famille:f});});
+const FAM=()=>STATS[NOMS[choix]]||FAMILLES[COULEURS[NOMS[choix]].fam];
+// déblocages : le premier appareil de chaque famille est ouvert ; les autres s'achètent avec la SOLDE gagnée en jouant (score / 150, +15 par nouvelle étoile)
+const PRIX=k=>k===0?0:k<=3?60:k<=7?120:200;
+function lireHangar(){let h;try{h=JSON.parse(localStorage.getItem('cieldeguerre.hangar'));}catch(e){}h=h&&typeof h==='object'?h:{};h.solde=Math.max(0,Math.round(Number(h.solde)||0));h.ouverts=Array.isArray(h.ouverts)?h.ouverts.filter(k=>STATS[k]):[];return h;}
+function ecrireHangar(h){try{localStorage.setItem('cieldeguerre.hangar',JSON.stringify(h));}catch(e){}}
+const ouvert=k=>STATS[k]&&(STATS[k].rang===0||k==='py7'||lireHangar().ouverts.includes(k));/* py7 : l'appareil de départ */
+function gagnerSolde(n){n=Math.max(0,Math.round(n));if(!n)return 0;const h=lireHangar();h.solde+=n;ecrireHangar(h);return n;}
+const NOMS=Object.keys(COULEURS);let choix=NOMS.indexOf('py7');try{const i=NOMS.indexOf(localStorage.getItem('cieldeguerre.avion'));if(i>=0){choix=i;if(!ouvert(NOMS[i])){const h=lireHangar();h.ouverts.push(NOMS[i]);ecrireHangar(h);}}}catch(e){}/* l'appareil déjà choisi avant les déblocages reste ouvert */
 // au démarrage : la flotte, les bombardiers, l'appareil du joueur et les polyvalents (premières vagues) ; le reste se charge ensuite, en fond
 const FLOTTE_CLES=['fga_destroyer2','fga_croiseur1','fga_destroyer4','fga_destroyer1','fga_croiseur2','fga_destroyer3','fga_croiseur4'];
 await Promise.all([...FLOTTE_CLES,...[1,2,3,4,5].flatMap(n=>['fga_corvette'+n+'_r','fga_fregate'+n+'_r']),COULEURS[NOMS[choix]].cle,...FAMILLES.poly.l.map(i=>'py'+i)].map(chargerModele));
@@ -405,20 +414,23 @@ function hangarApercu(){if(HG)return HG;const can=document.createElement('canvas
   const cam=new THREE.PerspectiveCamera(32,1.6,.1,200);HG={can,r,s,cam,g:null,k:-1,fam:null,ang:.8,boucle:0};return HG;}
 function hangarVoir(k){const H=hangarApercu();H.k=k;const c=COULEURS[NOMS[k]];
   hangar.querySelectorAll('.hListe button').forEach(b=>b.classList.toggle('vu',+b.dataset.k===k));
-  hangar.querySelector('.hNom').innerHTML=`${c.nom}${k===choix?' <em>EN SERVICE</em>':''}`;hangar.querySelector('.go').textContent=k===choix?'GARDER CET APPAREIL':'CHOISIR CET APPAREIL';
+  const st=STATS[NOMS[k]],F=FAMILLES[c.fam],ok=ouvert(NOMS[k]),prix=PRIX(st.rang),solde=lireHangar().solde,go=hangar.querySelector('.go');
+  const barre=(x,lo,hi)=>{const n=Math.max(1,Math.min(5,Math.round(1+4*(x-lo)/(hi-lo))));return '<i class="pl"></i>'.repeat(n)+'<i></i>'.repeat(5-n);};
+  hangar.querySelector('.hNom').innerHTML=`${c.nom}${k===choix?' <em>EN SERVICE</em>':ok?'':' <em class="ferme">FERME</em>'}`;
+  hangar.querySelector('.hFam').innerHTML=`<p>${F.txt.toUpperCase()} · <b>${st.profil.nom}</b> : ${st.profil.txt}</p><div class="st"><span>VITESSE</span><b>${barre(st.v,.8,1.24)}</b><span>VIRAGE</span><b>${barre(st.vir,.73,1.46)}</b><span>BLINDAGE</span><b>${barre(st.bli,.62,1.96)}</b><span>MISSILES</span><b class="n">${st.mis}</b></div>`;
+  go.disabled=!ok&&solde<prix;go.classList.toggle('achat',!ok);go.textContent=k===choix?'GARDER CET APPAREIL':ok?'CHOISIR CET APPAREIL':solde>=prix?`DEBLOQUER · ${prix} SOLDE`:`IL MANQUE ${prix-solde} SOLDE`;
   chargerModele(c.cle).then(()=>{if(H.k!==k)return;if(H.g)H.s.remove(H.g);const m=construire(c,false).g;const bo=new THREE.Box3().setFromObject(m),t=bo.getSize(new THREE.Vector3()),ce=bo.getCenter(new THREE.Vector3());
     m.position.sub(ce);const g=new THREE.Group();g.add(m);H.g=g;H.s.add(g);const d=Math.max(t.x,t.y*1.6,t.z)*1.3;H.cam.position.set(0,d*.42,d);H.cam.lookAt(0,0,0);});}
 function hangarOnglet(f){const H=hangarApercu();H.fam=f;const F=FAMILLES[f],barres=n=>'<i class="pl"></i>'.repeat(n)+'<i></i>'.repeat(5-n);
   hangar.querySelectorAll('.onglets button').forEach(b=>b.classList.toggle('on',b.dataset.f===f));
-  hangar.querySelector('.hFam').innerHTML=`<p>${F.txt}</p><div class="st"><span>VITESSE</span><b>${barres(F.b[0])}</b><span>VIRAGE</span><b>${barres(F.b[1])}</b><span>BLINDAGE</span><b>${barres(F.b[2])}</b><span>MISSILES</span><b class="n">${F.mis}</b></div>`;
-  let h='';NOMS.forEach((n,k)=>{if(COULEURS[n].fam===f)h+=`<button data-k="${k}" class="${k===choix?'on':''}">${COULEURS[n].nom}</button>`;});hangar.querySelector('.hListe').innerHTML=h;
+  let h='';NOMS.forEach((n,k)=>{if(COULEURS[n].fam===f){const o=ouvert(n);h+=`<button data-k="${k}" class="${k===choix?'on':''}${o?'':' ferme'}">${COULEURS[n].nom}${o?'':`<small>${PRIX(STATS[n].rang)}</small>`}</button>`;}});hangar.querySelector('.hListe').innerHTML=h;
   const k=COULEURS[NOMS[choix]].fam===f?choix:NOMS.findIndex(n=>COULEURS[n].fam===f);hangarVoir(k);}
 function hangarTourne(){const H=HG;if(!H||hangar.style.display==='none'){if(H)H.boucle=0;return;}H.boucle=requestAnimationFrame(hangarTourne);
   const w=H.can.clientWidth,h=H.can.clientHeight;if(!w||!h)return;const lw=Math.max(80,Math.round(w/3)),lh=Math.max(50,Math.round(h/3));/* rendu en gros pixels, comme le jeu */
   if(H.can.width!==lw||H.can.height!==lh){H.r.setSize(lw,lh,false);H.cam.aspect=lw/lh;H.cam.updateProjectionMatrix();}
   H.ang+=.012;if(H.g)H.g.rotation.y=H.ang;H.r.render(H.s,H.cam);}
 function ouvrirHangar(){try{document.exitPointerLock();}catch(x){}const H=hangarApercu();
-  hangar.innerHTML=`<div class="hTete"><b>HANGAR</b><button class="fermer" data-a="x">FERMER</button></div>
+  hangar.innerHTML=`<div class="hTete"><b>HANGAR</b><span class="solde">SOLDE <b>${lireHangar().solde}</b></span><button class="fermer" data-a="x">FERMER</button></div>
   <div class="onglets">${Object.keys(FAMILLES).map(f=>`<button data-f="${f}"><span class="long">${FAMILLES[f].nom}</span><span class="court">${{inter:'INTER',poly:'POLY',lourd:'LOURDS',furtif:'FURTIFS'}[f]}</span></button>`).join('')}</div>
   <div class="hCorps"><div class="apercu"><div class="cadre"></div><div class="hNom"></div><div class="hFam"></div><button class="go" data-a="ok">CHOISIR</button></div><div class="hListe"></div></div>`;
   hangar.querySelector('.cadre').appendChild(H.can);hangar.style.display='flex';hangarOnglet(COULEURS[NOMS[choix]].fam);if(!H.boucle)hangarTourne();}
@@ -426,8 +438,9 @@ function ouvrirHangar(){try{document.exitPointerLock();}catch(x){}const H=hangar
 for(const t of ['pointerdown','pointermove','pointerup','touchstart','touchmove'])hangar.addEventListener(t,e=>e.stopPropagation(),{passive:true});
 hangar.addEventListener('click',e=>{e.stopPropagation();const b=e.target.closest('button');if(!b)return;
   if(b.dataset.f)hangarOnglet(b.dataset.f);else if(b.dataset.k)hangarVoir(+b.dataset.k);
-  else if(b.dataset.a==='ok'){if(HG.k!==choix)choisir(HG.k);hangar.style.display='none';}else if(b.dataset.a==='x')hangar.style.display='none';});
-function changerAvion(){choisir((choix+1)%NOMS.length);}
+  else if(b.dataset.a==='ok'){const n=NOMS[HG.k];if(!ouvert(n)){const h=lireHangar(),prix=PRIX(STATS[n].rang);if(h.solde<prix)return;h.solde-=prix;h.ouverts.push(n);ecrireHangar(h);/* débloqué : on le prend tout de suite */}
+    if(HG.k!==choix)choisir(HG.k);hangar.style.display='none';}else if(b.dataset.a==='x')hangar.style.display='none';});
+function changerAvion(){let k=choix;for(let n=0;n<NOMS.length;n++){k=(k+1)%NOMS.length;if(ouvert(NOMS[k]))break;}choisir(k);}
 document.getElementById('charge').remove();
 // pilotage
 const S={cx:0,cy:0,mode:'titre',vies:3,dx:0,dy:0,blindage:100,p:new THREE.Vector3(0,40,0),yaw:0,pitch:0,bank:0,roll:0,rollT:-1,loopT:-1,v:46,boost:0,auto:true,doigt:null,dernier:0,vue:0,tir:false,munB:300,munM:5,t:0,score:0};
@@ -747,7 +760,8 @@ function finMission(gagne){const def=MIS.def,M=MIS;window.CDGSons&&CDGSons.jouer
   if(gagne)m[def.id]={e:Math.max(et,av.e||0),s:Math.max(S.score,av.s||0)};try{localStorage.setItem('cieldeguerre.missions',JSON.stringify(m));}catch(e){}
   $('fTitre').textContent=gagne?'MISSION REUSSIE':'MISSION ECHOUEE';$('fEtoiles').textContent=gagne?'★'.repeat(et)+'☆'.repeat(3-et):'';$('fScore').textContent=String(S.score).padStart(6,'0');
   $('fDetail').textContent=gagne?(et<3?`${et+1} étoiles : ${def.et[et-1]}.`:'Parfait !'):def.titre+' : raté.';
-  $('fRecord').innerHTML=neuf?'NOUVEAU RECORD D’ETOILES':'';const i=MISSIONS.indexOf(def);$('fSuivante').hidden=!(gagne&&MISSIONS[i+1]);
+  $('fRecord').innerHTML=neuf?'NOUVEAU RECORD D’ETOILES':'';const gs=gagnerSolde(S.score/150+15*Math.max(0,et-(av.e||0)));$('fSolde').textContent=gs?`+${gs} SOLDE (HANGAR)`:'';$('fRang').textContent='';
+  if(neuf&&window.LudoScores){const tot=Object.values(m).reduce((a,v)=>a+(v.e||0),0);LudoScores.submit('cieldeguerre','etoiles',tot,false).then(x=>{if(x)$('fRang').textContent='ETOILES : '+LudoScores.rankText(x);}).catch(()=>{});}const i=MISSIONS.indexOf(def);$('fSuivante').hidden=!(gagne&&MISSIONS[i+1]);
   setTimeout(()=>{if(MIS!==M||S.mode!=='fin')return;/* une autre partie a déjà commencé */finMissionNettoie();viderCombat();montrer('eFin');},gagne?2600:1600);}
 function briefing(def){const i=MISSIONS.indexOf(def);$('bNum').textContent=`MISSION ${i+1} SUR ${MISSIONS.length}`;$('bNom').textContent=def.nom;$('bTitre').textContent=def.titre;$('bTxt').textContent=def.brief;
   $('bButs').innerHTML=def.buts.map(t=>`<li>${t}</li>`).join('');$('bEt').innerHTML=`★ réussir la mission<br>★★ ${def.et[0]}<br>★★★ ${def.et[1]}`;S.brief=def;montrer('eBrief');}
@@ -773,6 +787,8 @@ function abattu(){boom(S.p,30);secouer(2.6);S.vies--;V.flash=.4;if(S.vies<=0){fi
 function finPartie(){if(MIS){finMission(false);return;}S.mode='fin';S.auto=true;S.tir=false;S.blindage=100;try{document.exitPointerLock();}catch(x){}const r=lireRecord(),neuf=S.score>(r.score||0);
   const n={score:Math.max(S.score,r.score||0),vague:Math.max(V.n,r.vague||0),parties:(r.parties||0)+1};try{localStorage.setItem('cieldeguerre.record',JSON.stringify(n));}catch(e){}
   $('fScore').textContent=String(S.score).padStart(6,'0');$('fDetail').textContent=`Vague ${V.n} atteinte.`;$('fRecord').innerHTML=neuf&&S.score>0?'NOUVEAU RECORD !':`RECORD ${String(n.score).padStart(6,'0')}`;
+  const gs=gagnerSolde(S.score/150);$('fSolde').textContent=gs?`+${gs} SOLDE (HANGAR)`:'';$('fRang').textContent='';
+  if(S.score>0&&window.LudoScores)LudoScores.submit('cieldeguerre','vagues',S.score,false).then(x=>{if(x)$('fRang').textContent='CLASSEMENT : '+LudoScores.rankText(x);}).catch(()=>{});
   $('fTitre').textContent='FIN DE PARTIE';$('fEtoiles').textContent='';$('fSuivante').hidden=true;setTimeout(()=>{viderCombat();montrer('eFin');},1600);}
 document.addEventListener('visibilitychange',()=>{if(document.hidden)pause();});
 const clic=(id,f)=>$(id).addEventListener('click',e=>{e.stopPropagation();f();});

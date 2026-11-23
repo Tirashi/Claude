@@ -1,7 +1,7 @@
 /* Alunissage : fiche de l'accueil (voir accueil-outils.js) */
 Ludo.fiche({
   k: "alunissage/index.html",
-  carte: {n: "ALUNISSAGE", s: "ALUNISSAGE", ic: "lander", fam: "32", lb: "linear-gradient(#0a0c1e, #2c2a28)", lt: "#e8e4d8", sh: "#8a8a90", rank: "alunissage",
+  carte: {n: "ALUNISSAGE", img: "alunissage/etiquette.jpg", jaq: "alunissage/jaquette.jpg", s: "ALUNISSAGE", ic: "lander", fam: "32", lb: "linear-gradient(#0a0c1e, #2c2a28)", lt: "#e8e4d8", sh: "#8a8a90", rank: "alunissage",
     d: "Pose ton module en douceur avec deux réacteurs, de la Lune à la comète. Plus l'aire est étroite, plus elle rapporte.", tags: ["MISSION DU JOUR"]},
   meta: {added: "2026-10-13", updated: "2026-10-15", genres: ["ADRESSE", "ESPACE", "DU JOUR"]},
   duJour: () => rk("alunissage.dailyTry", 0) === dayNum(),

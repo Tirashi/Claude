@@ -1,7 +1,7 @@
 /* Asteroids : fiche de l'accueil (voir accueil-outils.js) */
 Ludo.fiche({
   k: "asteroids/index.html",
-  carte: {n: "ASTEROIDS", s: "ASTEROIDS", ic: "rock", fam: "rep", lb: "radial-gradient(circle at 70% 30%, #1d2a5a, #05040e 70%)", lt: "#5ce1ff", sh: "#2ab0d0", rank: "asteroids",
+  carte: {n: "ASTEROIDS", img: "asteroids/etiquette.jpg", jaq: "asteroids/jaquette.jpg", s: "ASTEROIDS", ic: "rock", fam: "rep", lb: "radial-gradient(circle at 70% 30%, #1d2a5a, #05040e 70%)", lt: "#5ce1ff", sh: "#2ab0d0", rank: "asteroids",
     d: "Pilote ton vaisseau et pulvérise les astéroïdes, vague après vague.", tags: ["VAGUES"]},
   meta: {genres: ["ARCADE", "ESPACE"]},
   records: () => [["Meilleur score", num(rk("asteroids16.best", 0))]],

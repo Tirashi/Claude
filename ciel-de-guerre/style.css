@@ -112,3 +112,9 @@ html,body{margin:0;height:100%;background:#1a1424;overflow:hidden;overscroll-beh
 @media (max-aspect-ratio:1/1){.hCorps{grid-template-columns:1fr;grid-template-rows:auto minmax(0,1fr)}.cadre{min-height:150px}}
 @media (min-width:900px){.hangar{inset:5vh auto;left:50%;width:min(900px,92vw);transform:translateX(-50%)}.hangar button{font-size:11px}.hListe button{font-size:10px}.st{font-size:9px}.hFam p{font-size:10px}}
 @media (max-height:420px){.hangar{gap:5px;padding:8px 10px}.onglets button{padding:6px 4px}.hTete b{font-size:12px}.hTete button{padding:5px 8px}.hFam p{display:none}.apercu .go{padding:7px}}
+/* session 5 : solde, appareils fermés, classement */
+.hTete .solde{margin-left:auto;margin-right:10px;font-size:10px;color:#d8c8e8}.hTete .solde b{font-size:12px;color:#f2c94c;letter-spacing:.06em}
+.hListe button.ferme{color:#a898b8;border-style:dashed}.hListe button small{float:right;color:#f2c94c;font-size:8px;margin-top:1px}
+.hNom em.ferme{background:#6a5a7a;color:#fff}.hFam p b{color:#f2c94c}
+.apercu .go.achat{background:#3a7a4a;border-color:#8fd0a0}.apercu .go:disabled{background:#4a4058;border-color:#6a5e78;color:#b8a8c8;cursor:default}
+.carte .solde{color:#f2c94c;font:11px var(--titre);margin:0}.carte .rang{color:#bfe8ff;font:10px var(--titre);margin:0}
