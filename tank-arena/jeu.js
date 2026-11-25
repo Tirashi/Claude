@@ -100,8 +100,37 @@ function collision(o, r) {
     if (d < m && d > 1e-4) { o.x = b.x + dx / d * m; o.z = b.z + dz / d * m; }
   }
   o.x = Math.max(-5.75, Math.min(5.75, o.x)); o.z = Math.max(-5.75, Math.min(5.75, o.z));
+  borner(o);
 }
-function libre(x, z, r) { return OBS.every(b => Math.hypot(x - b.x, z - b.z) > b.r + r) && Math.abs(x) < 5.7 && Math.abs(z) < 5.7; }
+// Contour de la zone jouable : les gros rochers du bord débordent sur le damier, et la collision pouvait
+// pousser un tank derrière eux (caché sous les rochers, hors de l'arène). Pour chaque direction depuis le
+// centre (tous les 5°), on avance jusqu'au premier rocher du bord ; côté caméra (z > 2), on garde en plus
+// une marge selon la hauteur du rocher, qui cache le sol derrière lui.
+let LIMITE = [];
+const NL = 72;
+function calculerLimite() {
+  const bord = OBS.filter(b => Math.hypot(b.x, b.z) > 3.8);
+  const touche = (x, z) => Math.abs(x) > 5.75 || Math.abs(z) > 5.75 || bord.some(b => Math.hypot(x - b.x, z - b.z) < b.r + .32 + (b.z > 2 ? b.h * .4 : .05));
+  LIMITE = [];
+  for (let k = 0; k < NL; k++) {
+    const a = k * 2 * Math.PI / NL, dx = Math.sin(a), dz = Math.cos(a); let r = .5;
+    while (r < 8.5 && !touche(dx * r, dz * r)) r += .05;
+    LIMITE.push(Math.max(.5, r - .05));
+  }
+  // une direction ne dépasse pas trop ses voisines (pas de couloir étroit entre deux rochers)
+  LIMITE = LIMITE.map((r, k) => Math.min(r, LIMITE[(k + 1) % NL] + .4, LIMITE[(k + NL - 1) % NL] + .4));
+}
+function limite(x, z) {
+  let f = Math.atan2(x, z) / (2 * Math.PI) * NL; if (f < 0) f += NL;
+  const k = Math.floor(f) % NL, t = f - Math.floor(f);
+  return LIMITE[k] * (1 - t) + LIMITE[(k + 1) % NL] * t;
+}
+function borner(o) {
+  if (!LIMITE.length) return;
+  const d = Math.hypot(o.x, o.z), lim = limite(o.x, o.z);
+  if (d > lim) { o.x *= lim / d; o.z *= lim / d; }
+}
+function libre(x, z, r) { return OBS.every(b => Math.hypot(x - b.x, z - b.z) > b.r + r) && Math.abs(x) < 5.7 && Math.abs(z) < 5.7 && (!LIMITE.length || Math.hypot(x, z) <= limite(x, z)); }
 function place([x, z]) { for (let k = 0; k < 60 && !libre(x, z, .4); k++) { x *= .96; z *= .96; } return [x, z]; }
 let DEPARTS = [[-4.2, 4.6], [4.4, -4.9], [-4.9, -1.2], [4.6, 3.6]];
 let ENTREES = [[0, 5.3], [0, -5.3], [5.3, 0], [-5.3, 0], [-4.6, -4.6], [4.6, 4.8]];   // survie : entrées des ennemis
@@ -520,6 +549,7 @@ async function demarrer() {
   } catch (e) { $("tRecord").textContent = "IMPOSSIBLE DE CHARGER LES MODELES"; return; }
   PIV = [M.pivot[0] / 1000, M.pivot[1] / 1000];
   OBS = M.obstacles.filter(o => o[4] !== "Cylinder" && o[3] > .3).map(([x, z, r, h]) => ({ x, z, r, h }));
+  calculerLimite();
   DEPARTS = DEPARTS.map(place); ENTREES = ENTREES.map(place);
   construire(); brancher(); montrer("titre"); window.TankArena.pret = true;
   requestAnimationFrame(boucle);
@@ -529,7 +559,7 @@ window.TankArena = {
   pret: false, jouer, finir: () => { if (S && !S.fin) { S.temps = 0; S.depart = 0; finir(); } }, pause,
   etat: () => S && { mode: S.mode, temps: S.temps, depart: S.depart, fin: S.fin, caisse: S.caisse && S.caisse.b.k, vague: S.vague, vies: S.vies, file: S.file.length,
     tanks: tanks.map(t => ({ x: t.x, z: t.z, pv: t.pv, kills: t.kills, mort: t.mort, effets: { ...t.effets } })) },
-  S: () => S, tanks: () => tanks, joueur: () => manche[0], compoVague,
+  S: () => S, tanks: () => tanks, limite: () => LIMITE, scene: () => scene, depart: () => [DEPARTS, ENTREES], joueur: () => manche[0], compoVague,
   detruire: t => toucher(t, { deg: 9999, x: t.x, z: t.z, de: { kills: 0, camp: -1 } }), vue: (px, py, pz, x, z) => { cam.position.set(px, py, pz); vise.set(x, 0, z); }, bonus: (k) => { S.caisse = { x: manche[0].x, z: manche[0].z, b: BONUS.find(b => b.k === k) }; },
 };
 demarrer();

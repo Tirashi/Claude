@@ -27,6 +27,9 @@ Idée de l'utilisateur du 17/11 : « un petit jeu de tank » avec le pack **Low 
 - Les ennemis ne se tirent pas dessus entre eux (camps) et ne prennent pas les caisses ; une caisse tombe à chaque vague réussie (4 s de répit), et une autre toutes les 14 à 20 s.
 - Écran de fin : les tanks détruits par type, la vague, le record.
 
+## Terrain
+- Les gros rochers du bord débordent sur le damier : la zone jouable est un contour calculé au démarrage (`calculerLimite` : tous les 5°, du centre au premier rocher du bord, avec une marge selon la hauteur du rocher côté caméra, qui cache le sol derrière lui) ; `borner()` y ramène chaque tank après les collisions (correction du 25/11 : des tanks passaient derrière les rochers).
+
 ## Sauvegarde et classement
 `tankarena.best` (meilleure manche), `tankarena.stats` {parties, victoires, total}, `tankarena.survie` {vague, kills, parties}, `tankarena.options` {sons}. Classements `tankarena` / `best` et `tankarena` / `survie` (vague atteinte ; le plus haut gagne). Transfert `LUDO1-` : les trois premières clés.
 
