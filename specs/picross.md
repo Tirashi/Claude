@@ -23,3 +23,7 @@ Il manque 45 dessins en 15×15 : n° 201 à 242 et 246 à 248. Maquette de compa
 
 ## Méthode retrouvée (25/11)
 Les 46 Pokémon de Johto déjà faits sont le sprite du Minidex 16×16 **moins une rangée et une colonne**, puis recolorés à la main avec la palette du jeu (8 retouchés). Pour les 45 restants : retirer la rangée et la colonne qui abîment le moins le contour, recolorer d'après la vraie couleur du Pokémon (planche Or / Argent), retoucher à la main si illisible (ex. tête de Steelix refaite). Livraison par lots de 10, montrés en image avant d'être écrits dans `dessins.js`.
+
+## Avancement de Johto
+- **Lot 1 fait (25/11)** : n° 201 à 210 (Zarbi à Granbull) écrits dans `picross/dessins.js`, cache `ludotheque-v126`. Steelix : la version issue du Minidex (les versions redessinées de tête ou de profil ont été refusées).
+- Reste : n° 211 à 242 et 246 à 248 (35 Pokémon), par lots de 10.
