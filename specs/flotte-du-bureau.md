@@ -23,17 +23,20 @@ Laissé de côté pour le premier jet : matrice de 17 améliorations, trois thè
 
 ## 3. Maquettes
 - **Maquette 1** (25/11, [artefact](https://claude.ai/artifact/VLJwho7bw6e7F2SC2atptJ), `maquettes/flotte-du-bureau.html`) : trois téléphones jouables avec la même simulation (mineurs, marchands, patrouille, un pirate de passage, mode cinéma) : **A Radar** (vectoriel), **B Aquarium** (lumière douce, traînées), **C Pixel 32 bits** (seule direction rétro). **Retours du 25/11** : direction C (pixel) écartée (« je n'aime pas trop la vue toute pixellisée ») ; A radar « pourquoi pas » mais B aquarium préférée ; B à enrichir (couleurs, formes, trajectoires, orbites lentes mais présentes).
-- **Maquette 2** (25/11, [artefact](https://claude.ai/artifact/DgpcqGUi6Abh3VWGPijGQo), `maquettes/flotte-du-bureau-2.html`) : aquarium détaillé (étoile, 3 planètes dont une géante à anneaux, lune, ceinture d'astéroïdes, station qui tourne, orbites lentes, vaisseaux à formes et teintes variées, trajectoires courbes vers des destinations mobiles), surcouche **radar** optionnelle (bouton), version **PC** 16 : 10 avec panneau (flotte, Veille). **En attente de validation.**
+- **Maquette 2** (25/11, [artefact](https://claude.ai/artifact/DgpcqGUi6Abh3VWGPijGQo), `maquettes/flotte-du-bureau-2.html`) : aquarium détaillé (étoile, 3 planètes dont une géante à anneaux, lune, ceinture d'astéroïdes, station qui tourne, orbites lentes, vaisseaux à formes et teintes variées, trajectoires courbes vers des destinations mobiles), surcouche **radar** optionnelle (bouton), version **PC** 16 : 10 avec panneau (flotte, Veille). Retours du 25/11 (après la maquette 2) : « pas assez fin, l'écran est vite plein alors qu'il n'y a pas grand-chose » ; la colonisation doit « apparaître naturellement » en exploitant des ressources de plus en plus loin ; pas de classement.
+- **Maquette 3** (25/11, [artefact](https://claude.ai/artifact/S2fwrAwaLCVQpDryLeq93h), `maquettes/flotte-du-bureau-3.html`) : vaisseaux deux fois plus petits, traits et halos plus fins, astres réduits ; amélioration **Portée** (4 niveaux) qui ouvre une zone (fer, glace, cristal, iridium), pose un **avant-poste** tout seul et **dézoome** la carte ; minerais de plus en plus rentables mais trajets plus longs ; boutons ×10 et +1000 pour tester la densité. **En attente de validation.**
 
 ## 4. Décisions de l'utilisateur (25/11)
 - **Gains appli fermée** : une **fraction** des gains du jeu ouvert ; une amélioration de prestige augmente cette fraction (proposé : 25 % de base, +5 points par niveau, 75 % au maximum ; à valider).
 - **Le jeu doit bien passer sur PC** (écran large, panneau, clavier plus tard).
 - **Pas de vue pixellisée.** Base : aquarium ; le radar reste une surcouche au choix.
-- **Colonisation de système en système** (idée de l'utilisateur, avec technologies de vitesse et de portée) : le jeu d'origine n'en a pas (il avance par Signal Ranges SR1 à SR5, Engine Overclock, trous de ver ; sous réserve de ce qu'on a lu). Variante proposée : chaque système est un aquarium ; la propulsion ouvre les systèmes lointains ; le prestige ramène au système de départ. À confirmer.
+- **Colonisation naturelle** (25/11) : pas de mode séparé ; elle vient de l'exploitation de ressources de plus en plus loin. Le jeu d'origine n'a pas de colonisation (Signal Ranges SR1 à SR5, Engine Overclock, trous de ver ; sous réserve de ce qu'on a lu). Dans la maquette 3 : la portée ouvre zones et avant-postes, la carte dézoome ; au prestige, on pourrait repartir avec une portée de départ plus grande. Plusieurs systèmes : pas retenu pour l'instant.
+- **Pas de classement** (25/11).
+- **Rendu** : aquarium fin (voir maquette 3) ; le radar reste une surcouche au choix.
 
 ## 5. Questions ouvertes
-1. La colonisation de système en système devient-elle le cœur de la progression ?
-2. L'aquarium de la maquette 2 convient-il (taille des vaisseaux, orbites, couleurs) ?
-3. Le pourcentage de veille (25 % à 75 %) ?
-4. Prestige par singularité comme l'original, ou autre thème ?
-5. Classement (fortune en 10 min) ou aucun ?
+1. Rendu assez fin (taille, traits, halos) ?
+2. Quatre niveaux de portée pour une première partie avant le prestige ?
+3. Ressources des zones lointaines (fer, glace, cristal, iridium) ?
+4. Pourcentage de veille (25 % à 75 %) ?
+5. Prestige : quel thème (relancer une galaxie, léguer sa flotte) ?
