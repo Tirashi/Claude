@@ -176,3 +176,7 @@ Maquettes de la carte 2 à 4 (isométrique, puis papier à l'encre validée), é
 - **23/11 — Démineur sur main** : fusion de main (étiquettes des jeux, Stratégie spatiale), étiquette et jaquette faites avec le jeu (`outils/etiquettes.js`), `sw.js` v124.
 - **19/11 — Les Bannis, session 2** : dés et sorts du Mage (réserve de dés à faces spéciales, combos, sort annoncé, lancer d'un geste, déraillements, pages de grimoire, grimoire à onglets) ; artefact republié.
 - 23/11 — Les Bannis : étiquette et jaquette faites avec une image de combat (`outils/etiquettes.js`, entrée `bannis`) ; session 2 sur main.
+
+## Pokédex : PC, équipe et quiz (25/11)
+Affichage PC élargi (1280 px, liste en colonnes, fiche en deux colonnes) ; onglets Équipe (choix du jeu, 6 cases, génération automatique, analyse) et Quiz (silhouettes, noms proposés), détails dans [`pokedex.md`](pokedex.md). Service worker v126. Testé avec Playwright sur les vraies données CSV de PokéAPI ; à essayer sur le téléphone.
+- **25/11 — Tank Arena, tanks hors de l'arène** (capture de l'utilisateur : son tank caché sous les rochers du bord) : la collision poussait un tank derrière les gros rochers qui débordent sur le damier ; contour de la zone jouable calculé au démarrage (`calculerLimite`, tous les 5° depuis le centre jusqu'au premier rocher du bord, marge selon la hauteur côté caméra) et `borner()` après chaque collision ; entrées et départs remis dedans.
