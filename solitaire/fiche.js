@@ -1,7 +1,7 @@
 /* Solitaire : fiche de l'accueil (voir accueil-outils.js) */
 Ludo.fiche({
   k: "solitaire/index.html",
-  carte: {n: "SOLITAIRE", s: "SOLITAIRE", ic: "cards", fam: "rep", lb: "linear-gradient(#2a8a48, #145a2c)", lt: "#ffd23f", sh: "#2a8a48", rank: "solitaire",
+  carte: {n: "SOLITAIRE", img: "solitaire/etiquette.jpg", jaq: "solitaire/jaquette.jpg", s: "SOLITAIRE", ic: "cards", fam: "rep", lb: "linear-gradient(#2a8a48, #145a2c)", lt: "#ffd23f", sh: "#2a8a48", rank: "solitaire",
     d: "Le Klondike de Windows XP : range les cartes de l'As au Roi, et regarde-les rebondir à la fin.", tags: ["PIOCHE 1 OU 3"]},
   meta: {genres: ["CARTES"]},
   nom: "le Solitaire",

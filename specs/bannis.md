@@ -195,3 +195,15 @@ Retours du 19/11 (quatrième essai) :
 - **Première run un peu longue, il faut lutter dès le début** : un monstre de plus par vague (5 + vague, 16 au plus), monstres du premier palier plus solides (vie +25 % environ, attaque +1), vie +15 % et attaque +10 % de départ, puis +15 % / +9 % par vague. Simulateur : vague moyenne 5,5 sans dés, 6,2 avec (avant : 6,5 et 7,8) ; la Muraille perd déjà 8, 16 puis 26 aux vagues 1 à 3 ; quelques nuits perdues dès la vague 2 ou 3.
 
 Retour de l'utilisateur (19/11) : « c'est pas mal là » : **session 1 validée** après les retours d'essai (contour des textes, vignettes, armes, début plus dur). Prochaine étape : session 2 (dés et sorts).
+
+## 17. Session 2 : les dés et les sorts du Mage (19/11)
+- **Réserve de dés** (`run.des`, au plus 5) : au départ 2 d6 ; dés trouvés au butin (30 % des vagues, 60 % après un boss : d4 du Geôlier avec une face x2, d8 du Passeur, d10 d'os, d12 de braise avec une étoile, d20 du Bourreau, dé maudit à 2 crânes et 2 x2, dé pipé à 2 étoiles, dé de la Lune /2 et x2) et au marchand (d8 du Passeur, 22 or) ; **graver une face** (18 or) : la plus petite face d'un dé devient x2.
+- **Faces spéciales** : x2 (double la puissance), /2 (la divise), crâne (vaut 0 ; deux crânes et le sort déraille), étoile (le dé est relancé tout seul).
+- **Puissance** : somme des faces chiffrées ; combinaisons sur les faces chiffrées : PAIRE x1,5, SUITE (3 valeurs qui se suivent) x2, BRELAN x2, MIRACLE (toutes pareilles, 3 dés au moins) x3 ; 20 naturel au d20 x2 ; puis les x2 et /2 ; le détail s'affiche (« BASE 28 · x2 »).
+- **Le sort s'annonce quand la jauge est pleine** (« SORT PRET ») : on choisit le moment du lancer (bouton LANCER LES DES ; PLUS TARD referme le plateau). Plateau : le sort, ce qu'il fait et ce qu'il fait s'il déraille, la réserve avec les faces spéciales de chaque dé ; **lancer d'un geste vers le haut** (la vitesse du geste change la hauteur des rebonds) ou avec le bouton ; une relance par vague, dés gardés en les touchant.
+- **Déraillement** (deux crânes, ou un 1 au d20) : prévenu avant de lancer le sort ; une fois sur quatre une pluie de poulets (sans danger), sinon l'effet de travers du sort.
+- **Grimoire** : 3 sorts au départ (boule de feu, pluie de soins, foudre en chaîne) ; **pages de grimoire** au butin des boss : bouclier de givre (moitié des dégâts ; déraillé : héros gelés 2 s), vent glacé (monstres ralentis ; déraillé : accélérés), rempart (répare la Muraille ; déraillé : pierres sur tout le monde), pluie de météores (3 monstres écrasés ; déraillé : n'importe qui). Le sort lancé est tiré parmi ceux qu'on connaît.
+- **Écran du grimoire** (bouton dé en haut) : onglets DÉS (chaque dé et ses faces, les faces spéciales expliquées) et SORTS (effet et déraillement).
+- Simulateur : vague moyenne inchangée (environ 6 avec les dés).
+
+Retour de l'utilisateur : en attente.

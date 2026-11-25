@@ -1,7 +1,7 @@
 /* Odyssée : fiche de l'accueil (voir accueil-outils.js) */
 Ludo.fiche({
   k: "odyssee/index.html",
-  carte: {n: "ODYSSEE", s: "ODYSSEE", ic: "galere", fam: "3d", lb: "linear-gradient(#9fdcff, #1fb0c9)", lt: "#13506e", sh: "#2bb3cf", rank: "odyssee",
+  carte: {n: "ODYSSEE", img: "odyssee/etiquette.jpg", jaq: "odyssee/jaquette.jpg", s: "ODYSSEE", ic: "galere", fam: "3d", lb: "linear-gradient(#9fdcff, #1fb0c9)", lt: "#13506e", sh: "#2bb3cf", rank: "odyssee",
     d: "Penche le téléphone pour ramener la galère d'Ulysse de Troie à Ithaque : Polyphème, Éole, Circé, les Sirènes, Charybde et Scylla… 30 plateaux en 3D et un plateau du jour pour toute la famille.", tags: ["3D", "PLATEAU DU JOUR"]},
   meta: {added: "2026-10-17", genres: ["ADRESSE", "DU JOUR"]},
   duJour: () => rk("odyssee.dailyTry", 0) === dayNum(),

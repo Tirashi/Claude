@@ -115,23 +115,51 @@ const XP_NIVEAUX = [0, 20, 48, 85, 130, 190, 260, 340]; // xp totale pour attein
 const NIV_LEGENDAIRE = 5;
 
 // Sorts instables du Mage (dés).
-const SORTS = [
-  {k: "feu", n: "BOULE DE FEU", c: "#ff6a1f", p: 40, d: "Frappe tous les monstres."},
-  {k: "soin", n: "PLUIE DE SOINS", c: "#6dff8a", p: 25, d: "Soigne toute l'escouade."},
-  {k: "foudre", n: "FOUDRE EN CHAINE", c: "#8fd8ff", p: 25, d: "Frappe fort les monstres un par un."},
-  {k: "poulets", n: "PLUIE DE POULETS", c: "#fff3c2", p: 10, d: "Des poulets. Beaucoup de poulets."}
+// Sorts du Mage instable : effet normal (d) et effet quand le sort déraille (der). La puissance vient des dés.
+const SORTS = {
+  feu:      {n: "BOULE DE FEU", c: "#ff6a1f", ic: [3,9], d: "Frappe tous les monstres.", der: "La boule retombe aussi sur un héros."},
+  soin:     {n: "PLUIE DE SOINS", c: "#6dff8a", ic: [3,5], d: "Soigne toute l'escouade.", der: "Les monstres sont soignés aussi !"},
+  foudre:   {n: "FOUDRE EN CHAINE", c: "#8fd8ff", ic: [0,8], d: "Frappe fort les monstres, un par un.", der: "La foudre frappe aussi la Muraille."},
+  givre:    {n: "BOUCLIER DE GIVRE", c: "#bfe8ff", ic: [21,11], d: "Les héros reçoivent moitié moins de dégâts pendant quelques secondes.", der: "Les héros gèlent sur place 2 secondes."},
+  gel:      {n: "VENT GLACE", c: "#9ad0ff", ic: [3,12], d: "Ralentit tous les monstres pendant quelques secondes.", der: "Les monstres accélèrent !"},
+  rempart:  {n: "REMPART", c: "#e8dcc0", ic: [3,8], d: "Répare la Muraille.", der: "Des pierres tombent sur tout le monde."},
+  meteores: {n: "PLUIE DE METEORES", c: "#ffb040", ic: [3,13], d: "Trois météores écrasent des monstres au hasard.", der: "Les météores tombent n'importe où, héros compris."}
+};
+const SORTS_DEPART = ["feu", "soin", "foudre"];
+// Dés du Mage : type -> nombre de faces. Faces spéciales : x2 (double la puissance), div2 (la divise par 2),
+// crane (vaut 0 ; deux crânes et le sort déraille), etoile (le dé est relancé tout seul).
+const TYPES_DES = {d4: 4, d6: 6, d8: 8, d10: 10, d12: 12, d20: 20};
+const FACES_SPECIALES = {
+  x2:     {n: "x2", d: "double la puissance"},
+  div2:   {n: "/2", d: "divise la puissance par 2"},
+  crane:  {n: "CRANE", d: "vaut 0 ; deux crânes et le sort déraille"},
+  etoile: {n: "ETOILE", d: "le dé est relancé tout seul"}
+};
+// Dés à trouver (butin, marchand) ; sp : faces remplacées par une face spéciale
+const DES_TROUVES = [
+  {k: "d8", n: "D8 DU PASSEUR", p: 30},
+  {k: "d4", n: "D4 DU GEOLIER", sp: {4: "x2"}, p: 18},
+  {k: "d10", n: "D10 D'OS", p: 18},
+  {k: "d12", n: "D12 DE BRAISE", sp: {12: "etoile"}, p: 14},
+  {k: "d20", n: "D20 DU BOURREAU", p: 10},
+  {k: "d6", n: "DE MAUDIT", sp: {1: "crane", 2: "crane", 5: "x2", 6: "x2"}, p: 6},
+  {k: "d6", n: "DE PIPE", sp: {1: "etoile", 2: "etoile"}, p: 8},
+  {k: "d6", n: "DE DE LA LUNE", sp: {3: "div2", 6: "x2"}, p: 8}
 ];
+const MAX_DES = 5;
 
 // Marchand entre les vagues.
 const MARCHAND = [
   {k: "potion", n: "POTION", prix: 12, ic: [9,0], d: "Soigne le héros le plus blessé (45 %)."},
   {k: "parchemin", n: "PARCHEMIN D'ECLAIR", prix: 16, ic: [21,1], d: "Foudroie un monstre pendant le combat."},
   {k: "vue", n: "LONGUE-VUE", prix: 8, ic: [10,7], d: "Montre toute la vague suivante."},
-  {k: "mur", n: "REPARER LA MURAILLE", prix: 15, ic: [10,4], d: "+30 de vie pour la Muraille."}
+  {k: "mur", n: "REPARER LA MURAILLE", prix: 15, ic: [10,4], d: "+30 de vie pour la Muraille."},
+  {k: "de", n: "D8 DU PASSEUR", prix: 22, ic: [13,13], d: "Un dé de plus dans la réserve du Mage."},
+  {k: "graver", n: "GRAVER UNE FACE", prix: 18, ic: [10,4], d: "La plus petite face d'un de tes dés devient x2."}
 ];
 
 const NOMS = ["BRAM", "ODA", "KESS", "MARL", "TOVE", "RHYS", "ILSE", "GARN", "SEFA", "OREK", "VALE", "NELL", "JORN", "AUDE", "THEO", "MAUD", "YSOLDE", "CORBIN", "ELNA", "HUGUES", "ISEUT", "BALDO", "RENAUD", "OLWEN"];
 const NOMS_F = ["ODA", "KESS", "TOVE", "ILSE", "SEFA", "VALE", "NELL", "AUDE", "MAUD", "YSOLDE", "ELNA", "ISEUT", "OLWEN"];
 
-B.D = {HEROS, CLASSES, PORTEE, ROLES, CROISSANCE, TRAITS, MONSTRES, PALIERS, BOSS, NB_VAGUES, SLOTS, RARETES, AFFIXES, BONUS_NIVEAU, XP_NIVEAUX, NIV_LEGENDAIRE, SORTS, MARCHAND, NOMS, NOMS_F};
+B.D = {HEROS, CLASSES, PORTEE, ROLES, CROISSANCE, TRAITS, MONSTRES, PALIERS, BOSS, NB_VAGUES, SLOTS, RARETES, AFFIXES, BONUS_NIVEAU, XP_NIVEAUX, NIV_LEGENDAIRE, SORTS, SORTS_DEPART, TYPES_DES, FACES_SPECIALES, DES_TROUVES, MAX_DES, MARCHAND, NOMS, NOMS_F};
 })();

@@ -183,6 +183,7 @@ function dessinerUnite(u){
     if (u.pv <= 0){ dessinerHeros(u.spr, "mort", 1, x, y, u.dir, {alpha: .55}); return; }
     if (u.leg) aura(x, y, G.t);
     if (u.hate > 0){ ctx.fillStyle = "rgba(160,240,255,.35)"; ctx.beginPath(); ctx.ellipse(x, y + 2, 22, 6, 0, 0, 7); ctx.fill(); }
+    if (u.givre > 0){ ctx.strokeStyle = `rgba(190,235,255,${.5 + .2*Math.sin(G.t*6)})`; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(x, y - 30, 26, 40, 0, 0, 7); ctx.stroke(); }
     let a = u.act, sh = 0, saut = 0, pench = 0; if (a === "mal") sh = Math.sin(u.ta*60)*3;
     // marche : petits bonds, buste penché vers l'avant, poussière aux pieds
     if (a === "marche"){ saut = -Math.abs(Math.sin(u.ta*11))*4; pench = (u.dir || 1)*0.07; poussiere(u); }
@@ -190,6 +191,7 @@ function dessinerUnite(u){
     dessinerHeros(u.spr, a === "coup" ? (u.role === "cac" ? "coup" : "sort") : a, u.ta, 0, 0, u.dir, {blanc});
     dessinerArme(u, 0, 0);
     ctx.restore();
+    if (u.gele > 0){ ctx.fillStyle = "rgba(190,235,255,.45)"; ctx.fillRect(x - 20, y - 66, 40, 68); ctx.strokeStyle = "#e8f8ff"; ctx.lineWidth = 2; ctx.strokeRect(x - 20, y - 66, 40, 68); }
   } else {
     const k = u.t*1.2, mort = u.pv <= 0;
     let yy = y, sx = 1, sy = 1;
@@ -281,7 +283,7 @@ function ecranRecrutement(){
 
 /* ---------- placement et combat ---------- */
 function allerPlacement(){
-  G.ecran = "place"; G.sel = -1; G.C = null; G.des = null; G.evo = null; G.butin = null; G.jauge = 0; G.txt = []; G.part = []; G.fx = [];
+  G.ecran = "place"; G.sel = -1; G.C = null; G.des = null; G.sortPret = null; G.evo = null; G.butin = null; G.jauge = 0; G.txt = []; G.part = []; G.fx = [];
   G.unitesPlace = G.run.heros.map(h => { const c = R.CASES[h.slot]; return {h, x: c[0], y: c[1], ta: Math.random()*2}; });
   sauverRun();
 }
@@ -296,6 +298,8 @@ function hud(){
     petit(W - 112, 14, 46, 38); texte("x" + G.vitesse, W - 89, 40, 16, "#fff", "center");
     zone(W - 112, 14, 46, 38, () => { G.vitesse = G.vitesse === 1 ? 2 : 1; ecrire("bannis.vitesse", G.vitesse); SON.clic(); });
   }
+  const gx = G.ecran === "combat" ? W - 164 : W - 112;
+  petit(gx, 14, 46, 38); icone([13, 13], gx + 9, 19, 28); zone(gx, 14, 46, 38, () => { G.grimoire = true; SON.clic(); });
   petit(W - 60, 14, 46, 38); ctx.fillStyle = "#fff"; ctx.fillRect(W - 44, 23, 5, 20); ctx.fillRect(W - 34, 23, 5, 20);
   zone(W - 60, 14, 46, 38, () => { G.pause = true; SON.clic(); });
 }
@@ -314,7 +318,8 @@ function bandeau(){
     });
   } else if (G.ecran === "combat"){
     panneau(8, 62, W - 16, 50);
-    texte("LE MAGE INSTABLE", 22, 84, 13, "#ffe3a8");
+    if (!G.sortPret) texte("LE MAGE INSTABLE", 22, 84, 13, "#ffe3a8");
+    if (G.sortPret){ const S = D.SORTS[G.sortPret]; texte("PRET : " + S.n, 22, 84, 13, S.c, "left", {max: 220}); }
     const C = G.C, reste = C.file.length + R.vivants(C, "m").length;
     texte("monstres : " + reste, W - 22, 84, 13, "#fff", "right", {gras: false});
     barre(36, 92, W - 72, 9, G.jauge, G.jauge >= 1 ? `hsl(${(G.t*200) % 360},90%,62%)` : "#a77bff");
@@ -353,7 +358,7 @@ function objets(){
   });
   const bx = 196, bw = W - 204;
   if (G.ecran === "place") bouton(bx, 648, bw, 58, "COMBATTRE", lancerCombat, true, true);
-  else if (G.ecran === "combat") bouton(bx, 648, bw, 58, "LANCER LES DES", () => { if (G.jauge >= 1 && !G.des) lancerDes(false); }, G.jauge >= 1 && !G.des, G.jauge >= 1);
+  else if (G.ecran === "combat") bouton(bx, 648, bw, 58, "LANCER LES DES", () => { if (G.jauge >= 1 && !G.des) ouvrirPlateau(); }, G.jauge >= 1 && !G.des, G.jauge >= 1);
 }
 function champPlacement(){
   // cases de départ devant la Muraille
@@ -396,71 +401,115 @@ function traiterEvenements(){
     else if (e.k === "chant"){ SON.chant(); for (const h of R.vivants(C, "h")) etincelles(h.x, h.y - 50, 4, "#9ff0ff", true); }
     else if (e.k === "rate") flotte(e.x, e.y - 70, "RATE", "#c8c8c8", {petit: true});
     else if (e.k === "fuite") flotte(e.u.x, e.u.y - 80, "FUIT !", "#ffb08a", {petit: true});
+    else if (e.k === "rempart"){ flotte(R.MUR_X + 20, 300, "+" + e.v, "#e8dcc0"); }
     else if (e.k === "eclair"){ G.fx.push({k: "foudre", x: e.x, t: 0}); SON.crit(); }
   }
   C.ev.length = 0;
 }
 
 /* ---------- dés du Mage ---------- */
-function lancerDes(relance){
-  const garder = relance && G.des ? G.des.des.map(d => d.garde ? d : null) : null;
-  const des = R.lancerDes(garder);
-  G.des = {t: 0, etat: "roule", des: des.map((d, i) => Object.assign(d, {fin: garder && garder[i] ? 0 : .7 + i*.35, sp: alea(7, 11), garde: !!(garder && garder[i]), pose: !!(garder && garder[i])})),
-    sort: relance && G.des ? G.des.sort : R.tirerSort()};
-  SON.clic();
+const COUL_DES = {d4: "#3ac060", d6: "#f4f4f4", d8: "#3866e0", d10: "#9050d0", d12: "#e08030", d20: "#d83030"};
+// ouvre le plateau : le sort annoncé, la réserve de dés ; on lance d'un geste vers le haut (ou le bouton)
+function ouvrirPlateau(){
+  if (!G.sortPret) G.sortPret = R.tirerSort(G.run.sorts);
+  G.des = {etat: "attente", sort: G.sortPret, t: 0, res: null, des: null}; SON.clic();
 }
-function dessinerDe(d, x, y, taille, rot, valeur, fini){
-  ctx.save(); ctx.translate(x, y); ctx.rotate(rot);
-  const s = taille*.42; ctx.fillStyle = "#000"; ctx.beginPath();
-  if (d.k === "d6") ctx.rect(-s - 3, -s - 3, 2*s + 6, 2*s + 6);
-  else if (d.k === "d8"){ ctx.moveTo(0, -s - 6); ctx.lineTo(s + 6, 0); ctx.lineTo(0, s + 6); ctx.lineTo(-s - 6, 0); }
-  else for (let i = 0; i < 6; i++){ const a = i*Math.PI/3 + Math.PI/6; ctx.lineTo(Math.cos(a)*(s + 5), Math.sin(a)*(s + 5)); }
-  ctx.fill();
-  ctx.fillStyle = d.k === "d20" ? "#e03030" : d.k === "d8" ? "#3060e0" : "#f4f4f4"; ctx.beginPath();
-  if (d.k === "d6") ctx.rect(-s, -s, 2*s, 2*s);
-  else if (d.k === "d8"){ ctx.moveTo(0, -s - 1); ctx.lineTo(s + 1, 0); ctx.lineTo(0, s + 1); ctx.lineTo(-s - 1, 0); }
-  else for (let i = 0; i < 6; i++){ const a = i*Math.PI/3 + Math.PI/6; ctx.lineTo(Math.cos(a)*s, Math.sin(a)*s); }
-  ctx.fill(); ctx.fillStyle = "rgba(255,255,255,.5)"; ctx.fillRect(-s + 3, -s + 3, s*.6, 3);
-  ctx.rotate(-rot); texte(String(valeur), 0, 9, fini ? 28 : 20, d.k === "d6" ? "#202040" : "#fff", "center", {titre: false});
+function lancerDes(relance, force){
+  const Dd = G.des, garder = relance && Dd.des ? Dd.des.map(d => d.garde ? d : null) : null;
+  const f = Math.max(.4, Math.min(1.3, force || 1));
+  Dd.des = R.lancerDes(G.run.des, garder).map((d, i) => Object.assign(d, {fin: d.garde ? 0 : (.55 + i*.22)*f, sp: alea(7, 12)*f, h: alea(60, 120)*f, garde: !!d.garde, pose: !!d.garde}));
+  Dd.t = 0; Dd.etat = "roule"; Dd.res = null; SON.clic(); SON.de();
+}
+function formeDe(k, s){
+  ctx.beginPath();
+  if (k === "d4"){ ctx.moveTo(0, -s*1.1); ctx.lineTo(s*1.05, s*.75); ctx.lineTo(-s*1.05, s*.75); }
+  else if (k === "d6") ctx.rect(-s, -s, 2*s, 2*s);
+  else if (k === "d8"){ ctx.moveTo(0, -s*1.15); ctx.lineTo(s*1.15, 0); ctx.lineTo(0, s*1.15); ctx.lineTo(-s*1.15, 0); }
+  else { const n = k === "d10" ? 4 : k === "d12" ? 5 : 6, rx = k === "d10" ? .85 : 1, ry = k === "d10" ? 1.2 : 1;
+    for (let i = 0; i < n; i++){ const a = -Math.PI/2 + i*2*Math.PI/n; ctx.lineTo(Math.cos(a)*s*1.1*rx, Math.sin(a)*s*1.1*ry); } }
+  ctx.closePath();
+}
+// un dé : sa forme et sa couleur selon le type ; face = {v} ou {s}, ou null (pas encore lancé)
+function dessinerDe(k, face, x, y, taille, rot){
+  const s = taille*.4;
+  ctx.save(); ctx.translate(x, y); ctx.rotate(rot || 0);
+  ctx.fillStyle = "#120a1a"; ctx.save(); ctx.scale(1.14, 1.14); formeDe(k, s); ctx.fill(); ctx.restore();
+  ctx.fillStyle = COUL_DES[k] || "#fff"; formeDe(k, s); ctx.fill();
+  ctx.fillStyle = "rgba(255,255,255,.35)"; ctx.fillRect(-s*.5, -s*.62, s*.6, 3);
+  ctx.rotate(-(rot || 0));
+  const fonce = k === "d6";
+  if (!face) texte("?", 0, s*.42, taille*.36, fonce ? "#202040" : "#fff", "center", {ombre: !fonce});
+  else if (face.v) texte(String(face.v), 0, s*.42, taille*.36, fonce ? "#202040" : "#fff", "center", {ombre: !fonce});
+  else if (face.s === "x2") texte("x2", 0, s*.4, taille*.32, "#ffe14a", "center", {ombreC: "#3a1a00"});
+  else if (face.s === "div2") texte("/2", 0, s*.4, taille*.32, "#9ff0ff", "center", {ombreC: "#00203a"});
+  else if (face.s === "crane") icone([0, 0], -s*.6, -s*.6, s*1.2);
+  else if (face.s === "etoile") icone([0, 5], -s*.6, -s*.6, s*1.2);
   ctx.restore();
 }
+// petit résumé des faces spéciales d'un dé
+function specialesDe(de){ const c = {}; for (const f of de.f) if (f.s) c[f.s] = (c[f.s] || 0) + 1;
+  return Object.entries(c).map(([k, n]) => (n > 1 ? n + " " : "") + D.FACES_SPECIALES[k].n).join(" "); }
 function plateauDes(dt){
   const Dd = G.des; if (!Dd) return; Dd.t += dt;
-  ctx.fillStyle = "rgba(0,0,0,.5)"; ctx.fillRect(0, 0, W, H);
-  const py = 260; grand(14, py - 104, W - 28, 330);
-  texte(Dd.sort.n, W/2, py - 58, 16, Dd.sort.c, "center", {titre: true, max: W - 70});
-  texte(Dd.sort.d, W/2, py - 34, 14, "#fff", "center", {gras: false, max: W - 70});
+  const S = D.SORTS[Dd.sort], n = G.run.des.length, py = 300;
+  ctx.fillStyle = "rgba(0,0,0,.55)"; ctx.fillRect(0, 0, W, H);
+  grand(10, 112, W - 20, 470);
+  icone(S.ic, 30, 136, 36);
+  texte(S.n, 74, 162, 14, S.c, "left", {titre: true, max: W - 104});
+  paragraphe(S.d, 30, 196, W - 60, 13, "#fff", 1.15);
+  texte("S'il déraille : " + S.der, 30, 236, 12, "#ffb0a0", "left", {max: W - 60});
+  const pos = i => W/2 + (i - (n - 1)/2)*Math.min(66, (W - 60)/n);
   let tousFinis = true;
-  Dd.des.forEach((d, i) => {
-    const fini = Dd.t >= d.fin; if (!fini) tousFinis = false;
-    const x = 90 + i*90; let y = py + 32, rot = 0, v = d.v;
-    if (!fini){ const k = Dd.t/d.fin; y += -Math.abs(Math.sin(k*Math.PI*3))*40*(1 - k); rot = Dd.t*d.sp; v = ent(1, {d6: 6, d8: 8, d20: 20}[d.k]); if (Math.random() < .25) SON.de(); }
-    else if (!d.pose){ d.pose = true; SON.pose(); if (!reduit) G.sec = Math.max(G.sec, 3); etincelles(x, py + 32, 8, "#fff"); }
-    const z = fini ? 1 + Math.max(0, .3 - (Dd.t - d.fin))*1.2 : 1;
-    dessinerDe(d, x, y, 78*z, rot, v, fini);
-    if (fini && d.x2) texte("x2", x + 32, y - 30, 18, "#ffdf3a", "center");
-    texte(d.k.toUpperCase(), x, py + 92, 12, "#ffe3a8", "center");
-    if (Dd.etat === "choix"){ zone(x - 42, py - 10, 84, 90, () => { d.garde = !d.garde; SON.clic(); });
-      if (d.garde){ ctx.strokeStyle = "#ffe14a"; ctx.lineWidth = 3; rr(x - 42, py - 10, 84, 90, 8); ctx.stroke(); texte("GARDE", x, py - 16, 12, "#ffe14a", "center"); } }
+  G.run.des.forEach((de, i) => {
+    const x = pos(i); let y = py, rot = 0, face = null;
+    if (Dd.etat === "attente"){ y += Math.sin(G.t*3 + i)*3; }
+    else { const d = Dd.des[i], fini = Dd.t >= d.fin; if (!fini) tousFinis = false;
+      if (!fini){ const k = Dd.t/d.fin; y = py + 170*(1 - k) - Math.abs(Math.sin(k*Math.PI*2.5))*d.h*(1 - k); rot = Dd.t*d.sp; face = R.nouveauDe(de.k).f[ent(0, D.TYPES_DES[de.k] - 1)]; if (Math.random() < .3) SON.de(); }
+      else { face = d.face; if (!d.pose){ d.pose = true; SON.pose(); if (!reduit) G.sec = Math.max(G.sec, 3); etincelles(x, py, 8, "#fff"); } }
+      if (fini && d.etoile) icone([0, 5], x + 14, py - 50, 20);
+      if (Dd.etat === "choix"){ zone(x - 32, py - 34, 64, 70, () => { d.garde = !d.garde; SON.clic(); });
+        if (d.garde){ ctx.strokeStyle = "#ffe14a"; ctx.lineWidth = 3; rr(x - 31, py - 34, 62, 68, 8); ctx.stroke(); texte("GARDE", x, py - 40, 11, "#ffe14a", "center"); } } }
+    const z = Dd.etat === "choix" ? 1 + Math.max(0, .25 - (Dd.t - Dd.des[i].fin))*1.2 : 1;
+    dessinerDe(de.k, face, x, y, 58*z, rot);
+    texte(de.k.toUpperCase(), x, py + 50, 12, "#ffe3a8", "center");
+    const sp = specialesDe(de); if (sp) texte(sp, x, py + 64, 10, "#ffe14a", "center", {max: 64});
   });
-  if (tousFinis && Dd.etat === "roule"){ Object.assign(Dd, R.resultatDes(Dd.des)); Dd.etat = "choix"; if (Dd.combo && Dd.combo !== "FIASCO") SON.combo(); else SON.pose(); }
+  if (Dd.etat === "attente"){
+    const a = (G.t*1.5) % 1; ctx.save(); ctx.globalAlpha = 1 - a; texte("▲", W/2, 420 - a*30, 22, "#ffe14a", "center"); ctx.restore();
+    texte("Glisse vers le haut pour lancer", W/2, 446, 15, "#fff", "center");
+    bouton(80, 470, W - 160, 48, "LANCER", () => lancerDes(false, 1), true, true);
+    bouton(110, 528, W - 220, 38, "PLUS TARD", () => { G.des = null; SON.clic(); }, true, false, 3);
+  }
+  if (tousFinis && Dd.etat === "roule"){ Dd.res = R.resultatDes(Dd.des); Dd.etat = "choix";
+    if (Dd.res.deraille) SON.defaite(); else if (Dd.res.combo) SON.combo(); else SON.pose(); }
   if (Dd.etat === "choix"){
-    if (Dd.combo){ const p = 1 + Math.sin(G.t*10)*.06; ctx.save(); ctx.translate(W/2, py + 124); ctx.scale(p, p); texte(Dd.combo, 0, 0, 16, Dd.combo === "FIASCO" ? "#ff5040" : "#ffdf3a", "center", {titre: true, max: W - 60}); ctx.restore(); }
-    texte("PUISSANCE " + Dd.total + (Dd.mult !== 1 ? "  (x" + Dd.mult + ")" : ""), W/2, py + 152, 18, "#fff", "center");
+    const r = Dd.res;
+    texte("BASE " + r.base + (r.etapes.length ? "  ·  " + r.etapes.join("  ·  ") : ""), W/2, 392, 13, "#ffe3a8", "center", {max: W - 50});
+    const p = 1 + Math.sin(G.t*8)*.04; ctx.save(); ctx.translate(W/2, 422); ctx.scale(p, p);
+    texte("PUISSANCE " + r.total, 0, 0, 16, r.deraille ? "#ff7a6a" : "#ffe14a", "center", {titre: true}); ctx.restore();
+    if (r.deraille) texte("LE SORT VA DERAILLER !", W/2, 448, 15, "#ff5a4a", "center");
+    else if (r.cranes === 1) texte("Un crâne : encore un et le sort déraille", W/2, 448, 13, "#ffb0a0", "center");
     const rel = G.run.relances || 0;
-    bouton(30, py + 166, 146, 46, "RELANCER (" + rel + ")", () => { if (G.run.relances > 0){ G.run.relances--; lancerDes(true); } }, rel > 0, false, 2);
-    bouton(184, py + 166, W - 214, 46, "LANCER LE SORT", jeterSort, true, true);
-    texte("Touche un dé pour le garder avant de relancer", W/2, py + 222, 12, "#ffe3a8", "center", {gras: false});
+    bouton(26, 466, 150, 48, "RELANCER (" + rel + ")", () => { if (G.run.relances > 0){ G.run.relances--; lancerDes(true, 1); } }, rel > 0, false, 2);
+    bouton(184, 466, W - 210, 48, "LANCER LE SORT", jeterSort, true, true);
+    texte("Touche un dé pour le garder avant de relancer", W/2, 540, 12, "#ffe3a8", "center");
   }
 }
 function jeterSort(){
-  const Dd = G.des, sp = Dd.sort, tot = Dd.total; G.jauge = 0; G.des = null;
-  flotte(W/2, 200, sp.n, sp.c, {titre: true});
-  if (sp.k === "feu"){ SON.boum(); if (!reduit) G.sec = 12; G.fx.push({k: "feu", t: 0}); setTimeout(() => { if (G.C) R.jeterSort(G.C, sp, tot); }, 450); }
-  else if (sp.k === "soin"){ SON.soin(); G.fx.push({k: "soin", t: 0}); R.jeterSort(G.C, sp, tot); }
-  else if (sp.k === "foudre"){ const ms = R.vivants(G.C, "m"); ms.forEach((m, i) => setTimeout(() => { if (G.C && m.pv > 0){ G.fx.push({k: "foudre", x: m.x, t: 0}); SON.crit(); } }, i*120)); R.jeterSort(G.C, sp, tot); }
-  else { SON.poule(); for (let i = 0; i < Math.min(12, 4 + Math.round(tot/6)); i++) G.fx.push({k: "poule", x: -20 - i*26, y: alea(260, 520), t: 0});
-    setTimeout(() => { if (G.C) R.jeterSort(G.C, sp, tot); }, 1000); }
+  const Dd = G.des, k = Dd.sort, S = D.SORTS[k], res = Dd.res; G.jauge = 0; G.sortPret = null; G.des = null;
+  flotte(W/2, 196, S.n, S.c, {titre: true});
+  if (res.deraille){ flotte(W/2, 232, "IL DERAILLE !", "#ff5a4a", {titre: true}); }
+  const appliquer = () => { if (!G.C) return; const r = R.jeterSort(G.C, k, res.total, res.deraille);
+    if (r.poulets){ SON.poule(); flotte(W/2, 268, "DES POULETS ?!", "#fff3c2", {titre: true}); for (let i = 0; i < Math.min(12, 4 + Math.round(res.total/6)); i++) G.fx.push({k: "poule", x: -20 - i*26, y: alea(260, 520), t: 0}); }
+    if (k === "meteores") for (const u of r.cibles || []){ G.fx.push({k: "impact", x: u.x, y: u.y, t: 0}); etincelles(u.x, u.y - 20, 24, "#ffb040"); } };
+  if (k === "feu"){ SON.boum(); if (!reduit) G.sec = 12; G.fx.push({k: "feu", t: 0}); setTimeout(appliquer, 450); }
+  else if (k === "meteores"){ SON.boum(); G.fx.push({k: "meteores", t: 0}); setTimeout(() => { appliquer(); if (!reduit) G.sec = 10; SON.boum(); }, 500); }
+  else if (k === "soin"){ SON.soin(); G.fx.push({k: "soin", t: 0}); appliquer(); }
+  else if (k === "foudre"){ R.vivants(G.C, "m").forEach((m, i) => setTimeout(() => { if (G.C && m.pv > 0){ G.fx.push({k: "foudre", x: m.x, t: 0}); SON.crit(); } }, i*120)); appliquer(); }
+  else if (k === "givre"){ SON.chant(); G.fx.push({k: "teinte", c: "190,230,255", t: 0}); appliquer(); }
+  else if (k === "gel"){ SON.chant(); G.fx.push({k: "vent", t: 0}); appliquer(); }
+  else if (k === "rempart"){ SON.mur(); G.fx.push({k: "rempart", t: 0}); appliquer(); }
+  else appliquer();
 }
 function effets(dt){
   for (const f of G.fx){ f.t += dt;
@@ -469,6 +518,15 @@ function effets(dt){
     else if (f.k === "soin"){ ctx.fillStyle = `rgba(110,255,140,${Math.max(0, .3 - f.t*.3)})`; ctx.fillRect(0, 0, W, H); if (f.t > 1.2) f.fini = true; }
     else if (f.k === "foudre"){ ctx.strokeStyle = `rgba(200,240,255,${1 - f.t*3})`; ctx.lineWidth = 4; ctx.beginPath(); let x = f.x, y = 0; ctx.moveTo(x, y);
       while (y < 520){ y += 30; x = f.x + alea(-14, 14); ctx.lineTo(x, y); } ctx.stroke(); if (f.t > .33) f.fini = true; }
+    else if (f.k === "teinte"){ ctx.fillStyle = `rgba(${f.c},${Math.max(0, .35 - f.t*.35)})`; ctx.fillRect(0, 0, W, H); if (f.t > 1) f.fini = true; }
+    else if (f.k === "vent"){ ctx.strokeStyle = `rgba(200,235,255,${Math.max(0, .8 - f.t*.6)})`; ctx.lineWidth = 2;
+      for (let i = 0; i < 14; i++){ const y = 250 + (i*37) % 280, x = W - ((f.t*520 + i*61) % (W + 120)); ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + 40, y + 4); ctx.stroke(); } if (f.t > 1.3) f.fini = true; }
+    else if (f.k === "rempart"){ for (let i = 0; i < 8; i++){ const k = Math.min(1, f.t*1.8 - i*.08); if (k <= 0) continue; const x = 200 - k*170 + i*6, y = 140 + i*45 - Math.sin(k*Math.PI)*60;
+        ctx.fillStyle = "#8a8498"; ctx.fillRect(x - 6, y - 5, 12, 10); ctx.fillStyle = "#5c566c"; ctx.fillRect(x - 6, y + 3, 12, 2); }
+      if (f.t > .55 && f.t < .9){ ctx.fillStyle = `rgba(255,240,200,${.4 - (f.t - .55)})`; ctx.fillRect(0, 196, R.MUR_X, 350); } if (f.t > 1) f.fini = true; }
+    else if (f.k === "meteores"){ const k = f.t/.5; for (let i = 0; i < 3; i++){ const x = 120 + i*90 - k*40, y = -60 + k*(330 + i*40); ctx.fillStyle = "rgba(255,120,30,.5)"; ctx.beginPath(); ctx.arc(x + 10, y - 14, 14, 0, 7); ctx.fill();
+        ctx.fillStyle = "#ffb040"; ctx.beginPath(); ctx.arc(x, y, 12, 0, 7); ctx.fill(); ctx.fillStyle = "#fff0b0"; ctx.beginPath(); ctx.arc(x, y, 5, 0, 7); ctx.fill(); } if (f.t > .5) f.fini = true; }
+    else if (f.k === "impact"){ ctx.strokeStyle = `rgba(255,190,90,${Math.max(0, 1 - f.t*2)})`; ctx.lineWidth = 4; ctx.beginPath(); ctx.ellipse(f.x, f.y, 10 + f.t*90, 4 + f.t*30, 0, 0, 7); ctx.stroke(); if (f.t > .5) f.fini = true; }
     else if (f.k === "poule"){ f.x += dt*190; const sx = f.x, sy = f.y - Math.abs(Math.sin(f.t*12))*10;
       ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.ellipse(sx, sy, 10, 8, 0, 0, 7); ctx.fill(); ctx.beginPath(); ctx.arc(sx + 8, sy - 7, 5, 0, 7); ctx.fill();
       ctx.fillStyle = "#e33"; ctx.fillRect(sx + 7, sy - 14, 4, 4); ctx.fillStyle = "#fb2"; ctx.fillRect(sx + 12, sy - 7, 5, 3);
@@ -486,8 +544,8 @@ function finDeVague(){
     gains.push({h, niv: h.niv, t}); }
   if (gagne){ finDeNuit(true); return; }
   const boss = !!D.BOSS[run.vague];
-  G.butin = {etape: "bilan", t: 0, xp, gains, choix: null, objets: [0, 1, 2].slice(0, boss ? 3 : 2).map(() => R.genererObjet(run.vague, boss)), pris: null};
-  G.ecran = "butin"; SON.victoire();
+  G.butin = {etape: "bilan", t: 0, xp, gains, choix: null, objets: R.genererButin(run, boss), pris: null};
+  G.ecran = "butin"; G.txt = []; G.fx = []; SON.victoire();
 }
 function suiteButin(){
   const B = G.butin;
@@ -497,7 +555,7 @@ function suiteButin(){
   B.etape = "marchand";
 }
 function ecranButin(dt){
-  const B = G.butin; B.t += dt;
+  const B = G.butin; B.t += dt; G.txt = G.txt.filter(t => (t.t += dt) < 1.4);
   fond(); muraille();
   // l'escouade au repos
   for (const h of G.run.heros){ const c = R.CASES[h.slot]; if (h.leg) aura(c[0], c[1], G.t);
@@ -531,7 +589,19 @@ function ecranButin(dt){
     texte("BUTIN", W/2, 150, 18, "#ffe14a", "center", {titre: true});
     texte("Choisis un objet, puis le héros qui le porte.", W/2, 178, 14, "#fff", "center", {gras: false});
     B.objets.forEach((o, i) => {
-      const y = 194 + i*112, R0 = D.RARETES[o.rar];
+      const y = 194 + i*112;
+      if (o.type === "de" || o.type === "page"){
+        petit(30, y, W - 60, 104); ctx.strokeStyle = "#ffe14a"; ctx.lineWidth = 2; rr(32, y + 2, W - 64, 100, 8); ctx.stroke();
+        if (o.type === "de"){ dessinerDe(o.de.k, {v: D.TYPES_DES[o.de.k]}, 66, y + 50, 52, Math.sin(G.t*2)*.1);
+          texte(o.n, 102, y + 28, 15, "#fff", "left", {max: W - 146}); texte("UN DE DE PLUS POUR LE MAGE", 102, y + 48, 13, "#ffe14a", "left", {max: W - 146});
+          texte(o.de.k.toUpperCase() + (specialesDe(o.de) ? " · " + specialesDe(o.de) : "") + " · réserve " + G.run.des.length + "/" + D.MAX_DES, 102, y + 69, 13, "#d8ffd8", "left", {max: W - 146}); }
+        else { const S = D.SORTS[o.sort]; icone(S.ic, 42, y + 26, 48);
+          texte("PAGE DE GRIMOIRE", 102, y + 28, 15, "#fff", "left", {max: W - 146}); texte("NOUVEAU SORT : " + S.n, 102, y + 48, 13, S.c, "left", {max: W - 146});
+          paragraphe(S.d, 102, y + 68, W - 146, 12, "#d8ffd8", 1.05); }
+        zone(30, y, W - 60, 104, () => { if (o.type === "de") G.run.des.push(o.de); else G.run.sorts.push(o.sort); B.pris = o; SON.butin(); suiteButin(); });
+        return;
+      }
+      const R0 = D.RARETES[o.rar];
       petit(30, y, W - 60, 104); ctx.strokeStyle = R0.c; ctx.lineWidth = 2; rr(32, y + 2, W - 64, 100, 8); ctx.stroke();
       icone(o.ic, 42, y + 26, 48);
       texte(o.n, 102, y + 28, 15, "#fff", "left", {max: W - 146});
@@ -565,21 +635,28 @@ function ecranButin(dt){
     texte("L'objet remplacé est revendu.", W/2, 590, 12, "#ffe3a8", "center", {gras: false});
     bouton(60, 602, W - 120, 44, "VENDRE (" + Math.round(o.prix/2) + " OR)", () => { G.run.or += Math.round(o.prix/2); SON.or(); suiteButin(); }, true, false, 3);
   } else if (B.etape === "marchand"){
-    grand(14, 112, W - 28, 500);
-    texte("LE MARCHAND", W/2, 160, 18, "#ffe14a", "center", {titre: true});
-    texte("Tu as " + G.run.or + " pièces d'or.", W/2, 190, 15, "#fff", "center");
+    grand(14, 92, W - 28, 600);
+    texte("LE MARCHAND", W/2, 138, 18, "#ffe14a", "center", {titre: true});
+    texte("Tu as " + G.run.or + " pièces d'or.", W/2, 166, 15, "#fff", "center");
     D.MARCHAND.forEach((m, i) => {
-      const y = 200 + i*82, ok = G.run.or >= m.prix && !(m.k === "mur" && G.run.mur >= G.run.murMax);
-      petit(30, y, W - 60, 76); ctx.save(); if (!ok) ctx.globalAlpha = .5;
-      icone(m.ic, 40, y + 17, 42);
-      texte(m.n, 92, y + 26, 15, "#fff", "left", {max: W - 190});
-      paragraphe(m.d, 92, y + 46, W - 186, 12, "#ffe3a8", 1.05);
-      texte(m.prix + " OR", W - 44, y + 26, 15, "#ffe14a", "right");
-      if (m.k !== "mur") texte("x" + (G.run.stock[m.k] || 0), W - 44, y + 62, 13, "#fff", "right");
+      const plein = (m.k === "mur" && G.run.mur >= G.run.murMax) || (m.k === "de" && G.run.des.length >= D.MAX_DES);
+      const y = 178 + i*70, ok = G.run.or >= m.prix && !plein;
+      petit(30, y, W - 60, 64); ctx.save(); if (!ok) ctx.globalAlpha = .5;
+      icone(m.ic, 40, y + 13, 38);
+      texte(m.n, 88, y + 24, 15, "#fff", "left", {max: W - 184});
+      paragraphe(m.d, 88, y + 42, W - 180, 12, "#ffe3a8", 1.0);
+      texte(m.prix + " OR", W - 44, y + 24, 15, "#ffe14a", "right");
+      if (G.run.stock[m.k] !== undefined) texte("x" + (G.run.stock[m.k] || 0), W - 44, y + 52, 13, "#fff", "right");
+      if (m.k === "de") texte(G.run.des.length + "/" + D.MAX_DES, W - 44, y + 52, 13, "#fff", "right");
       ctx.restore();
-      if (ok) zone(30, y, W - 60, 76, () => { G.run.or -= m.prix; if (m.k === "mur") G.run.mur = Math.min(G.run.murMax, G.run.mur + 30); else G.run.stock[m.k] = (G.run.stock[m.k] || 0) + 1; SON.or(); });
+      if (ok) zone(30, y, W - 60, 64, () => { G.run.or -= m.prix;
+        if (m.k === "mur") G.run.mur = Math.min(G.run.murMax, G.run.mur + 30);
+        else if (m.k === "de") G.run.des.push(R.nouveauDe("d8", "D8 DU PASSEUR"));
+        else if (m.k === "graver"){ const de = R.graverFace(G.run); if (de) flotte(W/2, 640, de.n + " : une face devient x2", "#ffe14a", {petit: true}); }
+        else G.run.stock[m.k] = (G.run.stock[m.k] || 0) + 1; SON.or(); });
     });
-    bouton(50, 538, W - 100, 54, "VAGUE SUIVANTE", () => { G.run.vague++; R.preparerVague(G.run); allerPlacement(); SON.pose(); }, true, true);
+    bouton(50, 608, W - 100, 54, "VAGUE SUIVANTE", () => { G.run.vague++; R.preparerVague(G.run); allerPlacement(); SON.pose(); }, true, true);
+    for (const t of G.txt) texte(t.v, t.x, t.y - t.t*20, 14, t.c, "center");
   }
 }
 function evolution(dt){
@@ -650,6 +727,37 @@ function ficheHeros(){
   bouton(90, 664, W - 180, 46, "FERMER", () => { G.fiche = null; SON.clic(); }, true, false, 3);
 }
 
+/* ---------- grimoire : réserve de dés et sorts connus ---------- */
+function ecranGrimoire(){
+  ctx.fillStyle = "rgba(0,0,0,.6)"; ctx.fillRect(0, 0, W, H); zone(0, 0, W, H, () => {});
+  grand(10, 40, W - 20, 690);
+  texte("LE GRIMOIRE", W/2, 90, 16, "#ffe14a", "center", {titre: true});
+  // deux onglets : la réserve de dés, les sorts connus
+  const onglet = G.ongletGrimoire || "des";
+  bouton(30, 106, (W - 72)/2, 40, "DES " + G.run.des.length + "/" + D.MAX_DES, () => { G.ongletGrimoire = "des"; SON.clic(); }, true, onglet === "des", onglet === "des" ? 1 : 3);
+  bouton(42 + (W - 72)/2, 106, (W - 72)/2, 40, "SORTS " + G.run.sorts.length, () => { G.ongletGrimoire = "sorts"; SON.clic(); }, true, onglet === "sorts", onglet === "sorts" ? 1 : 3);
+  if (onglet === "des"){
+  texte("Relances par vague : 1  ·  touche un dé gardé pour ne pas le relancer", W/2, 172, 12, "#ffe3a8", "center", {max: W - 60});
+  G.run.des.forEach((de, i) => {
+    const y = 186 + i*58; petit(26, y, W - 52, 52);
+    dessinerDe(de.k, {v: D.TYPES_DES[de.k]}, 54, y + 24, 38, 0);
+    texte(de.n, 84, y + 20, 14, "#fff", "left", {max: W - 120});
+    // les faces, en petit
+    de.f.forEach((f, j) => { const x = 84 + j*13, yy = y + 28; if (x > W - 44) return;
+      ctx.fillStyle = f.s ? (f.s === "crane" ? "#5a2030" : "#5a4a10") : "rgba(0,0,0,.3)"; ctx.fillRect(x, yy, 12, 14);
+      texte(f.v ? String(f.v) : f.s === "x2" ? "x2" : f.s === "div2" ? "/2" : f.s === "crane" ? "X" : "*", x + 6, yy + 11, 9, f.s ? "#ffe14a" : "#fff", "center", {ombre: false}); });
+  });
+  Object.entries(D.FACES_SPECIALES).forEach(([k, f], i) => texte(f.n + " : " + f.d, 30, 494 + i*20, 12, "#ffe14a", "left", {max: W - 60}));
+  } else {
+  const y = 160;
+  G.run.sorts.forEach((k, i) => { const S = D.SORTS[k], yy = y + i*68;
+    icone(S.ic, 28, yy + 6, 32); texte(S.n, 68, yy + 20, 14, S.c, "left", {max: W - 96});
+    paragraphe(S.d, 68, yy + 38, W - 96, 12, "#fff", 1.05); texte("déraille : " + S.der, 68, yy + 64, 11, "#ffb0a0", "left", {max: W - 96}); });
+  if (G.run.sorts.length < Object.keys(D.SORTS).length) texte("D'autres sorts dorment dans les pages du grimoire (butin des boss).", W/2, y + G.run.sorts.length*68 + 10, 12, "#ffe3a8", "center", {max: W - 60});
+  }
+  bouton(90, 664, W - 180, 46, "FERMER", () => { G.grimoire = false; SON.clic(); }, true, false, 3);
+}
+
 /* ---------- pause ---------- */
 function ecranPause(){
   ctx.fillStyle = "rgba(0,0,0,.6)"; ctx.fillRect(0, 0, W, H); zone(0, 0, W, H, () => {});
@@ -677,12 +785,13 @@ function boucle(now){
   else if (G.ecran === "butin") ecranButin(dt);
   else if (G.ecran === "place" || G.ecran === "combat"){
     // simulation
-    if (G.ecran === "combat" && !G.pause && !G.fiche){
+    if (G.ecran === "combat" && !G.pause && !G.fiche && !G.grimoire){
       let ds = dt*G.vitesse; if (G.gel > 0){ G.gel -= dt; ds = 0; } if (G.des) ds = 0;
       for (let pas = ds; pas > 0; pas -= 1/60) R.etape(G.C, Math.min(1/60, pas));
       for (const u of G.C.unites){ u.ta += ds; u.flash = Math.max(0, u.flash - ds); u.lunge = Math.max(0, u.lunge - ds); if (u.pv <= 0) u.mort += ds;
         if (u.pv > 0 && (u.act === "coup" || u.act === "mal") && u.ta > .45){ u.act = "repos"; u.ta = 0; } }
       traiterEvenements();
+      if (G.jauge >= 1 && !G.sortPret){ G.sortPret = R.tirerSort(G.run.sorts); SON.niveau(); flotte(W/2, 170, "SORT PRET", "#d8b8ff", {titre: true}); }
       if (G.C.fin && !G.attenteFin){ G.attenteFin = true; const f = G.C.fin; setTimeout(() => { G.attenteFin = false; if (f === "victoire") finDeVague(); else finDeNuit(false); }, 1300); }
     }
     fond(); muraille();
@@ -706,14 +815,22 @@ function boucle(now){
   }
   ctx.restore();
   if (G.fiche) ficheHeros();
+  if (G.grimoire) ecranGrimoire();
   if (G.pause) ecranPause();
   requestAnimationFrame(boucle);
 }
 
 /* ---------- toucher et taille ---------- */
+function coords(e){ const r = cv.getBoundingClientRect(); return [(e.clientX - r.left)*W/r.width, (e.clientY - r.top)*H/r.height]; }
+cv.addEventListener("pointerup", e => {
+  const g = G.geste; G.geste = null; if (!g || !G.des || G.des.etat !== "attente") return;
+  const [, y] = coords(e), dy = g.y - y, dt = Math.max(.05, (performance.now() - g.t)/1000);
+  if (dy > 40) lancerDes(false, .6 + Math.min(.7, dy/dt/2500));
+});
 cv.addEventListener("pointerdown", e => {
   audio();
   const r = cv.getBoundingClientRect(), x = (e.clientX - r.left)*W/r.width, y = (e.clientY - r.top)*H/r.height;
+  if (G.des && G.des.etat === "attente" && y > 250 && y < 460) G.geste = {y, t: performance.now()};
   for (let i = zones.length - 1; i >= 0; i--){ const z = zones[i]; if (x >= z.x && x <= z.x + z.w && y >= z.y && y <= z.y + z.h){ z.f(); return; } }
   if (G.ecran === "place") G.sel = -1;
 });
@@ -728,6 +845,6 @@ window.addEventListener("resize", taille); taille();
 document.addEventListener("visibilitychange", () => { if (document.hidden && G.ecran === "combat") G.pause = true; });
 // pour les tests
 window.Bannis.G = G;
-window.Bannis.J = {nouvelleNuit, allerPlacement, lancerCombat, finDeVague, finDeNuit, lancerDes, jeterSort, suiteButin};
+window.Bannis.J = {nouvelleNuit, allerPlacement, lancerCombat, finDeVague, finDeNuit, ouvrirPlateau, lancerDes, jeterSort, suiteButin};
 requestAnimationFrame(boucle);
 })();

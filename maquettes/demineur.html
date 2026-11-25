@@ -1,0 +1,282 @@
+<title>Démineur, maquette 1</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Outfit:wght@400;600;800&family=Caveat:wght@600;700&family=IBM+Plex+Mono:wght@500;600&family=Space+Grotesk:wght@500;700&family=Inter:wght@400;600&family=Cinzel:wght@700&display=swap">
+<style>
+/* Maquette du Démineur : trois habillages du mode classique (jouables) + pistes du mode funky,
+   dont une jouable (Donjon des mines). Page sombre comme les autres maquettes de la Ludothèque. */
+:root{ --fond:#121418; --texte:#eef1f6; --doux:#a7afbd; --accent:#ffb547; --cadre:#050607; color-scheme:dark;
+  --f-titre:"Space Grotesk", system-ui, sans-serif; --f-texte:"Inter", system-ui, sans-serif; }
+html,body{background:var(--fond);color:var(--texte)}
+body{margin:0;font-family:var(--f-texte);font-size:15px;line-height:1.55;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px 56px}
+.page{max-width:1160px;margin:0 auto;display:flex;flex-direction:column;gap:30px}
+h1{font-family:var(--f-titre);font-size:clamp(24px,5vw,34px);margin:0;color:var(--accent);text-wrap:balance}
+h2.sec{font-family:var(--f-titre);font-size:22px;margin:12px 0 0;color:var(--accent)}
+header p,.intro{margin:8px 0 0;color:var(--doux);max-width:72ch}
+b{color:var(--texte);font-weight:600}
+.rangee{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:40px 24px}
+.dir{display:flex;flex-direction:column;align-items:center;gap:12px;min-width:0}
+.dir h3{font-family:var(--f-titre);font-size:17px;margin:0;text-align:center}
+.dir p{margin:0;color:var(--doux);font-size:14px;max-width:38ch}
+.dir ul{margin:0;padding-left:18px;color:var(--doux);font-size:13.5px;max-width:38ch}
+
+/* --- Téléphone --- */
+.tel{width:100%;max-width:330px;height:660px;border:9px solid var(--cadre);border-radius:30px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 12px 34px #000a;position:relative;user-select:none;-webkit-user-select:none}
+.tete{display:flex;justify-content:space-between;align-items:center;padding:12px 14px 6px}
+.compteur{min-width:62px;text-align:center}
+.niveaux{display:flex;justify-content:center;gap:6px;padding:4px 10px 8px}
+.niveaux button{cursor:pointer}
+.zone{flex:1;display:flex;align-items:center;justify-content:center;min-height:0;padding:4px 10px;touch-action:manipulation}
+.grille{display:grid;position:relative}
+.c{display:flex;align-items:center;justify-content:center;cursor:pointer;line-height:1;position:relative}
+.c svg{width:72%;height:72%}
+.pied{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 14px 16px}
+.pied button{cursor:pointer}
+.msg{position:absolute;left:12px;right:12px;bottom:76px;padding:12px;text-align:center;border-radius:12px;pointer-events:none;opacity:0;transform:translateY(8px);transition:.25s}
+.msg.vu{opacity:1;transform:none}
+button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* --- A : Galets (moderne, relief doux) --- */
+.sA{background:linear-gradient(170deg,#e9eef6,#d9e1ee);color:#1d2740;font-family:"Outfit",sans-serif}
+.sA .titre{font-weight:800;font-size:20px;letter-spacing:-.02em}
+.sA .compteur{font-weight:600;font-size:15px;background:#fff;border-radius:999px;padding:4px 10px;box-shadow:0 2px 6px #1d274020}
+.sA .niveaux button{font:600 13px "Outfit",sans-serif;border:0;border-radius:999px;padding:6px 12px;background:#ffffffaa;color:#4a5878}
+.sA .niveaux button.on{background:#1d2740;color:#fff}
+.sA .grille{gap:3px}
+.sA .c{border-radius:28%;background:linear-gradient(160deg,#6fa8ff,#4b7fe6);box-shadow:inset 0 -3px 0 #2f5cc0,0 2px 3px #1d274030;font-weight:800}
+.sA .c.o{background:#f6f8fc;box-shadow:inset 0 1px 2px #1d274018}
+.sA .c.boum{background:#ff5d6c}
+.sA .n1{color:#3a7cf0}.sA .n2{color:#1fa36a}.sA .n3{color:#f0533e}.sA .n4{color:#7b4ce0}.sA .n5{color:#d97a00}.sA .n6{color:#0e9ca8}.sA .n7{color:#1d2740}.sA .n8{color:#8794ad}
+.sA .pied button{font:600 14px "Outfit",sans-serif;border:0;border-radius:14px;padding:11px 14px;background:#fff;color:#1d2740;box-shadow:0 3px 0 #b9c4d8}
+.sA .pied button.on{background:#ff5d6c;color:#fff;box-shadow:0 3px 0 #c43a48}
+.sA .msg{background:#1d2740;color:#fff;font-weight:600}
+
+/* --- B : Carte d'état-major (papier, crayon) --- */
+.sB{background:#efe5cd;background-image:linear-gradient(#0000 23px,#9a8a6418 24px),linear-gradient(90deg,#0000 23px,#9a8a6418 24px);background-size:24px 24px;color:#3a2f1e;font-family:"IBM Plex Mono",monospace}
+.sB .titre{font:700 26px "Caveat",cursive;color:#2b4a7a}
+.sB .compteur{font-size:14px;border:1.5px dashed #6d5a3a;padding:3px 8px}
+.sB .niveaux button{font:500 12px "IBM Plex Mono",monospace;background:none;border:1.5px solid #6d5a3a;padding:5px 9px;color:#6d5a3a}
+.sB .niveaux button.on{background:#6d5a3a;color:#efe5cd}
+.sB .grille{border:2px solid #3a2f1e;background:#3a2f1e;gap:1px;padding:1px}
+.sB .c{background:#7d8b55;background-image:repeating-linear-gradient(45deg,#0000 0 4px,#5f6d3c55 4px 5px)}
+.sB .c.o{background:#f4ecd8}
+.sB .c.boum{background:#d9644a}
+.sB .c{font:700 1.25em "Caveat",cursive}
+.sB .n1{color:#2b4a7a}.sB .n2{color:#3d6b2f}.sB .n3{color:#a8321e}.sB .n4{color:#4d2f6b}.sB .n5{color:#8a4b12}.sB .n6{color:#1f6b6b}.sB .n7,.sB .n8{color:#3a2f1e}
+.sB .pied button{font:500 13px "IBM Plex Mono",monospace;background:#f4ecd8;border:1.5px solid #3a2f1e;padding:9px 11px;color:#3a2f1e}
+.sB .pied button.on{background:#a8321e;color:#f4ecd8}
+.sB .msg{background:#f4ecd8;border:2px solid #3a2f1e;font:700 22px "Caveat",cursive;color:#a8321e;border-radius:2px;transform:rotate(-2deg)}
+
+/* --- C : 16 bits (le classique, en console) --- */
+.sC{background:#2d2a5c;color:#fff;font-family:"Press Start 2P",monospace}
+.sC .titre{font-size:12px;color:#ffd23f;text-shadow:2px 2px 0 #000}
+.sC .compteur{font-size:12px;background:#000;color:#ff3b3b;padding:6px 6px;border:2px solid #807cc0}
+.sC .niveaux button{font:8px "Press Start 2P",monospace;background:#4a4690;color:#cfcaff;border:2px solid #000;padding:7px 6px}
+.sC .niveaux button.on{background:#ffd23f;color:#000}
+.sC .grille{background:#7b7b7b;border:4px solid;border-color:#7b7b7b #fff #fff #7b7b7b}
+.sC .c{background:#c0c0c0;border:3px solid;border-color:#fff #7b7b7b #7b7b7b #fff;font-size:.62em}
+.sC .c.o{border:1px solid #8a8a8a;background:#bdbdbd}
+.sC .c.boum{background:#ff2b2b}
+.sC .n1{color:#0000ff}.sC .n2{color:#007b00}.sC .n3{color:#ff0000}.sC .n4{color:#00007b}.sC .n5{color:#7b0000}.sC .n6{color:#007b7b}.sC .n7{color:#000}.sC .n8{color:#7b7b7b}
+.sC .pied button{font:9px "Press Start 2P",monospace;background:#c0c0c0;color:#000;border:3px solid;border-color:#fff #7b7b7b #7b7b7b #fff;padding:9px 8px}
+.sC .pied button.on{background:#ffd23f}
+.sC .msg{background:#000;border:3px solid #ffd23f;color:#ffd23f;font-size:10px;line-height:1.6;border-radius:0}
+
+/* --- Donjon des mines --- */
+.sD{background:radial-gradient(120% 80% at 50% 0%,#3a2b22,#140f0d);color:#f3e2c4;font-family:"Outfit",sans-serif}
+.sD .titre{font:700 17px "Cinzel",serif;color:#ffb547;letter-spacing:.04em}
+.sD .stats{display:flex;gap:10px;align-items:center;padding:0 14px 6px;font-weight:600;font-size:13px}
+.sD .barre{flex:1;height:12px;background:#000a;border-radius:6px;overflow:hidden;border:1px solid #6b4a2e}
+.sD .barre i{display:block;height:100%;background:linear-gradient(90deg,#e0403a,#ff7a52);transition:width .25s}
+.sD .barre.xp i{background:linear-gradient(90deg,#4fb3ff,#8ad8ff)}
+.sD .grille{gap:3px}
+.sD .c{border-radius:6px;background:linear-gradient(160deg,#5b4636,#3f2f25);box-shadow:inset 0 -3px 0 #24190f;font-weight:800;color:#f3e2c4}
+.sD .c.o{background:#1d1612;box-shadow:inset 0 1px 3px #000}
+.sD .c.mort{background:#2a1f1a}
+.sD .c.mort svg{opacity:.35}
+.sD .c .marque{font-size:.7em;color:#ffb547;opacity:.9}
+.sD .c .lv{position:absolute;right:2px;bottom:1px;font-size:.5em;color:#ffd9a0}
+.sD .n1{color:#f3e2c4}
+.sD .pied button{font:600 13px "Outfit",sans-serif;border:1px solid #6b4a2e;border-radius:10px;padding:10px 12px;background:#2a1f1a;color:#f3e2c4}
+.sD .pied button.on{background:#ffb547;color:#1d1612}
+.sD .msg{background:#1d1612;border:1px solid #ffb547;color:#ffb547;font-weight:600}
+.sD .journal{font-size:12px;color:#c9b08a;text-align:center;min-height:18px;padding:0 12px}
+
+/* --- Pistes du mode funky --- */
+.pistes{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
+.piste{border:1px solid #2b313c;border-radius:14px;padding:16px;background:#181c22;display:flex;flex-direction:column;gap:6px;min-width:0}
+.piste h4{font-family:var(--f-titre);font-size:16px;margin:0}
+.piste .croise{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--accent)}
+.piste p{margin:0;color:var(--doux);font-size:14px}
+.piste.reco{border-color:var(--accent)}
+.questions{border-left:3px solid var(--accent);padding:4px 0 4px 36px;margin:0;color:var(--doux);max-width:76ch}
+.questions li{margin:4px 0}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="page">
+<header>
+  <h1>Démineur — maquette 1</h1>
+  <p>Trois habillages pour le <b>mode classique</b> (tout est jouable : tape pour creuser, <b>appui long</b> ou bouton drapeau pour marquer, tape sur un chiffre entouré de ses drapeaux pour déblayer autour). Trois tailles de grille, pensées en <b>portrait</b> pour le téléphone. Plus bas, cinq pistes pour le <b>mode funky</b>, dont une jouable.</p>
+</header>
+
+<div class="rangee">
+  <div class="dir">
+    <h3>A · Galets</h3>
+    <div class="tel sA" data-skin="A"></div>
+    <p>Moderne, tuiles bombées et couleurs vives, police ronde. Hors rétro : ce serait la direction « appli de 2026 ».</p>
+  </div>
+  <div class="dir">
+    <h3>B · Carte d'état-major</h3>
+    <div class="tel sB" data-skin="B"></div>
+    <p>Papier quadrillé, terrain hachuré, chiffres écrits au crayon. Le démineur comme mission de sapeur sur une carte.</p>
+  </div>
+  <div class="dir">
+    <h3>C · 16 bits</h3>
+    <div class="tel sC" data-skin="C"></div>
+    <p>Le démineur qu'on connaît, cases biseautées et couleurs d'origine, dans un cadre de console. Le plus lisible, le moins surprenant.</p>
+  </div>
+</div>
+
+<h2 class="sec">Le mode funky : cinq pistes</h2>
+<p class="intro">Chaque piste croise le démineur avec un autre genre. Elles peuvent se combiner : ma recommandation est la <b>1</b> comme base, avec des pouvoirs de la <b>4</b> entre les étages et parfois une règle de la <b>2</b> sur un étage.</p>
+<div class="pistes">
+  <div class="piste reco"><span class="croise">Démineur × RPG · jouable ci-dessous</span><h4>1. Donjon des mines</h4><p>Les mines sont des <b>monstres de niveau 1 à 5</b> et les chiffres donnent la <b>somme des niveaux</b> autour. Tu peux taper un monstre exprès : plus faible que toi, il ne fait pas mal et donne de l'XP. On monte de niveau pour oser affronter les gros. On ne cherche plus à éviter, on cherche à <b>chasser dans le bon ordre</b>.</p></div>
+  <div class="piste"><span class="croise">Démineur × puzzle à règles</span><h4>2. Mines farfelues</h4><p>Chaque grille tire une règle bizarre : chiffres en <b>saut de cavalier</b>, <b>mines doubles</b> qui comptent pour 2, <b>mines négatives</b> (−1), une case <b>menteuse</b> par ligne, chiffres qui disent seulement pair ou impair. Sept grilles à la suite font une « semaine ».</p></div>
+  <div class="piste"><span class="croise">Démineur × arcade</span><h4>3. Le sapeur pressé</h4><p>Un petit robot avance tout seul vers la sortie, une case par seconde. À toi de déminer son chemin devant lui, en temps réel ; il accélère à chaque niveau. Du démineur sous pression, avec des tuyaux à la Lemmings.</p></div>
+  <div class="piste"><span class="croise">Démineur × roguelite</span><h4>4. La descente</h4><p>Des étages de plus en plus grands. Entre deux étages, on choisit <b>un pouvoir sur trois</b> : radar 3×3, bouclier qui encaisse une mine, sonar sur une ligne, pioche qui révèle un chiffre sûr. Une partie dure 10 minutes et ne se ressemble jamais.</p></div>
+  <div class="piste"><span class="croise">Démineur × jeu de société</span><h4>5. Duel des drapeaux</h4><p>Contre l'ordinateur, chacun son tour sur la même grille : trouver une mine rapporte un point et fait rejouer, tomber sur un chiffre passe la main. Le premier à la majorité des mines gagne. Une bombe « joker » à lancer une fois par partie.</p></div>
+</div>
+
+<div class="rangee">
+  <div class="dir">
+    <h3>1 · Donjon des mines</h3>
+    <div class="tel sD" data-skin="D"></div>
+    <p>Essai rapide : 9 × 9, 20 monstres. Un monstre plus fort que toi enlève 3 PV par niveau d'écart. Tape un monstre vaincu pour récupérer son chiffre. Marquer (appui long) fait défiler un niveau supposé de 1 à 5.</p>
+  </div>
+  <div class="dir" style="justify-content:center">
+    <h3>À décider</h3>
+    <ol class="questions">
+      <li><b>L'habillage</b> du classique : A, B ou C (ou un mélange).</li>
+      <li><b>Le mode funky</b> : la piste 1 seule, la combinaison 1 + 4 (+ 2), ou une autre.</li>
+      <li><b>Les tailles</b> : Facile 8 × 10 (10 mines), Moyen 12 × 18 (35), Difficile 16 × 26 (80) en portrait ; sur PC, la grille se tourne en paysage.</li>
+      <li><b>Classements</b> par taille (meilleur temps) et un <b>défi du jour</b> : la même grille pour tout le monde, une seule tentative.</li>
+      <li>Première case toujours sûre (déjà dans la maquette) ; faut-il en plus des grilles <b>sans hasard</b> (jamais de 50/50 forcé) ?</li>
+    </ol>
+  </div>
+</div>
+</div>
+
+<script>
+(function(){
+const NIV={Facile:{w:8,h:10,m:10},Moyen:{w:12,h:18,m:35},Difficile:{w:16,h:26,m:80}};
+const SVG={
+  mine:'<svg viewBox="0 0 20 20"><g stroke="currentColor" stroke-width="2"><path d="M10 1v18M1 10h18M3.6 3.6l12.8 12.8M16.4 3.6L3.6 16.4"/></g><circle cx="10" cy="10" r="6" fill="currentColor"/><circle cx="8" cy="8" r="1.8" fill="#fff"/></svg>',
+  drapeau:'<svg viewBox="0 0 20 20"><path d="M6 2v16" stroke="currentColor" stroke-width="2"/><path d="M7 3l9 4-9 4z" fill="#e8392f"/><path d="M3 18h8" stroke="currentColor" stroke-width="2"/></svg>',
+  pelle:'<svg viewBox="0 0 20 20" width="16" height="16" style="vertical-align:-3px"><path d="M4 16l7-7M11 9l3-3 2 2-3 3z" stroke="currentColor" stroke-width="2" fill="none"/><path d="M2 18l3-1-2-2z" fill="currentColor"/></svg>'
+};
+const COUL={1:'#7fd36b',2:'#5fb4ff',3:'#c58cff',4:'#ff9b4a',5:'#ff4d4d'};
+function monstre(l){ // petite bestiole dont la taille et les cornes montent avec le niveau
+  const r=4+l*1.1, c=COUL[l];
+  const cornes=l>=3?`<path d="M${10-r*.7} ${10-r*.6}l-2 -${l} 4 2zM${10+r*.7} ${10-r*.6}l2 -${l} -4 2z" fill="${c}"/>`:'';
+  return `<svg viewBox="0 0 20 20">${cornes}<ellipse cx="10" cy="11" rx="${r}" ry="${r*.9}" fill="${c}"/><circle cx="8" cy="10" r="1.4" fill="#111"/><circle cx="12" cy="10" r="1.4" fill="#111"/>${l>=4?'<path d="M7.5 13.5h5" stroke="#111" stroke-width="1.2"/>':''}</svg>`;
+}
+
+function jeu(tel){
+  const skin=tel.dataset.skin, donjon=skin==='D';
+  tel.innerHTML=`<div class="tete"><span class="titre">${donjon?'DONJON DES MINES':skin==='C'?'DEMINEUR':skin==='B'?'Opération Sapeur':'Démineur'}</span><span class="compteur cpt">0</span></div>`+
+    (donjon?`<div class="stats"><span class="lvl">NIV 1</span><span class="barre pv"><i></i></span><span class="pvt">10</span></div><div class="stats"><span>XP</span><span class="barre xp"><i></i></span><span class="xpt">0</span></div>`
+           :`<div class="niveaux">${Object.keys(NIV).map(k=>`<button type="button" data-n="${k}">${skin==='C'?k.toUpperCase():k}</button>`).join('')}</div>`)+
+    `<div class="zone"><div class="grille"></div></div>${donjon?'<div class="journal"></div>':''}
+     <div class="pied"><button type="button" class="b-mode">${SVG.pelle} ${skin==='C'?'CREUSER':'Creuser'}</button><span class="chrono">0:00</span><button type="button" class="b-neuf">${skin==='C'?'REJOUER':'Rejouer'}</button></div><div class="msg"></div>`;
+  const $=s=>tel.querySelector(s), G=$('.grille');
+  let W,H,M,cases,fini,lance,drapeauMode=false,t0=0,timer=null;
+  let pv,pvMax,lv,xp; const SEUILS=[0,6,15,26,40,999];
+  function nouvelle(n){
+    if(donjon){W=9;H=9;M=20;pv=pvMax=10;lv=1;xp=0;}
+    else{n=n||'Facile';({w:W,h:H,m:M}=NIV[n]);tel.querySelectorAll('.niveaux button').forEach(b=>b.classList.toggle('on',b.dataset.n===n));}
+    cases=Array.from({length:W*H},()=>({m:0,n:0,o:false,f:0}));
+    fini=false;lance=false;clearInterval(timer);$('.chrono').textContent='0:00';
+    const zone=$('.zone').getBoundingClientRect();
+    const t=Math.max(14,Math.floor(Math.min((zone.width-20)/W,(zone.height-8)/H)));
+    G.style.gridTemplateColumns=`repeat(${W},${t}px)`;G.style.gridAutoRows=t+'px';G.style.fontSize=Math.round(t*.56)+'px';
+    $('.msg').classList.remove('vu');if(donjon)$('.journal').textContent='Tape une case pour entrer dans le donjon.';
+    dessiner();
+  }
+  const voisins=i=>{const x=i%W,y=(i/W)|0,r=[];for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){if(!dx&&!dy)continue;const a=x+dx,b=y+dy;if(a>=0&&b>=0&&a<W&&b<H)r.push(b*W+a);}return r;};
+  function placer(sur){
+    const interdit=new Set([sur,...voisins(sur)]);
+    const libres=cases.map((_,i)=>i).filter(i=>!interdit.has(i));
+    for(let i=libres.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[libres[i],libres[j]]=[libres[j],libres[i]];}
+    const niveaux=donjon?[1,1,1,1,1,1,1,1,2,2,2,2,2,2,3,3,3,4,4,5]:Array(M).fill(1);
+    niveaux.forEach((l,k)=>cases[libres[k]].m=l);
+    cases.forEach((c,i)=>c.n=voisins(i).reduce((s,v)=>s+cases[v].m,0));
+    lance=true;t0=Date.now();timer=setInterval(()=>{const s=((Date.now()-t0)/1000)|0;$('.chrono').textContent=`${(s/60)|0}:${String(s%60).padStart(2,'0')}`;},500);
+  }
+  function ouvrir(i){
+    const pile=[i];
+    while(pile.length){const k=pile.pop(),c=cases[k];if(c.o||c.m)continue;c.o=true;c.f=0;if(c.n===0)voisins(k).forEach(v=>{if(!cases[v].o)pile.push(v);});}
+  }
+  function message(t){const m=$('.msg');m.textContent=t;m.classList.add('vu');}
+  function finir(gagne,texte){fini=true;clearInterval(timer);if(!gagne)cases.forEach(c=>{if(c.m)c.o=true;});message(texte);}
+  function verifier(){
+    if(donjon){if(cases.every(c=>!c.m||c.mort))finir(true,`Donjon nettoyé en ${$('.chrono').textContent}, niveau ${lv} !`);}
+    else if(cases.every(c=>c.m||c.o))finir(true,skin==='C'?'BRAVO ! '+$('.chrono').textContent:skin==='B'?'Terrain dégagé ! '+$('.chrono').textContent:'Gagné en '+$('.chrono').textContent+' !');
+  }
+  function creuser(i){
+    if(fini)return; const c=cases[i];
+    if(!lance)placer(i);
+    if(c.f&&!donjon)return;
+    if(donjon){
+      if(c.mort){if(!c.vu){c.vu=true;}dessiner();return;}
+      if(c.o)return;
+      if(c.m){
+        const l=c.m,deg=l>lv?(l-lv)*3:0;pv-=deg;xp+=l;c.o=true;c.mort=true;c.f=0;
+        let txt=deg?`Un monstre de niveau ${l} t'a pris ${deg} PV.`:`Monstre de niveau ${l} vaincu sans une égratignure.`;
+        while(xp>=SEUILS[lv]&&lv<5){lv++;pvMax+=2;pv=Math.min(pvMax,pv+4);txt+=` Niveau ${lv} !`;}
+        $('.journal').textContent=txt;
+        if(pv<=0){pv=0;dessiner();finir(false,`Vaincu par un monstre de niveau ${l}… Rejoue !`);dessiner();return;}
+      } else ouvrir(i);
+      verifier();dessiner();return;
+    }
+    if(c.o){ // déblayer autour d'un chiffre
+      const v=voisins(i);if(c.n&&v.filter(k=>cases[k].f).length===c.n)v.forEach(k=>{if(!cases[k].f&&!cases[k].o)creuserSimple(k);});
+    } else creuserSimple(i);
+    if(!fini)verifier();dessiner();
+  }
+  function creuserSimple(i){const c=cases[i];if(fini)return;if(c.m){c.boum=true;finir(false,skin==='C'?'BOUM ! REJOUER ?':skin==='B'?'Sauté sur une mine…':'Boum ! On réessaie ?');}else ouvrir(i);}
+  function marquer(i){
+    if(fini)return;const c=cases[i];if(c.o)return;
+    c.f=donjon?(c.f+1)%6:(c.f?0:1);dessiner();
+  }
+  function dessiner(){
+    if(donjon){$('.cpt').textContent=cases.filter(c=>c.m&&!c.mort).length+' ☠';$('.lvl').textContent='NIV '+lv;$('.pvt').textContent=pv+'/'+pvMax;$('.pv i').style.width=(pv/pvMax*100)+'%';
+      const a=SEUILS[lv-1],b=SEUILS[lv];$('.xpt').textContent=xp;$('.xp i').style.width=(lv>=5?100:(xp-a)/(b-a)*100)+'%';}
+    else $('.cpt').textContent=String(M-cases.filter(c=>c.f).length).padStart(3,'0');
+    G.innerHTML=cases.map((c,i)=>{
+      let cl='c',h='';
+      if(c.o){cl+=' o';
+        if(c.mort){cl+=c.vu?'':' mort';h=c.vu?(c.n?`<span class="n1">${c.n}</span>`:''):monstre(c.m);}
+        else if(c.m){if(c.boum)cl+=' boum';h=donjon?monstre(c.m):`<span style="color:#1b1b1b;display:contents">${SVG.mine}</span>`;}
+        else if(c.n)h=`<span class="n${Math.min(c.n,8)}">${c.n}</span>`;
+      } else if(c.f)h=donjon?`<span class="marque">${c.f}?</span>`:SVG.drapeau;
+      return `<div class="${cl}" data-i="${i}">${h}</div>`;}).join('');
+  }
+  // tape / appui long
+  let appui=null,long=false;
+  const caseDe=e=>{const el=e.target.closest('.c');if(el)return +el.dataset.i;const r=G.getBoundingClientRect();
+    const x=Math.min(W-1,Math.floor((e.clientX-r.left)/r.width*W)),y=Math.min(H-1,Math.floor((e.clientY-r.top)/r.height*H));return (x<0||y<0)?null:y*W+x;};
+  G.addEventListener('pointerdown',e=>{const i0=caseDe(e);if(i0==null)return;long=false;clearTimeout(appui);appui=setTimeout(()=>{long=true;marquer(i0);if(navigator.vibrate)try{navigator.vibrate(20)}catch(_){}} ,380);});
+  ['pointerup','pointerleave','pointercancel'].forEach(t=>G.addEventListener(t,()=>clearTimeout(appui)));
+  G.addEventListener('click',e=>{const i=caseDe(e);if(i==null||long)return;(drapeauMode&&!cases[i].o)?marquer(i):creuser(i);});
+  G.addEventListener('contextmenu',e=>{e.preventDefault();});
+  $('.b-mode').addEventListener('click',()=>{drapeauMode=!drapeauMode;const b=$('.b-mode');b.classList.toggle('on',drapeauMode);
+    const lab=donjon?(drapeauMode?'Marquer':'Combattre'):(drapeauMode?'Drapeau':'Creuser');b.innerHTML=(drapeauMode?'<svg viewBox="0 0 20 20" width="16" height="16" style="vertical-align:-3px"><path d="M6 2v16" stroke="currentColor" stroke-width="2"/><path d="M7 3l9 4-9 4z" fill="#e8392f"/></svg> ':SVG.pelle+' ')+(skin==='C'?lab.toUpperCase():lab);});
+  $('.b-neuf').addEventListener('click',()=>nouvelle(tel.querySelector('.niveaux .on')?.dataset.n));
+  tel.querySelectorAll('.niveaux button').forEach(b=>b.addEventListener('click',()=>nouvelle(b.dataset.n)));
+  if(donjon){const b=$('.b-mode');b.innerHTML=SVG.pelle+' Combattre';}
+  nouvelle('Facile');
+}
+function demarrer(){document.querySelectorAll('.tel').forEach(jeu);}
+(document.fonts&&document.fonts.ready?document.fonts.ready:Promise.resolve()).then(demarrer);
+})();
+</script>

@@ -1,7 +1,7 @@
 /* Orbite : fiche de l'accueil (voir accueil-outils.js) */
 Ludo.fiche({
   k: "orbite/index.html",
-  carte: {n: "ORBITE", s: "ORBITE", ic: "planet", fam: "32", lb: "radial-gradient(circle at 30% 30%, #3a2a8a, #070a1c 75%)", lt: "#6fd8ff", sh: "#5a3ab8", rank: "orbite",
+  carte: {n: "ORBITE", img: "orbite/etiquette.jpg", jaq: "orbite/jaquette.jpg", s: "ORBITE", ic: "planet", fam: "32", lb: "radial-gradient(circle at 30% 30%, #3a2a8a, #070a1c 75%)", lt: "#6fd8ff", sh: "#5a3ab8", rank: "orbite",
     d: "Lance ta sonde et laisse la gravité des planètes la guider jusqu'à la balise, entre trous noirs et portails.", tags: ["30 NIVEAUX"]},
   meta: {added: "2026-10-12", genres: ["ADRESSE", "ESPACE"]},
   records: () => { const s = rk("orbite.stars", {}) || {}, n = sum(s); return [["Étoiles", n ? n + " / 90" : null], ["Niveaux réussis", num(Object.values(s).filter(v => v > 0).length)]]; },

@@ -4,8 +4,8 @@
    Serveur local d'abord (racine du dépôt) : python3 -m http.server 8765
    node outils/fumee.js [dossier-captures]   (code de sortie 1 en cas d'erreur) */
 const { BASE, phone } = require('./pw');
-const PAGES = ['index.html', 'classements/index.html#sudoku-1', 'queens/index.html', 'picross/index.html', 'lignee/index.html', 'injagility/index.html', 'injagility/parcours.html',
-  'touche-coule/index.html', 'amiral/index.html', 'club/index.html', 'orbite/index.html', 'lune-rover/index.html', 'pont-stellaire/index.html', 'sudoku/index.html', 'calculator/index.html', 'alunissage/index.html', 'nebula/index.html', 'ile/index.html', 'empilage/index.html', 'odyssee/index.html', 'yams/index.html', 'escadrille/index.html', 'capitaine-du-port/index.html', 'magasinier/index.html', 'ciel-de-guerre/index.html', 'ecurie/index.html', 'tank-arena/index.html', 'bannis/index.html', 'romet/index.html', 'dragon-simulator/index.html', 'bastion/index.html', 'terres-franches/index.html', 'duche/index.html', 'bannieres/index.html', 'boutique/index.html', 'mineur-de-l-espace/index.html', 'the-des-jarls/index.html', 'doggy-saga/index.html',
+const PAGES = ['index.html', 'classements/index.html#sudoku-1', 'queens/index.html', 'demineur/index.html', 'demineur/index.html#prairie', 'picross/index.html', 'lignee/index.html', 'injagility/index.html', 'injagility/parcours.html',
+  'touche-coule/index.html', 'amiral/index.html', 'club/index.html', 'orbite/index.html', 'lune-rover/index.html', 'pont-stellaire/index.html', 'sudoku/index.html', 'calculator/index.html', 'alunissage/index.html', 'nebula/index.html', 'ile/index.html', 'empilage/index.html', 'odyssee/index.html', 'yams/index.html', 'escadrille/index.html', 'capitaine-du-port/index.html', 'magasinier/index.html', 'ciel-de-guerre/index.html', 'ecurie/index.html', 'strategie-ciel/index.html', 'tank-arena/index.html', 'bannis/index.html', 'romet/index.html', 'dragon-simulator/index.html', 'bastion/index.html', 'terres-franches/index.html', 'duche/index.html', 'bannieres/index.html', 'boutique/index.html', 'mineur-de-l-espace/index.html', 'the-des-jarls/index.html', 'doggy-saga/index.html',
   'mot-d-or/index.html', 'lanterne/index.html', 'tetris/index.html', 'snake/index.html', 'asteroids/index.html', 'solitaire/index.html', 'jeu-de-la-vie/index.html', 'pokedex/index.html'];
 const shots = process.argv[2];
 (async () => {
@@ -132,6 +132,35 @@ const shots = process.argv[2];
       });
       if (r !== 'ok') errs.push('Ciel de guerre : ' + r);
       if (shots) await p.screenshot({ path: `${shots}/fumee-ciel-de-guerre.png` });
+    }
+    if (url === 'strategie-ciel/index.html') {
+      // Stratégie spatiale : les modèles se chargent, une partie démarre, un collecteur mine, une production sort du chantier, une vague arrive et se bat, le porte-vaisseaux détruit = écran de fin
+      const r = await p.evaluate(async () => {
+        const wait = ms => new Promise(r => setTimeout(r, ms));
+        for (let i = 0; i < 80 && !(window.StrategieCiel && StrategieCiel.etat() === 'titre'); i++) await wait(250);
+        const J = window.StrategieCiel; if (!J || J.etat() !== 'titre') return "pas d'écran titre";
+        // tutoriel : il s'affiche, chaque étape se valide par l'action demandée, puis les vagues reprennent leur compte
+        J.jouer(true); if (document.getElementById('tuto').hidden || !J.S.tuto) return 'pas de tutoriel';
+        const clic = () => document.querySelector('#tuto [data-tuto="suivant"]').click(), att = async () => { await wait(1000); };
+        clic(); J.CA.c.x += 600; await att(); J.groupe('chasseur'); await att(); J.ordonner(J.U().filter(u => u.type === 'chasseur'), 'aller', null, J.CA.c.clone()); await att();
+        J.produire('collecteur'); await att(); J.avance(60); await att(); J.vitesse(0); await att(); J.vitesse(1); await att(); document.getElementById('bRech').click(); await att(); document.getElementById('bRech').click(); J.ouvrirPlanete(J.PLANETES.find(P => P.nom === 'GAIA')); await att();
+        if (J.TU.i !== 10) return "le tutoriel n'avance pas (étape " + (J.TU.i + 1) + ')'; clic(); if (J.S.tuto || !document.getElementById('tuto').hidden) return 'le tutoriel ne finit pas';
+        J.jouer(false); if (J.etat() !== 'jeu') return 'la partie ne démarre pas';
+        J.produire('chasseur'); const n0 = J.U().length; J.avance(40);
+        if (!(J.S.mine > 0)) return 'les collecteurs ne minent pas'; if (J.U().length <= n0) return 'le chantier ne produit pas';
+        J.lancerVague(); if (!J.U().some(u => u.camp === 1)) return 'pas de vague ennemie';
+        const d0 = J.S.detruits + J.S.perdus; J.avance(120); if (J.S.detruits + J.S.perdus <= d0) return 'pas de combat';
+        // session 2 : une recherche finie propose des cartes, un colon s'installe sur DUNE, un labo s'y construit
+        J.U().filter(u => u.camp === 1).forEach(u => J.meurt(u)); J.S.prochaine = 1e6; J.S.cristal = 3000; J.avance(200); if (!J.S.rech.fait.includes('colonisation')) return 'la recherche COLONISATION ne finit pas';
+        for (const d in J.S.rech.dom){ const D = J.S.rech.dom[d]; if (!D.cur && D.choix.length) J.choisirRecherche(D.choix[0]); }
+        const P = J.PLANETES.find(P => P.nom === 'DUNE'), pv = J.U().find(u => u.type === 'pv'); if (J.fonderColonie(P)) return 'colonie fondée avec AURORE trop loin';
+        pv.pos.set(P.x + P.r + 300, pv.pos.y, P.z); pv.ordre = { k: 'rien' }; if (!J.fonderColonie(P)) return 'le colon ne part pas d\'AURORE'; if (!J.U().find(u => u.type === 'colon')) return 'pas de colon'; J.avance(240); if (P.camp !== 0) return "DUNE n'est pas colonisée"; if (!J.construire(P, 'labo')) return 'pas de labo sur DUNE'; J.avance(30); if (!P.col.bat.includes('labo')) return 'le labo ne se termine pas';
+        J.meurt(J.U().find(u => u.type === 'pv'));
+        for (let i = 0; i < 60 && J.etat() !== 'fin'; i++) await wait(250); if (J.etat() !== 'fin' || document.getElementById('eFin').hidden) return "pas d'écran de fin quand le porte-vaisseaux tombe";
+        return 'ok';
+      });
+      if (r !== 'ok') errs.push('Stratégie spatiale : ' + r);
+      if (shots) await p.screenshot({ path: `${shots}/fumee-strategie-ciel.png` });
     }
     if (url === 'ecurie/index.html') {
       // Écurie miniature : écran titre, nouvelle partie, les six onglets, un grand prix en 3D, résultat direct, semaine suivante

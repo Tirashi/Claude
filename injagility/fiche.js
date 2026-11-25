@@ -1,7 +1,7 @@
 /* Injagility : fiche de l'accueil (voir accueil-outils.js) */
 Ludo.fiche({
   k: "injagility/index.html",
-  carte: {n: "INJAGILITY", s: "INJAGILITY", ic: "dog", fam: "32", lb: "linear-gradient(#78bae7, #5fb548)", lt: "#fff", sh: "#5fb548", rank: "injagility",
+  carte: {n: "INJAGILITY", img: "injagility/etiquette.jpg", jaq: "injagility/jaquette.jpg", s: "INJAGILITY", ic: "dog", fam: "32", lb: "linear-gradient(#78bae7, #5fb548)", lt: "#fff", sh: "#5fb548", rank: "injagility",
     d: "Ton chien en agility : course sans fin, ou parcours vus du dessus à tracer au doigt. Six races à adopter au chenil.", tags: ["COURSE", "PARCOURS"], play: "INFINI ▶", more: [["PARCOURS ▶", "injagility/parcours.html"]]},
   meta: {genres: ["ADRESSE", "CHIENS"]},
   records: () => { const p = rk("injagility.parcours", {}) || {};
