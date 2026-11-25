@@ -1,0 +1,335 @@
+<title>Flotte du bureau, maquette 4</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Inter:wght@400;600;700&display=swap">
+<style>
+/* une planche : l'écran de PC en grand, le téléphone à côté, puis les décisions ; la carte est presque nue, les fenêtres flottent par-dessus */
+:root{--bg:#eef1f4;--carte:#fff;--fg:#14202b;--doux:#5a6b7a;--bord:#cdd6de;--acc:#0b7a8a;
+  --corps:"Inter",system-ui,sans-serif;--mono:"IBM Plex Mono",ui-monospace,monospace}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e141a;--carte:#17202a;--fg:#e6edf3;--doux:#9aabba;--bord:#2a3846;--acc:#5fd0e0;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0e141a;--carte:#17202a;--fg:#e6edf3;--doux:#9aabba;--bord:#2a3846;--acc:#5fd0e0;color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font:16px/1.55 var(--corps);padding-block:24px 56px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+main{max-width:1100px;margin:0 auto;display:grid;gap:30px}
+h1{font-size:26px;margin:0 0 6px;text-wrap:balance} h2{font-size:17px;margin:0 0 10px;text-wrap:balance}
+p{margin:0;max-width:68ch} .doux{color:var(--doux)}
+.themes{display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:14px}
+.themes button{font:inherit;font-size:13px;padding:6px 14px;border-radius:99px;border:1px solid var(--bord);background:var(--carte);color:var(--fg);cursor:pointer}
+.themes button[aria-pressed="true"]{border-color:var(--acc);color:var(--acc);font-weight:700}
+.duo{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:24px;align-items:start}
+@media (max-width:900px){.duo{grid-template-columns:1fr;justify-items:center}}
+figure{margin:0;display:grid;gap:10px;min-width:0;width:100%;align-content:start}
+.ph{max-width:300px}
+.screen{position:relative;width:100%;overflow:hidden;background:#000;border:6px solid #000;--ac:#f0a830;--pb:rgba(150,190,255,.3);--pf:#b9c9ee;--pd:#7f93c4;user-select:none;-webkit-user-select:none}
+.pc .screen{border-radius:12px;aspect-ratio:16/9}
+.ph .screen{border-radius:26px;aspect-ratio:9/17}
+canvas{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:crosshair}
+.pan{position:absolute;background:rgba(7,12,22,.84);border:1px solid var(--pb);border-top:2px solid var(--ac);color:var(--pf);font:10px/1.35 "IBM Plex Mono",monospace;transition:opacity .5s;z-index:2}
+.pan header{display:flex;justify-content:space-between;align-items:center;gap:6px;padding:6px 8px;text-transform:uppercase;letter-spacing:.06em;font-size:10px}
+.pan header b{font-weight:600;color:#fff}
+.pan .hc{margin-left:auto;color:var(--ac);font-weight:600}
+.pan .chev{font:inherit;background:none;border:0;color:var(--pf);cursor:pointer;padding:2px 4px;transition:transform .2s}
+.pan.shut .pb{display:none}.pan.shut .chev{transform:rotate(-90deg)}.pan:not(.shut) .hc{display:none}
+.pan .pb{padding:2px 8px 8px;display:grid;gap:6px}
+.lab{font-size:8.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--pd)}
+.big{font-size:20px;font-weight:600;color:#fff;font-variant-numeric:tabular-nums;line-height:1.1}
+.rate{color:var(--ac);font-variant-numeric:tabular-nums}
+.rows{display:grid;gap:2px;border-top:1px solid var(--pb);padding-top:5px}
+.rows div{display:flex;justify-content:space-between}.rows b{color:#fff;font-weight:600;font-variant-numeric:tabular-nums}
+.amt{display:flex;gap:4px}
+.amt button,.pan .btn{font:inherit;color:var(--pf);background:transparent;border:1px solid var(--pb);padding:3px 7px;cursor:pointer}
+.amt button[aria-pressed="true"]{border-color:var(--ac);color:var(--ac)}
+.buy{display:flex;justify-content:space-between;gap:6px;width:100%;text-align:left;text-transform:uppercase;padding:5px 7px}
+.buy:disabled,.pan .btn:disabled{opacity:.38;cursor:default}
+.buy span:last-child{font-variant-numeric:tabular-nums;color:var(--ac)}
+.upg{border:1px solid var(--pb);padding:6px 7px;display:grid;gap:3px}
+.upg h4{margin:0;font-size:10px;letter-spacing:.05em;text-transform:uppercase;color:#fff;display:flex;justify-content:space-between;gap:6px;font-weight:600}
+.upg h4 span{color:var(--ac)}
+.upg p{font-size:9px;color:var(--pd);max-width:none}
+.upg .btn{justify-self:start;margin-top:2px}
+.log{max-height:78px;overflow:auto;font-size:9px;color:var(--pd);display:grid;gap:1px;align-content:start}
+.log div b{color:var(--ac);font-weight:400}
+.card{left:50%;transform:translateX(-50%);bottom:10px;width:230px}
+.card .nm{font:600 15px/1.2 "Inter",sans-serif;color:#fff}
+.card .tg{color:var(--ac)}
+.zoom{position:absolute;right:10px;bottom:10px;display:grid;gap:3px;z-index:2;transition:opacity .5s}
+.zoom button{font:600 14px "IBM Plex Mono",monospace;width:30px;height:28px;background:rgba(7,12,22,.84);border:1px solid var(--pb);color:var(--pf);cursor:pointer}
+.zoom span{font:600 9px "IBM Plex Mono",monospace;text-align:center;color:var(--pf);background:rgba(7,12,22,.84);padding:3px 0}
+.cinb{position:absolute;left:50%;top:8px;transform:translateX(-50%);font:9px "IBM Plex Mono",monospace;text-transform:uppercase;color:var(--pf);background:rgba(7,12,22,.7);border:1px solid var(--pb);padding:3px 9px;cursor:pointer;z-index:2;transition:opacity .5s}
+.cin .pan,.cin .zoom,.cin .cinb{opacity:0;pointer-events:none}
+.toast{position:absolute;left:50%;top:16%;transform:translateX(-50%);text-align:center;font:600 12px "IBM Plex Mono",monospace;color:#ffe9a8;text-shadow:0 1px 8px #000;opacity:0;transition:opacity .8s;pointer-events:none;width:70%;z-index:3}
+.toast small{display:block;font-weight:400;font-size:10px;color:#dfe;opacity:.85}.toast.on{opacity:1}
+/* pc */
+.pc .fleet{left:10px;top:10px;width:200px}
+.pc .eng{right:10px;top:10px;width:210px;max-height:calc(100% - 112px);overflow:auto}
+.pc .con{left:10px;bottom:10px;width:260px}
+/* téléphone */
+.ph .fleet{left:8px;top:8px;width:150px}.ph .fleet:not(.shut){width:calc(100% - 16px);z-index:4}
+.ph .eng{right:8px;top:8px;width:112px}.ph .eng:not(.shut){width:calc(100% - 16px);z-index:4;max-height:70%;overflow:auto}
+.ph .con{left:8px;bottom:8px;width:128px}.ph .con:not(.shut){width:calc(100% - 60px)}
+.ph .card{bottom:48px;width:250px}
+.ph .zoom{right:8px;bottom:8px}
+.ph .cinb{top:auto;bottom:40px;left:auto;right:8px;transform:none}
+.liste{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.bloc{background:var(--carte);border:1px solid var(--bord);border-radius:10px;padding:12px 14px;display:grid;gap:8px;align-content:start}
+.bloc h3{margin:0;font-size:12px;color:var(--acc);letter-spacing:.06em;text-transform:uppercase}
+ul{margin:0;padding-left:18px;display:grid;gap:5px;font-size:15px}
+.q{background:var(--carte);border-left:5px solid var(--acc);padding:14px 16px;display:grid;gap:8px}
+.q ol{margin:0;padding-left:20px;display:grid;gap:7px}
+.cap{font-size:14px;color:var(--doux)} .cap b{color:var(--fg);display:block;font-size:15px}
+</style>
+<main>
+<header>
+  <h1>Flotte du bureau, maquette 4</h1>
+  <p class="doux">Le rendu se rapproche de tes captures : carte presque nue, astres en petits points nommés, lignes pointillées, anneaux de portée, fenêtres flottantes (flotte, ingénierie, console), zoom et fiche d'un navire (touche un navire). Orbites et vaisseaux sont plus lents. Zoome pour voir apparaître le détail des vaisseaux.</p>
+</header>
+<div class="themes" role="group" aria-label="Couleurs de l'interface"><span>Ambiance :</span>
+  <button type="button" data-t="bleue" aria-pressed="true">Nuit bleue</button><button type="button" data-t="violette" aria-pressed="false">Violette</button><button type="button" data-t="verte" aria-pressed="false">Phosphore</button></div>
+
+<section class="duo">
+  <figure class="pc"><div class="screen" id="s1"><canvas></canvas></div>
+    <figcaption class="cap"><b>PC</b>Fenêtres ouvertes à gauche et à droite, console en bas. Chaque fenêtre se replie avec la flèche.</figcaption></figure>
+  <figure class="ph"><div class="screen" id="s2"><canvas></canvas></div>
+    <figcaption class="cap"><b>Téléphone</b>Mêmes fenêtres, repliées : touche l'une pour l'ouvrir, l'autre se referme.</figcaption></figure>
+</section>
+
+<section>
+  <h2>Ce qui a changé depuis la maquette 3</h2>
+  <div class="liste">
+    <div class="bloc"><h3>Rendu</h3><ul>
+      <li>Astres en petits points avec leur nom et leur production, comme sur tes captures.</li>
+      <li>Routes pointillées permanentes entre avant-postes et zones ; anneaux de portée en pointillés.</li>
+      <li>Vaisseaux réduits à de petits points : leur détail apparaît quand on zoome.</li>
+      <li>Trois ambiances de couleurs : nuit bleue, violette, phosphore.</li>
+    </ul></div>
+    <div class="bloc"><h3>Interface</h3><ul>
+      <li>Fenêtres « Flotte » (crédits, navires, quantité ×1 / ×10 / ×100 / max) et « Ingénierie » (améliorations).</li>
+      <li>Améliorations qui marchent : moteurs, soute, portée du signal, veille (appli fermée).</li>
+      <li>Console du système et fiche d'un navire (nom, missions, gains).</li>
+    </ul></div>
+    <div class="bloc"><h3>Vitesse</h3><ul>
+      <li>Orbites environ deux fois plus lentes, vaisseaux environ un tiers plus lents.</li>
+      <li>Une amélioration « Moteurs » les accélère de 8 % par niveau.</li>
+    </ul></div>
+  </div>
+</section>
+
+<section class="q">
+  <h2>Pour avancer</h2>
+  <ol>
+    <li>Ce rendu se rapproche-t-il de ce que tu veux ? Qu'est-ce qui manque ou qui est de trop ?</li>
+    <li>Une seule ambiance de couleurs ou un choix dans les réglages ?</li>
+    <li>La vitesse te convient-elle maintenant ?</li>
+    <li>Si c'est bon, je rédige le cahier des charges et on programme un premier jet.</li>
+  </ol>
+</section>
+</main>
+
+<script>
+(function(){
+const TAU=Math.PI*2,rnd=(a,b)=>a+Math.random()*(b-a),clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const THEMES={
+ bleue:{bg:['#091330','#0a2147'],lane:'rgba(150,190,255,.34)',lab:'#a9c0f0',sub:'#6f86b8',ring:'rgba(150,190,255,.26)',ac:'#f0a830',pb:'rgba(150,190,255,.3)',pf:'#b9c9ee',pd:'#7f93c4'},
+ violette:{bg:['#190a2c','#2b1049'],glow:'rgba(240,150,60,.13)',lane:'rgba(215,170,255,.34)',lab:'#d3b6f7',sub:'#8f77b8',ring:'rgba(215,170,255,.24)',ac:'#f0a830',pb:'rgba(215,170,255,.3)',pf:'#d9c4f5',pd:'#9b84c2'},
+ verte:{bg:['#030f08','#06180e'],lane:'rgba(70,255,150,.36)',lab:'#5fe89a',sub:'#3b9e68',ring:'rgba(70,255,150,.26)',ac:'#37f08c',pb:'rgba(70,255,150,.4)',pf:'#7cf0ae',pd:'#3fa56e'}};
+const COST={m:[20,1.08],t:[60,1.1],p:[90,1.2]},RCOST=[120,350,900],CAM=[.5,.76,1.0,1.26],RANGE=[.5,.74,.97,1.22];
+const ORE={fer:['#ffc58a',2,'fer'],glace:['#9fe0ff',5,'glace'],cristal:['#dcaaff',12,'cristal'],iridium:['#ffe27a',30,'iridium']};
+const HM=['#f4b860','#e8944a','#f0d070','#d98a5b'],HT=['#8fe3d0','#a6d8f5','#c5b8f0','#9fe0a8'],PODS=['#ff9f7a','#7ad1ff','#ffd966','#b69cff'];
+const NOMS=['Elena Star','Marc Voss','Iris Kaan','Tom Reyes','Lina Okoro','Yan Dorel','Mira Tesch','Paul Aster','Nadia Brun','Eli Mercer'];
+const fmt=n=>Math.floor(n).toLocaleString('fr-FR');
+function Sim(root,cfg){
+  const W=cfg.W,H=cfg.H,dpr=Math.min(window.devicePixelRatio||1,2),cv=root.querySelector('canvas');
+  cv.width=W*dpr;cv.height=H*dpr;const c=cv.getContext('2d');c.scale(dpr,dpr);
+  const sc=Math.min(W,H)/(cfg.phone?300:380),u0=Math.min(.46*W,.46*H/cfg.tilt),cx=cfg.cx*W,cy=cfg.cy*H,tl=cfg.tilt,om=r=>.007*Math.pow(r,-1.5);
+  const mk=(n,rf,ph,lv,o)=>Object.assign({n,rf,ph,lv,om:om(rf),x:0,y:0,t0:0},o);
+  const planets=[mk('Cendre',.14,.8,0,{r:2.6,col:'#e0a883',sub:'Planète'}),mk('Géante',.6,3.9,1,{r:5.5,col:'#d9a36f',sub:'Planète à anneaux',ring:1}),mk('Prime',.46,2.2,0,{r:4,col:'#8fd0f5',sub:'Marché'})];
+  const prime=planets[2];
+  const hubs=[mk('QG de la flotte',.24,5.3,0,{r:3.5,hub:1,main:1}),mk('Orbite-G',.6,4.4,1,{r:2.4,hub:1,orb:planets[1],sub:'Avant-poste'}),mk('Relais 2',.88,1.2,2,{r:2.4,hub:1,sub:'Avant-poste'}),mk('Bord du système',1.15,3.3,3,{r:2.4,hub:1,sub:'Avant-poste'})];
+  const hq=hubs[0];
+  const mines=[['Ast-1',.36,.4,0,'fer'],['Ast-2',.36,3.2,0,'fer'],['Gla-1',.68,2.5,1,'glace'],['Gla-2',.68,5.4,1,'glace'],['Cri-1',.88,3.9,2,'cristal'],['Cri-2',.88,.2,2,'cristal'],['Iri-1',1.15,5.5,3,'iridium'],['Iri-2',1.15,1.9,3,'iridium']]
+    .map((p,i)=>mk(p[0],p[1],p[2],p[3],{r:2+(i%3)*.4,ore:p[4],mine:1,col:'#9aa0b8',sub:'Produit : '+p[4]}));
+  const all=[...planets,...hubs,...mines];
+  const ZN=['Système central','Ceinture de glace','Champ de cristal','Bord du système'];
+  const s={t:0,credits:400,ships:[],pops:[],pirates:[],patrols:[],buys:{m:0,t:0,p:0},inc:[],sp:10,id:0,lv:0,cam:CAM[0],z:1,amt:1,upg:{mot:0,soute:0,veille:0},sel:null,theme:'bleue',logs:[]};
+  let bg,stars=Array.from({length:Math.round(W*H/1800)},()=>({x:rnd(0,W),y:rnd(0,H),r:rnd(.3,.9),f:rnd(0,TAU)}));
+  function buildBg(){const T=THEMES[s.theme];bg=document.createElement('canvas');bg.width=W;bg.height=H;const g=bg.getContext('2d'),l=g.createLinearGradient(0,0,0,H);l.addColorStop(0,T.bg[0]);l.addColorStop(1,T.bg[1]);g.fillStyle=l;g.fillRect(0,0,W,H);
+    if(T.glow){const r=g.createRadialGradient(W,H*.2,0,W,H*.2,W*.6);r.addColorStop(0,T.glow);r.addColorStop(1,'rgba(0,0,0,0)');g.fillStyle=r;g.fillRect(0,0,W,H)}
+    const v=g.createRadialGradient(W/2,H/2,Math.min(W,H)*.3,W/2,H/2,Math.max(W,H)*.75);v.addColorStop(0,'rgba(0,0,0,0)');v.addColorStop(1,'rgba(0,0,0,.35)');g.fillStyle=v;g.fillRect(0,0,W,H)}
+  s.setTheme=n=>{s.theme=n;const T=THEMES[n];buildBg();for(const k of ['ac','pb','pf','pd'])root.style.setProperty('--'+k,T[k])};
+  let ue=0;
+  const live=b=>b.lv<=s.lv,vis=b=>b.lv===0?1:clamp((s.t-b.t0)/2.5,0,1);
+  function place(){ue=u0/s.cam*s.z;
+    for(const b of all){const a=b.ph+b.om*s.t;
+      if(b.orb){b.x=b.orb.x+Math.cos(a*8)*(b.orb.r+6)*sc;b.y=b.orb.y+Math.sin(a*8)*(b.orb.r+6)*sc*.8}
+      else{b.x=cx+Math.cos(a)*b.rf*ue;b.y=cy+Math.sin(a)*b.rf*ue*tl}}}
+  place();
+  const spdMul=()=>1+.08*s.upg.mot,gainMul=()=>1+.1*s.upg.soute,vfrac=()=>Math.min(.75,.25+.05*s.upg.veille);
+  const log=m=>{const d=new Date(),h=String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');s.logs.push('<div><b>'+h+'</b> '+m+'</div>');if(s.logs.length>30)s.logs.shift();if(el.log){el.log.innerHTML=s.logs.slice(-12).join('');el.log.scrollTop=1e5}};
+  function hover(sh,b){const R=((b.r||3)+4)*sc;return [b.x+Math.cos(sh.id*2.1+s.t*.35)*R,b.y+Math.sin(sh.id*2.1+s.t*.35)*R*.8]}
+  function P(sh,p){const sx=cx+sh.sxr*ue,sy=cy+sh.syr*ue,dx=sh.to.x-sx,dy=sh.to.y-sy,d=Math.hypot(dx,dy)||1,e=p*p*(3-2*p),lat=sh.bow*Math.sin(p*Math.PI);
+    return [sx+dx*e-dy/d*lat,sy+dy*e+dx/d*lat,d]}
+  const lm=()=>mines.filter(live),pickMine=()=>{const l=lm();return l[Math.floor(Math.random()*l.length)]};
+  const nearHub=m=>{let b=null,d=1e9;for(const h of hubs){if(!live(h))continue;const k=Math.hypot(h.x-m.x,h.y-m.y);if(k<d){d=k;b=h}}return b};
+  const pickHub=()=>{const l=hubs.filter(live);return l[Math.floor(Math.random()*l.length)]};
+  function add(type){
+    const sh={id:s.id++,type,flash:0,trail:[],tt:0,state:'wait',wait:rnd(0,2),p:0,bow:0,x:0,y:0,ang:0,ore:'fer',nom:NOMS[s.id%NOMS.length],trips:0,earn:0};
+    if(type==='m'){sh.at=nearHub(pickMine());sh.to=pickMine()}else{sh.at=pickHub();sh.to=prime}
+    sh.hue=type==='m'?HM[sh.id%4]:HT[sh.id%4];const h=hover(sh,sh.at);sh.x=h[0];sh.y=h[1];s.ships.push(sh);
+  }
+  s.cost=k=>Math.round(COST[k][0]*Math.pow(COST[k][1],s.buys[k]));
+  const cnt=k=>s.ships.filter(x=>x.type===k).length;
+  let toastT=0;const toast=document.createElement('div');toast.className='toast';root.appendChild(toast);
+  function range(){const cost=RCOST[s.lv];if(s.lv>=3||s.credits<cost)return;s.credits-=cost;s.lv++;for(const b of all)if(b.lv===s.lv)b.t0=s.t;
+    toast.innerHTML='Portée '+(s.lv+1)+' : '+ZN[s.lv]+'<small>nouvelle ressource, nouvel avant-poste</small>';toast.classList.add('on');toastT=4;log('Portée du signal niveau '+(s.lv+1)+' : '+ZN[s.lv]+'.')}
+  function buy(k){let n=s.amt==='max'?200:s.amt,done=0;for(let i=0;i<n;i++){const cost=s.cost(k);if(s.credits<cost)break;s.credits-=cost;s.buys[k]++;done++;if(k==='p')s.patrols.push({a:rnd(0,TAU),x:hq.x,y:hq.y,ang:0});else add(k)}
+    if(done)log('Acheté : '+done+' '+({m:'mineur',t:'marchand',p:'patrouille'})[k]+(done>1?'s':'')+'.')}
+  const UP=[
+   {k:'mot',n:'Moteurs',d:()=>'Vitesse des navires +8 % par niveau (actuel +'+8*s.upg.mot+' %).',max:10,cost:()=>Math.round(80*Math.pow(1.8,s.upg.mot))},
+   {k:'soute',n:'Soute étendue',d:()=>'Gains de chaque livraison +10 % par niveau (actuel +'+10*s.upg.soute+' %).',max:10,cost:()=>Math.round(120*Math.pow(1.9,s.upg.soute))},
+   {k:'por',n:'Portée du signal',d:()=>s.lv<3?'Ouvre : '+ZN[s.lv+1]+' ('+ORE[['fer','glace','cristal','iridium'][s.lv+1]][2]+').':'Toutes les zones sont ouvertes.',max:3,cost:()=>s.lv<3?RCOST[s.lv]:0,lvl:()=>s.lv,act:range},
+   {k:'veille',n:'Veille',d:()=>'Gains appli fermée : '+Math.round(vfrac()*100)+' % (+5 points par niveau, 75 % max).',max:10,cost:()=>Math.round(200*Math.pow(2,s.upg.veille))}];
+  function simAbs(){const r=s.rate(),g=Math.round(r*8*3600*vfrac());log('Retour après 8 h : +'+fmt(g)+' cr ('+Math.round(vfrac()*100)+' % de '+r.toFixed(1)+' / s).')}
+  s.rate=()=>s.inc.reduce((a,i)=>a+i.n,0)/Math.min(10,Math.max(s.t,2));
+  for(let i=0;i<5;i++)add('m');for(let i=0;i<3;i++)add('t');
+  function gain(sh,n,x,y,col){n=Math.round(n*gainMul());s.credits+=n;s.inc.push({t:s.t,n});s.pops.push({x,y,n,life:1,col});if(sh){sh.trips++;sh.earn+=n}}
+  s.update=function(dt){
+    s.t+=dt;s.cam+=(CAM[s.lv]-s.cam)*Math.min(1,dt*1.1);place();s.sp-=dt;
+    if(toastT>0){toastT-=dt;if(toastT<=0)toast.classList.remove('on')}
+    for(const sh of s.ships){
+      sh.flash=Math.max(0,sh.flash-dt*2);
+      if(sh.state==='wait'){
+        const h=hover(sh,sh.at);sh.x+=(h[0]-sh.x)*Math.min(1,dt*5);sh.y+=(h[1]-sh.y)*Math.min(1,dt*5);sh.wait-=dt;
+        sh.ang=Math.atan2(sh.at.y-sh.y,sh.at.x-sh.x)+Math.PI/2;
+        if(sh.wait<=0){sh.state='fly';sh.p=0;sh.sxr=(sh.x-cx)/ue;sh.syr=(sh.y-cy)/ue;const d=Math.hypot(sh.to.x-sh.x,sh.to.y-sh.y);sh.bow=d*.03*(sh.id%2?1:-1)}
+      }else{
+        const d0=P(sh,sh.p)[2];sh.p=Math.min(1,sh.p+cfg.speed*sc*spdMul()*dt*(sh.type==='t'?1.15:1)/Math.max(d0,30));
+        const a=P(sh,sh.p),b=P(sh,Math.min(1,sh.p+.02));sh.x=a[0];sh.y=a[1];
+        if(b[0]!==a[0]||b[1]!==a[1])sh.ang=Math.atan2(b[1]-a[1],b[0]-a[0]);
+        if(sh.p>=1){const dest=sh.to;
+          if(sh.type==='m'){
+            if(dest.mine){sh.ore=dest.ore;sh.at=dest;sh.to=nearHub(dest);sh.wait=2}
+            else{gain(sh,ORE[sh.ore][1]*2,dest.x,dest.y,ORE[sh.ore][0]);sh.at=dest;sh.to=pickMine();sh.wait=.5}
+          }else{
+            if(dest===prime){gain(sh,10*(1+.6*s.lv),prime.x,prime.y,'#e8fff6');sh.at=prime;sh.to=pickHub();sh.wait=1}
+            else{sh.at=dest;sh.to=prime;sh.wait=.6}
+          }
+          sh.state='wait'}
+      }
+      sh.tt+=dt;if(sh.tt>.1){sh.tt=0;sh.trail.push([sh.x,sh.y]);if(sh.trail.length>9)sh.trail.shift()}
+    }
+    if(s.sp<=0&&!s.pirates.length&&s.ships.length){s.sp=rnd(24,38);const e=Math.floor(rnd(0,4));log('Alerte : pirate détecté.');
+      s.pirates.push({x:e%2?(e===1?W:0):rnd(0,W),y:e%2?rnd(0,H*.7):(e===0?0:H*.7),hp:2,tg:s.ships[Math.floor(Math.random()*s.ships.length)],flee:0,hit:0,ang:0})}
+    for(const p of s.pirates){p.hit=Math.max(0,p.hit-dt*3);let tx,ty;
+      if(p.flee>0){p.flee-=dt;tx=p.x<W/2?-60:W+60;ty=p.y}else{tx=p.tg.x;ty=p.tg.y;
+        if(Math.hypot(tx-p.x,ty-p.y)<6*sc){const l=Math.min(s.credits,5);s.credits-=l;p.tg.flash=1;s.pops.push({x:p.x,y:p.y,n:-l,life:1});p.flee=5;log('Un navire a été pillé : −'+l+' cr.')}}
+      const dx=tx-p.x,dy=ty-p.y,d=Math.hypot(dx,dy)||1,v=cfg.speed*1.1*sc*dt;p.x+=dx/d*v;p.y+=dy/d*v;p.ang=Math.atan2(dy,dx);
+      if(s.patrols.length&&Math.hypot(p.x-hq.x,p.y-hq.y)<90*sc){p.hp-=dt*.8*s.patrols.length;p.hit=1;
+        if(p.hp<=0){gain(null,12,p.x,p.y,'#ffd1dc');log('Pirate détruit : prime +12 cr.')}}}
+    s.pirates=s.pirates.filter(p=>p.hp>0&&p.x>-70&&p.x<W+70);
+    for(const q of s.patrols){q.a+=dt*.8;q.x=hq.x+Math.cos(q.a)*10*sc;q.y=hq.y+Math.sin(q.a)*10*sc;q.ang=q.a+Math.PI/2}
+    for(const o of s.pops)o.life-=dt*.7;s.pops=s.pops.filter(o=>o.life>0);
+    s.inc=s.inc.filter(i=>s.t-i.t<10);
+  };
+  /* dessin */
+  const ell=(r,a)=>{c.beginPath();c.ellipse(cx,cy,r*ue,r*ue*tl,0,0,TAU);c.stroke()};
+  function detailShip(sh,k){
+    c.save();c.translate(sh.x,sh.y);c.rotate(sh.ang);c.scale(k,k);c.lineWidth=1.1;c.strokeStyle='rgba(15,18,36,.7)';
+    const fl=.7+.3*Math.sin(s.t*30+sh.id);
+    if(sh.state==='fly'){const L=sh.type==='t'?-10:-8;c.fillStyle='rgba(255,210,120,.85)';c.beginPath();c.moveTo(L,-1.6);c.lineTo(L-5*fl,0);c.lineTo(L,1.6);c.fill()}
+    if(sh.type==='m'){c.fillStyle=sh.flash>0?'#fff':sh.hue;c.beginPath();c.moveTo(6,0);c.lineTo(3,-4);c.lineTo(-6,-5);c.lineTo(-8,-3);c.lineTo(-8,3);c.lineTo(-6,5);c.lineTo(3,4);c.closePath();c.fill();c.stroke();
+      c.fillStyle='#9aa3b5';c.beginPath();c.moveTo(6,-1.4);c.lineTo(11,0);c.lineTo(6,1.4);c.fill();c.fillStyle='#bfe6ff';c.beginPath();c.ellipse(1,0,2.6,1.8,0,0,TAU);c.fill();
+      if(sh.state==='fly'){c.fillStyle=ORE[sh.ore][0];c.fillRect(-6,-1.2,5,2.4)}}
+    else if(sh.type==='t'){c.fillStyle=sh.flash>0?'#fff':sh.hue;c.fillRect(-10,-2.4,19,4.8);c.strokeRect(-10,-2.4,19,4.8);
+      for(let i=0;i<3;i++){c.fillStyle=PODS[(sh.id+i)%4];c.fillRect(-8+i*5,-5.2,4,2.8);c.fillRect(-8+i*5,2.4,4,2.8)}c.fillStyle='#ffffffcc';c.fillRect(5,-1.4,3.6,2.8)}
+    else if(sh.type==='p'){c.fillStyle='#8ab4ff';c.beginPath();c.moveTo(9,0);c.lineTo(-5,-5);c.lineTo(-2,0);c.lineTo(-5,5);c.closePath();c.fill();c.stroke()}
+    else{c.fillStyle=sh.flash>0?'#fff':'#c4344f';c.beginPath();c.moveTo(8,0);c.lineTo(2,-3);c.lineTo(-2,-7);c.lineTo(-4,-2);c.lineTo(-8,0);c.lineTo(-4,2);c.lineTo(-2,7);c.lineTo(2,3);c.closePath();c.fill();c.stroke()}
+    c.restore();
+  }
+  function shipDraw(sh){
+    const k=sc*.5*clamp(s.z,.8,1.9);
+    if(k>=.6){detailShip(sh,k);return}
+    c.save();c.translate(sh.x,sh.y);c.rotate(sh.ang);const q=sc*(sh.type==='t'?1.1:1);
+    c.fillStyle=sh.flash>0?'#fff':(sh.type==='m'?sh.hue:sh.type==='t'?sh.hue:sh.type==='p'?'#8ab4ff':'#ff5a6e');
+    if(sh.type==='t')c.fillRect(-2.6*q,-1*q,5.2*q,2*q);
+    else if(sh.type==='x'){c.beginPath();c.moveTo(3*q,0);c.lineTo(0,2.4*q);c.lineTo(-3*q,0);c.lineTo(0,-2.4*q);c.fill()}
+    else{c.beginPath();c.moveTo(3.2*q,0);c.lineTo(-2.4*q,-2*q);c.lineTo(-2.4*q,2*q);c.closePath();c.fill()}
+    c.restore();
+  }
+  s.draw=function(){
+    const T=THEMES[s.theme];c.drawImage(bg,0,0,W,H);
+    for(const st of stars){c.fillStyle='rgba(255,255,255,'+(.2+.25*Math.sin(s.t*.6+st.f))+')';c.fillRect(st.x,st.y,st.r*1.2,st.r*1.2)}
+    c.lineWidth=.8;c.setLineDash([4,6]);
+    for(let l=0;l<=Math.min(3,s.lv+1);l++){c.strokeStyle=T.ring;c.globalAlpha=l<=s.lv?1:.45;ell(RANGE[l]);}
+    c.globalAlpha=1;c.setLineDash([]);
+    c.font=Math.round(7*Math.max(1,sc))+'px "IBM Plex Mono",monospace';c.fillStyle=T.sub;c.textAlign='left';
+    for(let l=0;l<=s.lv;l++)c.fillText('ZONE '+(l+1),cx+RANGE[l]*ue*.72+2,cy-RANGE[l]*ue*tl*.72-2);
+    c.setLineDash([1.5,4.5]);c.lineWidth=.9;c.strokeStyle=T.lane;
+    for(const m of mines){if(!live(m))continue;const h=nearHub(m);c.globalAlpha=vis(m);c.beginPath();c.moveTo(m.x,m.y);c.lineTo(h.x,h.y);c.stroke()}
+    for(const h of hubs){if(!live(h)||h===hq&&false)continue;c.globalAlpha=vis(h);c.beginPath();c.moveTo(h.x,h.y);c.lineTo(prime.x,prime.y);c.stroke()}
+    c.globalAlpha=1;c.setLineDash([]);
+    const fs=Math.round(7.5*Math.max(1,sc)),zl=clamp(s.z,.7,1.6);
+    for(const b of all){if(!live(b))continue;const al=vis(b),r=Math.max(1.6,b.r*sc*clamp(s.z,.8,1.8));c.globalAlpha=al;
+      if(b.ring){c.strokeStyle='rgba(240,215,170,.55)';c.lineWidth=.8;c.beginPath();c.ellipse(b.x,b.y,r*2,r*.55,-.35,0,TAU);c.stroke()}
+      c.fillStyle=b.main?'#ffd23a':(b.hub?'transparent':b.col||T.lab);
+      if(b.hub&&!b.main){c.strokeStyle=T.lab;c.lineWidth=1;c.beginPath();c.arc(b.x,b.y,r*1.3,0,TAU);c.stroke();c.fillStyle=T.lab;c.beginPath();c.arc(b.x,b.y,r*.5,0,TAU);c.fill()}
+      else{c.beginPath();c.arc(b.x,b.y,r,0,TAU);c.fill()}
+      if(b.mine){c.fillStyle=ORE[b.ore][0];c.beginPath();c.arc(b.x+r*.4,b.y-r*.3,Math.max(.8,r*.38),0,TAU);c.fill()}
+      if(b.main){c.strokeStyle='rgba(255,210,60,.5)';c.lineWidth=.8;c.beginPath();c.arc(hq.x,hq.y,r*2.2+Math.sin(s.t*2)*.8,0,TAU);c.stroke()}
+      c.font=fs+'px "IBM Plex Mono",monospace';c.fillStyle=b.main?'#ffe38a':T.lab;c.fillText(b.main?b.n+' niv. '+(s.lv+1):b.n,b.x+r+4,b.y+fs*.35);
+      if(b.sub&&(s.z>=.9||b.hub)){c.fillStyle=T.sub;c.font=Math.round(fs*.9)+'px "IBM Plex Mono",monospace';c.fillText(b.sub,b.x+r+4,b.y+fs*1.4)}
+      c.globalAlpha=1}
+    for(const sh of s.ships){for(let i=1;i<sh.trail.length;i++){c.strokeStyle='rgba(255,255,255,'+(i/sh.trail.length*.22)+')';c.lineWidth=.8;c.beginPath();c.moveTo(sh.trail[i-1][0],sh.trail[i-1][1]);c.lineTo(sh.trail[i][0],sh.trail[i][1]);c.stroke()}}
+    for(const sh of s.ships){if(sh.type==='m'&&sh.state==='wait'&&sh.at.mine){const pu=.5+.5*Math.sin(s.t*9+sh.id);c.strokeStyle=ORE[sh.at.ore][0];c.globalAlpha=.25+.35*pu;c.lineWidth=.7;c.beginPath();c.moveTo(sh.x,sh.y);c.lineTo(sh.at.x,sh.at.y);c.stroke();c.globalAlpha=1}}
+    for(const sh of s.ships)shipDraw(sh);
+    for(const q of s.patrols)shipDraw({id:0,type:'p',x:q.x,y:q.y,ang:q.ang,state:'fly',flash:0,trail:[]});
+    for(const p of s.pirates){shipDraw({id:1,type:'x',x:p.x,y:p.y,ang:p.ang,state:'fly',flash:p.hit>0?1:0,trail:[]});c.strokeStyle='rgba(255,90,110,.6)';c.setLineDash([2,3]);c.lineWidth=.8;c.beginPath();c.arc(p.x,p.y,8*sc,0,TAU);c.stroke();c.setLineDash([]);
+      if(s.patrols.length&&p.hit>0){c.strokeStyle='rgba(150,190,255,.8)';c.lineWidth=.9;for(const q of s.patrols){c.beginPath();c.moveTo(q.x,q.y);c.lineTo(p.x,p.y);c.stroke()}}}
+    if(s.sel&&s.ships.includes(s.sel)){const a=s.sel;c.strokeStyle='#5dffa6';c.lineWidth=1;c.setLineDash([2,2.5]);c.beginPath();c.arc(a.x,a.y,9*sc,s.t,s.t+TAU);c.stroke();c.setLineDash([])}
+    c.font='600 '+Math.round(8.5*Math.max(1,sc))+'px "IBM Plex Mono",monospace';c.textAlign='center';
+    for(const o of s.pops){c.globalAlpha=o.life;c.fillStyle=o.n<0?'#ff9eb0':(o.col||'#e1fff5');c.fillText((o.n>0?'+':'')+o.n,o.x,o.y-(1-o.life)*12);c.globalAlpha=1}
+  };
+  /* interface : fenêtres */
+  const pan=(cls,title,body,shut)=>'<section class="pan '+cls+(shut?' shut':'')+'"><header><b>:: '+title+'</b><span class="hc"></span><button class="chev" type="button" aria-label="Replier">⌄</button></header><div class="pb">'+body+'</div></section>';
+  root.insertAdjacentHTML('beforeend',
+   pan('fleet','Flotte','<div><div class="lab">Crédits</div><div class="big v"></div><div class="rate"></div></div>'+
+     '<div class="rows"><div>Navires <b class="nt"></b></div><div>Mineurs <b class="nm"></b></div><div>Marchands <b class="ntr"></b></div><div>Patrouilles <b class="np"></b></div><div>Pirates <b class="npi"></b></div></div>'+
+     '<div class="lab">Quantité</div><div class="amt">'+[1,10,100,'max'].map(a=>'<button type="button" data-a="'+a+'" aria-pressed="'+(a===1)+'">'+(a==='max'?'max':'×'+a)+'</button>').join('')+'</div>'+
+     [['m','Mineurs'],['t','Marchands'],['p','Patrouilles']].map(a=>'<button class="btn buy" type="button" data-k="'+a[0]+'"><span>'+a[1]+'</span><span class="c"></span></button>').join(''),cfg.phone)+
+   pan('eng','Ingénierie',UP.map(u=>'<div class="upg" data-u="'+u.k+'"><h4>'+u.n+'<span class="ul"></span></h4><p class="ud"></p><button class="btn ub" type="button"></button></div>').join('')+'<button class="btn sim" type="button">Simuler 8 h d\'absence</button>',cfg.phone)+
+   pan('con','Console système','<div class="log"></div>',cfg.phone)+
+   '<section class="pan card" hidden><header><b>:: Navire</b><button class="chev x" type="button" aria-label="Fermer">✕</button></header><div class="pb"><div class="nm"></div><div><span class="tg"></span></div><div class="rows"><div>Matricule <b class="cm"></b></div><div>Mode <b class="cmo"></b></div><div>Livraisons <b class="ctr"></b></div><div>Gains cumulés <b class="cg"></b></div></div></div></section>'+
+   '<div class="zoom"><button type="button" class="zi" aria-label="Zoom avant">+</button><span class="zp">100%</span><button type="button" class="zo" aria-label="Zoom arrière">−</button></div><button class="cinb" type="button">cinéma</button>');
+  const el={log:root.querySelector('.log')};
+  const q=sel=>root.querySelector(sel);
+  const pans=[...root.querySelectorAll('.pan')].filter(p=>!p.classList.contains('card'));
+  pans.forEach(p=>p.querySelector('header').addEventListener('click',e=>{if(e.target.closest('.x'))return;const open=p.classList.contains('shut');
+    if(cfg.phone&&open)pans.forEach(o=>{if(o!==p&&!o.classList.contains('con'))o.classList.add('shut')});p.classList.toggle('shut')}));
+  root.querySelectorAll('.amt button').forEach(b=>b.addEventListener('click',()=>{s.amt=b.dataset.a==='max'?'max':+b.dataset.a;root.querySelectorAll('.amt button').forEach(o=>o.setAttribute('aria-pressed',o===b))}));
+  root.querySelectorAll('.buy').forEach(b=>b.addEventListener('click',()=>{buy(b.dataset.k);ui()}));
+  UP.forEach(u=>q('[data-u="'+u.k+'"] .ub').addEventListener('click',()=>{const cost=u.cost();if(u.act){u.act();ui();return}
+    if(s.upg[u.k]>=u.max||s.credits<cost)return;s.credits-=cost;s.upg[u.k]++;log(u.n+' niveau '+s.upg[u.k]+'.');ui()}));
+  q('.sim').addEventListener('click',simAbs);
+  q('.zi').addEventListener('click',()=>{s.z=clamp(s.z*1.25,.6,2.4);ui()});q('.zo').addEventListener('click',()=>{s.z=clamp(s.z/1.25,.6,2.4);ui()});
+  q('.cinb').addEventListener('click',()=>root.classList.add('cin'));
+  q('.card .x').addEventListener('click',()=>{s.sel=null});
+  cv.addEventListener('pointerdown',e=>{if(root.classList.contains('cin')){root.classList.remove('cin');return}
+    const r=cv.getBoundingClientRect(),mx=(e.clientX-r.left)*W/r.width,my=(e.clientY-r.top)*H/r.height;let best=null,bd=18*sc;
+    for(const sh of s.ships){const d=Math.hypot(sh.x-mx,sh.y-my);if(d<bd){bd=d;best=sh}}s.sel=best});
+  const v=q('.v'),rt=q('.rate'),hc=q('.fleet .hc');
+  function ui(){const r=s.rate();v.textContent='$'+fmt(s.credits);rt.textContent='+'+r.toFixed(1)+' / s';hc.textContent='$'+fmt(s.credits);
+    q('.nt').textContent=s.ships.length+' navires';q('.nm').textContent=cnt('m');q('.ntr').textContent=cnt('t');q('.np').textContent=s.patrols.length;q('.npi').textContent=s.pirates.length;
+    root.querySelectorAll('.buy').forEach(b=>{const k=b.dataset.k,cost=s.cost(k);b.disabled=s.credits<cost;b.querySelector('.c').textContent=fmt(cost)+' cr'});
+    UP.forEach(u=>{const box=q('[data-u="'+u.k+'"]'),lvl=u.lvl?u.lvl():s.upg[u.k],cost=u.cost(),full=lvl>=u.max;
+      box.querySelector('.ul').textContent='niv. '+(u.k==='por'?lvl+1:lvl)+(u.k==='por'?' / 4':' / '+u.max);box.querySelector('.ud').textContent=u.d();
+      const b=box.querySelector('.ub');b.textContent=full?'maximum':fmt(cost)+' cr';b.disabled=full||s.credits<cost});
+    q('.zp').textContent=Math.round(s.z*100)+'%';
+    const card=q('.card'),a=s.sel;card.hidden=!(a&&s.ships.includes(a));
+    if(!card.hidden){q('.card .nm').textContent=a.nom;q('.card .tg').textContent='Affecté : '+(a.type==='m'?'MINEUR':'MARCHAND');q('.cm').textContent=(a.type==='m'?'M-':'T-')+String(a.id+1).padStart(3,'0');
+      q('.cmo').textContent=a.state==='fly'?'EN VOL':(a.type==='m'&&a.at.mine?'AU TRAVAIL':'À QUAI');q('.ctr').textContent=a.trips;q('.cg').textContent=fmt(a.earn)+' cr'}}
+  s.ui=ui;s.log=log;s.setTheme('bleue');log('Système SOL-1 en ligne.');log('Flotte initiale : 5 mineurs, 3 marchands.');ui();setInterval(ui,250);
+  return s;
+}
+const sims=[Sim(document.getElementById('s1'),{W:960,H:540,tilt:.62,cx:.5,cy:.5,speed:15}),Sim(document.getElementById('s2'),{W:300,H:567,tilt:.9,cx:.5,cy:.46,speed:15,phone:true})];
+document.querySelectorAll('.themes button').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.themes button').forEach(o=>o.setAttribute('aria-pressed',o===b));sims.forEach(s=>s.setTheme(b.dataset.t))}));
+let last=performance.now();
+(function loop(now){const dt=Math.min(.1,(now-last)/1000);last=now;for(const s of sims){s.update(dt);s.draw()}requestAnimationFrame(loop)})(last);
+})();
+</script>

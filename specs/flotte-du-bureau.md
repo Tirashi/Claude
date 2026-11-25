@@ -25,6 +25,8 @@ Laissé de côté pour le premier jet : matrice de 17 améliorations, trois thè
 - **Maquette 1** (25/11, [artefact](https://claude.ai/artifact/VLJwho7bw6e7F2SC2atptJ), `maquettes/flotte-du-bureau.html`) : trois téléphones jouables avec la même simulation (mineurs, marchands, patrouille, un pirate de passage, mode cinéma) : **A Radar** (vectoriel), **B Aquarium** (lumière douce, traînées), **C Pixel 32 bits** (seule direction rétro). **Retours du 25/11** : direction C (pixel) écartée (« je n'aime pas trop la vue toute pixellisée ») ; A radar « pourquoi pas » mais B aquarium préférée ; B à enrichir (couleurs, formes, trajectoires, orbites lentes mais présentes).
 - **Maquette 2** (25/11, [artefact](https://claude.ai/artifact/DgpcqGUi6Abh3VWGPijGQo), `maquettes/flotte-du-bureau-2.html`) : aquarium détaillé (étoile, 3 planètes dont une géante à anneaux, lune, ceinture d'astéroïdes, station qui tourne, orbites lentes, vaisseaux à formes et teintes variées, trajectoires courbes vers des destinations mobiles), surcouche **radar** optionnelle (bouton), version **PC** 16 : 10 avec panneau (flotte, Veille). Retours du 25/11 (après la maquette 2) : « pas assez fin, l'écran est vite plein alors qu'il n'y a pas grand-chose » ; la colonisation doit « apparaître naturellement » en exploitant des ressources de plus en plus loin ; pas de classement.
 - **Maquette 3** (25/11, [artefact](https://claude.ai/artifact/S2fwrAwaLCVQpDryLeq93h), `maquettes/flotte-du-bureau-3.html`) : vaisseaux deux fois plus petits, traits et halos plus fins, astres réduits ; amélioration **Portée** (4 niveaux) qui ouvre une zone (fer, glace, cristal, iridium), pose un **avant-poste** tout seul et **dézoome** la carte ; minerais de plus en plus rentables mais trajets plus longs ; boutons ×10 et +1000 pour tester la densité. **En attente de validation.**
+- **Retours du 25/11 (après la maquette 3)** : ralentir encore planètes et vaisseaux ; rendu à approcher de **captures du jeu d'origine** envoyées par l'utilisateur (carte presque nue, astres en petits points nommés avec leur production, routes pointillées, anneaux de portée, fenêtres « Fleet Command » en haut à gauche et « Engineering » en haut à droite, console en bas à gauche, zoom en % en bas à droite, fiche d'un navire avec son pilote ; trois thèmes bleu, violet, vert phosphore).
+- **Maquette 4** (25/11, [artefact](https://claude.ai/artifact/Sc99T6iuxW64J8DGaAzaUT), `maquettes/flotte-du-bureau-4.html`) : carte épurée à ce modèle (sans rien reprendre de ses graphismes), trois ambiances (nuit bleue, violette, phosphore), fenêtres flottantes repliables (Flotte : crédits, navires, quantité ×1 / ×10 / ×100 / max ; Ingénierie : moteurs, soute, portée du signal, veille ; Console système), zoom, fiche d'un navire au toucher, détail des vaisseaux visible en zoomant ; orbites ~2× plus lentes, vaisseaux ~1/3 plus lents ; PC en 16 : 9 et téléphone. **En attente de validation.**
 
 ## 4. Décisions de l'utilisateur (25/11)
 - **Gains appli fermée** : une **fraction** des gains du jeu ouvert ; une amélioration de prestige augmente cette fraction (proposé : 25 % de base, +5 points par niveau, 75 % au maximum ; à valider).
@@ -35,8 +37,9 @@ Laissé de côté pour le premier jet : matrice de 17 améliorations, trois thè
 - **Rendu** : aquarium fin (voir maquette 3) ; le radar reste une surcouche au choix.
 
 ## 5. Questions ouvertes
-1. Rendu assez fin (taille, traits, halos) ?
-2. Quatre niveaux de portée pour une première partie avant le prestige ?
-3. Ressources des zones lointaines (fer, glace, cristal, iridium) ?
-4. Pourcentage de veille (25 % à 75 %) ?
-5. Prestige : quel thème (relancer une galaxie, léguer sa flotte) ?
+1. Le rendu de la maquette 4 convient-il (manque, trop) ?
+2. Une ambiance de couleurs ou un choix dans les réglages ?
+3. Vitesse des vaisseaux et des orbites maintenant ?
+4. Quatre niveaux de portée avant le prestige ; ressources fer, glace, cristal, iridium ?
+5. Pourcentage de veille (25 % à 75 %) ?
+6. Prestige : quel thème (relancer une galaxie, léguer sa flotte) ?
