@@ -1,7 +1,7 @@
 /* Le Magasinier : fiche de l'accueil (voir accueil-outils.js) */
 Ludo.fiche({
   k: "magasinier/index.html",
-  carte: {n: "LE MAGASINIER", s: "MAGASINIER", ic: "caisse", fam: "3d", lb: "linear-gradient(#f6d39a, #a8683a)", lt: "#3a2414", sh: "#e8963a", rank: "magasinier",
+  carte: {n: "LE MAGASINIER", img: "magasinier/etiquette.jpg", jaq: "magasinier/jaquette.jpg", s: "MAGASINIER", ic: "caisse", fam: "3d", lb: "linear-gradient(#f6d39a, #a8683a)", lt: "#3a2414", sh: "#e8963a", rank: "magasinier",
     d: "Pousse les caisses sur les marques, dans un entrepôt baigné de soleil en HD-2D. 60 niveaux en 5 entrepôts, avec de la glace, des tapis roulants et des caisses en fonte, et une grille du jour pour toute la famille.", tags: ["3D", "PUZZLE", "GRILLE DU JOUR"]},
   meta: {added: "2026-10-20", genres: ["LOGIQUE", "DU JOUR"]},
   enCours: () => { const d = rk("magasinier.dailyRun", null), p = rk("magasinier.partie", null);

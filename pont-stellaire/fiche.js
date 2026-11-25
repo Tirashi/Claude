@@ -1,7 +1,7 @@
 /* Pont stellaire : fiche de l'accueil (voir accueil-outils.js) */
 Ludo.fiche({
   k: "pont-stellaire/index.html",
-  carte: {n: "PONT STELLAIRE", s: "PONT STELLAIRE", ic: "stars", fam: "32", lb: "radial-gradient(circle at 70% 25%, #24407a, #070a1c 75%)", lt: "#ffd76a", sh: "#2a4a9a", rank: "pontstellaire",
+  carte: {n: "PONT STELLAIRE", img: "pont-stellaire/etiquette.jpg", jaq: "pont-stellaire/jaquette.jpg", s: "PONT STELLAIRE", ic: "stars", fam: "32", lb: "radial-gradient(circle at 70% 25%, #24407a, #070a1c 75%)", lt: "#ffd76a", sh: "#2a4a9a", rank: "pontstellaire",
     d: "Relie les étoiles par des faisceaux de lumière, sans croisement, pour dessiner une constellation. Un ciel du jour pour toute la famille.", tags: ["CIEL DU JOUR"]},
   meta: {added: "2026-10-12", updated: "2026-10-15", genres: ["LOGIQUE", "ESPACE", "DU JOUR"]},
   nom: "Pont stellaire",

@@ -4,6 +4,7 @@ Des jeux jouables dans le navigateur, sans build ni dépendance. La page [`index
 
 **Réflexion et jeux du jour**
 
+- [`demineur/index.html`](demineur/index.html) : **Démineur**, dans une prairie en pixel art : trois tailles, la Grande prairie sans fin (trois cœurs, panier à remplir) et un défi du jour qui grandit du lundi au dimanche.
 - [`queens/index.html`](queens/index.html) : **Queens 16-Bit**, une reprise du jeu Queens de LinkedIn.
 - [`picross/index.html`](picross/index.html) : **Picross Dex**, un picross sur le thème des Pokémon (fan-game personnel, non officiel).
 - [`lignee/index.html`](lignee/index.html) : **Lignée**, un puzzle de généalogie : reconstituer un arbre grâce aux indices, en famille française ou en dynastie royale.
@@ -11,6 +12,7 @@ Des jeux jouables dans le navigateur, sans build ni dépendance. La page [`index
 - [`pont-stellaire/index.html`](pont-stellaire/index.html) : **Pont stellaire**, un puzzle de logique en 32 bits (les règles du Hashi) : relier les étoiles par des faisceaux de lumière pour dessiner une constellation, avec un Ciel du jour.
 - [`mot-d-or/index.html`](mot-d-or/index.html) : **Le Mot d'or**, un mot de 6 lettres par jour à trouver en 6 essais, sur un bureau à la lueur de la lampe, en pixel art 32 bits.
 - [`capitaine-du-port/index.html`](capitaine-du-port/index.html) : **Capitaine du port**, un casse-tête de bateaux en pixel art 32 bits : déplacer les bateaux du bassin pour ouvrir la passe au navire doré.
+- [`strategie-ciel/index.html`](strategie-ciel/index.html) : **Stratégie spatiale** (démo, nom provisoire), stratégie en temps réel avec pause dans l'univers de Ciel de guerre : défends le système SOL-7 avec ton porte-vaisseaux, tes collecteurs et tes escadrilles.
 - [`bannis/index.html`](bannis/index.html) : **Les Bannis** (démo), un autobattler rogue-lite : le Mage instable et trois condamnés tiennent la Muraille contre les hordes de la Gueule.
 - [`tank-arena/index.html`](tank-arena/index.html) : **Tank Arena**, une petite arène de tanks en 3D : toi contre trois tanks de l'ordinateur, en manches de 90 secondes.
 - [`magasinier/index.html`](magasinier/index.html) : **Le Magasinier**, un Sokoban en HD-2D façon Octopath Traveler : pousser les caisses sur les marques dans un entrepôt baigné de soleil.
@@ -480,6 +482,16 @@ Combat aérien en 3D low poly au-dessus d'un archipel, au crépuscule, au milieu
 - **Le hangar** : 35 chasseurs en 4 familles (intercepteurs, polyvalents, lourds, furtifs), chacune avec sa vitesse, son virage, son blindage et ses missiles ; chaque appareil a en plus son profil (rapide, agile, robuste ou armé). Au départ, un appareil par famille est ouvert : la solde gagnée en jouant débloque les autres.
 - **Les classements** : meilleur score en vagues sans fin, et total des étoiles des missions.
 - Au téléphone : un joystick sous le pouce et des boutons ronds ; au PC : la souris dirige l'appareil, clic gauche pour le feu, clic droit pour les missiles. Explosions et réacteur enregistrés, musique synthétisée, secousses, épaves qui tombent en fumée, jauge d'énergie du boost. - **Les décors** : crépuscule, nuit étoilée, orage (pluie, éclairs), désert, neige ; chaque mission a le sien, et le temps change toutes les 5 vagues. La nuit et sous l'orage, les appareils allument leurs feux de position.
+
+## Écurie miniature
+
+Gestion d'une petite écurie de course (première version). On ne pilote pas : on prépare la semaine, puis on regarde la course en 3D low poly sur un circuit de ville.
+
+- **Le paddock** : six onglets (écurie, garage, achat, sponsors, semaine, fans). Chaque pilote reçoit une voiture du parc, les autres restent en réserve et remplacent une voiture cassée.
+- **Le garage et la concession** : douze voitures neuves et des occasions qui changent chaque semaine ; six pièces (moteur, turbo, aileron, pneus, freins, allègement), peinture ; une voiture trop puissante pour la division ne peut pas courir.
+- **La course** : grille issue des qualifications, 8 tours, dépassements, erreurs, sorties de piste, accidents et casses ; caméra derrière ses pilotes, diorama ou télé ; course accélérée ou résultat direct.
+- **Les circuits** : cinq circuits de ville (virages à gauche et à droite, chicanes), avec le bruit des moteurs, les bips du départ et la foule à l'arrivée.
+- **La saison** : 8 grands prix ; les 3 premiers du championnat montent de division (Coupe 300 ch, Trophée 500 ch, Grand Prix illimité). La réputation ouvre des places de pilotes et des sponsors ; les fans finissent par rapporter (boutique de goodies, convention, fan club).
 
 ## Les classiques passés en 16 bits
 

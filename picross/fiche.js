@@ -1,7 +1,7 @@
 /* Picross Dex : fiche de l'accueil (voir accueil-outils.js) */
 Ludo.fiche({
   k: "picross/index.html",
-  carte: {n: "PICROSS DEX", s: "PICROSS DEX", ic: "ball", fam: "16", lb: "#cf2b34", lt: "#fff7ec", sh: "#d23a3a", rank: "picross",
+  carte: {n: "PICROSS DEX", img: "picross/etiquette.jpg", jaq: "picross/jaquette.jpg", s: "PICROSS DEX", ic: "ball", fam: "16", lb: "#cf2b34", lt: "#fff7ec", sh: "#d23a3a", rank: "picross",
     d: "Remplis la grille d'après les nombres pour révéler un Pokémon. Fan-game personnel.", tags: ["207 GRILLES"]},
   meta: {genres: ["LOGIQUE"]},
   nom: "Picross Dex",

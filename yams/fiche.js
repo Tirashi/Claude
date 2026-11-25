@@ -1,7 +1,7 @@
 /* Yams : fiche de l'accueil (voir accueil-outils.js) */
 Ludo.fiche({
   k: "yams/index.html",
-  carte: {n: "YAMS", s: "YAMS", ic: "des", fam: "3d", lb: "linear-gradient(#f6e1f3, #bfe8d0)", lt: "#6b4a7a", sh: "#e0559a", rank: "yams",
+  carte: {n: "YAMS", img: "yams/etiquette.jpg", jaq: "yams/jaquette.jpg", s: "YAMS", ic: "des", fam: "3d", lb: "linear-gradient(#f6e1f3, #bfe8d0)", lt: "#6b4a7a", sh: "#e0559a", rank: "yams",
     d: "Le Yams classique avec de vrais dés en 3D : lance-les d'un geste, garde les bons et remplis les 13 cases de la feuille. Six styles de dés à débloquer, de la taverne à la Lune.", tags: ["3D", "DÉS", "6 STYLES"]},
   meta: {added: "2026-10-17", genres: ["HASARD"]},
   enCours: () => { const p = rk("yams.partie", null); return p && p.tour < 13 ? `TOUR ${p.tour + 1}/13` : null; },

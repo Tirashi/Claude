@@ -1,7 +1,7 @@
 /* La Boutique de cartes : fiche de l'accueil (voir accueil-outils.js) */
 Ludo.fiche({
   k: "boutique/index.html",
-  carte: {n: "LA BOUTIQUE DE CARTES", s: "BOUTIQUE", ic: "boutique", fam: "3d", lb: "linear-gradient(#8a63d2, #2b2838)", lt: "#ffd84d", sh: "#8a63d2", rank: "boutique",
+  carte: {n: "LA BOUTIQUE DE CARTES", img: "boutique/etiquette.jpg", jaq: "boutique/jaquette.jpg", s: "BOUTIQUE", ic: "boutique", fam: "3d", lb: "linear-gradient(#8a63d2, #2b2838)", lt: "#ffd84d", sh: "#8a63d2", rank: "boutique",
     d: "Tiens une boutique de cartes à collectionner pendant un an, en 3D. Commande au grossiste, ouvre des boosters (vendre fermé ou ouvrir ? c'est tout le pari), remplis tes vitrines et ton classeur, aménage et agrandis la boutique, organise le tournoi du samedi, et regarde les clients acheter. Cinq extensions sortent dans l'année, les cotes bougent chaque dimanche.", tags: ["3D", "GESTION", "52 SEMAINES"]},
   meta: {added: "2026-10-23", genres: ["SIMULATION"]},
   enCours: () => { const r = rk("boutique.run", null); return r && r.semaine && !r.fin ? `SEMAINE ${r.semaine}/52` : null; },
