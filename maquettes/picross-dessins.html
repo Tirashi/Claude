@@ -1,0 +1,90 @@
+<meta charset="utf-8">
+<title>Dessins Picross Dex</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,400;0,500;0,700;1,800&display=swap">
+<style>
+/* Planche de comparaison : un même Pokémon (Cizayox, n° 212) converti de cinq façons, en cartes à côté les unes des autres ; bascule dessin / grille à résoudre. */
+:root {
+  --page: #17181d; --page-2: #22242b; --page-line: #34363f; --page-text: #eceae4; --page-dim: #9a9aa6; --page-accent: #ffd23f;
+  --ok: #6be675; --ko: #ff7a7a; --screen: #cde1c8;
+  --f-page: "Rubik", system-ui, sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--page); color: var(--page-text); font-family: var(--f-page); font-size: 15px; line-height: 1.5; margin: 0;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 24px 56px; }
+.wrap { max-width: 1100px; margin: 0 auto; display: flex; flex-direction: column; gap: 24px; }
+h1 { margin: 0; font-style: italic; font-weight: 800; font-size: clamp(28px, 7vw, 44px); color: var(--page-accent); }
+.lead { margin: 6px 0 0; color: var(--page-dim); max-width: 64ch; }
+.bar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.bar span { color: var(--page-dim); font-size: 13px; text-transform: uppercase; letter-spacing: .08em; }
+.tog { border: 2px solid var(--page-line); background: var(--page-2); color: var(--page-text); padding: 8px 14px; border-radius: 8px; font: inherit; cursor: pointer; }
+.tog[aria-pressed="true"] { border-color: var(--page-accent); color: var(--page-accent); }
+.tog:focus-visible { outline: 3px solid var(--page-accent); outline-offset: 2px; }
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 16px; }
+.card { background: var(--page-2); border: 1px solid var(--page-line); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.card h2 { margin: 0; font-size: 17px; font-weight: 700; display: flex; gap: 10px; align-items: baseline; }
+.card h2 .l { color: var(--page-accent); font-size: 22px; }
+.card .desc { margin: 0; color: var(--page-dim); font-size: 14px; }
+.shot { background: var(--screen); border-radius: 8px; padding: 10px; display: flex; justify-content: center; }
+.shot canvas { image-rendering: pixelated; max-width: 100%; height: auto; display: block; }
+.stats { display: flex; gap: 8px; flex-wrap: wrap; }
+.stat { background: var(--page); border-radius: 6px; padding: 4px 9px; font-size: 13px; font-variant-numeric: tabular-nums; }
+.stat b { color: var(--page-accent); font-weight: 700; }
+ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px; font-size: 14px; }
+.pro li::marker { color: var(--ok); content: "+  "; }
+.con li::marker { color: var(--ko); content: "–  "; }
+.note { color: var(--page-dim); font-size: 14px; max-width: 70ch; }
+.note b { color: var(--page-text); }
+</style>
+<div class="wrap">
+  <header>
+    <h1>Cizayox, cinq conversions</h1>
+    <p class="lead">Le même Pokémon (n° 212, tiré de votre Minidex) transformé en grille de Picross par cinq méthodes. Dites-moi laquelle rend le mieux. Toutes les grilles se résolvent entièrement par logique, sans deviner.</p>
+  </header>
+  <div class="bar" role="group" aria-label="Affichage">
+    <span>Voir</span>
+    <button class="tog" id="b-dessin" aria-pressed="true" type="button">Le dessin</button>
+    <button class="tog" id="b-grille" aria-pressed="false" type="button">La grille à résoudre</button>
+  </div>
+  <div class="cards" id="cards"></div>
+  <p class="note"><b>Limites de l'essai.</b> Un seul Pokémon testé : le résultat de chaque méthode dépend du sprite. Les sprites du Minidex n'ont que 4 couleurs (noir, rouge, orange, fond), donc les versions automatiques sont plus pauvres en couleurs que les dessins du jeu. Les images servent de référence seulement : rien n'en est repris sans vérifier la licence et citer les auteurs.</p>
+</div>
+<script>
+const CARDS = [{"id": "orig16", "lettre": "0", "titre": "Référence 16×16", "desc": "Le sprite du Minidex tel quel, sans rien changer. Sert de témoin.", "pro": ["Fidèle à 100 %, aucune retouche", "152 cases pleines : le plus détaillé"], "con": ["Une nouvelle taille, 16×16, à ajouter au jeu (les rencontres sont tirées par taille)", "Cases un peu plus petites sur le téléphone (environ 6 %)"], "art": ["......k.k...kk..", ".....krkk..kook.", "....krkkrkkoook.", "...krrrrk.koook.", "..krrrrk.koook..", "..krrkrk.kook...", "..krkokrkkkk....", "...kkkkkkkoook..", ".....rkrrrkoook.", "....kkrkkrkkook.", "..kkrkkkkrk.kk..", ".krrk..krkrk....", "krkrk..kkrrkk...", "kk.rk.krkrkrrk..", "...k.krk.k.krk..", ".....kr.....kk.."], "stats": {"w": 16, "h": 16, "pleines": 152, "inconnues": 0, "maxind": 4}}, {"id": "voisin", "lettre": "A", "titre": "Script « plus proche voisin »", "desc": "Un script réduit l'image de 16 à 15 pixels sans réfléchir : il saute une rangée et une colonne réparties dans le dessin.", "pro": ["Instantané : les 45 Pokémon en une seconde", "Aucune main-d'œuvre"], "con": ["Contours noirs coupés : la griffe gauche et le dos sont troués", "24 cases perdues (128 au lieu de 152)", "L'œil et les détails du cou disparaissent"], "art": ["......kk...kk..", ".....krk..kook.", "....krkrkkoook.", "...krrrk.koook.", "..krrrr.koook..", "..krrkr.kook...", "..krkokkkkk....", ".....rkrrkoook.", "....kkrkrkkook.", "..kkrkkkrk.kk..", ".krrk..rkrk....", "krkrk..krrkk...", "kk.rk.kkrkrrk..", "...k.kr.k.krk..", ".....kr....kk.."], "stats": {"w": 15, "h": 15, "pleines": 128, "inconnues": 0, "maxind": 4}}, {"id": "vote", "lettre": "B", "titre": "Script « vote majoritaire »", "desc": "Chaque case de 15×15 prend la couleur dominante des pixels qu'elle recouvre.", "pro": ["Instantané aussi", "Les contours restent continus"], "con": ["Le noir envahit tout : corps et tête deviennent une tache sombre", "Le rouge, la couleur du Pokémon, presque disparu", "Pire des cinq à l'œil : on ne reconnaît plus le dessin"], "art": ["......kk...kk..", ".....kkkk.kook.", "....krkkkkoook.", "...krrrkkkoook.", "..krrrrkkoook..", "..krkkrkkkok...", "..kkkkkkkkko...", "...kkkkkkkoook.", "....kkrkrkkook.", "..kkkkkkrkkkkk.", ".krrk.kkkrk....", "krkrk..krrkk...", "kk.rk.kkrkrrk..", "...k.krkkkkrk..", ".....kr....kk.."], "stats": {"w": 15, "h": 15, "pleines": 140, "inconnues": 0, "maxind": 3}}, {"id": "hybride", "lettre": "C", "titre": "Recadrage + retouches", "desc": "Un script supprime la colonne vide de droite et la rangée du « cou » (la moins utile), puis je retouche à la main ce qui reste de travers.", "pro": ["Presque identique à l'original (141 cases sur 152)", "Rapide : quelques secondes par Pokémon une fois le script écrit"], "con": ["Marche ici parce que Cizayox a une colonne vide : à vérifier sur chaque sprite", "Chaque dessin demande un coup d'œil humain", "Le cou est un peu écrasé"], "art": ["......k.k...kk.", ".....krkk..kook", "....krkkrkkoook", "...krrrrk.koook", "..krrrrk.koook.", "..krrkrk.kook..", "..krkokrkkkk...", ".....rkrrrkoook", "....kkrkkrkkook", "..kkrkkkkrk.kk.", ".krrk..krkrk...", "krkrk..kkrrkk..", "kk.rk.krkrkrrk.", "...k.krk.k.krk.", ".....kr.....kk."], "stats": {"w": 15, "h": 15, "pleines": 141, "inconnues": 0, "maxind": 4}}, {"id": "main", "lettre": "D", "titre": "Dessin à la main", "desc": "Je redessine le Pokémon en 15×15 d'après le sprite, dans le style des 193 dessins déjà dans le jeu (œil blanc compris).", "pro": ["Lisible, soigné, cohérent avec le reste du jeu", "Je peux utiliser toute la palette du jeu, pas seulement 4 couleurs"], "con": ["S'éloigne du sprite de référence : c'est ma version, pas la leur", "Long : 45 Pokémon, à livrer par lots de 10 pour que vous validiez", "Risque d'erreur de lettre (une grille se vérifie à l'œil)"], "art": [".....k...k.kk..", "....krk.krkkook", "...krrkkrrkoook", "..krrrrrrrkoook", "..krwkrrrkkook.", "..krrrrrkkook..", "...kkkrkkoook..", "....krrrkoook..", "..kkkkrrkkook..", ".krrkkrrrkkk...", "krrkkrkrkrrk...", "krkk.krkkrrrk..", ".kk..krk.krrk..", ".....kk...krk..", ".....k.....kk.."], "stats": {"w": 15, "h": 15, "pleines": 143, "inconnues": 0, "maxind": 3}}];
+const PAL = {k:"#20182e", r:"#e0383e", w:"#f6f4ee", o:"#f58a3a"};
+const INK = "#20182e", SCREEN = "#cde1c8";
+const full = ch => ch !== "." && ch !== "w";
+function clues(line){ const o=[]; let c=0; for (const v of line){ if (v) c++; else if (c){ o.push(c); c=0; } } if (c) o.push(c); return o.length ? o : [0]; }
+function drawArt(cv, art){
+  const H=art.length, W=art[0].length, s=Math.floor(240/Math.max(W,H));
+  cv.width=W*s; cv.height=H*s; const x=cv.getContext("2d"); x.fillStyle=SCREEN; x.fillRect(0,0,cv.width,cv.height);
+  art.forEach((row,j)=>[...row].forEach((ch,i)=>{ if (PAL[ch]){ x.fillStyle=PAL[ch]; x.fillRect(i*s,j*s,s,s); } }));
+}
+function drawGrid(cv, art){
+  const H=art.length, W=art[0].length, F=art.map(r=>[...r].map(full));
+  const R=F.map(clues), C=[...Array(W).keys()].map(i=>clues(F.map(r=>r[i])));
+  const s=14, gl=Math.max(...R.map(a=>a.length))*11+6, gt=Math.max(...C.map(a=>a.length))*12+6;
+  cv.width=gl+W*s+1; cv.height=gt+H*s+1; const x=cv.getContext("2d"); x.fillStyle="#fff"; x.fillRect(0,0,cv.width,cv.height);
+  x.font="10px Rubik, sans-serif"; x.fillStyle=INK; x.textAlign="center"; x.textBaseline="middle";
+  C.forEach((a,i)=>a.forEach((n,k)=>x.fillText(n,gl+i*s+s/2,gt-6-(a.length-1-k)*12)));
+  x.textAlign="right"; R.forEach((a,j)=>a.forEach((n,k)=>x.fillText(n,gl-5-(a.length-1-k)*11,gt+j*s+s/2+.5)));
+  for (let i=0;i<=W;i++){ x.fillStyle = i%5===0 ? "#6a7390" : "#c4c9d6"; x.fillRect(gl+i*s,gt,1,H*s+1); }
+  for (let j=0;j<=H;j++){ x.fillStyle = j%5===0 ? "#6a7390" : "#c4c9d6"; x.fillRect(gl,gt+j*s,W*s+1,1); }
+}
+const cards=document.getElementById("cards"); let mode="dessin";
+CARDS.forEach(c=>{
+  const el=document.createElement("article"); el.className="card";
+  const li=a=>a.map(t=>"<li>"+t+"</li>").join("");
+  el.innerHTML=`<h2><span class="l">${c.lettre}</span>${c.titre}</h2><p class="desc">${c.desc}</p>
+   <div class="shot"><canvas aria-label="${c.titre}"></canvas></div>
+   <div class="stats"><span class="stat">Taille <b>${c.stats.w}×${c.stats.h}</b></span><span class="stat">Cases pleines <b>${c.stats.pleines}</b></span><span class="stat">Indices max par ligne <b>${c.stats.maxind}</b></span></div>
+   <ul class="pro">${li(c.pro)}</ul><ul class="con">${li(c.con)}</ul>`;
+  cards.appendChild(el); c.cv=el.querySelector("canvas");
+});
+function render(){ CARDS.forEach(c=> mode==="dessin" ? drawArt(c.cv,c.art) : drawGrid(c.cv,c.art)); }
+function setMode(m){ mode=m; document.getElementById("b-dessin").setAttribute("aria-pressed",m==="dessin"); document.getElementById("b-grille").setAttribute("aria-pressed",m==="grille"); render(); }
+document.getElementById("b-dessin").onclick=()=>setMode("dessin");
+document.getElementById("b-grille").onclick=()=>setMode("grille");
+render();
+</script>
