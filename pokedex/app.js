@@ -32,6 +32,8 @@ const image = (n, alt = "") => `<img src="${DESSIN(n)}" alt="${esc(alt)}" loadin
 const SVG_LOUPE = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg>`;
 const SVG_LIVRE = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5zM4 20.5A2.5 2.5 0 0 0 6.5 23H20"/></svg>`;
 const SVG_ECLAIR = `<svg viewBox="0 0 24 24"><path fill="currentColor" d="M13.5 2L5 13h5.5L9.5 22 19 10.5h-5.5z"/></svg>`;
+const SVG_EQUIPE = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="8" cy="8" r="3"/><circle cx="17" cy="9" r="2.4"/><path d="M2.5 19a5.5 5.5 0 0 1 11 0M14.5 19a4 4 0 0 1 7.5-1.5"/></svg>`;
+const SVG_QUIZ = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><path d="M9.2 9.5a2.8 2.8 0 1 1 4 2.5c-.8.5-1.2 1-1.2 2M12 17.2v.1"/></svg>`;
 const SVG_FLECHE = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>`;
 
 // une ligne de CSV (champs entre guillemets possibles)
@@ -86,12 +88,174 @@ async function chargerFiche(n) {
   return f;
 }
 
+/* ---------- les jeux : quels Pokémon dans quel jeu, évolutions, légendaires (gardés dans le navigateur) ---------- */
+let ESP = lire("pokedex.esp", null);   // n -> pré-évolution * 8 + drapeaux (1 bébé, 2 légendaire, 4 fabuleux)
+let DEX = lire("pokedex.dex", null);   // n° de Pokédex régional -> [n° nationaux]
+async function chargerJeux() {
+  const ids = new Set(); D.JEUX.forEach(j => (j.dex || []).forEach(i => ids.add(i)));
+  const [esp, dex] = await Promise.all([texte(CSV + "pokemon_species.csv"), texte(CSV + "pokemon_dex_numbers.csv")]);
+  const e = [];
+  for (const l of esp.split("\n").slice(1)) { const c = l.trim().split(","); const n = +c[0]; if (n >= 1 && n <= MAX) e[n] = (+c[3] || 0) * 8 + (+c[11] ? 1 : 0) + (+c[16] ? 2 : 0) + (+c[17] ? 4 : 0); }
+  const d = {};
+  for (const l of dex.split("\n").slice(1)) { const c = l.trim().split(","); const n = +c[0], p = +c[1]; if (ids.has(p) && n >= 1 && n <= MAX) (d[p] = d[p] || []).push(n); }
+  if (e.filter(x => x !== undefined).length < 1000 || Object.keys(d).length < ids.size) throw new Error("jeux incomplets");
+  ESP = e.map(x => x || 0); DEX = d;
+  ecrire("pokedex.esp", ESP); ecrire("pokedex.dex", DEX);
+}
+
+/* ---------- l'équipe ---------- */
+const jeuDe = id => D.JEUX.find(j => j.id === id) || D.JEUX[0];
+// les Pokémon qu'on peut avoir dans ce jeu
+function dispo(jeu) {
+  const j = jeuDe(jeu);
+  if (!j.dex) return LISTE.map(p => p.n);
+  const s = new Set(); j.dex.forEach(i => (DEX[i] || []).forEach(n => s.add(n)));
+  return [...s].sort((x, y) => x - y);
+}
+// ceux qu'on propose à la génération : dernière évolution du jeu, ni bébé ni légendaire (sauf si demandé)
+function candidats(jeu, legendaires) {
+  const l = dispo(jeu), peres = new Set();
+  l.forEach(n => { const f = ESP[n] >> 3; if (f) peres.add(f); });
+  return l.filter(n => !peres.has(n) && !(ESP[n] & 1) && (legendaires || !(ESP[n] & 6)));
+}
+// note d'une équipe : défense (faiblesses communes), attaque (types couverts), variété des types
+function noter(ns) {
+  const T = ns.map(n => parNum(n).types);
+  let s = 0;
+  for (const a of D.ORDRE) {
+    let w = 0, r = 0;
+    for (const t of T) { const m = D.mult(a, t); if (m >= 4) w += 2; else if (m > 1) w++; else if (m === 0) r += 1.5; else if (m < 1) r++; }
+    s += r * .4 - w * .6 - (w >= 3 ? 2 : w === 2 ? .8 : 0);
+  }
+  for (const d of D.ORDRE) if (!T.some(t => t.some(a => D.mult1(a, d) > 1))) s--;
+  const vus = {}; for (const t of T) for (const x of t) { if (vus[x]) s -= .8; vus[x] = 1; }
+  return s;
+}
+function generer(complete) {
+  const garde = complete ? S.eq.m.filter(Boolean) : [];
+  const libres = 6 - garde.length; if (!libres) return;
+  const cand = candidats(S.eq.jeu, S.eq.leg).filter(n => !garde.includes(n));
+  if (cand.length < libres) return;
+  let meilleur = null, ms = -1e9;
+  for (let r = 0; r < 12; r++) {
+    const m = cand.slice(); for (let i = 0; i < libres; i++) { const j = i + Math.random() * (m.length - i) | 0; [m[i], m[j]] = [m[j], m[i]]; }
+    let eq = garde.concat(m.slice(0, libres)), sc = noter(eq);
+    for (let tour = 0; tour < 3; tour++) for (let k = garde.length; k < 6; k++) for (let c = 0; c < 60; c++) {
+      const n = cand[Math.random() * cand.length | 0]; if (eq.includes(n)) continue;
+      const e2 = eq.slice(); e2[k] = n; const s2 = noter(e2); if (s2 > sc) { eq = e2; sc = s2; }
+    }
+    if (sc > ms) { ms = sc; meilleur = eq; }
+  }
+  const neufs = meilleur.slice(garde.length);
+  S.eq.m = complete ? S.eq.m.map(n => n || neufs.shift()) : meilleur;
+  ecrire("pokedex.equipe", S.eq);
+}
+// noms proposés au fur et à mesure qu'on écrit
+function suggere(q, l, max) {
+  q = plat(q.trim()); if (!q) return [];
+  const deb = [], mil = [];
+  for (const n of l) { const p = parNum(n); if (!p) continue; if (p.cle.startsWith(q)) deb.push(p); else if (p.cle.includes(q)) mil.push(p); }
+  return deb.concat(mil).slice(0, max);
+}
+const listeSuggest = (l, attr) => l.length ? l.map(p => `<button class="sug" ${attr}="${p.n}" type="button">${attr === "data-ajout" ? image(p.n, "") : ""}<span>${esc(p.nom)}</span>${attr === "data-ajout" ? p.types.map(t => bulle(t)).join("") : ""}</button>`).join("") : `<div class="sug-vide">Aucun nom ne ressemble à ça…</div>`;
+
+function analyse(ns) {
+  const T = ns.map(n => parNum(n).types), faibles = [], solides = [], trous = [];
+  for (const a of D.ORDRE) {
+    let w = 0, r = 0;
+    for (const t of T) { const m = D.mult(a, t); if (m > 1) w++; else if (m < 1) r++; }
+    if (w >= 2 && w > r) faibles.push([a, w]); else if (r >= 2 && w === 0) solides.push([a, r]);
+  }
+  for (const d of D.ORDRE) if (!T.some(t => t.some(a => D.mult1(a, d) > 1))) trous.push(d);
+  const c = ([t, k]) => puce(t, `<em>${k}</em>`);
+  return `<div class="bloc mauvais" style="--i:5"><h3>Faiblesses de l'équipe</h3><div class="puces">${faibles.length ? faibles.map(c).join("") : '<span class="chargement">Aucune faiblesse commune, bravo !</span>'}</div><p class="petit">Le chiffre = combien de tes Pokémon craignent ce type.</p></div>
+    <div class="bloc bon" style="--i:6"><h3>Bien protégée contre</h3><div class="puces">${solides.length ? solides.map(c).join("") : '<span class="chargement">Rien de spécial.</span>'}</div></div>
+    <div class="bloc" style="--i:7"><h3>Attaques super efficaces sur</h3><div class="puces">${D.ORDRE.filter(d => !trous.includes(d)).map(d => puce(d)).join("")}</div>
+      ${trous.length ? `<h3 class="sous">Pas de coup super efficace sur</h3><div class="puces">${trous.map(d => puce(d)).join("")}</div>` : '<p class="petit">Ton équipe a de quoi frapper fort sur tous les types.</p>'}</div>`;
+}
+
+function vueEquipe() {
+  const tete = `<div class="tete"><h1><small>Choisis ton équipe</small>Équipe</h1><a class="reglage ludo-retour" href="../index.html">‹ Ludothèque</a>${boutonTheme()}</div>`;
+  if (!LISTE) return tete + `<div class="attente">${"<i></i>".repeat(3)}</div>`;
+  if (!ESP || !DEX) return tete + (S.erreurJeux ? `<div class="vide">Il faut internet la première fois pour savoir quel Pokémon est dans quel jeu.<br><button class="reglage" data-rejeux>Réessayer</button></div>` : `<div class="attente">${"<i></i>".repeat(3)}</div>`);
+  const e = S.eq, plein = e.m.filter(Boolean), gens = [...new Set(D.JEUX.map(j => j.gen))].filter(Boolean);
+  const options = `<option value="nat" ${e.jeu === "nat" ? "selected" : ""}>${D.JEUX[0].nom}</option>` + gens.map(g => `<optgroup label="Génération ${g}">${D.JEUX.filter(j => j.gen === g).map(j => `<option value="${j.id}" ${e.jeu === j.id ? "selected" : ""}>${esc(j.nom)}</option>`).join("")}</optgroup>`).join("");
+  const nb = candidats(e.jeu, e.leg).length;
+  const cases = e.m.map((n, i) => {
+    const p = n && parNum(n);
+    return p ? `<div class="case" style="--fond-type:${fondType(p.types)}"><button class="cadre" data-case="${i}" aria-label="Changer ${esc(p.nom)}">${image(n, p.nom)}<b>${esc(p.nom)}</b></button><button class="x" data-retire="${i}" aria-label="Retirer ${esc(p.nom)}">✕</button><a class="fiche-lien" href="#p${n}" aria-label="Fiche de ${esc(p.nom)}">ℹ</a></div>`
+      : `<button class="case vide-case ${S.choisir === i ? "sel" : ""}" data-case="${i}" aria-label="Ajouter un Pokémon"><span>+</span></button>`;
+  }).join("");
+  const picker = S.choisir === null ? "" : `<div class="bloc picker"><h3>Quel Pokémon pour la case ${S.choisir + 1} ?</h3><div class="recherche"><input id="qe" type="search" placeholder="Écris le début du nom…" autocomplete="off" autocapitalize="off" aria-label="Nom du Pokémon"></div><div id="resqe" class="sugs">${listeSuggest(suggere(S.qe || "", dispo(e.jeu).filter(n => !e.m.includes(n) || e.m[S.choisir] === n), 8), "data-ajout")}</div></div>`;
+  return tete + `<div class="fiche equipe">
+    <div class="bloc" style="--i:0"><h3>Pour quel jeu ?</h3><select id="jeu" aria-label="Jeu">${options}</select>
+      <label class="coche"><input type="checkbox" id="leg" ${e.leg ? "checked" : ""}> Avec les Pokémon légendaires</label>
+      ${S.msg ? `<p class="petit">${esc(S.msg)}</p>` : `<p class="petit">${nb} Pokémon possibles dans ce jeu pour la génération automatique.</p>`}</div>
+    <div class="bloc" style="--i:1"><h3>Mon équipe ${plein.length}/6</h3><div class="cases">${cases}</div>
+      <div class="actions"><button class="gros" data-gen>✨ Équipe au hasard</button>${plein.length && plein.length < 6 ? `<button class="gros" data-comp>Compléter</button>` : ""}${plein.length ? `<button class="reglage" data-vider>Vider</button>` : ""}</div></div>
+    ${picker}
+    ${plein.length ? analyse(plein) : `<div class="bloc"><h3>Comment ça marche ?</h3><p class="petit">Touche une case pour choisir un Pokémon (écris son nom, l'appli le propose), ou laisse l'appli composer une équipe équilibrée pour le jeu choisi. Elle regarde les faiblesses communes et les types que tu peux frapper fort.</p></div>`}
+  </div>`;
+}
+
+/* ---------- le quiz « Qui est ce Pokémon ? » ---------- */
+const Q = { etat: "debut", gen: 0, liste: [], i: 0, score: 0, essais: 0, indice: false, bon: false, rate: false, saisie: "" };
+const meilleurs = lire("pokedex.quiz", {});
+const TOURS = 10;
+function lancerQuiz() {
+  const pool = LISTE.filter(p => !Q.gen || D.region(p.n)[2] === Q.gen).map(p => p.n);
+  for (let i = pool.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [pool[i], pool[j]] = [pool[j], pool[i]]; }
+  Object.assign(Q, { etat: "jeu", liste: pool.slice(0, TOURS), i: 0, score: 0, essais: 0, indice: false, bon: false, rate: false, saisie: "" });
+}
+function repondre(n) {
+  const cible = Q.liste[Q.i];
+  if (n === cible) { Q.score += Q.essais === 0 && !Q.indice ? 1 : .5; Q.bon = true; Q.etat = "reponse"; }
+  else { Q.essais++; if (Q.essais >= 2) { Q.rate = true; Q.etat = "reponse"; } else { Q.indice = true; Q.saisie = ""; Q.faux = n; } }
+}
+function suivant() {
+  if (Q.i + 1 >= Q.liste.length) {
+    Q.etat = "fin";
+    const k = String(Q.gen); if (Q.score > (meilleurs[k] || 0)) { meilleurs[k] = Q.score; ecrire("pokedex.quiz", meilleurs); Q.record = true; } else Q.record = false;
+  } else Object.assign(Q, { i: Q.i + 1, etat: "jeu", essais: 0, indice: false, bon: false, rate: false, saisie: "", faux: null });
+}
+const pts = x => String(x).replace(".", ",");
+function vueQuiz() {
+  const tete = `<div class="tete"><h1><small>Qui est ce Pokémon ?</small>Quiz</h1><a class="reglage ludo-retour" href="../index.html">‹ Ludothèque</a>${boutonTheme()}</div>`;
+  if (!LISTE) return tete + `<div class="attente">${"<i></i>".repeat(3)}</div>`;
+  if (Q.etat === "debut") {
+    const rec = meilleurs[String(Q.gen)];
+    return tete + `<div class="fiche"><div class="bloc quizdebut" style="--i:0"><h3>Prêt à jouer ?</h3><p>${TOURS} silhouettes à deviner. Écris le nom : l'appli te propose les noms au fur et à mesure, il n'y a plus qu'à choisir le bon.</p>
+      <select id="qgen" aria-label="Génération"><option value="0">Tous les Pokémon</option>${D.REGIONS.map(r => `<option value="${r[2]}" ${Q.gen === r[2] ? "selected" : ""}>${r[1]} · génération ${r[2]}</option>`).join("")}</select>
+      ${rec ? `<p class="petit">Ton record ici : ${pts(rec)} / ${TOURS}</p>` : ""}
+      <div class="actions"><button class="gros" data-jouer>▶ Jouer</button></div></div></div>`;
+  }
+  if (Q.etat === "fin") {
+    const s = Q.score, msg = s === TOURS ? "Parfait, maître Pokémon !" : s >= 7 ? "Excellent dresseur !" : s >= 4 ? "Pas mal du tout !" : "Continue à t'entraîner !";
+    return tete + `<div class="fiche"><div class="bloc quizdebut" style="--i:0"><h3>Terminé</h3><div class="resultat"><div class="mult" style="--m:#3fa765">${pts(s)}<small> / ${TOURS}</small></div><div class="phr" style="--m:#3fa765">${msg}</div></div>${Q.record ? `<p class="petit">🏆 Nouveau record !</p>` : ""}
+      <div class="actions"><button class="gros" data-jouer>↻ Rejouer</button><button class="reglage" data-qmenu>Changer de génération</button></div></div></div>`;
+  }
+  const n = Q.liste[Q.i], p = parNum(n), fini = Q.etat === "reponse";
+  const stage = `<div class="stage ${fini ? "revele" : ""}">${image(n, fini ? p.nom : "Silhouette d'un Pokémon").replace(' loading="lazy"', "")}</div>`;
+  const haut = `<div class="qhaut"><span>Question ${Q.i + 1} / ${TOURS}</span><span>Score : ${pts(Q.score)}</span></div><div class="jauge" style="margin:0 0 12px">${Q.liste.map((_, k) => `<i class="${k < Q.i || (k === Q.i && fini) ? "on" : ""}" style="--i:0;${k === Q.i ? "opacity:.6" : ""}"></i>`).join("")}</div>`;
+  if (fini) return tete + `<div class="fiche"><div class="bloc quiz" style="--i:0;--c:${D.COULEURS[p.types[0]]}">${haut}${stage}
+    <div class="verdict ${Q.bon ? "ok" : "ko"}">${Q.bon ? (Q.essais === 0 && !Q.indice ? "Bravo ! +1 point" : "Bien joué ! +½ point") : "Raté… c'était :"}</div><h2 class="qnom">${esc(p.nom)}</h2><div class="puces" style="justify-content:center">${p.types.map(t => puce(t)).join("")}</div>
+    <div class="actions"><button class="gros" data-suivant autofocus>${Q.i + 1 >= TOURS ? "Voir mon score" : "Suivant ›"}</button></div></div></div>`;
+  return tete + `<div class="fiche"><div class="bloc quiz" style="--i:0">${haut}${stage}
+    ${Q.faux ? `<div class="verdict ko">Ce n'est pas ${esc(parNum(Q.faux).nom)}. Essaie encore !</div>` : ""}
+    ${Q.indice ? `<div class="puces" style="justify-content:center;margin-bottom:10px">${p.types.map(t => puce(t)).join("")}</div>` : ""}
+    <div class="recherche"><input id="qr" type="search" placeholder="Écris le nom du Pokémon…" value="${esc(Q.saisie)}" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Nom du Pokémon"></div>
+    <div id="resqr" class="sugs">${listeSuggest(suggere(Q.saisie, LISTE.map(x => x.n), 5), "data-rep")}</div>
+    <div class="actions"><button class="reglage" data-indice ${Q.indice ? "disabled" : ""}>💡 Indice : ses types</button><button class="reglage" data-passe>Je passe</button></div></div></div>`;
+}
+
 /* ---------- l'état et l'affichage ---------- */
-const S = { sombre: lire("pokedex.sombre", true), q: "", filtre: null, att: "Eau", def: ["Feu", "Roche"], hautListe: 0, erreur: null };
+const S = { sombre: lire("pokedex.sombre", true), q: "", filtre: null, att: "Eau", def: ["Feu", "Roche"], hautListe: 0, erreur: null, erreurJeux: false, choisir: null, qe: "", msg: "",
+  eq: Object.assign({ jeu: "nat", leg: false, m: [null, null, null, null, null, null] }, lire("pokedex.equipe", {})) };
 const racine = document.getElementById("app");
 let routePrecedente = null, depuisListe = false;
-const route = () => { const h = location.hash.slice(1); return h === "types" ? { v: "types" } : /^p\d+$/.test(h) ? { v: "fiche", n: +h.slice(1) } : { v: "liste" }; };
-const parNum = n => LISTE && LISTE.find(p => p.n === n);
+const route = () => { const h = location.hash.slice(1); return h === "types" || h === "equipe" || h === "quiz" ? { v: h } : /^p\d+$/.test(h) ? { v: "fiche", n: +h.slice(1) } : { v: "liste" }; };
+let MAP = null;
+const parNum = n => { if (!LISTE) return null; if (!MAP || MAP.src !== LISTE) { MAP = new Map(LISTE.map(p => [p.n, p])); MAP.src = LISTE; } return MAP.get(n); };
 
 function resultats() {
   if (S.erreur) return `<div class="vide">Le Pokédex a besoin d'internet la première fois, pour charger les 1025 Pokémon.<br><button class="reglage" data-recharger>Réessayer</button></div>`;
@@ -172,11 +336,11 @@ function vueTypes() {
 
 function rendre(entree) {
   const r = route();
-  const corps = r.v === "types" ? vueTypes() : r.v === "fiche" ? vueFiche(r.n) : vueListe();
+  const corps = r.v === "types" ? vueTypes() : r.v === "equipe" ? vueEquipe() : r.v === "quiz" ? vueQuiz() : r.v === "fiche" ? vueFiche(r.n) : vueListe();
   document.body.classList.toggle("clair", !S.sombre);
   const meta = document.querySelector('meta[name="theme-color"]'); if (meta) meta.content = S.sombre ? "#15121f" : "#f4f1fb";
   racine.innerHTML = `<div class="app ${S.sombre ? "sombre" : ""} ${entree ? "entree" : ""}"><main class="vue">${corps}</main>
-    <nav class="onglets"><button data-onglet="liste" class="${r.v !== "types" ? "on" : ""}">${SVG_LIVRE}Pokédex</button><button data-onglet="types" class="${r.v === "types" ? "on" : ""}">${SVG_ECLAIR}Types</button></nav></div>`;
+    <nav class="onglets">${[["liste", SVG_LIVRE, "Pokédex"], ["types", SVG_ECLAIR, "Types"], ["equipe", SVG_EQUIPE, "Équipe"], ["quiz", SVG_QUIZ, "Quiz"]].map(([k, s, t]) => `<button data-onglet="${k}" class="${(r.v === "fiche" ? "liste" : r.v) === k ? "on" : ""}">${s}${t}</button>`).join("")}</nav></div>`;
 }
 const vue = () => racine.querySelector(".vue");
 
@@ -187,10 +351,15 @@ function surAdresse() {
   routePrecedente = r;
   rendre(true);
   vue().scrollTop = r.v === "liste" ? S.hautListe : 0;
+  if (r.v === "equipe" && (!ESP || !DEX)) chargeurJeux();
   if (r.v === "fiche" && LISTE) {
     const n = r.n, f = FICHES[n];
     if (!f || (f.c && !CHAINES[f.c])) chargerFiche(n).then(() => { if (route().n === n) { const h = vue().scrollTop; rendre(false); vue().scrollTop = h; } }).catch(() => {});
   }
+}
+function chargeurJeux() {
+  S.erreurJeux = false;
+  chargerJeux().then(() => { if (route().v === "equipe") { rendre(false); } }).catch(() => { S.erreurJeux = true; if (route().v === "equipe") rendre(false); });
 }
 window.addEventListener("hashchange", surAdresse);
 
@@ -199,8 +368,21 @@ racine.addEventListener("click", ev => {
   const haut = vue().scrollTop;
   if (b.dataset.n) { depuisListe = route().v !== "fiche" || depuisListe; location.hash = "p" + b.dataset.n; return; }
   if ("retour" in b.dataset) { if (depuisListe && history.length > 1) history.back(); else location.hash = ""; depuisListe = false; return; }
-  if (b.dataset.onglet) { const h = b.dataset.onglet === "types" ? "types" : ""; if (location.hash.slice(1) !== h) location.hash = h; else vue().scrollTo({ top: 0, behavior: "smooth" }); return; }
+  if (b.dataset.onglet) { const h = b.dataset.onglet === "liste" ? "" : b.dataset.onglet; if (location.hash.slice(1) !== h) location.hash = h; else vue().scrollTo({ top: 0, behavior: "smooth" }); return; }
   if ("recharger" in b.dataset) { demarrer(); return; }
+  if ("rejeux" in b.dataset) { chargeurJeux(); rendre(false); return; }
+  if (b.dataset.case !== undefined) { const i = +b.dataset.case; S.choisir = S.choisir === i ? null : i; S.qe = ""; rendre(false); const q = document.getElementById("qe"); if (q) { q.focus(); q.scrollIntoView({ block: "center", behavior: "smooth" }); } return; }
+  if (b.dataset.retire !== undefined) { S.eq.m[+b.dataset.retire] = null; ecrire("pokedex.equipe", S.eq); S.msg = ""; rendre(false); vue().scrollTop = haut; return; }
+  if (b.dataset.ajout) { S.eq.m[S.choisir] = +b.dataset.ajout; ecrire("pokedex.equipe", S.eq); S.choisir = null; S.msg = ""; rendre(false); vue().scrollTop = haut; return; }
+  if ("gen" in b.dataset) { S.choisir = null; S.msg = ""; generer(false); rendre(true); return; }
+  if ("comp" in b.dataset) { S.choisir = null; S.msg = ""; generer(true); rendre(true); return; }
+  if ("vider" in b.dataset) { S.eq.m = [null, null, null, null, null, null]; ecrire("pokedex.equipe", S.eq); S.choisir = null; S.msg = ""; rendre(false); return; }
+  if ("jouer" in b.dataset) { lancerQuiz(); rendre(false); vue().scrollTop = 0; focusQ(); return; }
+  if ("qmenu" in b.dataset) { Q.etat = "debut"; rendre(false); return; }
+  if (b.dataset.rep) { repondre(+b.dataset.rep); rendre(false); focusQ(); return; }
+  if ("indice" in b.dataset) { Q.indice = true; rendre(false); focusQ(); return; }
+  if ("passe" in b.dataset) { Q.rate = true; Q.etat = "reponse"; rendre(false); return; }
+  if ("suivant" in b.dataset) { suivant(); rendre(false); vue().scrollTop = 0; focusQ(); return; }
   if ("theme" in b.dataset) { S.sombre = !S.sombre; ecrire("pokedex.sombre", S.sombre); }
   else if (b.dataset.filtre) S.filtre = S.filtre === b.dataset.filtre ? null : b.dataset.filtre;
   else if (b.dataset.att) S.att = b.dataset.att;
@@ -212,11 +394,32 @@ racine.addEventListener("click", ev => {
   rendre(false);
   vue().scrollTop = haut;
 });
+function focusQ() { const q = document.getElementById("qr"); if (q) q.focus(); }
 racine.addEventListener("input", ev => {
-  if (ev.target.id !== "q") return;
-  S.q = ev.target.value; document.getElementById("res").innerHTML = resultats();
+  const id = ev.target.id;
+  if (id === "q") { S.q = ev.target.value; document.getElementById("res").innerHTML = resultats(); }
+  else if (id === "qe") { S.qe = ev.target.value; document.getElementById("resqe").innerHTML = listeSuggest(suggere(S.qe, dispo(S.eq.jeu).filter(n => !S.eq.m.includes(n)), 8), "data-ajout"); }
+  else if (id === "qr") { Q.saisie = ev.target.value; document.getElementById("resqr").innerHTML = listeSuggest(suggere(Q.saisie, LISTE.map(x => x.n), 5), "data-rep"); }
 });
-racine.addEventListener("keydown", ev => { if (ev.target.id === "q" && ev.key === "Enter") ev.target.blur(); });
+racine.addEventListener("change", ev => {
+  const id = ev.target.id;
+  if (id === "jeu") {
+    S.eq.jeu = ev.target.value; S.choisir = null;
+    const ok = new Set(dispo(S.eq.jeu)), avant = S.eq.m.filter(Boolean).length;
+    S.eq.m = S.eq.m.map(n => n && ok.has(n) ? n : null);
+    const perdus = avant - S.eq.m.filter(Boolean).length;
+    S.msg = perdus ? `${perdus} Pokémon retiré${perdus > 1 ? "s" : ""} : absent${perdus > 1 ? "s" : ""} de ce jeu.` : "";
+    ecrire("pokedex.equipe", S.eq); const h = vue().scrollTop; rendre(false); vue().scrollTop = h;
+  } else if (id === "leg") { S.eq.leg = ev.target.checked; ecrire("pokedex.equipe", S.eq); const h = vue().scrollTop; rendre(false); vue().scrollTop = h; }
+  else if (id === "qgen") { Q.gen = +ev.target.value; rendre(false); }
+});
+racine.addEventListener("keydown", ev => {
+  const id = ev.target.id;
+  if (id === "q" && ev.key === "Enter") ev.target.blur();
+  else if (id === "qe" && ev.key === "Enter") { const b = document.querySelector("#resqe [data-ajout]"); if (b) b.click(); }
+  else if (id === "qr" && ev.key === "Enter") { const b = document.querySelector("#resqr [data-rep]"); if (b) b.click(); }
+  else if (ev.key === "Escape" && S.choisir !== null) { S.choisir = null; rendre(false); }
+});
 
 /* ---------- démarrage ---------- */
 async function demarrer() {

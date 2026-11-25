@@ -62,6 +62,31 @@ const ICONES = {
 const REGIONS = [[151, "Kanto", 1], [251, "Johto", 2], [386, "Hoenn", 3], [493, "Sinnoh", 4], [649, "Unys", 5], [721, "Kalos", 6], [809, "Alola", 7], [905, "Galar", 8], [1025, "Paldea", 9]];
 const region = n => REGIONS.find(r => n <= r[0]) || REGIONS[REGIONS.length - 1];
 
+// les jeux de la série principale, pour composer une équipe : Pokédex régionaux (identifiants `pokedexes` de PokéAPI) que chaque jeu permet d'attraper.
+// dex: null = tous les Pokémon (Pokédex national)
+const JEUX = [
+  { id: "nat", nom: "Tous les Pokémon (Pokédex national)", gen: 0, dex: null },
+  { id: "rbj", nom: "Rouge, Bleu, Jaune", gen: 1, dex: [2] },
+  { id: "frvf", nom: "Rouge Feu, Vert Feuille", gen: 3, dex: [2] },
+  { id: "oac", nom: "Or, Argent, Cristal", gen: 2, dex: [3] },
+  { id: "hgss", nom: "HeartGold, SoulSilver", gen: 4, dex: [7] },
+  { id: "rse", nom: "Rubis, Saphir, Émeraude", gen: 3, dex: [4] },
+  { id: "oras", nom: "Rubis Oméga, Saphir Alpha", gen: 6, dex: [15] },
+  { id: "dp", nom: "Diamant, Perle", gen: 4, dex: [5] },
+  { id: "pt", nom: "Platine", gen: 4, dex: [6] },
+  { id: "bdsp", nom: "Diamant Étincelant, Perle Scintillante", gen: 8, dex: [5] },
+  { id: "nb", nom: "Noir, Blanc", gen: 5, dex: [8] },
+  { id: "n2b2", nom: "Noir 2, Blanc 2", gen: 5, dex: [9] },
+  { id: "xy", nom: "X, Y", gen: 6, dex: [12, 13, 14] },
+  { id: "sl", nom: "Soleil, Lune", gen: 7, dex: [16] },
+  { id: "usul", nom: "Ultra-Soleil, Ultra-Lune", gen: 7, dex: [21, 22, 23, 24, 25] },
+  { id: "lgpe", nom: "Let's Go, Pikachu / Évoli", gen: 7, dex: [26] },
+  { id: "eb", nom: "Épée, Bouclier (avec les extensions)", gen: 8, dex: [27, 28, 29] },
+  { id: "lpa", nom: "Légendes : Arceus", gen: 8, dex: [30] },
+  { id: "ev", nom: "Écarlate, Violet (avec les extensions)", gen: 9, dex: [31, 32, 33] },
+  { id: "laz", nom: "Légendes : Z-A", gen: 9, dex: [34, 35] }
+];
+
 // objets d'évolution les plus courants (les autres : « Objet spécial »)
 const OBJETS = { "fire-stone": "Pierre Feu", "water-stone": "Pierre Eau", "thunder-stone": "Pierre Foudre", "leaf-stone": "Pierre Plante", "moon-stone": "Pierre Lune", "sun-stone": "Pierre Soleil", "shiny-stone": "Pierre Éclat", "dusk-stone": "Pierre Nuit", "dawn-stone": "Pierre Aube", "ice-stone": "Pierre Glace" };
 
@@ -87,5 +112,5 @@ function condition(liste) {
   return "Spécial";
 }
 
-window.PokedexDonnees = { TYPES, ANGLAIS, COULEURS, ORDRE, TABLE, mult1, mult, ICONES, REGIONS, region, OBJETS, condition };
+window.PokedexDonnees = { TYPES, ANGLAIS, COULEURS, ORDRE, TABLE, mult1, mult, ICONES, REGIONS, region, JEUX, OBJETS, condition };
 })();
