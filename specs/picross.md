@@ -8,6 +8,8 @@ Picross Dex est l'un des tout premiers jeux de la Ludothèque (avant les fiches,
 
 - `reference-gold-silver-sheet.png` (624×2048, ajoutée le 25/11) : planche des sprites Or / Argent en couleurs (normal, chromatique, gris), réduite : on y lit bien les **couleurs et la forme générale** de chaque Pokémon, pas les détails fins. Sert à choisir la palette et à retoucher les têtes.
 
+- `reference-gold-silver-sheet-grande.png` (1711×5609, 25/11) : la même planche **en pleine taille** : sprites de 56×56 nets, avec la version grise. C'est la référence à utiliser pour les formes ; la petite version ne sert plus.
+
 ## Ce qu'on en retient
 - Sprites d'environ 16×16 en 4 ou 5 couleurs, silhouette lisible, contour noir.
 - Les dessins actuels (`picross/dessins.js`) font 10×10 : à comparer avant toute refonte des dessins.
