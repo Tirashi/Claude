@@ -27,4 +27,4 @@ Les 46 Pokémon de Johto déjà faits sont le sprite du Minidex 16×16 **moins u
 ## Avancement de Johto
 - **Lot 1 fait (25/11)** : n° 201 à 210 (Zarbi à Granbull) écrits dans `picross/dessins.js`, cache `ludotheque-v126`. Steelix : la version issue du Minidex (les versions redessinées de tête ou de profil ont été refusées).
 - **Lot 2 fait (25/11)** : n° 211 à 220 (Qwilfish à Marcacrin), cache `ludotheque-v127`.
-- Reste : n° 221 à 242 et 246 à 248 (25 Pokémon), par lots de 10.
+- **Lot 3 fait (25/11)** : n° 221 à 242 et 246 à 248 (25 Pokémon d'un coup), cache `ludotheque-v128`. **Le Pokédex de Johto est complet** (Togepi n° 175 reste dans Kanto jusqu'à l'ouverture de Johto).
