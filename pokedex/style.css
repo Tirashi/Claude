@@ -44,6 +44,22 @@ body.clair { background: #f4f1fb; }
 .gen::after { content: ""; flex: 1; height: 2px; border-radius: 2px; background: var(--carte2); }
 .liste { display: grid; gap: 12px; padding: 0 16px 6px; }
 @media (min-width: 520px) { .liste { grid-template-columns: 1fr 1fr; } }
+/* PC : l'appli prend la largeur de l'écran (1280 px au plus), liste en colonnes, fiche en deux colonnes */
+@media (min-width: 900px) {
+  .app { max-width: 1280px; box-shadow: 0 0 40px rgba(0,0,0,.25); }
+  .tete, .filtres { padding-left: 32px; padding-right: 32px; }
+  .recherche { margin: 0 32px; max-width: 560px; }
+  .gen { margin: 20px 32px 10px; }
+  .liste, .attente { padding: 0 32px 10px; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
+  .hero { border-radius: 0 0 44px 44px; padding-left: 32px; padding-right: 32px; }
+  .hero img { width: 280px; height: 280px; }
+  .titre-fiche { padding: 18px 32px 6px; }
+  .titre-fiche h2 { font-size: 38px; }
+  .fiche { padding: 10px 32px 28px; gap: 16px; grid-template-columns: 1fr 1fr; align-items: start; }
+  .fiche > .bloc:first-child, .fiche > .chargement { grid-column: 1 / -1; }
+  .bloc { font-size: 16px; padding: 16px 18px; }
+}
+@media (min-width: 1400px) { .liste, .attente { grid-template-columns: repeat(4, 1fr); } }
 .ligne { position: relative; display: flex; align-items: flex-start; width: 100%; min-height: 124px; text-align: left; border-radius: 28px; background: var(--fond-type); color: #fff; padding: 16px 18px; overflow: hidden; box-shadow: var(--ombre); transition: transform .18s; }
 .ligne:active { transform: scale(.97); }
 .ligne .nom { display: grid; gap: 2px; min-width: 0; position: relative; z-index: 1; max-width: 60%; }
