@@ -13,6 +13,7 @@ const ORDRE = [
   "picross/index.html",
   "lignee/index.html",
   "queens/index.html",
+  "demineur/index.html",
   "injagility/index.html",
   "solitaire/index.html",
   "touche-coule/index.html",
@@ -47,6 +48,9 @@ const ORDRE = [
   "tank-arena/index.html",
   "nebula/index.html",
   "ciel-de-guerre/index.html",
+  "ecurie/index.html",
+  "bannis/index.html",
+  "strategie-ciel/index.html",
   "tetris/index.html",
   "snake/index.html",
   "asteroids/index.html",
@@ -67,6 +71,12 @@ const META = {};   // rempli par les fiches (meta)
 // genre "neuf" (nouveau jeu ou démo), "maj" (mise à jour d'un jeu) ou "acc" (accueil, classements : dossier vide).
 // Un numéro du journal par mois ; la plus récente nouveauté du mois fait la couverture.
 const NEWS = [
+  ["2026-11-22", "neuf", "demineur", "Nouveau : le Démineur, dans une prairie en pixel art. Trois tailles de grille, la Grande prairie sans fin (trois cœurs, des fleurs, des cerises et des œufs d'or à ramasser) et un défi du jour qui grandit du lundi au dimanche."],
+  ["2026-11-21", "maj", "strategie-ciel", "La stratégie spatiale a ses colonies et sa recherche : un colon s'installe sur une planète libre, chaque colonie a ses emplacements de bâtiments (mine, labo, chantier, défense), et la recherche avance en trois domaines où l'on choisit la suite parmi trois cartes (bombardiers, destroyers, boucliers…). Nouvelle interface « liste de flotte » et icônes tactiques de loin."],
+  ["2026-11-20", "neuf", "strategie-ciel", "Nouveau : une stratégie spatiale en temps réel avec pause, dans l'univers de Ciel de guerre (nom provisoire). Ton porte-vaisseaux Aurore fabrique collecteurs, chasseurs, bombardiers et destroyers ; mine le cristal de la ceinture d'astéroïdes et défends le système SOL-7 contre huit vagues de la flotte rouge. Première session, en démo."],
+  ["2026-11-20", "neuf", "ecurie", "Nouveau : Écurie miniature, un jeu de gestion d'écurie de course. Pilotes, voitures, pièces, sponsors et fans se gèrent dans le paddock ; la course, elle, se regarde en 3D sur un circuit de ville, derrière tes pilotes, en diorama ou à la télé. Première version : saisons de 8 grands prix et trois divisions."],
+  ["2026-11-19", "neuf", "bannis", "Nouveau : Les Bannis, un autobattler rogue-lite. Le Mage instable, banni pour ses sorts imprévisibles, tient la Muraille avec trois condamnés tirés au sort : place ton escouade, regarde-la se battre contre les hordes de la Gueule, lance les dés du Mage, équipe le butin, et fais évoluer tes héros en classes légendaires. Douze vagues jusqu'au matin. Première version, en démo."],
+  ["2026-11-18", "maj", "ciel-de-guerre", "Ciel de guerre a ses missions : défendre un port contre les bombardiers, escorter le destroyer Albatros, tenir trois minutes seul contre l'escadre rouge, abattre le croiseur amiral Tempête, puis affronter la forteresse volante Léviathan, ses boucliers et ses chasseurs. Jusqu'à trois étoiles par mission. Et sur ordinateur, le curseur est maintenant ton viseur."],
   ["2026-11-18", "neuf", "ciel-de-guerre", "Nouveau : Ciel de guerre, du combat aérien en 3D au-dessus d'un archipel, au milieu d'une bataille de grands vaisseaux bleus et rouges. Loopings, tonneaux, missiles à verrouiller, tourelles à abattre, et 35 chasseurs en 4 familles au hangar. Au doigt sur téléphone, à la souris sur ordinateur. Première version : des vagues sans fin, les missions viendront."],
   ["2026-11-18", "maj", "tank-arena", "Tank Arena a son mode survie : des vagues d'ennemis de plus en plus forts (soldats, chasseurs petits et rapides, blindés solides, tireurs qui visent de loin) et 3 vies pour tenir le plus longtemps possible. Nouveau classement : la vague atteinte."],
   ["2026-11-17", "neuf", "tank-arena", "Une petite arène de tanks en 3D. Toi contre trois tanks de l'ordinateur, chacun pour soi, en manches de 90 secondes : glisse le doigt pour rouler, ton tank tire tout seul sur le plus proche. La caisse du centre répare, triple tes tirs, te protège d'un bouclier ou te donne de la vitesse."],
@@ -167,7 +177,9 @@ for (const f of GAMES.map(g => FICHES[g.k])){
 
 /* ---------- les cartouches ---------- */
 // l'image d'un jeu : icône 16×16 (le chien est plus large), ou la capture de Nebula
-function art(g){
+function art(g, jaq){
+  const src = jaq && g.jaq || g.img;   // étiquette faite avec les images du jeu (carte.img, en largeur ; carte.jaq, en hauteur) : règle du 22/11
+  if (src){ const i = new Image(); i.src = ROOT + src; i.alt = ""; i.className = "sc"; return i; }
   if (g.ic === "img"){ const i = new Image(); i.src = ROOT + NEBULA_IMG; i.alt = ""; return i; }
   const c = document.createElement("canvas");
   if (g.ic === "dog"){ c.width = 78; c.height = 54; c.className = "wide"; } else c.width = c.height = 16;
@@ -188,6 +200,11 @@ function objet(g, i){
   b.append(o, el("b", "nm", g.n));
   return b;
 }
+// une étiquette en photo (carte.img / carte.jaq) avec le nom du jeu posé dessus, en italique moderne ; carte.imgTitre : le titre est déjà dans l'image
+function habille(cont, g, jaq){
+  cont.append(art(g, jaq));
+  if (!g.imgTitre){ const m = el("span", "md"); m.append(el("i"), document.createTextNode(g.n)); cont.append(m); }
+}
 // une cartouche en 3D : six faces ; la face avant change selon la famille (carte.disquette : une disquette 3½, jeu qui se joue aussi au clavier et à la souris)
 function cart(g, i){
   if (g.objet) return objet(g, i);
@@ -195,11 +212,13 @@ function cart(g, i){
   b.type = "button"; b.dataset.k = g.k;
   b.style.cssText = `--i:${i}; --lb:${g.lb}; --lt:${g.lt}; --sh:${g.sh}`;
   const body = el("div", "body"), front = el("div", "f front"), lab = el("div", "lab");
-  if (st === "A"){ lab.append(art(g), el("b", "", g.s)); front.append(el("i", "rid"), lab, el("i", "notch")); }
-  else if (st === "B"){ body.append(el("div", "f pcb")); lab.append(art(g), el("b", "", g.s)); front.append(el("span", "emb", "LUDO"), lab, el("span", "arw", "▼")); }
-  else if (st === "E"){ lab.append(art(g), el("b", "", g.s)); front.append(el("i", "volet"), el("i", "trou"), lab, el("span", "tagpc", "PC")); }
-  else if (st === "D"){ lab.append(art(g), el("b", "", g.s)); front.append(el("i", "disc"), el("i", "spine"), lab, el("span", "tag3d", "3D")); }
-  else { lab.append(art(g)); front.append(lab, el("div", "ttl chrome", g.s), el("i", "grip")); }
+  if (g.img){ lab.classList.add("photo"); habille(lab, g, st === "D"); }   // l'étiquette faite avec les images du jeu, titre posé dessus (maquette etiquettes-jeux, C)
+  else lab.append(art(g), el("b", "", g.s));
+  if (st === "A") front.append(el("i", "rid"), lab, el("i", "notch"));
+  else if (st === "B"){ body.append(el("div", "f pcb")); front.append(el("span", "emb", "LUDO"), lab, el("span", "arw", "▼")); }
+  else if (st === "E") front.append(el("i", "volet"), el("i", "trou"), lab, el("span", "tagpc", "PC"));
+  else if (st === "D") front.append(el("i", "disc"), el("i", "spine"), lab, el("span", "tag3d", "3D"));
+  else { if (!g.img){ lab.replaceChildren(art(g)); } front.append(lab, el("div", "ttl chrome", g.s), el("i", "grip")); }
   ["back", "left", "right", "top", "bottom"].forEach(f => body.append(el("div", "f " + f)));
   body.append(front); b.append(body, el("b", "nm", g.n));   // le nom, sous la cartouche, sur la planche
   return b;
@@ -461,8 +480,9 @@ const ovOpen = () => ov.classList.contains("on");
 // la boîte de jeu en 3D : face avant, tranches
 function box(g, w, h, d){
   const wrap = el("div", "bwrap"), b = el("div", "box3");
-  wrap.style.cssText = `--bw:${w}px; --bh:${h}px; --bd:${d}px; --bk:${w / 112}; --lb:${g.lb}; --lt:${g.lt}`;
-  const f = el("div", "bf"), a = el("div", "art"); a.append(art(g));
+  wrap.style.cssText = `--bw:${w}px; --bh:${h}px; --bd:${d}px; --bk:${w / 112}; --lb:${g.lb}; --lt:${g.lt}; --sh:${g.sh}`;
+  const f = el("div", "bf"), a = el("div", "art");
+  if (g.img || g.jaq){ a.classList.add("photo"); habille(a, g, true); } else a.append(art(g));   // carte.jaq : jaquette en hauteur faite avec les images du jeu
   f.append(el("span", "brand", "LUDOTHEQUE"), a, el("div", "tt chrome", g.s), el("span", "gen", (metaOf(g).genres || [])[0] || "JEU"));
   const s = el("div", "bs"); s.append(el("i"), el("span", "chrome", g.s));
   b.append(el("div", "bb"), el("div", "br"), el("div", "bt"), el("div", "bo"), s, f);
@@ -573,6 +593,7 @@ function controls(v){
     if (c === "tcmode" || c === "tcai" || c === "amai" || c === "esai") box.append(chips(c === "tcmode" ? TCMODES : c === "amai" ? AMAI : c === "esai" ? ESAI : TCAI, k => st[c] === k, k => st[c] = k));
     if (c === "cclvl") box.append(chips(CCLVL.map(([k]) => [k, String(k)]), k => st.cclvl === k, k => st.cclvl = k));
     if (c === "ccop") box.append(chips(CCOP, k => st.ccop === k, k => st.ccop = k));
+    if (c === "dmsize") box.append(chips(DMSIZE, k => st.dmsize === k, k => st.dmsize = k));
     if (c === "sdk") box.append(chips(SDK, k => st.sdk === k, k => st.sdk = k));
     if (c === "pssize") box.append(chips([7, 9, 11].map(n => [n, `${n}×${n}`]), k => st.pssize === k, k => st.pssize = k));
     if (c === "size") box.append(chips([5, 6, 7, 8, 9].map(n => [n, `${n}×${n}`]), k => st.size === k, k => st.size = k));

@@ -1,7 +1,7 @@
 /* Escadrille ! : fiche de l'accueil (voir accueil-outils.js) */
 Ludo.fiche({
   k: "escadrille/index.html",
-  carte: {n: "ESCADRILLE !", s: "ESCADRILLE", ic: "fighter", fam: "32", lb: "linear-gradient(#3a7cc4, #0f2850)", lt: "#ffd23f", sh: "#3a7cc4", rank: "escadrille",
+  carte: {n: "ESCADRILLE !", img: "escadrille/etiquette.jpg", jaq: "escadrille/jaquette.jpg", s: "ESCADRILLE", ic: "fighter", fam: "32", lb: "linear-gradient(#3a7cc4, #0f2850)", lt: "#ffd23f", sh: "#3a7cc4", rank: "escadrille",
     d: "La bataille aérienne où chaque avion a un pouvoir : radar, bombes en croix, missile, esquive, roquettes, leurres, ballons de barrage… Choisis tes 4 avions au hangar parmi 10, abats l'escadrille pirate cachée dans les nuages, gagne des avions et des escadrilles.", tags: ["3 NIVEAUX", "10 AVIONS", "4 ESCADRILLES"]},
   meta: {added: "2026-10-17", updated: "2026-10-19", genres: ["TACTIQUE"]},
   records: () => { const b = rk("escadrille.best", {}) || {}; return [["easy", "Recrue"], ["normal", "Pilote"], ["hard", "As"]].map(([k, l]) => [l, num(b[k], "tours")]).concat([["Victoires", num(rk("escadrille.victoires", 0), "")], ["Escadrilles", `${Math.max(1, (rk("escadrille.skins", ["a"]) || ["a"]).length)}/4`],

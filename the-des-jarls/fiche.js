@@ -1,7 +1,7 @@
 /* Le Thé des Jarls : fiche de l'accueil (voir accueil-outils.js) */
 Ludo.fiche({
   k: "the-des-jarls/index.html",
-  carte: {n: "LE THE DES JARLS", s: "JARLS", ic: "jarl", fam: "32", lb: "linear-gradient(#2c3c70, #0e1428)", lt: "#f3d58c", sh: "#3a4a8a", rank: "jarls",
+  carte: {n: "LE THE DES JARLS", img: "the-des-jarls/etiquette.jpg", jaq: "the-des-jarls/jaquette.jpg", s: "JARLS", ic: "jarl", fam: "32", lb: "linear-gradient(#2c3c70, #0e1428)", lt: "#f3d58c", sh: "#3a4a8a", rank: "jarls",
     d: "Duel de dés viking façon Orlog : six dés, trois lancers, et chaque face lance ton armée de 45 soldats à l'assaut (charge des haches, volée de flèches, éclaireurs voleurs). Invoque les faveurs de 20 dieux nordiques, remonte la route du fjord de taverne en taverne, joue à deux sur le même téléphone et tente le défi du jour.", tags: ["DES", "CAMPAGNE", "A DEUX", "DEFI DU JOUR"]},
   meta: {added: "2026-10-21", genres: ["TACTIQUE", "HASARD", "DU JOUR"]},
   enCours: () => { const d = rk("jarls.dailyRun", null), r = rk("jarls.run", null); return d && d.E && d.E.graine === dayNum() ? "DEFI DU JOUR" : r && r.E ? `MANCHE ${r.E.manche}` : null; },

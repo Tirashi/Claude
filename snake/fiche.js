@@ -1,7 +1,7 @@
 /* Snake : fiche de l'accueil (voir accueil-outils.js) */
 Ludo.fiche({
   k: "snake/index.html",
-  carte: {n: "SNAKE", s: "SNAKE", ic: "snake", fam: "rep", lb: "linear-gradient(#377a28, #1c4214)", lt: "#c4ff7a", sh: "#3fa02a", rank: "snake",
+  carte: {n: "SNAKE", img: "snake/etiquette.jpg", jaq: "snake/jaquette.jpg", s: "SNAKE", ic: "snake", fam: "rep", lb: "linear-gradient(#377a28, #1c4214)", lt: "#c4ff7a", sh: "#3fa02a", rank: "snake",
     d: "Mange les pommes sans te mordre la queue ni toucher les bords du jardin.", tags: []},
   meta: {genres: ["ARCADE"]},
   records: () => [["Meilleur score", num(rk("snakeBestScore", 0))]],

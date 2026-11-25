@@ -93,7 +93,7 @@
   // un pseudo est-il déjà utilisé par un autre joueur ? On regarde les principaux classements
   // (sans rien changer à Supabase : un joueur qui n'a encore aucun score n'y apparaît pas)
   var PSEUDO_BOARDS = [["tetris", "best"], ["snake", "best"], ["asteroids", "best"], ["solitaire", "best"], ["injagility", "best"],
-    ["parcours", "total"], ["duche", "best"], ["bannieres", "best"], ["boutique", "best"], ["jarls", "etoiles"], ["doggysaga", "etoiles"], ["capitaine", "etoiles"], ["romet", "tresors"], ["dragonsim", "distance"], ["motdor", "serie"], ["yams", "best"], ["lignee", "arbres"], ["picross", "dex"], ["queens", "best:5"], ["queens", "best:6"], ["queens", "best:7"], ["touchecoule", "best:classic:normal"], ["amiral", "best:normal"], ["escadrille", "best:normal"], ["club", "rep"], ["orbite", "etoiles"], ["lunerover", "etoiles"], ["magasinier", "etoiles"], ["tankarena", "best"], ["tankarena", "survie"], ["pontstellaire", "ciels"], ["sudoku", "grilles"], ["calculator", "serie:2:mix"], ["alunissage", "best"], ["nebula", "best"], ["nebula", "victoires"], ["empilage", "best"], ["odyssee", "etoiles"]];
+    ["parcours", "total"], ["duche", "best"], ["bannieres", "best"], ["boutique", "best"], ["jarls", "etoiles"], ["doggysaga", "etoiles"], ["capitaine", "etoiles"], ["romet", "tresors"], ["dragonsim", "distance"], ["motdor", "serie"], ["yams", "best"], ["lignee", "arbres"], ["picross", "dex"], ["demineur", "best:facile"], ["demineur", "prairie"], ["queens", "best:5"], ["queens", "best:6"], ["queens", "best:7"], ["touchecoule", "best:classic:normal"], ["amiral", "best:normal"], ["escadrille", "best:normal"], ["club", "rep"], ["orbite", "etoiles"], ["lunerover", "etoiles"], ["magasinier", "etoiles"], ["tankarena", "best"], ["tankarena", "survie"], ["cieldeguerre", "vagues"], ["cieldeguerre", "etoiles"], ["pontstellaire", "ciels"], ["sudoku", "grilles"], ["calculator", "serie:2:mix"], ["alunissage", "best"], ["nebula", "best"], ["nebula", "victoires"], ["empilage", "best"], ["odyssee", "etoiles"]];
   function pseudoTaken(pseudo, code){
     var me = player(), want = pseudo.toLowerCase();
     return Promise.all(PSEUDO_BOARDS.map(function (gb){
@@ -176,9 +176,14 @@
     hi("asteroids", "best", readKey("asteroids16.best", 0));
     hi("tankarena", "best", readKey("tankarena.best", 0));
     hi("tankarena", "survie", (readKey("tankarena.survie", {}) || {}).vague || 0);
+    hi("cieldeguerre", "vagues", (readKey("cieldeguerre.record", {}) || {}).score || 0);
+    hi("cieldeguerre", "etoiles", Object.values(readKey("cieldeguerre.missions", {}) || {}).reduce(function (t, m){ return t + ((m && Number(m.e)) || 0); }, 0));
     hi("solitaire", "best", readKey("solitaire16.best", 0));
     hi("injagility", "best", readKey("injagility.best", 0));
     var q = readKey("queens16.best", {}) || {}; Object.keys(q).forEach(function (n){ if (/^[5-9]$/.test(n)) lo("queens", "best:" + n, q[n]); });
+    var dm = readKey("demineur.best", {}) || {}; ["facile", "moyen", "difficile"].forEach(function (k){ lo("demineur", "best:" + k, dm[k]); });
+    var dj = readKey("demineur.jour", {}) || {}; Object.keys(dj).forEach(function (k){ if (/^\d{8}$/.test(k)) lo("demineur", "daily:" + k, dj[k]); });
+    hi("demineur", "prairie", (readKey("demineur.prairie", {}) || {}).score || 0);
     var qd = readKey("queens16.daily", {}) || {}; Object.keys(qd).forEach(function (k){ if (/^\d{8}$/.test(k)) lo("queens", "daily:" + k, qd[k]); });
     var d = readKey("lignee.daily", {}) || {};
     Object.keys(d).forEach(function (code){ if (/^[CR]2-J[0-9A-Z]+$/.test(code)) lo("lignee", "daily:" + code, d[code]); });
@@ -272,7 +277,7 @@
 
   window.addEventListener("online", function (){ flush(); });
   // les joueurs déjà inscrits envoient une fois leurs records des jeux ajoutés depuis (version 6 : avec Nebula)
-  var SYNC = 29;
+  var SYNC = 31;
   setTimeout(function (){
     if (joined() && get("synced", 1) < SYNC){ pushExisting(); set("synced", SYNC); }
     flush();

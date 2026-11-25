@@ -1,7 +1,7 @@
 /* Touché Coulé : fiche de l'accueil (voir accueil-outils.js) */
 Ludo.fiche({
   k: "touche-coule/index.html",
-  carte: {n: "TOUCHE COULE", s: "TOUCHE COULE", ic: "boat", fam: "16", lb: "linear-gradient(#2b6fd0, #0f1866)", lt: "#ffd84a", sh: "#2b6fd0", rank: "touchecoule",
+  carte: {n: "TOUCHE COULE", img: "touche-coule/etiquette.jpg", jaq: "touche-coule/jaquette.jpg", s: "TOUCHE COULE", ic: "boat", fam: "16", lb: "linear-gradient(#2b6fd0, #0f1866)", lt: "#ffd84a", sh: "#2b6fd0", rank: "touchecoule",
     d: "Bataille navale contre l'ordinateur, en mode classique ou avec sonar et torpilles.", tags: ["3 NIVEAUX D'IA"]},
   meta: {genres: ["TACTIQUE"]},
   records: () => { const b = rk("touchecoule.best", {}) || {}, ai = {easy: "facile", normal: "normale", hard: "amiral"};

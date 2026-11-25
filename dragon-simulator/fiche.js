@@ -1,7 +1,7 @@
 /* Dragon Simulator : fiche de l'accueil (voir accueil-outils.js) */
 Ludo.fiche({
   k: "dragon-simulator/index.html",
-  carte: {n: "DRAGON SIMULATOR", s: "DRAGON", ic: "dragonsim", fam: "3d", lb: "linear-gradient(#5ea7e6, #c23a3a)", lt: "#ffd25a", sh: "#c23a3a", rank: "dragonsim",
+  carte: {n: "DRAGON SIMULATOR", img: "dragon-simulator/etiquette.jpg", jaq: "dragon-simulator/jaquette.jpg", s: "DRAGON", ic: "dragonsim", fam: "3d", lb: "linear-gradient(#5ea7e6, #c23a3a)", lt: "#ffd25a", sh: "#c23a3a", rank: "dragonsim",
     d: "Une idée d'un garçon de 7 ans : dirige un dragon qui plane au-dessus de la ville, vu de profil, en 3D. Bats des ailes, crache du feu sur les immeubles et les voitures, évite grues et hélicoptères, ramasse jetpacks, grenades, bébé dragon et nuages d'orage. Plus tu vas loin, plus tu gagnes de pièces pour améliorer ton dragon au nid.", tags: ["3D", "POUR LES ENFANTS", "SANS FIN"]},
   meta: {added: "2026-11-02", genres: ["ARCADE"]},
   records: () => { const s = rk("dragonsim.sauvegarde", {}) || {}, r = s.records || {}, t = s.total || {}, n = Object.values(s.niv || {}).reduce((a, v) => a + Math.max(0, (Number(v) || 1) - 1), 0);

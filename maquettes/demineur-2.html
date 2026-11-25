@@ -1,0 +1,304 @@
+<title>Démineur, maquette 2</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=Pixelify+Sans:wght@500;700&family=Sora:wght@400;600;800&family=Inter:wght@400;600&family=Space+Grotesk:wght@500;700&display=swap">
+<style>
+/* Maquette 2 du Démineur : interface 2D moderne + tuiles, icônes et chiffres en pixel art 32 bits.
+   Trois directions, chacune jouable en Classique et en Donjon (règles v2). Page sombre comme les autres maquettes. */
+:root{ --fond:#121418; --texte:#eef1f6; --doux:#a7afbd; --accent:#ffcc4d; --cadre:#050607; color-scheme:dark;
+  --f-titre:"Space Grotesk", system-ui, sans-serif; --f-texte:"Inter", system-ui, sans-serif; --f-pix:"Pixelify Sans", monospace; }
+html,body{background:var(--fond);color:var(--texte)}
+body{margin:0;font-family:var(--f-texte);font-size:15px;line-height:1.55;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px 56px}
+.page{max-width:1160px;margin:0 auto;display:flex;flex-direction:column;gap:30px}
+h1{font-family:var(--f-titre);font-size:clamp(24px,5vw,34px);margin:0;color:var(--accent)}
+h2.sec{font-family:var(--f-titre);font-size:22px;margin:8px 0 0;color:var(--accent)}
+header p{margin:8px 0 0;color:var(--doux);max-width:74ch}
+b{color:var(--texte);font-weight:600}
+.rangee{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:40px 24px}
+.dir{display:flex;flex-direction:column;align-items:center;gap:12px;min-width:0}
+.dir h3{font-family:var(--f-titre);font-size:17px;margin:0;text-align:center}
+.dir p{margin:0;color:var(--doux);font-size:14px;max-width:38ch}
+
+/* --- Téléphone (commun) --- */
+.tel{width:100%;max-width:330px;height:680px;border:9px solid var(--cadre);border-radius:30px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 12px 34px #000a;position:relative;user-select:none;-webkit-user-select:none;background:var(--ui-fond);color:var(--ui-texte);font-family:var(--ui-police)}
+.tete{display:flex;justify-content:space-between;align-items:center;padding:14px 14px 8px}
+.titre{font-weight:800;font-size:19px;letter-spacing:-.02em}
+.compteur i{filter:drop-shadow(0 0 2px #fff8)}
+.compteur{font:700 15px var(--f-pix);padding:4px 10px;border-radius:10px;background:var(--ui-panneau);border:1px solid var(--ui-bord);display:flex;align-items:center;gap:6px}
+.onglets{display:flex;margin:0 14px;padding:3px;border-radius:12px;background:var(--ui-panneau);border:1px solid var(--ui-bord)}
+.onglets button{flex:1;border:0;background:none;color:inherit;font:600 13px var(--ui-police);padding:7px;border-radius:9px;cursor:pointer;opacity:.7}
+.onglets button.on{background:var(--ui-accent);color:var(--ui-sur-accent);opacity:1}
+.bandeau{min-height:58px;display:flex;flex-direction:column;justify-content:center;gap:6px;padding:8px 14px}
+.niveaux{display:flex;justify-content:center;gap:6px}
+.niveaux button{font:600 12px var(--ui-police);border:1px solid var(--ui-bord);border-radius:999px;padding:5px 11px;background:var(--ui-panneau);color:inherit;cursor:pointer}
+.niveaux button.on{background:var(--ui-texte);color:var(--ui-fond-uni)}
+.coeurs{display:flex;flex-wrap:wrap;gap:2px;align-items:center;flex:1}
+.coeurs i{width:14px;height:13px}
+.coeurs i.vide{opacity:.22;filter:grayscale(1)}
+.ligne{display:flex;align-items:center;gap:8px;font:700 13px var(--f-pix)}
+.barre{flex:1;height:10px;border-radius:5px;background:var(--ui-panneau);border:1px solid var(--ui-bord);overflow:hidden}
+.barre b{display:block;height:100%;background:var(--ui-accent);transition:width .25s}
+.monter{font:700 12px var(--f-pix);border:0;border-radius:8px;padding:5px 9px;background:var(--ui-panneau);color:inherit;opacity:.45;cursor:pointer}
+.monter.pret{opacity:1;background:var(--ui-accent);color:var(--ui-sur-accent);animation:pulse 1s infinite}
+@keyframes pulse{50%{transform:scale(1.08)}}
+.zone{flex:1;display:flex;align-items:center;justify-content:center;min-height:0;padding:2px 10px;touch-action:manipulation}
+.grille{display:grid;gap:2px;padding:6px;border-radius:14px;background:var(--ui-plateau);box-shadow:0 6px 18px #0003}
+.c{display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;background-size:100% 100%;image-rendering:pixelated;border-radius:4px;font:700 1em var(--f-pix);text-shadow:1px 1px 0 #0006}
+.c i{width:84%;height:84%}
+.c.mort i{filter:grayscale(1) brightness(.6);opacity:.55}
+.c .marque{font-size:.72em;color:var(--ui-accent);text-shadow:1px 1px 0 #000}
+.c .lv{position:absolute;right:1px;bottom:0;font-size:.48em;color:#fff;text-shadow:1px 1px 0 #000}
+.c.vise{outline:2px solid var(--ui-accent);outline-offset:-2px}
+i.spr{display:block;background-size:contain;background-repeat:no-repeat;background-position:center;image-rendering:pixelated}
+.journal{font-size:12px;text-align:center;min-height:34px;padding:2px 14px;opacity:.85;display:flex;align-items:center;justify-content:center}
+.pied{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 14px 16px}
+.pied button{font:600 13px var(--ui-police);border:1px solid var(--ui-bord);border-radius:12px;padding:10px 12px;background:var(--ui-panneau);color:inherit;cursor:pointer;display:flex;align-items:center;gap:6px}
+.pied button.on{background:var(--ui-accent);color:var(--ui-sur-accent)}
+.pied button i{width:16px;height:16px}
+.chrono{font:700 15px var(--f-pix)}
+.msg{position:absolute;left:14px;right:14px;bottom:80px;padding:12px;text-align:center;border-radius:14px;pointer-events:none;opacity:0;transform:translateY(8px);transition:.25s;background:var(--ui-texte);color:var(--ui-fond-uni);font-weight:600}
+.msg.vu{opacity:1;transform:none}
+button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* --- 1 : Arcade de poche (nuit, tuiles de pierre bleue tramées) --- */
+.s1{--ui-fond:radial-gradient(120% 70% at 50% 0%,#26305a,#11152a);--ui-fond-uni:#11152a;--ui-texte:#e8ecff;--ui-panneau:#1d2442;--ui-bord:#34407a;--ui-accent:#ffcc4d;--ui-sur-accent:#2a1e00;--ui-plateau:#0c1024;--ui-police:"Outfit",sans-serif}
+/* --- 2 : Prairie (jour, herbe et terre en pixel art) --- */
+.s2{--ui-fond:linear-gradient(180deg,#dff1e6,#c8e6d2);--ui-fond-uni:#eef8f1;--ui-texte:#1f3326;--ui-panneau:#ffffffc0;--ui-bord:#9cc7aa;--ui-accent:#ff7a45;--ui-sur-accent:#fff;--ui-plateau:#4b3a2a;--ui-police:"Sora",sans-serif}
+.s2 .c{text-shadow:1px 1px 0 #fff8}
+/* --- 3 : Grotte de cristal (violet et turquoise, cristaux taillés) --- */
+.s3{--ui-fond:linear-gradient(165deg,#2d1250,#14243f 60%,#0d3a45);--ui-fond-uni:#160f2c;--ui-texte:#f4ecff;--ui-panneau:#ffffff14;--ui-bord:#ffffff2a;--ui-accent:#5ef0d0;--ui-sur-accent:#062a24;--ui-plateau:#ffffff10;--ui-police:"Sora",sans-serif}
+.s3 .grille{backdrop-filter:blur(6px);border:1px solid #ffffff22}
+
+/* --- Règles --- */
+.regles{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+.bloc{border:1px solid #2b313c;border-radius:14px;padding:16px 18px;background:#181c22;min-width:0}
+.bloc h4{font-family:var(--f-titre);font-size:16px;margin:0 0 6px}
+.bloc ul,.bloc ol{margin:0;padding-left:20px;color:var(--doux);font-size:14px}
+.bloc li{margin:4px 0}
+.bloc .ic{display:inline-block;width:18px;height:18px;vertical-align:-4px;margin-right:2px}
+.bloc.chg{border-color:var(--accent)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<div class="page">
+<header>
+  <h1>Démineur — maquette 2</h1>
+  <p>L'interface est en <b>2D moderne</b> (panneaux arrondis, police nette, onglets), et ce qui se joue est en <b>pixel art 32 bits</b> : tuiles ombrées et tramées, mines, drapeaux, monstres et chiffres pixelisés. Chaque téléphone a deux onglets, <b>Classique</b> et <b>Donjon</b> (règles v2, plus bas). Tape pour creuser, <b>appui long</b> (ou bouton) pour marquer.</p>
+</header>
+
+<div class="rangee">
+  <div class="dir"><h3>1 · Arcade de poche</h3><div class="tel s1" data-skin="1"></div>
+    <p>Nuit bleue, tuiles de pierre tramées à l'ancienne, accent jaune. Le plus « console », mais avec une interface d'aujourd'hui.</p></div>
+  <div class="dir"><h3>2 · Prairie</h3><div class="tel s2" data-skin="2"></div>
+    <p>De jour : l'herbe se soulève, la terre apparaît dessous. Interface claire et douce, chiffres foncés bien lisibles.</p></div>
+  <div class="dir"><h3>3 · Grotte de cristal</h3><div class="tel s3" data-skin="3"></div>
+    <p>Cristaux taillés en pixel art, panneaux en verre dépoli, lueur turquoise. Le plus « fantaisie », il colle bien au donjon.</p></div>
+</div>
+
+<h2 class="sec">Donjon des mines : règles v2</h2>
+<div class="regles">
+  <div class="bloc"><h4>Le principe</h4><ul>
+    <li>Les mines sont des <b>monstres de niveau 1 à 5</b>. Un chiffre donne la <b>somme des niveaux</b> des huit cases autour.</li>
+    <li>Le <b>boss (niveau 8)</b> est visible dès le début : les gros chiffres autour de lui sont normaux. Le battre gagne la partie.</li>
+    <li>Grille 10 × 12 : 10 slimes, 7 chauves-souris, 5 crânes, 4 démons, 2 dragons, le boss, 2 potions et 2 coffres.</li>
+  </ul></div>
+  <div class="bloc chg"><h4>Ce qui change par rapport à la v1</h4><ul>
+    <li>Un combat coûte <b>toujours autant de PV que le niveau du monstre</b>. Plus de calcul caché : ce que tu vois, tu le paies.</li>
+    <li>L'XP remplit la barre, et c'est <b>toi qui choisis quand monter de niveau</b> (bouton NIV +) : ça <b>soigne entièrement</b>. Garder sa montée pour le bon moment devient la vraie décision.</li>
+    <li>PV max = 3 + 2 × niveau (5 au départ). À 0 PV, c'est fini.</li>
+    <li><b>Potions</b> (+3 PV) et <b>coffres</b> (+5 XP) cachés dans la grille : à ramasser d'une tape.</li>
+    <li>Un monstre vaincu reste en cadavre ; on le tape pour voir son chiffre.</li>
+  </ul></div>
+  <div class="bloc"><h4>À raffiner ensuite (idées)</h4><ul>
+    <li><b>Étages</b> : on descend, grille plus grande, et on choisit un pouvoir sur trois entre deux étages.</li>
+    <li>Monstres à <b>effets</b> : la chauve-souris réveille ses voisins, le crâne revient une fois, le dragon brûle une ligne.</li>
+    <li>Objets : <b>œil</b> (montre un niveau), <b>bombe</b> (ouvre un 3 × 3 sans combat).</li>
+    <li>Marques : appui long fait défiler 1 à 5 sur une case fermée, pour noter ses déductions.</li>
+  </ul></div>
+</div>
+
+<div class="bloc" style="max-width:820px"><h4>À décider</h4><ol>
+  <li>Laquelle des trois directions (ou un mélange : l'interface de l'une, les tuiles d'une autre).</li>
+  <li>Les règles v2 du donjon te vont-elles comme base ? Qu'est-ce qui te paraît encore à raffiner (dégâts, montée de niveau, objets, taille) ?</li>
+  <li>Le donjon en une seule grille, ou en étages avec des pouvoirs entre deux ?</li>
+</ol></div>
+</div>
+
+<script>
+(function(){
+/* ---------- Petit atelier de sprites ---------- */
+function toile(n,fn){const c=document.createElement('canvas');c.width=c.height=n;const g=c.getContext('2d');fn((x,y,col)=>{if(col){g.fillStyle=col;g.fillRect(x,y,1,1);}},g);return c.toDataURL();}
+function carte(rows,pal,n=16){const o=(n-rows[0].length)>>1,oy=(n-rows.length)>>1;return toile(n,p=>rows.forEach((r,y)=>[...r].forEach((ch,x)=>p(x+o,y+oy,pal[ch]))));}
+function hasard(s){return()=>(s=(s*16807)%2147483647)/2147483647;}
+
+const SKIN={
+ 1:{base:'#4a5fd6',hi:'#8a9bff',lo:'#29338a',tex:'#3c4fc0',ouv:'#1a2140',ouvT:'#222b52',boum:'#d9455f',
+    num:{1:'#6ec1ff',2:'#7ee08a',3:'#ff7a7a',4:'#c79bff',5:'#ffb35c',6:'#5ee0d0',7:'#fff',8:'#aab0d0'},motif:'trame'},
+ 2:{base:'#6cbf4b',hi:'#a6e67a',lo:'#3d8532',tex:'#4fa33c',tex2:'#8fd862',ouv:'#e3c896',ouvT:'#d2b37b',boum:'#e0533c',
+    num:{1:'#2f5fd0',2:'#2c7a34',3:'#d0402f',4:'#7a3fb8',5:'#a8561a',6:'#13747a',7:'#222',8:'#555'},motif:'herbe'},
+ 3:{base:'#8b5cf6',hi:'#dcc2ff',lo:'#4b23a0',tex:'#a982ff',ouv:'#1c1430',ouvT:'#2a1f48',boum:'#ff4f86',
+    num:{1:'#7fe7ff',2:'#8dffb0',3:'#ff8ab0',4:'#ffd37a',5:'#ff9a6b',6:'#b6a0ff',7:'#fff',8:'#c0b4d8'},motif:'cristal'}
+};
+function tuile(sk,v,ouverte){
+  const r=hasard(1+v*97+(ouverte?500:0));
+  return toile(16,p=>{
+    for(let y=0;y<16;y++)for(let x=0;x<16;x++){
+      const coin=(x===0||x===15)&&(y===0||y===15); if(coin)continue;
+      let c;
+      if(ouverte){c=sk.ouv; if(r()<.1)c=sk.ouvT; if(y===0||x===0)c=sk.ouvT;}
+      else{
+        c=sk.base;
+        if(sk.motif==='trame'&&y>8&&(x+y)%2===0)c=sk.tex;
+        if(sk.motif==='cristal'){if(x+y<9&&x+y>5)c=sk.tex; if((x-y)===3||(x-y)===4)c=sk.tex;}
+        if(y===0||x===0||(y===1&&x<14)||(x===1&&y<14))c=sk.hi;
+        if(y===15||x===15||(y===14&&x>1)||(x===14&&y>1))c=sk.lo;
+      }
+      p(x,y,c);
+    }
+    if(!ouverte&&sk.motif==='herbe')for(let k=0;k<7;k++){const x=2+(r()*12|0),y=3+(r()*9|0);p(x,y,sk.tex);p(x,y+1,sk.tex);p(x+1,y-1,sk.tex2);}
+    if(!ouverte&&sk.motif==='cristal'){p(4,3,'#fff');p(3,4,'#fff');}
+    if(!ouverte&&sk.motif==='trame'){p(3,3,'#fff');}
+    if(ouverte&&sk.motif==='herbe')for(let k=0;k<3;k++)p(2+(r()*12|0),2+(r()*12|0),'#b8935a');
+  });
+}
+// sprites communs aux trois styles
+const A='#1a1020';
+const SPR={
+ mine:carte(['....a.......','.a..a..a....','..aaaaa.....','.aakwkkaa...','aakwwkkkaa..','.akwkkkkka..','.akkkkkkka..','aakkkkkkaa..','.aakkkkaa...','..aaaaa.....','.a..a..a....','....a.......'],{a:'#2a2a33',k:'#3b3b48',w:'#e8e8f0'}),
+ drapeau:carte(['...arr......','...arrrr....','...arrrrrr..','...arrwrrrr.','...arrrrrr..','...arrrr....','...arr......','...a........','...a........','...a........','.aaaaa......','aaaaaaa.....'],{a:'#2a2230',r:'#e8392f',w:'#ff9a8a'}),
+ pelle:carte(['........aa..','.......abba.','......abbba.','.....abbba..','....aaaba...','...aw.a.....','..aw........','.aw.........','aw..........','a...........'],{a:'#2a2230',b:'#c8d0e0',w:'#9a6a3a'}),
+ coeur:carte(['.aa.aa.','arrarra','arwrrra','arrrrra','.arrra.','..ara..','...a...'],{a:A,r:'#ff4d5e',w:'#ffc0c8'},8),
+ potion:carte(['....aaaa....','.....ab.....','.....ab.....','....abba....','...arrrra...','..arrwrrra..','..arwrrrra..','..arrrrrra..','..arrrrrra..','...arrrra...','....aaaa....'],{a:A,b:'#c9a27a',r:'#ff4d7a',w:'#ffd0e0'}),
+ coffre:carte(['............','..aaaaaaaa..','.abbbbbbbba.','.abwbbbbbba.','.aaaayyaaaa.','.abbbyybbba.','.abbbbbbbba.','.abbbbbbbba.','.aaaaaaaaaa.'],{a:A,b:'#b06a2d',w:'#e0a060',y:'#ffd23f'})
+};
+const MONSTRES={
+ 1:[['............','....aaaa....','...abbbba...','..abwbbbbba.','..abbbbbbba.','..abkbbkba..','.abbbbbbbba.','.abbbbbbbba.','..aaaaaaaa..'],{a:A,b:'#6fd45a',w:'#d8ffc8',k:'#111'}],
+ 2:[['a..........a','ab..a..a..ba','abb.aaaa.bba','abbbawwabbba','abbbakkabbba','.abbbaabbba.','..ab.aa.ba..','...a....a...'],{a:A,b:'#9a6bff',w:'#ffe0ff',k:'#ff3050'}],
+ 3:[['...aaaaaa...','..awwwwwwa..','.awwwwwwwwa.','.awkkwwkkwa.','.awkkwwkkwa.','.awwwkkwwwa.','..awwwwwwa..','...awawawa..','...aaaaaa...'],{a:A,w:'#ece6d2',k:'#2a1a30'}],
+ 4:[['.a........a.','.ba......ba.','.bba....bba.','..baaaaaab..','..abbbbbba..','.abbbbbbbba.','.abywbbywba.','.abbbbbbbba.','.abwbwwbwba.','..abbbbbba..','...aaaaaa...'],{a:A,b:'#e0503c',w:'#fff',y:'#ffd23f'}],
+ 5:[['..a......a..','..aa....aa..','...abbbba...','..abbbbbba..','.abybbbbyba.','.abkbbbbkba.','.abbbbbbbba.','.abbaaaabba.','.abawwwwaba.','..abbbbbba..','...aaaaaa...'],{a:A,b:'#f0a030',w:'#fff6c0',y:'#ffee80',k:'#111'}],
+ 8:[['..y.y..y.y..','..yyyyyyyy..','..abbbbbba..','.abbbbbbbba.','.abrrbbrrba.','.abbbbbbbba.','..abbkkbba..','.aabbbbbbaa.','abbabbbbabba','abbbaaaabbba','.abbbbbbbba.','..aaaaaaaa..'],{a:A,b:'#5a4a8a',y:'#ffd23f',r:'#ff3030',k:'#111'}]
+};
+for(const l in MONSTRES)SPR['m'+l]=carte(...MONSTRES[l]);
+let css='';
+for(const k in SPR)css+=`i.${k}{background-image:url(${SPR[k]})}`;
+for(const s in SKIN){const sk=SKIN[s];
+  for(let v=0;v<4;v++)css+=`.s${s} .c.t${v}{background-image:url(${tuile(sk,v,false)})}.s${s} .c.o${v}{background-image:url(${tuile(sk,v,true)})}`;
+  css+=`.s${s} .c.boum{background:${sk.boum}}`;
+  for(const n in sk.num)css+=`.s${s} .n${n}{color:${sk.num[n]}}`;
+}
+const st=document.createElement('style');st.textContent=css;document.head.appendChild(st);
+
+/* ---------- Le jeu ---------- */
+const NIV={Facile:{w:8,h:10,m:10},Moyen:{w:12,h:18,m:35},Difficile:{w:16,h:26,m:80}};
+const POP=[[1,10],[2,7],[3,5],[4,4],[5,2]];
+
+function telephone(tel){
+  let mode='classique',niv='Facile';
+  tel.innerHTML=`<div class="tete"><span class="titre">Démineur</span><span class="compteur"><i class="spr mine ic-cpt" style="width:18px;height:18px"></i><span class="cpt">0</span></span></div>
+   <div class="onglets"><button type="button" data-m="classique" class="on">Classique</button><button type="button" data-m="donjon">Donjon</button></div>
+   <div class="bandeau"></div><div class="zone"><div class="grille"></div></div><div class="journal"></div>
+   <div class="pied"><button type="button" class="b-mode"></button><span class="chrono">0:00</span><button type="button" class="b-neuf">Rejouer</button></div><div class="msg"></div>`;
+  const $=s=>tel.querySelector(s),G=$('.grille');
+  let W,H,cases,fini,lance,marqueMode=false,t0,timer,pv,lv,xp,pvMax;
+  const besoin=()=>4+2*lv;
+  const pvDe=l=>3+2*l;
+  function modeBouton(){const b=$('.b-mode');b.classList.toggle('on',marqueMode);
+    b.innerHTML=marqueMode?'<i class="spr drapeau"></i> Marquer':(mode==='donjon'?'<i class="spr m1"></i> Explorer':'<i class="spr pelle"></i> Creuser');}
+  function nouvelle(){
+    fini=false;lance=false;clearInterval(timer);$('.chrono').textContent='0:00';$('.msg').classList.remove('vu');
+    if(mode==='donjon'){W=10;H=12;lv=1;xp=0;pvMax=pvDe(1);pv=pvMax;
+      $('.bandeau').innerHTML=`<div class="ligne"><div class="coeurs"></div><span class="lvl"></span></div><div class="ligne"><span>XP</span><span class="barre"><b></b></span><button type="button" class="monter">NIV +</button></div>`;
+      $('.monter').addEventListener('click',monter);
+      $('.journal').textContent='Le boss t\'attend. Tape une case pour entrer.';
+    } else {({w:W,h:H}=NIV[niv]);
+      $('.bandeau').innerHTML=`<div class="niveaux">${Object.keys(NIV).map(k=>`<button type="button" data-n="${k}" class="${k===niv?'on':''}">${k}</button>`).join('')}</div>`;
+      tel.querySelectorAll('.niveaux button').forEach(b=>b.addEventListener('click',()=>{niv=b.dataset.n;nouvelle();}));
+      $('.journal').textContent=`${NIV[niv].m} mines · la première case est toujours sûre`;
+    }
+    cases=Array.from({length:W*H},(_,i)=>({m:0,n:0,o:false,f:0,v:(i*7+((i/W)|0)*3)%4}));
+    if(mode==='donjon'){const bx=2+(Math.random()*(W-4)|0),by=2+(Math.random()*(H-4)|0);const b=cases[by*W+bx];b.m=8;b.vis=true;}
+    const z=$('.zone').getBoundingClientRect();
+    const t=Math.max(14,Math.floor(Math.min((z.width-34)/W,(z.height-14)/H))-2);
+    G.style.gridTemplateColumns=`repeat(${W},${t}px)`;G.style.gridAutoRows=t+'px';G.style.fontSize=Math.round(t*.62)+'px';
+    const ic=$('.ic-cpt');ic.className='spr ic-cpt '+(mode==='donjon'?'m3':'mine');
+    modeBouton();dessiner();
+  }
+  const voisins=i=>{const x=i%W,y=(i/W)|0,r=[];for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){if(!dx&&!dy)continue;const a=x+dx,b=y+dy;if(a>=0&&b>=0&&a<W&&b<H)r.push(b*W+a);}return r;};
+  function placer(sur){
+    const interdit=new Set([sur,...voisins(sur)]);
+    const libres=cases.map((_,i)=>i).filter(i=>!interdit.has(i)&&!cases[i].m);
+    for(let i=libres.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[libres[i],libres[j]]=[libres[j],libres[i]];}
+    let k=0;
+    if(mode==='donjon'){POP.forEach(([l,n])=>{for(let q=0;q<n;q++)cases[libres[k++]].m=l;});['potion','potion','coffre','coffre'].forEach(o=>cases[libres[k++]].it=o);}
+    else for(;k<NIV[niv].m;k++)cases[libres[k]].m=1;
+    cases.forEach((c,i)=>c.n=voisins(i).reduce((s,v)=>s+cases[v].m,0));
+    lance=true;t0=Date.now();timer=setInterval(()=>{const s=((Date.now()-t0)/1000)|0;$('.chrono').textContent=`${(s/60)|0}:${String(s%60).padStart(2,'0')}`;},500);
+  }
+  function ouvrir(i){const pile=[i];while(pile.length){const k=pile.pop(),c=cases[k];if(c.o||c.m)continue;c.o=true;c.f=0;if(c.n===0&&!c.it)voisins(k).forEach(v=>{if(!cases[v].o)pile.push(v);});}}
+  function message(t){const m=$('.msg');m.textContent=t;m.classList.add('vu');}
+  function finir(gagne,t){fini=true;clearInterval(timer);if(!gagne)cases.forEach(c=>{if(c.m)c.o=true;});message(t);}
+  function monter(){if(fini||xp<besoin())return;xp-=besoin();lv++;pvMax=pvDe(lv);pv=pvMax;$('.journal').textContent=`Niveau ${lv} ! PV au maximum (${pvMax}).`;dessiner();}
+  function taper(i){
+    if(fini)return;const c=cases[i];
+    if(!lance){if(mode==='donjon'&&c.m)return;placer(i);}
+    if(mode==='donjon'){
+      if(c.mort){c.vu=true;dessiner();return;}
+      if(c.o&&c.it&&!c.pris){c.pris=true;
+        if(c.it==='potion'){const g=Math.min(3,pvMax-pv);pv+=g;$('.journal').textContent=`Potion : +${g} PV.`;}
+        else{xp+=5;$('.journal').textContent='Coffre : +5 XP.';}
+        dessiner();return;}
+      if(c.o)return;
+      if(c.m){const l=c.m;pv-=l;c.o=true;
+        if(pv<=0){pv=0;finir(false,l===8?'Le boss était trop fort… Rejoue !':`Vaincu par un monstre de niveau ${l}. Rejoue !`);$('.journal').textContent='';dessiner();return;}
+        c.mort=true;c.f=0;xp+=l;
+        if(l===8){finir(true,`Boss vaincu en ${$('.chrono').textContent}, au niveau ${lv} !`);}
+        else $('.journal').textContent=`Monstre de niveau ${l} vaincu : −${l} PV, +${l} XP.`+(xp>=besoin()?' Tu peux monter de niveau.':'');
+      } else ouvrir(i);
+      dessiner();return;
+    }
+    if(c.f)return;
+    if(c.o){const v=voisins(i);if(c.n&&v.filter(k=>cases[k].f).length===c.n)v.forEach(k=>{if(!cases[k].f&&!cases[k].o)creuser(k);});}
+    else creuser(i);
+    if(!fini&&cases.every(c=>c.m||c.o))finir(true,`Gagné en ${$('.chrono').textContent} !`);
+    dessiner();
+  }
+  function creuser(i){const c=cases[i];if(fini)return;if(c.m){c.boum=true;finir(false,'Boum ! On réessaie ?');}else ouvrir(i);}
+  function marquer(i){if(fini)return;const c=cases[i];if(c.o||c.vis)return;c.f=mode==='donjon'?(c.f+1)%6:(c.f?0:1);dessiner();}
+  function dessiner(){
+    if(mode==='donjon'){
+      $('.cpt').textContent=cases.filter(c=>c.m&&!c.mort).length;
+      $('.coeurs').innerHTML=Array.from({length:pvMax},(_,k)=>`<i class="spr coeur${k<pv?'':' vide'}"></i>`).join('');
+      $('.lvl').textContent='NIV '+lv;
+      $('.barre b').style.width=Math.min(100,xp/besoin()*100)+'%';
+      $('.monter').classList.toggle('pret',xp>=besoin()&&!fini);
+    } else $('.cpt').textContent=NIV[niv].m-cases.filter(c=>c.f).length;
+    G.innerHTML=cases.map((c,i)=>{
+      let cl='c',h='';
+      if(c.o){cl+=' o'+c.v;
+        if(c.mort){if(c.vu)h=c.n?`<span class="n${Math.min(c.n,8)}">${c.n}</span>`:'';else{cl+=' mort';h=`<i class="spr m${c.m}"></i>`;}}
+        else if(c.m){if(c.boum)cl+=' boum';h=mode==='donjon'?`<i class="spr m${c.m}"></i>`:'<i class="spr mine"></i>';}
+        else if(c.it&&!c.pris)h=`<i class="spr ${c.it}"></i>`;
+        else if(c.n)h=`<span class="n${Math.min(c.n,8)}">${c.n}</span>`;
+      } else {cl+=' t'+c.v;
+        if(c.vis)h=`<i class="spr m8"></i><span class="lv">8</span>`;
+        else if(c.f)h=mode==='donjon'?`<span class="marque">${c.f}</span>`:'<i class="spr drapeau"></i>';}
+      return `<div class="${cl}" data-i="${i}">${h}</div>`;}).join('');
+  }
+  let appui=null,long=false;
+  const caseDe=e=>{const el=e.target.closest('.c');if(el)return +el.dataset.i;return null;};
+  G.addEventListener('pointerdown',e=>{const i=caseDe(e);if(i==null)return;long=false;clearTimeout(appui);appui=setTimeout(()=>{long=true;marquer(i);},380);});
+  ['pointerup','pointerleave','pointercancel'].forEach(t=>G.addEventListener(t,()=>clearTimeout(appui)));
+  G.addEventListener('click',e=>{const i=caseDe(e);if(i==null||long)return;(marqueMode&&!cases[i].o)?marquer(i):taper(i);});
+  G.addEventListener('contextmenu',e=>e.preventDefault());
+  $('.b-mode').addEventListener('click',()=>{marqueMode=!marqueMode;modeBouton();});
+  $('.b-neuf').addEventListener('click',nouvelle);
+  tel.querySelectorAll('.onglets button').forEach(b=>b.addEventListener('click',()=>{mode=b.dataset.m;tel.querySelectorAll('.onglets button').forEach(x=>x.classList.toggle('on',x===b));marqueMode=false;nouvelle();}));
+  nouvelle();
+  return {onglet:m=>tel.querySelector(`.onglets [data-m="${m}"]`).click()};
+}
+(document.fonts&&document.fonts.ready?document.fonts.ready:Promise.resolve()).then(()=>{
+  const t=[...document.querySelectorAll('.tel')].map(telephone);
+  t[2].onglet('donjon'); // la grotte s'ouvre sur le donjon pour le montrer tout de suite
+});
+})();
+</script>

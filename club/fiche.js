@@ -1,7 +1,7 @@
 /* Le Club d'agility : fiche de l'accueil (voir accueil-outils.js) */
 Ludo.fiche({
   k: "club/index.html",
-  carte: {n: "LE CLUB D'AGILITY", s: "CLUB AGILITY", ic: "cup", fam: "32", lb: "linear-gradient(#3f8a37, #173a1a)", lt: "#ffd23f", sh: "#3f8a37", rank: "club",
+  carte: {n: "LE CLUB D'AGILITY", img: "club/etiquette.jpg", jaq: "club/jaquette.jpg", s: "CLUB AGILITY", ic: "cup", fam: "32", lb: "linear-gradient(#3f8a37, #173a1a)", lt: "#ffd23f", sh: "#3f8a37", rank: "club",
     d: "Recrute des chiens, entraîne-les semaine après semaine et mène ton club jusqu'au Championnat de France.", tags: ["6 RACES"]},
   meta: {added: "2026-10-12", genres: ["GESTION", "CHIENS"]},
   nom: "le Club",

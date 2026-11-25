@@ -1,7 +1,7 @@
 /* Lune-Rover : fiche de l'accueil (voir accueil-outils.js) */
 Ludo.fiche({
   k: "lune-rover/index.html",
-  carte: {n: "LUNE-ROVER", s: "LUNE-ROVER", ic: "rover", fam: "32", lb: "linear-gradient(#14142a, #3a3834)", lt: "#5ae6f2", sh: "#5a5a6a", rank: "lunerover",
+  carte: {n: "LUNE-ROVER", img: "lune-rover/etiquette.jpg", jaq: "lune-rover/jaquette.jpg", s: "LUNE-ROVER", ic: "rover", fam: "32", lb: "linear-gradient(#14142a, #3a3834)", lt: "#5ae6f2", sh: "#5a5a6a", rank: "lunerover",
     d: "Programme Pico, le petit robot lunaire, à l'avance (avancer, tourner, sauter, ramasser, boucles et conditions) pour récolter les cristaux. 3 étoiles pour le programme le plus court.", tags: ["30 NIVEAUX"]},
   meta: {added: "2026-10-16", genres: ["LOGIQUE", "ESPACE"]},
   records: () => { const s = rk("lunerover.stars", {}) || {}, n = sum(s); return [["Étoiles", n ? n + " / 90" : null], ["Niveaux réussis", num(Object.values(s).filter(v => v > 0).length)]]; },

@@ -30,6 +30,17 @@ const TESTS = {
     }
     return out;
   }, D),
+  'demineur/index.html': async (p, D) => p.evaluate(D => {
+    const { grilleDuJour, tailleDuJour } = window.Demineur, out = [];
+    for (const { k } of D) {
+      const g = grilleDuJour(k), t = tailleDuJour(k);
+      if (g.mines.length !== t.m || new Set(g.mines).size !== t.m) out.push(`grille du ${k} : ${g.mines.length} mines au lieu de ${t.m}`);
+      if (JSON.stringify(g) !== JSON.stringify(grilleDuJour(k))) out.push(`grille du ${k} : pas la même à chaque fois`);
+      const x = g.depart % g.w, y = (g.depart / g.w) | 0, m = new Set(g.mines);
+      for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) if (m.has((y + dy) * g.w + x + dx) && x + dx >= 0 && x + dx < g.w) out.push(`grille du ${k} : mine à côté du départ`);
+    }
+    return out;
+  }, D),
   'queens/index.html': async (p, D) => p.evaluate(D => {
     const { generate } = window.Queens, SIZE = [9, 5, 6, 7, 7, 8, 9], out = [];
     for (const { k, w } of D) {
@@ -222,10 +233,10 @@ const TESTS = {
   }, D),
   'index.html': async p => p.evaluate(() => {
     // des records dans plusieurs jeux, exportés en LUDO1-, effacés, puis réimportés
-    const recs = { 'tetris16.best': 1234, 'queens16.best': { 6: 41000 }, 'sudoku.best': { '9-2': 300000 }, 'orbite.stars': { 3: 2 }, 'yams.best': 250, 'escadrille.best': { normal: 12 },
+    const recs = { 'tetris16.best': 1234, 'demineur.best': { moyen: 61000 }, 'demineur.jour': { 20261122: 90000 }, 'demineur.prairie': { score: 120, dist: 80 }, 'queens16.best': { 6: 41000 }, 'sudoku.best': { '9-2': 300000 }, 'orbite.stars': { 3: 2 }, 'yams.best': 250, 'escadrille.best': { normal: 12 },
       'odyssee.stars': { '1-2': 3 }, 'nebula.best': 900, 'lunerover.stars': { 4: 3 }, 'amiral.best': { hard: 30 }, 'pontstellaire.best': { 9: 90000 },
       'amiral.palmares': { victoires: 3, normal: 1 }, 'amiral.daily': { 20261019: 24 }, 'magasinier.niveaux': { 0: { coups: 7, etoiles: 2 }, 13: { coups: 9, etoiles: 3 } },
-      'magasinier.daily': { 20261020: 41 }, 'tankarena.best': 7, 'tankarena.stats': { parties: 4, victoires: 2, total: 19 }, 'tankarena.survie': { vague: 9, kills: 31, parties: 3 }, 'romet.machines': { foire: { t: [true, false, true, true, false, false], butin: 312, parties: 3 } }, 'capitaine.niveaux': { 2: { coups: 6, etoiles: 3 }, 15: { coups: 20, etoiles: 2 } }, 'capitaine.daily': { 20261021: 17 }, 'duche.best': 3120, 'duche.daily': { 20261020: 2800 },
+      'magasinier.daily': { 20261020: 41 }, 'bannis.stats': { nuits: 3, record: 7, gagnees: 0, eclats: 61, kills: 58 }, 'strategieciel.record': { parties: 2, vagues: 5, victoires: 0 }, 'tankarena.best': 7, 'tankarena.stats': { parties: 4, victoires: 2, total: 19 }, 'tankarena.survie': { vague: 9, kills: 31, parties: 3 }, 'romet.machines': { foire: { t: [true, false, true, true, false, false], butin: 312, parties: 3 } }, 'capitaine.niveaux': { 2: { coups: 6, etoiles: 3 }, 15: { coups: 20, etoiles: 2 } }, 'capitaine.daily': { 20261021: 17 }, 'duche.best': 3120, 'duche.daily': { 20261020: 2800 },
       'motdor.stats': { parties: 5, gagnees: 4, serie: 2, record: 3, dernier: 20261019, dist: [0, 1, 2, 1, 0, 0] }, 'motdor.daily': { 20261019: 3 },
       'jarls.campagne': { etoiles: { heimdall: 3, idunn: 2 } }, 'jarls.daily': { 20261021: 1290 },
       'doggysaga.progres': { etoiles: { 1: 3, 2: 1 }, scores: {}, album: [0, 3] }, 'doggysaga.daily': { 20261023: 98 },

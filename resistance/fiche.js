@@ -1,7 +1,7 @@
 /* Résistance : fiche de l'accueil (voir accueil-outils.js) */
 Ludo.fiche({
   k: "resistance/index.html",
-  carte: {n: "RESISTANCE", s: "RESISTANCE", ic: "resistance", fam: "32", lb: "linear-gradient(#2c4fa8, #121a3a)", lt: "#ffd23f", sh: "#2c4fa8",
+  carte: {n: "RESISTANCE", img: "resistance/etiquette.jpg", jaq: "resistance/jaquette.jpg", s: "RESISTANCE", ic: "resistance", fam: "32", lb: "linear-gradient(#2c4fa8, #121a3a)", lt: "#ffd23f", sh: "#2c4fa8",
     d: "Rogue-lite tactique façon Fire Emblem GBA : un tyran a soumis le continent, mène l'armée rebelle. Recrute tes soldats, traverse le pays de combat en combat (marchand, repos, événements), triangle des armes, mort définitive, et abats le général. À chaque retour, agrandis la forteresse rebelle : caserne, taverne, infirmerie, Mémorial des vétérans…", tags: ["ROGUE-LITE", "FORTERESSE", "11 CLASSES"]},
   meta: {added: "2026-10-28", genres: ["TACTIQUE"]},
   enCours: () => { const r = (rk("resistance.run", {}) || {}).run, n = r && r.map && r.current !== null ? r.map.nodes[r.current] : null; return r ? (n ? `ETAGE ${n.floor + 1}/${r.map.floors}` : "CAMPAGNE EN COURS") : null; },

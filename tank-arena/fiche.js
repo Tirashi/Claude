@@ -1,7 +1,7 @@
 /* Tank Arena : fiche de l'accueil (voir accueil-outils.js) */
 Ludo.fiche({
   k: "tank-arena/index.html",
-  carte: {n: "TANK ARENA", s: "TANK ARENA", ic: "tank", fam: "3d", lb: "linear-gradient(#5a6ee0, #2a2f6e)", lt: "#ffcf4a", sh: "#e2433a", rank: "tankarena",
+  carte: {n: "TANK ARENA", img: "tank-arena/etiquette.jpg", jaq: "tank-arena/jaquette.jpg", s: "TANK ARENA", ic: "tank", fam: "3d", lb: "linear-gradient(#5a6ee0, #2a2f6e)", lt: "#ffcf4a", sh: "#e2433a", rank: "tankarena",
     d: "Une petite arène de tanks en 3D. Toi contre trois tanks de l'ordinateur, chacun pour soi : glisse le doigt pour rouler, ton tank tire tout seul. Détruis-en le plus possible en 90 secondes, ou tiens en survie face à des vagues de chasseurs, de blindés et de tireurs. La caisse du centre : réparation, tir triple, bouclier, vitesse.", tags: ["3D", "ACTION", "SURVIE"]},
   meta: {added: "2026-11-17", updated: "2026-11-18", genres: ["ARCADE"]},
   records: () => { const s = rk("tankarena.stats", null) || {};

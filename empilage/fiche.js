@@ -1,7 +1,7 @@
 /* Empilage : fiche de l'accueil (voir accueil-outils.js) */
 Ludo.fiche({
   k: "empilage/index.html",
-  carte: {n: "EMPILAGE", s: "EMPILAGE", ic: "stack", fam: "3d", lb: "linear-gradient(#9fd8ff, #ffd6c8)", lt: "#5a46a8", sh: "#f29bc0", rank: "empilage",
+  carte: {n: "EMPILAGE", img: "empilage/etiquette.jpg", jaq: "empilage/jaquette.jpg", s: "EMPILAGE", ic: "stack", fam: "3d", lb: "linear-gradient(#9fd8ff, #ffd6c8)", lt: "#5a46a8", sh: "#f29bc0", rank: "empilage",
     d: "Lâche chaque bloc pile sur la tour : ce qui dépasse tombe. Monte du matin jusqu'à la nuit étoilée, en 3D pastel. Une tour du jour pour toute la famille.", tags: ["3D", "TOUR DU JOUR"]},
   meta: {added: "2026-10-16", genres: ["ADRESSE", "DU JOUR"]},
   duJour: () => rk("empilage.dailyTry", 0) === dayNum(),

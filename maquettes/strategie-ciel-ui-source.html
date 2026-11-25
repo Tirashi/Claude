@@ -1,0 +1,157 @@
+<title>Interface de SOL-7</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Michroma&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+/* Mise en page : la même capture du jeu, trois interfaces par-dessus ; cadre à l'échelle (téléphone en paysage ou PC) */
+:root{
+  --fond:#0b0a1e; --fond2:#141230; --texte:#e8eaf6; --doux:#9aa3c8; --ligne:rgba(150,170,230,.28);
+  --verre:rgba(14,16,40,.72); --verre2:rgba(24,30,64,.86); --bleu:#5ab0ff; --cyan:#9ff0ff; --rouge:#ff7a5a; --vert:#7fe08a; --or:#ffd27a;
+  --titre:"Michroma","Rajdhani",sans-serif; --ui:"Rajdhani",system-ui,sans-serif; --chiffres:"Share Tech Mono",ui-monospace,monospace;
+  color-scheme:dark;
+}
+body{background:var(--fond);color:var(--texte);font:15px/1.5 var(--ui);margin:0}
+main{max-width:1240px;margin:0 auto;padding-block:16px 32px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1{font:400 20px/1.2 var(--titre);letter-spacing:.08em;margin:6px 0 4px;color:var(--or)}
+.chapeau{color:var(--doux);margin:0 0 14px;max-width:70ch}
+.outils{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.grp{display:flex;gap:2px;background:var(--fond2);border:1px solid var(--ligne);border-radius:8px;padding:3px}
+.grp button{font:600 14px var(--ui);letter-spacing:.06em;color:var(--doux);background:none;border:0;border-radius:6px;padding:7px 12px;cursor:pointer}
+.grp button.on{background:#25407a;color:#fff}
+.grp button:focus-visible{outline:2px solid var(--cyan)}
+#cadre{position:relative;width:100%;max-width:100%;overflow:hidden;border-radius:10px;border:1px solid var(--ligne);background:#000;margin:0 auto}
+#cadre.tel{border:7px solid #23203a;border-radius:24px;max-width:960px}
+#fond{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+#ui{position:absolute;left:0;top:0;transform-origin:0 0;font-family:var(--ui);color:var(--texte)}
+.cartes{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px;margin-top:14px}
+.carte{background:var(--fond2);border:1px solid var(--ligne);border-radius:10px;padding:12px 14px;min-width:0}
+.carte h3{font:400 12px var(--titre);letter-spacing:.08em;color:var(--or);margin:0 0 6px}
+.carte p{margin:0;color:var(--texte)}
+.note{color:var(--doux);font-size:14px;margin-top:12px}
+/* éléments communs de l'interface du jeu */
+.v{position:absolute;background:var(--verre);border:1px solid var(--ligne);border-radius:6px;backdrop-filter:blur(3px)}
+.n{font-family:var(--chiffres)}.cr{color:var(--cyan)}.rg{color:var(--rouge)}.dx{color:var(--doux)}
+.b{display:inline-flex;align-items:center;justify-content:center;gap:4px;background:var(--verre2);border:1px solid var(--ligne);border-radius:5px;color:var(--texte);font:600 13px var(--ui);letter-spacing:.04em;cursor:pointer}
+.b.on{background:#25407a;border-color:var(--bleu)}
+.b svg{width:20px;height:20px;fill:currentColor}
+.k{font:11px var(--chiffres);color:var(--or);opacity:.9}
+.pv{height:3px;background:rgba(0,0,0,.5);border-radius:2px;overflow:hidden}.pv i{display:block;height:100%;background:var(--vert)}
+.pv.m i{background:#ffd060}
+.ico{fill:currentColor}
+</style>
+
+<main>
+  <h1>INTERFACE DE SOL-7</h1>
+  <p class="chapeau">Maquette du 20/11 : la même bataille avec trois interfaces plus fines et plus petites, inspirées des jeux de stratégie spatiale. Polices plus nettes (Rajdhani pour le texte, Share Tech Mono pour les chiffres, Michroma pour les titres) et icônes de vaisseaux à la place des mots. Choisis la direction et l'appareil.</p>
+  <div class="outils">
+    <div class="grp" id="gDir"><button data-v="A" class="on">A · BARRE DE COMMANDE</button><button data-v="B">B · TIROIRS</button><button data-v="C">C · LISTE DE FLOTTE</button></div>
+    <div class="grp" id="gApp"><button data-v="tel" class="on">TELEPHONE</button><button data-v="pc">PC</button></div>
+    <div class="grp" id="gEtat"><button data-v="sel" class="on">CHASSEURS CHOISIS</button><button data-v="pv">AURORE CHOISIE</button></div>
+  </div>
+  <div id="cadre" class="tel"><img id="fond" alt="Capture du jeu : Aurore, ses chasseurs, GAIA et la ceinture d'astéroïdes"><div id="ui"></div></div>
+  <div class="cartes" id="desc"></div>
+  <p class="note">Les autres jeux qui ont servi de repères : StarCraft et Command &amp; Conquer (grille de commandes en bas à droite), Homeworld et Sins of a Solar Empire (liste des flottes, ou « arbre de l'empire »), Stellaris (barre du haut fine, liste à droite), Rusted Warfare et Mindustry sur téléphone (tiroirs qui se replient, boutons ronds au pouce).</p>
+</main>
+
+<svg width="0" height="0" style="position:absolute">
+  <symbol id="i-chasseur" viewBox="0 0 24 24"><path d="M12 2l4 13-4-2-4 2zM6 17l6-3 6 3-6 5z" opacity=".95"/></symbol>
+  <symbol id="i-bombardier" viewBox="0 0 24 24"><path d="M12 3l9 14-5 1-4-3-4 3-5-1z"/><rect x="10" y="17" width="4" height="4" rx="1"/></symbol>
+  <symbol id="i-destroyer" viewBox="0 0 24 24"><path d="M12 1l3 5v14l-3 3-3-3V6z"/><rect x="7" y="9" width="10" height="3" rx="1"/></symbol>
+  <symbol id="i-collecteur" viewBox="0 0 24 24"><rect x="8" y="5" width="8" height="14" rx="1.5"/><rect x="3" y="8" width="4" height="9" rx="1"/><rect x="17" y="8" width="4" height="9" rx="1"/></symbol>
+  <symbol id="i-aurore" viewBox="0 0 24 24"><path d="M5 2h4v9h6V2h4v13l-3 7H8l-3-7z"/></symbol>
+  <symbol id="i-stop" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/></symbol>
+  <symbol id="i-attaque" viewBox="0 0 24 24"><path d="M11 2h2v5h-2zM11 17h2v5h-2zM2 11h5v2H2zM17 11h5v2h-5z"/><circle cx="12" cy="12" r="3"/></symbol>
+  <symbol id="i-aller" viewBox="0 0 24 24"><path d="M4 11h11l-4-4 1.5-1.5L19 12l-6.5 6.5L11 17l4-4H4z"/></symbol>
+  <symbol id="i-patrouille" viewBox="0 0 24 24"><path d="M5 9a7 7 0 0 1 13-2l2-2v6h-6l2-2a5 5 0 0 0-9 1zM19 15a7 7 0 0 1-13 2l-2 2v-6h6l-2 2a5 5 0 0 0 9-1z"/></symbol>
+  <symbol id="i-miner" viewBox="0 0 24 24"><path d="M12 2l5 8-5 12-5-12z"/></symbol>
+  <symbol id="i-drapeau" viewBox="0 0 24 24"><path d="M5 2h2v20H5zM8 3h11l-3 4 3 4H8z"/></symbol>
+  <symbol id="i-carte" viewBox="0 0 24 24"><path d="M3 5l6-2 6 2 6-2v16l-6 2-6-2-6 2zM9 5v14M15 7v14" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
+  <symbol id="i-menu" viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="2.4" rx="1"/><rect x="4" y="11" width="16" height="2.4" rx="1"/><rect x="4" y="17" width="16" height="2.4" rx="1"/></symbol>
+</svg>
+
+<script>
+const $ = s => document.querySelector(s);
+const FONDS = { tel: '/*FOND_TEL*/', pc: '/*FOND_PC*/' };
+const VIRT = { tel: [844, 390], pc: [1280, 720] };
+let DIR = 'A', APP = 'tel', ETAT = 'sel', TIROIR = true, LISTE = true;
+const ic = (n, s = 20) => `<svg width="${s}" height="${s}" class="ico"><use href="#i-${n}"/></svg>`;
+const pv = (v, m) => `<div class="pv${v < .5 ? ' m' : ''}"><i style="width:${v * 100}%"></i></div>`;
+const SEL = [['chasseur', .9], ['chasseur', 1], ['chasseur', .45], ['chasseur', .8]];
+const PROD = [['collecteur', 'COLLECTEUR', 30, 'W'], ['chasseur', 'CHASSEUR', 40, 'X'], ['bombardier', 'BOMBARDIER', 80, 'C'], ['destroyer', 'DESTROYER', 220, 'V']];
+const GRP = [['chasseur', 4, '2'], ['bombardier', 0, '3'], ['destroyer', 1, '4'], ['collecteur', 2, '5'], ['aurore', 1, 'H']];
+// la barre du haut, commune (fine, comme Stellaris)
+function barreHaut(tel, extra = ''){ const h = tel ? 26 : 30;
+  return `<div class="v" style="left:0;top:0;right:0;height:${h}px;border-radius:0;border-width:0 0 1px;display:flex;align-items:center;gap:${tel ? 12 : 18}px;padding:0 ${tel ? 10 : 14}px;font-size:${tel ? 13 : 14}px">
+    <span class="n cr">◆ 999</span><span class="dx">+120/min</span><span>${ic('chasseur', 14)} <span class="n">9</span></span>
+    <span style="margin-left:auto" class="rg">VAGUE 1 DANS <span class="n">1:28</span></span>${extra}
+    <span style="margin-left:auto;display:flex;gap:3px">${['❚❚', '▶', '▶▶', '▶▶▶'].map((t, i) => `<span class="b${i === 1 ? ' on' : ''}" style="height:${h - 6}px;min-width:${tel ? 30 : 34}px;font-size:11px">${t}</span>`).join('')}</span>
+    <span class="n dx">J 16</span><span class="b" style="height:${h - 6}px;width:${h}px">${ic('menu', 16)}</span></div>`; }
+function mini(x, y, s){ return `<div class="v" style="left:${x}px;${y};width:${s}px;height:${s}px;overflow:hidden;padding:0">
+  <svg viewBox="0 0 100 100" width="${s}" height="${s}"><circle cx="50" cy="50" r="30" fill="none" stroke="#4a4560" stroke-width="7"/><circle cx="50" cy="50" r="18" fill="none" stroke="#3a3f6a" stroke-width=".6"/><circle cx="50" cy="50" r="42" fill="none" stroke="#3a3f6a" stroke-width=".6"/>
+  <circle cx="50" cy="50" r="3" fill="#ffd27a"/><circle cx="64" cy="61" r="3" fill="#3a7ab8"/><circle cx="84" cy="26" r="4" fill="#c89a60"/><circle cx="92" cy="58" r="2.5" fill="none" stroke="#ff6a6a"/>
+  <rect x="66" y="64" width="3" height="3" fill="#7fd0ff"/><rect x="70" y="66" width="2" height="2" fill="#d8ffd8"/><polygon points="62,58 80,56 84,72 60,74" fill="none" stroke="#fff" stroke-width=".7"/></svg></div>`; }
+
+// A · barre de commande en bas : sélection au centre, grille de commandes à droite (StarCraft), mini-carte à gauche
+function dirA(tel){ const [W, H] = VIRT[APP], m = tel ? 112 : 170, g = tel ? 40 : 48;
+  const cmd = ETAT === 'pv' ? PROD.map(([t, n, p, k]) => [t, `<span class="n" style="font-size:10px">${p}</span>`, k]).concat([['drapeau', '', 'B'], ['stop', '', 'S']])
+    : [['aller', '', 'M'], ['attaque', '', 'A'], ['patrouille', '', 'P'], ['stop', '', 'S'], ['miner', '', ''], ['drapeau', '', 'B']];
+  const selec = ETAT === 'pv' ? `<div style="display:flex;gap:8px;align-items:center">${ic('aurore', tel ? 30 : 38)}<div style="flex:1"><b style="font:600 ${tel ? 14 : 16}px var(--ui)">AURORE</b> <span class="dx">porte-vaisseaux</span>${pv(.86)}<div class="dx" style="font-size:12px;margin-top:3px">EN CHANTIER : DESTROYER · <span class="n">0:18</span></div>${pv(.4)}</div></div>`
+    : `<div class="dx" style="font-size:12px;margin-bottom:2px">4 CHASSEURS</div><div style="display:flex;gap:4px;flex-wrap:wrap">${SEL.map(([t, v]) => `<div class="b" style="width:${tel ? 32 : 40}px;height:${tel ? 32 : 40}px;flex-direction:column;gap:2px">${ic(t, tel ? 18 : 22)}<div style="width:80%">${pv(v)}</div></div>`).join('')}</div>`;
+  return barreHaut(tel) + mini(8, `bottom:8px`, m) +
+    `<div class="v" style="left:${m + 16}px;bottom:${tel ? 72 : 82}px;display:flex;gap:3px;padding:3px">${GRP.map(([t, n, k]) => `<span class="b" style="height:${tel ? 26 : 30}px;padding:0 6px">${tel ? '' : `<span class="k">${k}</span>`}${ic(t, 15)}<span class="n">${n}</span></span>`).join('')}<span class="b" style="height:${tel ? 26 : 30}px;padding:0 6px;color:var(--or)"><span class="k">A</span>${ic('chasseur', 13)}${ic('destroyer', 13)}<span class="n">5</span></span></div>
+    <div class="v" style="left:${m + 16}px;bottom:8px;right:${3 * g + 26}px;height:${tel ? 60 : 68}px;padding:4px 8px">${selec}</div>
+    <div class="v" style="right:8px;bottom:8px;padding:4px;display:grid;grid-template-columns:repeat(3,${g}px);gap:4px">${cmd.map(([t, txt, k]) => `<span class="b" style="height:${g}px;flex-direction:column;gap:0;position:relative">${ic(t, tel ? 20 : 24)}${txt}${k && !tel ? `<span class="k" style="position:absolute;right:3px;top:1px">${k}</span>` : ''}</span>`).join('')}</div>`; }
+
+// B · tiroirs : presque rien à l'écran ; groupes en boutons ronds à gauche, chantier dans un tiroir à droite, mini-carte repliable
+function dirB(tel){ const r = tel ? 40 : 46;
+  const rond = (inner, x, y, on, coul) => `<span class="b${on ? ' on' : ''}" style="position:absolute;${x};${y};width:${r}px;height:${r}px;border-radius:50%;${coul ? 'color:' + coul : ''}">${inner}</span>`;
+  let h = barreHaut(tel);
+  h += GRP.map(([t, n], i) => `<span class="b${t === 'chasseur' && ETAT === 'sel' || t === 'aurore' && ETAT === 'pv' ? ' on' : ''}" style="position:absolute;left:8px;top:${(tel ? 34 : 42) + i * (r + 6)}px;width:${r}px;height:${r}px;border-radius:50%;flex-direction:column;gap:0">${ic(t, tel ? 18 : 20)}<span class="n" style="font-size:10px;line-height:1">${n}</span></span>`).join('');
+  h += rond(ic('carte', 20), 'left:8px', `bottom:8px`, false);
+  if (!TIROIR) h += rond(ic('aurore', 24), 'right:8px', 'bottom:8px', false, 'var(--or)');
+  // bulle d'actions à côté de la sélection
+  const bulle = ETAT === 'pv' ? '' : `<div class="v" style="left:50%;bottom:8px;transform:translateX(-50%);display:flex;gap:4px;padding:4px;border-radius:24px">${[['aller'], ['attaque'], ['stop'], ['drapeau']].map(([t]) => `<span class="b" style="width:${r - 4}px;height:${r - 4}px;border-radius:50%">${ic(t, 18)}</span>`).join('')}<span class="dx" style="align-self:center;padding:0 8px 0 4px;font-size:12px">4 ${ic('chasseur', 12)}</span></div>`;
+  h += bulle;
+  if (TIROIR){ const w = tel ? 210 : 260;
+    h += `<div class="v" style="right:0;top:${tel ? 26 : 30}px;bottom:0;width:${w}px;border-radius:10px 0 0 0;padding:8px 10px;display:flex;flex-direction:column;gap:6px">
+      <div style="display:flex;align-items:center;gap:6px">${ic('aurore', 22)}<b style="font:400 11px var(--titre);letter-spacing:.08em;color:var(--or)">AURORE</b><span class="b" style="margin-left:auto;width:24px;height:24px">✕</span></div>${pv(.86)}
+      ${PROD.map(([t, n, p]) => `<span class="b" style="justify-content:flex-start;height:${tel ? 32 : 38}px;padding:0 8px">${ic(t, 18)}<span>${n}</span><span class="n cr" style="margin-left:auto">${p}◆</span></span>`).join('')}
+      <div class="dx" style="font-size:12px;display:flex;justify-content:space-between"><span>DESTROYER</span><span class="n">0:18</span></div>${pv(.4)}
+      <span class="b" style="height:28px;margin-top:auto">${ic('drapeau', 16)} RALLIEMENT</span></div>`; }
+  return h; }
+
+// C · liste de flotte à droite (Sins of a Solar Empire, Stellaris) : chaque groupe et AURORE, avec vie, ordre et chantier dépliable
+function dirC(tel){ const w = LISTE ? (tel ? 200 : 250) : 46;
+  let h = barreHaut(tel) + mini(8, 'bottom:8px', tel ? 100 : 150);
+  const lignes = [['aurore', 'AURORE', 1, .86, ETAT === 'pv', 'CHANTIER · DESTROYER'], ['chasseur', 'CHASSEURS', 4, .8, ETAT === 'sel', 'ATTAQUE'], ['destroyer', 'DESTROYER', 1, 1, false, 'EN GARDE'], ['collecteur', 'COLLECTEURS', 2, 1, false, 'MINENT'], ['bombardier', 'BOMBARDIERS', 0, 0, false, '—']];
+  h += `<div class="v" style="right:0;top:${tel ? 26 : 30}px;bottom:0;width:${w}px;border-radius:0;border-width:0 0 0 1px;padding:6px;display:flex;flex-direction:column;gap:4px;overflow:hidden">`;
+  if (!LISTE) h += lignes.map(([t, , n, v, on]) => `<span class="b${on ? ' on' : ''}" style="height:40px;flex-direction:column;gap:1px">${ic(t, 18)}<span class="n" style="font-size:10px;line-height:1">${n}</span></span>`).join('');
+  else { h += `<div style="font:400 10px var(--titre);letter-spacing:.1em;color:var(--doux);padding:2px 4px">FLOTTE DE SOL-7</div>`;
+    for (const [t, nom, n, v, on, ordre] of lignes){ if (!n) continue; h += `<div class="b${on ? ' on' : ''}" style="justify-content:flex-start;flex-direction:column;align-items:stretch;padding:${tel ? '2px 6px' : '4px 6px'};gap:1px;${n ? '' : 'opacity:.45'}"><div style="display:flex;align-items:center;gap:6px">${ic(t, 18)}<span>${nom}</span><span class="n" style="margin-left:auto">${n}</span></div>${n ? pv(v) : ''}<span class="dx" style="font-size:11px">${ordre}</span></div>`;
+      if (t === 'aurore' && on) h += `<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:3px;padding:2px 0 4px">${PROD.map(([pt, , p]) => `<span class="b" style="height:38px;flex-direction:column;gap:0">${ic(pt, 17)}<span class="n cr" style="font-size:10px">${p}</span></span>`).join('')}</div>${pv(.4)}`; }
+    h += `<div class="b" style="height:28px;margin-top:auto;color:var(--or)">+ NOUVEAU GROUPE</div>`; }
+  h += `</div>`;
+  if (ETAT === 'sel') h += `<div class="v" style="left:${(tel ? 100 : 150) + 16}px;bottom:8px;display:flex;gap:4px;padding:4px">${['aller', 'attaque', 'patrouille', 'stop', 'drapeau'].map(t => `<span class="b" style="width:${tel ? 38 : 44}px;height:${tel ? 38 : 44}px">${ic(t, 20)}</span>`).join('')}</div>`;
+  return h; }
+
+const DESC = {
+  A: [['EN BREF', 'Le schéma classique des jeux de stratégie : barre fine en haut, mini-carte en bas à gauche, ce qui est choisi au centre, une grille de commandes à droite qui change selon la sélection (choisis AURORE : la grille devient le chantier).'],
+      ['TELEPHONE', 'Tout tient dans une bande de 50 px en bas ; les boutons font 40 px, assez pour le pouce. Les groupes sont des onglets avec leur icône et leur nombre.'],
+      ['PLUS ET MOINS', 'Le plus familier et le plus complet. La bande du bas mange un peu de la carte.']],
+  B: [['EN BREF', 'Le moins d\'interface possible, pensé pour le pouce : groupes en boutons ronds à gauche, une bulle d\'ordres sous la sélection, le chantier dans un tiroir qui sort de la droite (le bouton AURORE l\'ouvre), la mini-carte derrière un bouton.'],
+      ['TELEPHONE', 'La carte reste presque entièrement visible ; tout se replie. Sur PC, le même écran avec les raccourcis clavier.'],
+      ['PLUS ET MOINS', 'Le plus aéré. Une touche de plus pour produire (ouvrir le tiroir).']],
+  C: [['EN BREF', 'Une liste de la flotte à droite (comme l\'arbre de l\'empire de Sins of a Solar Empire) : chaque groupe avec son nombre, sa vie et son ordre ; AURORE se déplie en chantier. Les ordres en bas, la mini-carte à gauche.'],
+      ['TELEPHONE', 'La liste se replie en colonne d\'icônes (touche LISTE) pour laisser la carte.'],
+      ['PLUS ET MOINS', 'Le meilleur pour suivre une grosse flotte et plusieurs systèmes plus tard (galaxie). La colonne prend de la place.']]};
+function rendre(){ const [W, H] = VIRT[APP], ui = $('#ui'); $('#fond').src = FONDS[APP]; $('#cadre').classList.toggle('tel', APP === 'tel'); $('#cadre').style.aspectRatio = W + '/' + H;
+  ui.style.width = W + 'px'; ui.style.height = H + 'px'; ui.innerHTML = { A: dirA, B: dirB, C: dirC }[DIR](APP === 'tel'); redim();
+  $('#desc').innerHTML = DESC[DIR].map(([t, p]) => `<div class="carte"><h3>${t}</h3><p>${p}</p></div>`).join('');
+  if (DIR === 'B') $('#desc').insertAdjacentHTML('beforeend', `<div class="carte"><h3>ESSAI</h3><p><button class="b" id="bT" style="padding:6px 10px">${TIROIR ? 'Fermer' : 'Ouvrir'} le tiroir du chantier</button></p></div>`);
+  if (DIR === 'C') $('#desc').insertAdjacentHTML('beforeend', `<div class="carte"><h3>ESSAI</h3><p><button class="b" id="bL" style="padding:6px 10px">${LISTE ? 'Replier' : 'Déplier'} la liste</button></p></div>`); }
+function redim(){ const [W, H] = VIRT[APP], r = $('#cadre').getBoundingClientRect(); $('#ui').style.transform = `scale(${r.width / W})`; }
+function groupe(id, f){ $(id).addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; $(id).querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); f(b.dataset.v); rendre(); }); }
+groupe('#gDir', v => DIR = v); groupe('#gApp', v => APP = v); groupe('#gEtat', v => ETAT = v);
+$('#desc').addEventListener('click', e => { if (e.target.id === 'bT'){ TIROIR = !TIROIR; rendre(); } if (e.target.id === 'bL'){ LISTE = !LISTE; rendre(); } });
+addEventListener('resize', redim); rendre();
+</script>

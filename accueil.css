@@ -440,6 +440,7 @@ body.lock .rack .c3 .body, body.lock .rack .c3 .front::after, body.lock .rack .c
 .box3 .bf::before{content:""; position:absolute; top:0; bottom:0; right:calc(4px * var(--bk)); width:3px; background:var(--red)}
 .box3 .brand{font-family:var(--f-display); font-size:calc(5px * var(--bk)); letter-spacing:1px; color:#fff; background:var(--red); padding:calc(3px * var(--bk)) calc(4px * var(--bk)); align-self:flex-start}
 .box3 .art{flex:1; background:var(--lb); border:2px solid #000; display:flex; align-items:center; justify-content:center; overflow:hidden}
+.box3 .art img{width:100%; height:100%; object-fit:cover; display:block}
 .box3 .art canvas{width:calc(56px * var(--bk)); height:calc(56px * var(--bk)); image-rendering:pixelated; filter:drop-shadow(3px 3px 0 rgba(0,0,0,.5))}
 .box3 .art canvas.wide{width:calc(84px * var(--bk)); height:calc(58px * var(--bk))}
 .box3 .art img{width:100%; height:100%; object-fit:cover}
@@ -462,3 +463,17 @@ body.lock .rack .c3 .body, body.lock .rack .c3 .front::after, body.lock .rack .c
   .c3 .body{transform:rotateX(6deg) rotateY(-18deg)}
   .box3{transform:rotateY(24deg)}
 }
+
+/* étiquettes faites avec les images du jeu (carte.img / carte.jaq, règle du 22/11 ; maquette maquettes/etiquettes-jeux.html, direction C « photo brillante ») :
+   la scène comme une photo glacée, le nom du jeu en Titillium italique avec un trait de sa couleur */
+@font-face{font-family:"Titillium Web"; font-style:italic; font-weight:700; font-display:swap; src:url("polices/titillium-web-700i.woff2") format("woff2")}
+.c3 .lab.photo{display:block; padding:0; overflow:hidden; background:#0b0f1a; border-radius:calc(4px * var(--k))}
+.c3.sD .lab.photo, .c3.sE .lab.photo{border-radius:2px}
+.lab.photo > img.sc, .box3 .art.photo > img.sc{position:absolute; inset:0; width:100%; height:100%; object-fit:cover; image-rendering:auto; filter:none}
+.box3 .art.photo{position:relative; display:block}
+.lab.photo::after, .box3 .art.photo::after{content:""; position:absolute; inset:0; pointer-events:none;
+  background:linear-gradient(transparent 45%, rgba(0,0,0,.75)), linear-gradient(120deg, rgba(255,255,255,.35), transparent 35%)}
+.lab.photo .md, .box3 .art.photo .md{position:absolute; z-index:1; left:6%; right:4%; bottom:5%; font:italic 700 calc(9px * var(--k))/.95 "Titillium Web", "Arial Narrow", sans-serif;
+  color:#fff; text-transform:uppercase; letter-spacing:.02em; text-shadow:0 1px 3px rgba(0,0,0,.8); overflow-wrap:anywhere}
+.lab.photo .md i, .box3 .art.photo .md i{display:block; width:40%; height:2px; background:var(--sh); margin-bottom:2px}
+.box3 .art.photo .md{font-size:calc(13px * var(--bk))}
