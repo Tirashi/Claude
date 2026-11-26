@@ -38,7 +38,9 @@ LANTERNE.persos = {
   garance: { nom: 'Garance', perso: 'garance' }, mineur: { nom: 'Le vieux Barnabé', perso: 'mineur' },
   chevalier: { nom: 'Chevalier de cendre', perso: 'chevalier' }, geant: { nom: 'Géant de sel', perso: 'geant_sel' },
   // acte 4 : le Cimetière des cloches et le Clocher englouti
-  fossoyeur: { nom: 'Anselme le fossoyeur', perso: 'ancien' }, sonneur: { nom: 'Le Sonneur', perso: 'sonneur' }
+  fossoyeur: { nom: 'Anselme le fossoyeur', perso: 'ancien' }, sonneur: { nom: 'Le Sonneur', perso: 'sonneur' },
+  // le final : l'abbaye de Saint-Cendre
+  aubrin: { nom: 'Aubrin', perso: 'vaast' }, tiennot: { nom: 'Tiennot', perso: 'enfant' }
 };
 
 LANTERNE.statistiques = [
@@ -79,7 +81,8 @@ LANTERNE.aide = [
 
 LANTERNE.fin = ['vaast_vu', 'verene_rejoint', 'outil:lanterne', 'roi_vaincu', 'acte1_fini', 'mission_marais', 'maud_rejoint', 'outil:grappin', 'dame_vaincue', 'acte2_fini',
   'isee_avouee', 'echarpe_trouvee', 'isee_conseil', 'mission_roches', 'outil:masse', 'page_sceau', 'geant_vaincu', 'acte3_fini',
-  'ysolde_partie', 'lettre_lue', 'mission_cimetiere', 'sonneur_vaincu', 'fresque_finale', 'acte4_fini'];
+  'ysolde_partie', 'lettre_lue', 'mission_cimetiere', 'sonneur_vaincu', 'fresque_finale', 'acte4_fini',
+  'ysolde_libre', 'aubrin_vaincu', 'jeu_fini'];
 
 LANTERNE.depart = { carte: 'maison_ysolde', x: 2, y: 4, dir: 'bas', equipe: ['heros'], niveau: 1, ecus: 0, chapitre: 'Prologue' };
 
@@ -109,7 +112,9 @@ LANTERNE.journal = e => {
   if (!d.clocher_vu) return 'Traverser le Cimetière des cloches jusqu\'au Clocher englouti, derrière l\'église.';
   if (!d.sonneur_vaincu) return 'Dans le Clocher englouti : grappin, masse et lanterne servent tous. Trouver la clé du clocher et la Flamme blanche.';
   if (!d.acte4_fini) return 'La Flamme blanche brille. Lire la fresque du clocher avec Vérène.';
-  return 'Quatre flammes dans la lanterne… Mère Ysolde est captive à l\'abbaye. La suite (le final) arrive bientôt.';
+  if (!d.ysolde_libre) return 'Quatre flammes dans la lanterne. Retourner à l\'abbaye : une porte de fer s\'ouvre derrière la Grande Lanterne. Délivrer Mère Ysolde dans les cachots.';
+  if (!d.aubrin_vaincu) return 'Mère Ysolde est libre. Monter au sommet de l\'abbaye affronter le Prieur et la Grande Lanterne.';
+  return 'La brume se lève au matin et revient le soir. Les villageois allument leurs lanternes pour la nuit seulement.';
 };
 
 /* Légende commune des cartes : une lettre par case.

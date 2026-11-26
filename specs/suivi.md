@@ -183,3 +183,6 @@ Affichage PC élargi (1280 px, liste en colonnes, fiche en deux colonnes) ; ongl
 
 ## La Dernière Lanterne, acte 4 (26/11)
 Session 5a : rebondissement 3 (Clairfond éteinte, lettre d'Ysolde), Cimetière des cloches, Clocher englouti (4 salles, les trois outils), le Sonneur (niveau 12), fresque finale, Flamme blanche ; 5 cartes, 7 monstres, 6 objets d'équipement. Détails : `specs/rpg.md` § 17.3. Cache v129. À essayer sur le téléphone ; ensuite le final (5b).
+
+## La Dernière Lanterne, final (26/11)
+Session 5b : cachots de l'abbaye (levier, grille, Ysolde libérée), sommet, Aubrin puis la Grande Lanterne (deux combats), fin à Clairfond (Tiennot, Isée, lanternes de nuit). 2 cartes, 2 boss, cas d'équilibrage au niveau 13. Détails : `specs/rpg.md` § 17.4. Cache v130. Correction : la lettre d'Ysolde se lisait même avant la disparition (les objets ignorent `si`). Reste 5c : scène bonus et à-côtés.

@@ -43,7 +43,12 @@ const CAS = [
   { nom: 'Acte 4 : l\'équipe de 4 niv. 11 contre une goule et un Veilleur d\'os', equipe: ['heros', 'eloi', 'verene', 'maud'], niveau: 11, monstres: ['goule', 'squelette'], objets: { herbe: 3 }, cible: { victoire: .9, tours: [2, 5] } },
   { nom: 'Acte 4 : l\'équipe de 4 niv. 11 contre un poltergeist et une âme perdue', equipe: ['heros', 'eloi', 'verene', 'maud'], niveau: 11, monstres: ['poltergeist', 'ame_perdue'], objets: { herbe: 3 }, cible: { victoire: .9, tours: [2, 5] } },
   { nom: 'Acte 4 : l\'équipe de 4 niv. 12 contre un spectre et un phantôme', equipe: ['heros', 'eloi', 'verene', 'maud'], niveau: 12, monstres: ['spectre', 'phantome'], objets: { herbe: 3, fiole: 2 }, cible: { victoire: .9, tours: [2, 5] } },
-  { nom: 'Acte 4, boss : l\'équipe de 4 niv. 12 contre le Sonneur', equipe: ['heros', 'eloi', 'verene', 'maud'], niveau: 12, monstres: ['sonneur'], objets: { herbe: 5, fiole: 3 }, cible: { victoire: .85, tours: [5, 11] } }
+  { nom: 'Acte 4, boss : l\'équipe de 4 niv. 12 contre le Sonneur', equipe: ['heros', 'eloi', 'verene', 'maud'], niveau: 12, monstres: ['sonneur'], objets: { herbe: 5, fiole: 3 }, cible: { victoire: .85, tours: [5, 11] } },
+  // le final (26/11) : Aubrin puis la Grande Lanterne, prévus au niveau 13
+  { nom: 'Final : l\'équipe de 4 niv. 13 contre deux Chevaliers de cendre', equipe: ['heros', 'eloi', 'verene', 'maud'], niveau: 13, monstres: ['chevalier', 'chevalier'], objets: { herbe: 3, fiole: 2 }, cible: { victoire: .9, tours: [3, 8] } },
+  { nom: 'Final, boss : l\'équipe de 4 niv. 13 contre Aubrin', equipe: ['heros', 'eloi', 'verene', 'maud'], niveau: 13, monstres: ['aubrin'], objets: { herbe: 5, fiole: 3 }, cible: { victoire: .85, tours: [5, 11] } },
+  { nom: 'Final, boss : l\'équipe de 4 niv. 13 contre la Grande Lanterne', equipe: ['heros', 'eloi', 'verene', 'maud'], niveau: 13, monstres: ['grande_lanterne'], objets: { herbe: 5, fiole: 3 }, cible: { victoire: .85, tours: [5, 12] } },
+  { nom: 'Final, boss : l\'équipe de 4 niv. 12 contre Aubrin (un niveau en dessous)', equipe: ['heros', 'eloi', 'verene', 'maud'], niveau: 12, monstres: ['aubrin'], objets: { herbe: 5, fiole: 3 }, cible: { victoire: .5, tours: [5, 16] } }
 ];
 
 function jouerCas(M, J, cas, n, graine = 1) {

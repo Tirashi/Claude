@@ -69,7 +69,9 @@ LANTERNE.cartes = {
       { id: 'pecheur', perso: 'pecheur', x: 15, y: 15, evenement: 'pecheur' },
       { id: 'nuage', perso: 'nuage', x: 8, y: 13, evenement: 'nuage' },
       { id: 'garde', perso: 'garde', x: 10, y: 3, evenement: 'garde' },
-      { id: 'garcon_vert', perso: 'garcon_vert', x: 20, y: 11, evenement: 'garcon_vert', erre: 2, anim: 'attaque' }
+      { id: 'garcon_vert', perso: 'garcon_vert', x: 20, y: 11, evenement: 'garcon_vert', erre: 2, anim: 'attaque' },
+      { id: 'isee_aube', perso: 'isee', x: 12, y: 12, evenement: 'isee_route', cache: true },
+      { id: 'tiennot', perso: 'enfant', x: 9, y: 13, evenement: 'isee_route', cache: true }
     ],
     sorties: [
       { x: [11, 12], y: 0, vers: 'route_abbaye', a: [6, 28], dir: 'haut', si: 'mission', refus: 'pas_encore' },
@@ -161,7 +163,7 @@ LANTERNE.cartes = {
   abbaye: {
     nom: 'Abbaye de Saint-Cendre', musique: 'village', ciel: 0x151218, entree: 'abbaye_entree', sauvegardeAuto: true,
     plan: [
-      'AAAAAAAAAAAAA',
+      'AAAAAAaAAAAAA',
       'jaaaaaaaaaaaj',
       'jaaaaaaaaaaaj',
       'jalaaaaaaalaj',
@@ -178,10 +180,11 @@ LANTERNE.cartes = {
       { type: 'lanterne', x: 11, y: 8 }
     ],
     pnj: [
-      { id: 'vaast', perso: 'vaast', x: 5, y: 5, evenement: 'vaast' },
+      { id: 'vaast', perso: 'vaast', x: 5, y: 5, evenement: 'vaast', si: '!acte4_fini' },
       { id: 'eloi', perso: 'eloi', x: 8, y: 4, evenement: 'eloi_abbaye', si: '!eloi_rejoint' }
     ],
-    sorties: [{ x: 6, y: 9, vers: 'route_abbaye', a: [6, 3], dir: 'bas' }]
+    sorties: [{ x: 6, y: 9, vers: 'route_abbaye', a: [6, 3], dir: 'bas' },
+      { x: 6, y: 0, vers: 'donjon_cachots', a: [6, 9], dir: 'haut', si: 'acte4_fini', refus: 'porte_scellee' }]
   },
 
   // ---------- acte 1 : le Bois Murmurant ----------
@@ -1129,5 +1132,63 @@ LANTERNE.cartes = {
     pnj: [{ id: 'sonneur', perso: 'sonneur', x: 5, y: 3, evenement: 'sonneur_parle', si: '!sonneur_vaincu' }],
     sorties: [{ x: 5, y: 10, vers: 'clocher_nef', a: [7, 2], dir: 'bas' }],
     declencheurs: [{ x: [1, 9], y: 6, evenement: 'sonneur_combat', si: '!sonneur_vaincu' }]
+  },
+
+  // ---------- le final : les cachots et le sommet de l'abbaye de Saint-Cendre ----------
+  donjon_cachots: {
+    nom: 'Cachots de Saint-Cendre', musique: 'foret', ciel: 0x0a0a0e, sauvegardeAuto: true, entree: 'cachots_arrivee',
+    combat: { sol: ['sol_crypte0', 'sol_crypte1'], decor: 'mur_crypte_haut', interieur: true },
+    plan: [
+      'CCCCCCnCCCCCC',
+      'ZnnZnnnnnnnnZ',
+      'ZnnnnnnnnnnnZ',
+      'ZZZZnnnnnnnnZ',
+      'ZnnnnnnnnnnnZ',
+      'ZnnnQnnnQnnnZ',
+      'ZnnnnnnnnnnnZ',
+      'ZnnnnnnnnnnnZ',
+      'ZnnnQnnnQnnnZ',
+      'ZnnnnnnnnnnnZ',
+      'zzzzzznzzzzzz'
+    ],
+    ornements: [{ type: 'torche', x: 4, y: 0 }, { type: 'torche', x: 8, y: 0 }],
+    objets: [
+      { type: 'grille', id: 'cachot_grille', x: 3, y: 2, ouvertSi: 'levier_cachots', texte: 'Une grille de fer ferme la cellule. Derrière, une silhouette familière, assise, qui ne bouge pas.' },
+      { type: 'levier', id: 'cachot_levier', x: 11, y: 1, drapeau: 'levier_cachots', texte: 'Le levier grince… Dans le fond, la grille de la cellule se soulève.' },
+      { type: 'lanterne', x: 1, y: 9 },
+      { type: 'coffre', id: 'cachots_fioles', x: 11, y: 9, contenu: { objet: 'fiole', n: 3 } }
+    ],
+    pnj: [{ id: 'ysolde_cachot', perso: 'ysolde', x: 1, y: 1, evenement: 'ysolde_cachot' }],
+    monstres: [
+      { type: 'chevalier', x: 6, y: 4, rayon: 1, groupe: ['chevalier', 'chevalier'] },
+      { type: 'spectre', x: 9, y: 7, rayon: 1, groupe: ['spectre', 'phantome'] },
+      { type: 'chevalier', x: 4, y: 7, rayon: 1, groupe: ['chevalier', 'spectre'] }
+    ],
+    sorties: [
+      { x: 6, y: 10, vers: 'abbaye', a: [6, 1], dir: 'bas' },
+      { x: 6, y: 0, vers: 'abbaye_sommet', a: [5, 9], dir: 'haut', si: 'ysolde_libre', refus: 'sommet_ferme' }
+    ]
+  },
+  abbaye_sommet: {
+    nom: 'Sommet de l\'abbaye', musique: 'village', ciel: 0x151218, sauvegardeAuto: true, entree: 'sommet_arrivee',
+    combat: { sol: ['marbre0', 'marbre1'], decor: 'mur_blanc_haut', interieur: true },
+    plan: [
+      'AAAAAAAAAAA',
+      'jaaaaaaaaaj',
+      'jlaaaaaaalj',
+      'jaaaaaaaaaj',
+      'jaaaaaaaaaj',
+      'jaaaaaaaaaj',
+      'jlaaaaaaalj',
+      'jaaaaaaaaaj',
+      'jaaaaaaaaaj',
+      'jlaaaaaaalj',
+      'kkkkkakkkkk'
+    ],
+    ornements: [{ type: 'vitrail', x: 2, y: 0 }, { type: 'vitrail', x: 8, y: 0 }, { type: 'tapis_long', x: 5, y: 4, h: 6 }],
+    objets: [{ type: 'grande_lanterne', x: 5, y: 2, evenement: 'grande_lanterne_sommet' }],
+    pnj: [{ id: 'aubrin', perso: 'vaast', x: 5, y: 4, evenement: 'aubrin_parle', si: '!aubrin_vaincu' }],
+    sorties: [{ x: 5, y: 10, vers: 'donjon_cachots', a: [6, 1], dir: 'bas' }],
+    declencheurs: [{ x: [1, 9], y: 7, evenement: 'aubrin_combat', si: '!aubrin_vaincu' }]
   }
 };

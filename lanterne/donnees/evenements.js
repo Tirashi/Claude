@@ -175,6 +175,15 @@ LANTERNE.evenements = {
   isee_route: [{ dire: '…', qui: 'isee' }],
   // ---------- l'abbaye : le Prieur Vaast et Eloi ----------
   abbaye_entree: [
+    { si: 'acte4_fini', alors: [
+      { si: 'abbaye_final_vu', sinon: [
+        { drapeau: 'abbaye_final_vu' }, { sauver: 'auto' },
+        { dire: ['La grande salle de Saint-Cendre est vide : plus un moine, plus un Chevalier. Seule la Grande Lanterne brûle, plus blanche que jamais.',
+          'Derrière elle, la tapisserie a glissé : une porte de fer, entrouverte sur un escalier qui descend.'] },
+        { dire: 'Les cachots. C\'est là qu\'on met ceux qui disent la vérité au Prieur.', qui: 'maud' }
+      ] },
+      { stop: true }
+    ] },
     { si: 'vaast_vu', sinon: [
       { attendre: .5 },
       { dire: 'Sous la voûte, la Grande Lanterne brûle d\'une lumière pâle. Un vieil homme en robe blanche se retourne.' },
@@ -827,7 +836,7 @@ LANTERNE.evenements = {
 
   // ---------- rebondissement 3 : Clairfond éteinte, Mère Ysolde partie ----------
   clairfond_retour: [
-    { si: 'acte3_fini', alors: [{ si: 'ysolde_partie', sinon: [
+    { si: { tous: ['acte3_fini', { non: 'acte4_fini' }] }, alors: [{ si: 'ysolde_partie', sinon: [
       { drapeau: 'ysolde_partie' },
       { attendre: .5 },
       { dire: ['La nuit tombe sur Clairfond. Sur la place, la lanterne du village est éteinte : plus un point rouge, plus une braise.',
@@ -838,6 +847,7 @@ LANTERNE.evenements = {
     ] }] }
   ],
   lettre_ysolde: [
+    { si: 'ysolde_partie', sinon: [{ dire: 'La table de la veilleuse : un napperon, une tasse de tisane et la liste des courses de Mère Ysolde.' }, { stop: true }] },
     { si: 'lettre_lue',
       alors: [{ dire: 'La lettre de Mère Ysolde, pliée en quatre. « Va voir le Prieur comme si de rien n\'était. »' }],
       sinon: [
@@ -986,6 +996,94 @@ LANTERNE.evenements = {
     { dire: 'Quatre flammes dans la lanterne. Les quatre Gardiens à rendre à la vallée. Et une dame de Clairfond à tirer des mains d\'un Prieur.' },
     { dire: '(Fin de l\'acte 4. La suite — l\'abbaye de Saint-Cendre, le final — arrive bientôt.)' },
     { sauver: 'auto' }
+  ],
+
+  // ---------- le final : les cachots, le sommet, la fin ----------
+  porte_scellee: [{ dire: 'Un passage, derrière la Grande Lanterne : une porte de fer, verrouillée. Le Prieur seul en a la clé.' }],
+  sommet_ferme: [
+    { dire: 'Une lourde porte, scellée par une serrure de cendre. Rien ne l\'ouvre de ce côté-ci.' },
+    { dire: 'Mère Ysolde connaît sûrement le mot. Elle l\'a vu fermer cette porte cent fois.', qui: 'eloi' }
+  ],
+  cachots_arrivee: [
+    { si: 'cachots_vus', sinon: [
+      { drapeau: 'cachots_vus' }, { sauver: 'auto' },
+      { dire: ['Un escalier humide, puis de longues salles voûtées. Des armures vides montent la garde, sans bruit, comme des poupées.',
+        'Au fond, une cellule fermée par une grille. Une silhouette y attend, assise, la tête haute.'] },
+      { dire: 'Maman Ysolde !', qui: 'eloi' },
+      { dire: 'Un levier, quelque part. Il y en a toujours un.', qui: 'maud' }
+    ] }
+  ],
+  ysolde_cachot: [
+    { si: 'ysolde_libre',
+      alors: [{ dire: ['Va, mon petit. Je t\'attends ici : ma tisane aura refroidi, mais ma patience tient.', 'Il est tout en haut. Dis-lui bien en face ce que tu sais.'], qui: 'ysolde' }],
+      sinon: [
+        { dire: 'Ah, te voilà. Tu en as mis, du temps. J\'avais presque fini ma tisane.', qui: 'ysolde' },
+        { dire: 'Mère Ysolde ! Vous n\'êtes pas blessée ?', qui: 'eloi' },
+        { dire: ['Seulement vexée. Vaast m\'a enfermée avec gentillesse, ce qui est pire.',
+          'Il était mon ami d\'enfance… enfin, celui du début de ma vie, et il avait déjà soixante ans de plus que moi. J\'aurais dû comprendre.'], qui: 'ysolde' },
+        { dire: 'Il reste quatre flammes à rendre. Quatre flammes et une lanterne qu\'il ne veut pas lâcher.', qui: 'verene' },
+        { dire: ['Alors rendez-les. Il est tout en haut : la porte de fer, au bout des cachots. Elle s\'ouvre à qui connaît le mot des veilleurs.',
+          'Le mot, c\'est « rentrez ». Pas « entrez » : « rentrez ». Il l\'a oublié depuis longtemps.'], qui: 'ysolde' },
+        { soigner: true }, { drapeau: 'ysolde_libre' }, { sauver: 'auto' },
+        { dire: 'Mère Ysolde touche la serrure de cendre du bout de sa lanterne. Quelque part, tout en haut, une porte de fer s\'ouvre.' }
+      ] }
+  ],
+  grande_lanterne_sommet: [
+    { si: 'aubrin_vaincu',
+      alors: [{ dire: 'Les éclats de la Grande Lanterne scintillent au sol. Ils sont froids, maintenant. Normaux.' }],
+      sinon: [{ dire: ['La Grande Lanterne brûle devant toi. Quatre voix très lointaines chantent à l\'intérieur, et une cinquième, plus faible, murmure :', '« Il faut que je vive. »'] }] }
+  ],
+  sommet_arrivee: [
+    { si: 'aubrin_vaincu', sinon: [{ si: 'sommet_vu', sinon: [
+      { drapeau: 'sommet_vu' },
+      { dire: 'Tout en haut de l\'abbaye, une salle blanche et nue. Au fond, sous la voûte, la Grande Lanterne, et devant elle, le Prieur, de dos, la main sur la pierre.' }
+    ] }] }
+  ],
+  aubrin_parle: [{ dire: 'Approche, mon enfant. Approche. J\'ai tellement froid.', qui: 'vaast' }],
+  aubrin_combat: [
+    { dire: ['Vous voilà. Quatre flammes, enfin. Je les entends, je les sens d\'ici.', 'Donne-les-moi, Eloi. Pose la lanterne, et tout redeviendra comme avant.'], qui: 'vaast' },
+    { dire: 'Père… Aubrin. C\'est votre nom, n\'est-ce pas ? Nous avons lu la fresque.', qui: 'eloi' },
+    { dire: ['Une fresque. Une image. J\'avais peur de mourir, Eloi : j\'avais la fièvre, j\'étais seul. Ils m\'ont guéri, puis ils ont refusé de me laisser vivre.',
+      'Trois cents ans de prières, de petits veilleurs obéissants… Tu aurais fait autrement ?'], qui: 'aubrin' },
+    { dire: 'Oui. Je refuse. Au nom de l\'équipe, et au nom de tous ceux qui ont sonné pour vous ramener.', qui: 'eloi' },
+    { choix: 'Que dis-tu au Prieur ?', options: ['Ils rentrent chez eux.', 'Rentrez, vous aussi.'], suites: [
+      [{ dire: 'Ils rentrent chez eux. Et vous avec eux, Aubrin.', qui: 'heros' }],
+      [{ dire: 'Rentrez, vous aussi. Il est tard.', qui: 'heros' }]
+    ] },
+    { dire: 'Alors… je les prendrai.', qui: 'aubrin' },
+    { combat: ['aubrin'], boss: true },
+    { dire: ['Non… non, non. Je ne veux pas… Je ne veux pas m\'éteindre !', 'Je suis… la lanterne ! Je suis la lanterne !'], qui: 'aubrin' },
+    { dire: 'Il se jette dans la Grande Lanterne… La pierre se fend, rougeoie, enfle.' },
+    { soigner: true },
+    { dire: 'La Flamme blanche vibre dans ta lanterne : elle te réchauffe, le temps d\'un souffle.', qui: 'verene' },
+    { combat: ['grande_lanterne'], boss: true },
+    { drapeau: 'aubrin_vaincu' },
+    { dire: ['La Grande Lanterne vacille. Dedans, on distingue un homme tout petit, qui serre contre lui une flamme qui ne lui appartient pas.', '« J\'avais… tellement… peur. »'], qui: 'aubrin' },
+    { dire: ['Je sais. Mais ce n\'est pas à toi de les garder.', 'Eloi, Vérène, Maud : ensemble.'], qui: 'heros' },
+    { dire: 'Ensemble.', qui: 'eloi' },
+    { evenement: 'fin_du_jeu' }
+  ],
+  fin_du_jeu: [
+    { son: 'lanterne' },
+    { dire: ['Le héros brise la Grande Lanterne. Les quatre flammes jaillissent, rouge, bleue, or, blanche, et filent par les fenêtres vers les quatre coins de la vallée.',
+      'Aubrin ne crie pas. Il murmure « merci », et il n\'y a plus personne.'] },
+    { dire: ['Dans la crypte, le Roi des aulnes ouvre les yeux. Au moulin, la Dame berce à nouveau la roue. Dans les mines, le Géant se lève. Au clocher, la cloche sonne une seule note, claire.',
+      'La brume ne disparaît pas : elle se lève au matin, et revient le soir, douce.'] },
+    { drapeau: 'ysolde_partie', valeur: false },
+    { teleporter: 'clairfond', x: 11, y: 10, dir: 'bas' },
+    { pnj: 'isee_aube', montrer: true }, { pnj: 'tiennot', montrer: true },
+    { dire: 'Le jour se lève sur Clairfond. Mère Ysolde est arrivée la première : elle tient une allumette devant la lanterne du village, et ne se décide pas.' },
+    { dire: 'Quelqu\'un sort de la brume, tout au bout de la place : un garçon en écharpe verte, trop longue, qui cherche quelqu\'un des yeux.' },
+    { dire: 'Maud ?… Tu as… tellement grandi.', qui: 'tiennot' },
+    { dire: 'Tiennot. Tiennot ! Sept ans… Sept ans que j\'appelle ton nom dans le noir, imbécile !', qui: 'maud' },
+    { dire: 'Un peu plus loin, Isée regarde la scène. Le soleil traverse ses mains.' },
+    { dire: ['Je ne tenais que par ma propre flamme, et elle est rendue. Ce n\'est pas triste. J\'ai vu la fin de l\'histoire.',
+      'Ne pleure pas, Eloi. Je me lève au matin, et je reviens le soir. Comme la brume.'], qui: 'isee' },
+    { pnj: 'isee_aube', cacher: true },
+    { dire: 'Isée s\'efface avec l\'aube, en souriant, et la brume, douce, passe sur les toits comme une main sur un front.' },
+    { dire: ['Ce soir-là, les villageois de Clairfond allument leurs lanternes, cette fois pour la nuit seulement.', 'Mère Ysolde frotte l\'allumette. La flamme prend du premier coup.'] },
+    { drapeau: 'jeu_fini' }, { chapitre: 'Fin — la dernière lanterne' }, { sauver: 'auto' },
+    { dire: ['FIN', '(La scène bonus et les à-côtés — les 12 pages du journal, les quêtes des compagnons — arriveront dans une prochaine mise à jour. Tu peux continuer à te promener.)'] }
   ],
 
   porte_abbaye: [
