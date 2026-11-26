@@ -28,6 +28,9 @@ Laissé de côté pour le premier jet : matrice de 17 améliorations, trois thè
 - **Retours du 25/11 (après la maquette 3)** : ralentir encore planètes et vaisseaux ; rendu à approcher de **captures du jeu d'origine** envoyées par l'utilisateur (carte presque nue, astres en petits points nommés avec leur production, routes pointillées, anneaux de portée, fenêtres « Fleet Command » en haut à gauche et « Engineering » en haut à droite, console en bas à gauche, zoom en % en bas à droite, fiche d'un navire avec son pilote ; trois thèmes bleu, violet, vert phosphore).
 - **Maquette 4** (25/11, [artefact](https://claude.ai/artifact/Sc99T6iuxW64J8DGaAzaUT), `maquettes/flotte-du-bureau-4.html`) : carte épurée à ce modèle (sans rien reprendre de ses graphismes), trois ambiances (nuit bleue, violette, phosphore), fenêtres flottantes repliables (Flotte : crédits, navires, quantité ×1 / ×10 / ×100 / max ; Ingénierie : moteurs, soute, portée du signal, veille ; Console système), zoom, fiche d'un navire au toucher, détail des vaisseaux visible en zoomant ; orbites ~2× plus lentes, vaisseaux ~1/3 plus lents ; PC en 16 : 9 et téléphone. **En attente de validation.**
 
+- **Retours du 26/11 (après la maquette 4)** : « vraiment bien », vitesse « ok » ; seul point à travailler : le **sprite des vaisseaux au zoom**, qui « fait très IA » (le dessin vectoriel de la maquette 4).
+- **Maquette 5** (26/11, [artefact](https://claude.ai/artifact/26dv2X6wuYxn2iQhCTqb9q), `maquettes/flotte-du-bureau-5.html`) : même carte, trois styles de vaisseaux au choix (visibles dès 115 % de zoom) : **Actuel** (vectoriel), **Relief** (sprites pixel art éclairés du projet, ceux de Mineur de l'espace : `d_mineur`, `d_cargo`, `u_garde`, `a_rodeur`) et **3D** (Kenney Space Kit, CC0 : `craft_miner`, `craft_cargoA`, `craft_speederC`, `craft_speederD` rendus de dessus avec Three.js, 32 angles, teintés par rôle ; outils dans `outils/sprites-kenney/`, crédité) ; planche de comparaison « de près », zoom jusqu'à 320 %, caméra qui suit le navire touché (bouton ◎ : en choisit un). **En attente du choix de style.**
+
 ## 4. Décisions de l'utilisateur (25/11)
 - **Gains appli fermée** : une **fraction** des gains du jeu ouvert ; une amélioration de prestige augmente cette fraction (proposé : 25 % de base, +5 points par niveau, 75 % au maximum ; à valider).
 - **Le jeu doit bien passer sur PC** (écran large, panneau, clavier plus tard).
@@ -37,6 +40,7 @@ Laissé de côté pour le premier jet : matrice de 17 améliorations, trois thè
 - **Rendu** : aquarium fin (voir maquette 3) ; le radar reste une surcouche au choix.
 
 ## 5. Questions ouvertes
+0. Style des vaisseaux : Relief, 3D ou mélange ?
 1. Le rendu de la maquette 4 convient-il (manque, trop) ?
 2. Une ambiance de couleurs ou un choix dans les réglages ?
 3. Vitesse des vaisseaux et des orbites maintenant ?
