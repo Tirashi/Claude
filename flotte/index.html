@@ -21,12 +21,17 @@
     <header><b>:: FLOTTE</b><span class="hc" id="hCredits"></span><button class="chev" type="button" aria-label="Replier">⌄</button></header>
     <div class="pb">
       <div><div class="lab">Crédits</div><div class="big" id="vCredits">0</div><div class="rate" id="vRevenu"></div></div>
-      <div class="rows"><div>Navires <b id="vNavires"></b></div><div>Mineurs <b id="vM"></b></div><div>Marchands <b id="vT"></b></div></div>
+      <div class="rows"><div>Zone <b id="vZone"></b></div><div>Navires <b id="vNavires"></b></div><div>Mineurs <b id="vM"></b></div><div>Marchands <b id="vT"></b></div></div>
       <div class="lab">Quantité</div>
       <div class="amt" id="lots"></div>
       <button class="btn buy" type="button" data-k="m"><span>Mineurs</span><span class="c"></span></button>
       <button class="btn buy" type="button" data-k="t"><span>Marchands</span><span class="c"></span></button>
     </div>
+  </section>
+
+  <section class="pan eng" id="pIngenierie">
+    <header><b>:: INGÉNIERIE</b><span class="hc"></span><button class="chev" type="button" aria-label="Replier">⌄</button></header>
+    <div class="pb" id="ameliorations"></div>
   </section>
 
   <section class="pan opts shut" id="pOptions">
@@ -57,6 +62,8 @@
     <header><b>:: RETOUR</b></header>
     <div class="pb"><div class="nm" id="rTitre"></div><p id="rTexte"></p><button class="btn" type="button" id="bRetourOk">Récupérer</button></div>
   </section>
+
+  <div class="toast" id="toast"></div>
 
   <div class="zoom">
     <button type="button" id="zSuivre" aria-label="Suivre un navire" title="Suivre un navire">◎</button>

@@ -109,14 +109,15 @@ Voir la liste de contrôle de `specs/ludotheque.md` (skill `ajouter-un-jeu`) : d
 
 ## 15. Étapes (sessions)
 1. **Socle (fait le 26/11)** : carte et orbites, zone 1, mineurs et marchands, gains, achats par lot, fenêtre Flotte, sauvegarde, veille fixe à 25 %, zoom, ambiances, PC et téléphone, sprites Relief ; démo sur l'accueil.
-2. **Zones** : portée du signal, avant-postes, Ingénierie (moteurs, soute), console, fiche d'un navire et suivi de caméra, cinéma.
+2. **Zones (fait le 26/11)** : portée du signal, avant-postes, Ingénierie (moteurs, soute), console, fiche d'un navire et suivi de caméra, cinéma.
 3. **Pirates** : patrouilles, primes, alertes.
 4. **Prestige** : Horizon, éclats, améliorations permanentes dont la Veille, simulateur et équilibrage.
 5. **Finitions** : sons, performances (super-navire si besoin), variété des coques, étiquette, jaquette, transfert, artefact.
 Modèle : opusplan pour les sessions 1 à 3 et 5 ; Opus pour la session 4 (équilibrage).
 
-## 15 bis. État après la session 1 (26/11)
-`flotte/` est jouable en démo : tout ce qui est listé à la session 1, plus le mode cinéma, la fiche d'un navire avec suivi de caméra et le zoom au pincement ; l'Ingénierie, la portée du signal et les patrouilles ne sont pas dans l'interface (le code de `ouvrirZone` et des corps des zones 2 à 4 existe). **Rythme** : le simulateur (`node outils/flotte-simulateur.js rythme`) montre qu'un joueur simple ouvre les quatre zones en 15 minutes environ et gagne ~100 cr/s au bout d'une heure : les coûts de portée (120, 350, 900) sont trop bas pour la cible de 2 à 3 h, à recaler en session 2.
+## 15 bis. État après les sessions 1 et 2 (26/11)
+`flotte/` est jouable en démo ([artefact](https://claude.ai/artifact/G8fypxapvG7eFT7PaSvrzU)). **Session 1** : tout ce qui est listé plus le mode cinéma, la fiche d'un navire avec suivi de caméra et le zoom au pincement. **Session 2** : fenêtre **Ingénierie** (portée du signal, moteurs, soute), quatre zones avec avant-postes et carte qui dézoome, annonce à l'ouverture d'une zone, ligne « Zone » dans la fenêtre Flotte, raccourcis clavier (M, T, P, C), fenêtres réorganisées (PC : Flotte à gauche, Ingénierie à droite, Options au-dessus du zoom ; téléphone : repliées, une seule ouverte).
+**Rythme recalé** (`node outils/flotte-simulateur.js rythme`, joueur qui ouvre la zone dès qu'il peut puis rachète le meilleur rapport gain / coût) : portée **3 000, 40 000 et 100 000** crédits ; zones 2, 3 et 4 ouvertes à ~8, 36 et 93 minutes, moteurs et soute au maximum vers 45 à 60 minutes, revenu d'environ 400 à 500 cr/s en fin de zone 4. Le contrôle du simulateur exige 5 à 15, 25 à 60 et 70 à 140 minutes. Reste à vérifier à la main que ce rythme est agréable (la cible du prestige est de 2 à 3 h de jeu actif : il manquera sans doute un but après la zone 4, c'est le rôle de l'Horizon).
 
 ## 16. Questions ouvertes
 1. **Nom du jeu** (« Flotte du bureau » est provisoire).

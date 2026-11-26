@@ -13,24 +13,36 @@ let pb = 0; const non = m => { console.error('ÉCHEC ' + m); pb++; };
 function jouer(E, secondes) { S.rattraper(E, secondes); }
 const sain = E => E.ships.every(s => Number.isFinite(s.x) && Number.isFinite(s.y) && Number.isFinite(s.ang)) && Number.isFinite(E.credits);
 
-// Un joueur simple : rachète ce qui rapporte le plus vite (gain par crédit), puis la zone suivante dès qu'il peut
+// Un joueur raisonnable : ouvre la zone dès qu'il peut ; sinon rachète ce qui rapporte le plus par crédit (navire, soute, moteurs),
+// en économisant pour la zone quand elle est à moins de trois minutes de revenu
 function racheter(E) {
-  for (;;) {
-    const zone = E.lv < 3 ? R.ZONES[E.lv + 1].cout : Infinity;
-    if (E.credits >= zone && E.ships.length >= 12 * (E.lv + 1)) { S.ouvrirZone(E); continue; }
-    const cm = R.cout('m', E.buys.m), ct = R.cout('t', E.buys.t);
-    const k = (S.nombre(E, 'm') <= S.nombre(E, 't') * 2 ? 'm' : 't'), c = k === 'm' ? cm : ct;
+  for (let g = 0; g < 60; g++) {
+    const rev = S.revenu(E, 60), par = rev / (E.ships.length || 1), zc = E.lv < 3 ? R.ZONES[E.lv + 1].cout : Infinity;
+    if (E.credits >= zc) { S.ouvrirZone(E); continue; }
+    const o = [['m', R.cout('m', E.buys.m), par], ['t', R.cout('t', E.buys.t), par]];
+    if (E.up.soute < 10) o.push(['soute', R.coutAmelio('soute', E.up.soute), rev * .1 / (1 + .1 * E.up.soute)]);
+    if (E.up.mot < 10) o.push(['mot', R.coutAmelio('mot', E.up.mot), rev * .55 * .08 / (1 + .08 * E.up.mot)]);
+    o.sort((a, b) => b[2] / b[1] - a[2] / a[1]);
+    const [k, c] = o[0];
+    if (zc < Infinity && zc - E.credits < rev * 180 && E.credits < zc) return;
     if (E.credits < c) return;
-    S.acheter(E, k, 1);
+    if (k === 'm' || k === 't') S.acheter(E, k, 1); else S.ameliorer(E, k);
   }
+}
+// Joue une partie et note à quelle minute chaque zone s'ouvre
+function partie(graine, minutes, affiche) {
+  const E = S.creer({rng: rnd(graine)}), ouv = {};
+  for (let s = 0; s < minutes * 60; s += 2) {
+    S.rattraper(E, 2); if (s % 10 === 0) racheter(E);
+    for (let z = 1; z <= 3; z++) if (E.lv >= z && !ouv[z]) ouv[z] = s / 60;
+    if (affiche && s % 900 === 0 && s > 0) console.log(`${String(Math.round(s / 60)).padStart(3)} min : zone ${E.lv + 1}, ${E.ships.length} navires, revenu ${S.revenu(E, 60).toFixed(1)} cr/s, moteurs ${E.up.mot}, soute ${E.up.soute}`);
+  }
+  return {E, ouv};
 }
 
 if (process.argv[2] === 'rythme') {
-  const E = S.creer({rng: rnd(11)});
-  for (let m = 5; m <= 60; m += 5) {
-    for (let i = 0; i < 300; i++) { jouer(E, 1); if (i % 5 === 0) racheter(E); }
-    console.log(`${String(m).padStart(2)} min : zone ${E.lv + 1}, ${E.ships.length} navires, revenu ${S.revenu(E, 60).toFixed(1)} cr/s, gagné ${Math.round(E.total)}`);
-  }
+  const r = partie(11, 240, true);
+  console.log('ouvertures (min) : ' + [1, 2, 3].map(z => 'zone ' + (z + 1) + ' à ' + (r.ouv[z] == null ? '—' : Math.round(r.ouv[z]))).join(', '));
   process.exit(0);
 }
 
@@ -50,6 +62,14 @@ const avant = C.credits, n = S.acheter(C, 'm', 'max');
 if (n < 1 || C.credits < 0 || avant - C.credits !== R.coutLot('m', 0, n)) non('achat au maximum');
 if (S.acheter(C, 'm', 1) !== 0 && C.credits < 0) non('achat sans crédits');
 if (S.acheter(C, 'p', 1) !== 0) non('les patrouilles ne s\'achètent pas encore');
+// 3 bis. améliorations : coûts, plafonds, effet sur la vitesse et sur les gains
+const U = S.creer({rng: rnd(6)}); U.credits = 1e9;
+if (R.coutAmelio('mot', 0) !== 80 || R.coutAmelio('soute', 2) !== Math.round(120 * 1.9 * 1.9)) non('coût des améliorations');
+for (let i = 0; i < 12; i++) { S.ameliorer(U, 'mot'); S.ameliorer(U, 'soute'); }
+if (U.up.mot !== 10 || U.up.soute !== 10) non('plafond des améliorations');
+if (Math.abs(R.multVitesse(10) - 1.8) > 1e-9 || Math.abs(R.multGain(10) - 2) > 1e-9) non('effets des améliorations');
+const rapide = S.creer({rng: rnd(8)}), lent = S.creer({rng: rnd(8)}); rapide.up.mot = 10; rapide.up.soute = 10; jouer(rapide, 600); jouer(lent, 600);
+if (!(rapide.total > lent.total * 1.8)) non('les améliorations ne rapportent pas : ' + Math.round(rapide.total) + ' contre ' + Math.round(lent.total));
 // 4. absence : rattrapage ≤ 10 min, sinon part de veille plafonnée à 24 h
 const a1 = R.absence(2, 120, 0), a2 = R.absence(2, 3600, 0), a3 = R.absence(2, 10 * 86400, 10);
 if (a1.mode !== 'rattrapage' || a2.mode !== 'veille' || a2.gain !== Math.floor(2 * 3600 * .25)) non('absence courte ou moyenne');
@@ -69,9 +89,11 @@ for (let i = 0; i < 3; i++) if (!S.ouvrirZone(Z)) non('ouverture de la zone ' + 
 if (Z.lv !== 3 || S.ouvrirZone(Z)) non('quatre zones au plus');
 jouer(Z, 600); if (!sain(Z)) non('NaN après l\'ouverture des zones');
 if (!Z.ships.some(s => s.ore === 'iridium' && s.trips > 0) && !Z.ships.some(s => s.ore !== 'fer')) non('les mineurs ne vont pas dans les zones lointaines');
-// 7. une heure sans NaN, avec un joueur qui rachète
-const H = S.creer({rng: rnd(9)}); for (let i = 0; i < 720; i++) { jouer(H, 5); racheter(H); }
-if (!sain(H)) non('NaN après une heure'); if (!(S.revenu(H, 60) > rev * 3)) non('le revenu ne croît pas : ' + S.revenu(H, 60).toFixed(1));
-if (!(H.lv >= 2)) non('en une heure, le joueur simple devrait avoir ouvert au moins trois zones (zone ' + (H.lv + 1) + ')');
+// 7. rythme : un joueur raisonnable ouvre la zone 2 en 5 à 15 min, la 3 en 25 à 60, la 4 en 70 à 140 ; pas de NaN
+const H = partie(9, 150);
+if (!sain(H.E)) non('NaN après 2 h 30');
+const borne = [[1, 5, 15], [2, 25, 60], [3, 70, 140]];
+for (const [z, mini, maxi] of borne) { const t = H.ouv[z]; if (t == null || t < mini || t > maxi) non('la zone ' + (z + 1) + ' s\'ouvre à ' + (t == null ? 'jamais' : Math.round(t)) + ' min (visé : ' + mini + ' à ' + maxi + ')'); }
+if (!(S.revenu(H.E, 60) > rev * 20)) non('le revenu ne croît pas assez : ' + S.revenu(H.E, 60).toFixed(1));
 if (pb) { console.error(pb + ' échec(s)'); process.exit(1); }
 console.log('Flotte du bureau : tout est bon');

@@ -9,7 +9,7 @@ const ecrire = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } c
 const nb = (v, d) => (Number.isFinite(Number(v)) ? Number(v) : d);
 
 function exporter(E) {
-  return { v: 1, quand: Date.now(), t: E.t, credits: E.credits, total: E.total, buys: E.buys, lv: E.lv, veille: E.veille,
+  return { v: 1, quand: Date.now(), t: E.t, credits: E.credits, total: E.total, buys: E.buys, lv: E.lv, veille: E.veille, up: E.up,
     revenu: S.revenu(E, 60), navires: E.ships.map(s => ({ type: s.type, nom: s.nom, trips: s.trips, earn: s.earn })) };
 }
 
@@ -19,6 +19,7 @@ function importer(d) {
   const E = S.creer({ vide: true });
   E.t = Math.max(0, nb(d.t, 0)); E.credits = Math.max(0, nb(d.credits, R.DEPART.credits)); E.total = Math.max(0, nb(d.total, 0));
   E.lv = Math.max(0, Math.min(R.ZONES.length - 1, Math.floor(nb(d.lv, 0)))); E.veille = Math.max(0, Math.min(10, Math.floor(nb(d.veille, 0))));
+  for (const k of ["mot", "soute"]) E.up[k] = Math.max(0, Math.min(R.AMELIO[k].max, Math.floor(nb(d.up && d.up[k], 0))));
   for (const k of ["m", "t", "p"]) E.buys[k] = Math.max(0, Math.floor(nb(d.buys && d.buys[k], 0)));
   F.Monde.placer(E.M, E.t);
   for (const n of d.navires.slice(0, 2000)) if (n && (n.type === "m" || n.type === "t")) S.ajouter(E, n.type, n);

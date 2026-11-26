@@ -46,3 +46,4 @@ Un jeu sans lien ci-dessous : demander le lien à l'utilisateur avant d'en crée
 | Dragon Simulator (le jeu a remplacé la maquette 3D le 02/11 ; après `artefact.py`, insérer `<script>window.DS_MODELES_B64="…"</script>` (base64 de `modeles.glb`) juste avant le script de `monde3d.js`) | https://claude.ai/artifact/93nrGTRHG1G1qbt9GCg97q |
 
 Queens, Sudoku, Touché Coulé, Tetris, Snake, Asteroids, Solitaire, le Jeu de la vie, Odyssée, Le Mot d'or, Romet et Résistance **n'ont pas d'artefact** : on les joue sur le site. Ne pas en créer sans demande.
+| Flotte du bureau (`flotte/`, nom provisoire ; créé le 26/11) | https://claude.ai/artifact/G8fypxapvG7eFT7PaSvrzU |

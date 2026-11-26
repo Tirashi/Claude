@@ -29,6 +29,11 @@ const app = {
   E: () => E, V: () => V,
   lot: () => prefs.lot, setLot: l => { prefs.lot = l; Sv.enregistrerPrefs(prefs); },
   acheter(k) { const n = S.acheter(E, k, prefs.lot === "max" ? "max" : Number(prefs.lot)); if (n) Sv.enregistrer(E); return n; },
+  ameliorer(k) { if (S.ameliorer(E, k)) Sv.enregistrer(E); },
+  portee() {
+    if (!S.ouvrirZone(E)) return false;
+    const z = R.ZONES[E.lv]; UI.toast("Portée " + (E.lv + 1) + " : " + z.n, "nouvelle ressource (" + z.ore + "), nouvel avant-poste"); Sv.enregistrer(E); return true;
+  },
   theme(n) { prefs.theme = n; Sv.enregistrerPrefs(prefs); C.theme(V, n); },
   nouvelle() { Sv.effacer(); E = S.creer(); V.sel = null; V.z = 1; V.px = V.py = 0; V.cam = R.ZONES[0].cam; V.pops = []; Sv.enregistrer(E); UI.maj(E, V); },
   zoom(f) { C.zoomer(V, f); },
@@ -69,6 +74,7 @@ function entrees() {
     else if (e.key === "-") C.zoomer(V, 1 / 1.25);
     else if (e.key === "m" || e.key === "M") app.acheter("m");
     else if (e.key === "t" || e.key === "T") app.acheter("t");
+    else if (e.key === "p" || e.key === "P") app.portee();
     else if (e.key === "c" || e.key === "C") (cine ? sortirCinema : entrerCinema)();
   });
 }

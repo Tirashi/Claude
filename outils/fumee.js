@@ -189,6 +189,8 @@ const shots = process.argv[2];
         E.credits += 2000; J.app.setLot('10'); const n = J.app.acheter('m'); if (n !== 10 || E.ships.length !== 18) return 'achat ×10 : ' + n;
         J.app.zoom(2); if (!(V.z > 1.9)) return 'zoom'; J.suivre(); await wait(600); if (document.getElementById('pFiche').hidden) return 'pas de fiche de navire';
         J.app.fermerFiche(); await wait(300);
+        E.credits += 1e6; if (!J.app.portee() || E.lv !== 1) return 'la portée n\'ouvre pas la zone 2'; J.app.ameliorer('mot'); if (E.up.mot !== 1) return 'amélioration des moteurs';
+        await wait(300); if (!document.getElementById('toast').classList.contains('on')) return 'pas d\'annonce de la zone'; if (document.querySelectorAll('.upg').length !== 3) return 'fenêtre Ingénierie';
         window.dispatchEvent(new Event('pagehide')); const sauve = JSON.parse(localStorage.getItem('flotte.partie') || 'null');
         if (!sauve || sauve.navires.length !== 18) return 'sauvegarde illisible';
         J.entrerCinema(); await wait(400); if (!document.body.classList.contains('cin')) return 'pas de mode cinéma';

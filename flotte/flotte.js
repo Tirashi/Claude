@@ -13,7 +13,7 @@ function log(E, msg) { E.logs.push({ t: E.t, h: Date.now(), msg }); if (E.logs.l
 function creer(opts) {
   opts = opts || {};
   const M = Mo.creer(); Mo.placer(M, 0);
-  const E = { M, t: 0, credits: R.DEPART.credits, total: 0, buys: { m: 0, t: 0, p: 0 }, lv: 0, veille: 0, ships: [], inc: [], id: 0, rng: opts.rng || Math.random, evt: [], logs: [] };
+  const E = { M, t: 0, credits: R.DEPART.credits, total: 0, buys: { m: 0, t: 0, p: 0 }, lv: 0, veille: 0, up: { mot: 0, soute: 0 }, ships: [], inc: [], id: 0, rng: opts.rng || Math.random, evt: [], logs: [] };
   if (!opts.vide) {
     for (let i = 0; i < R.DEPART.m; i++) ajouter(E, "m");
     for (let i = 0; i < R.DEPART.t; i++) ajouter(E, "t");
@@ -56,9 +56,9 @@ function arriver(E, sh) {
   const dest = sh.vers, relais = Mo.relaisOuverts(E.M, E.lv);
   if (sh.type === "m") {
     if (dest.mine) { sh.ore = dest.ore; sh.a = dest; sh.vers = Mo.plusProche(relais, dest.x, dest.y); sh.attente = R.FORAGE; }
-    else { gagner(E, sh, R.gainMineur(sh.ore), dest, R.ORE[sh.ore].c); sh.a = dest; sh.vers = choisir(E, Mo.mines(E.M, E.lv)); sh.attente = R.QUAI_MINEUR; }
+    else { gagner(E, sh, R.gainMineur(sh.ore, R.multGain(E.up.soute)), dest, R.ORE[sh.ore].c); sh.a = dest; sh.vers = choisir(E, Mo.mines(E.M, E.lv)); sh.attente = R.QUAI_MINEUR; }
   } else if (dest === E.M.prime) {
-    gagner(E, sh, R.gainMarchand(E.lv), dest, "#e8fff6"); sh.a = dest; sh.vers = choisir(E, relais); sh.attente = R.QUAI_PRIME;
+    gagner(E, sh, R.gainMarchand(E.lv, R.multGain(E.up.soute)), dest, "#e8fff6"); sh.a = dest; sh.vers = choisir(E, relais); sh.attente = R.QUAI_PRIME;
   } else { sh.a = dest; sh.vers = E.M.prime; sh.attente = R.QUAI_RELAIS; }
   sh.etat = "attente";
 }
@@ -75,7 +75,7 @@ function maj(E, dt) {
         sh.bow = Math.hypot(sh.vers.x - sh.x, sh.vers.y - sh.y) * R.ARC * (sh.id % 2 ? 1 : -1);
       }
     } else {
-      const d0 = trajet(sh, sh.p)[2], v = R.VITESSE * (sh.type === "t" ? R.X_MARCHAND : 1);
+      const d0 = trajet(sh, sh.p)[2], v = R.VITESSE * R.multVitesse(E.up.mot) * (sh.type === "t" ? R.X_MARCHAND : 1);
       sh.p = Math.min(1, sh.p + v * dt / Math.max(d0, .1));
       const a = trajet(sh, sh.p), b = trajet(sh, Math.min(1, sh.p + .02));
       sh.x = a[0]; sh.y = a[1];
@@ -110,7 +110,15 @@ function acheter(E, k, qte) {
   return fait;
 }
 
-// Ouvre la zone suivante (la portée du signal arrive avec la session 2)
+// Amélioration d'Ingénierie (moteurs, soute) : un niveau de plus si les crédits suffisent
+function ameliorer(E, k) {
+  const a = R.AMELIO[k]; if (!a || E.up[k] >= a.max) return false;
+  const c = R.coutAmelio(k, E.up[k]); if (E.credits < c) return false;
+  E.credits -= c; E.up[k]++; log(E, a.n + " niveau " + E.up[k] + ".");
+  return true;
+}
+
+// Portée du signal : ouvre la zone suivante, pose son avant-poste et fait dézoomer la carte
 function ouvrirZone(E) {
   if (E.lv >= R.ZONES.length - 1) return false;
   const cout = R.ZONES[E.lv + 1].cout;
@@ -128,5 +136,5 @@ function rattraper(E, dt) {
   E.evt.length = 0;
 }
 
-F.Sim = { creer, ajouter, maj, revenu, nombre, acheter, ouvrirZone, rattraper, log, trajet, survol };
+F.Sim = { creer, ajouter, maj, revenu, nombre, acheter, ameliorer, ouvrirZone, rattraper, log, trajet, survol };
 })();

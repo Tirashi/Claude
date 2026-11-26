@@ -15,14 +15,17 @@ function init(a) {
   const tel = () => document.body.classList.toggle("tel", window.innerWidth < 900);
   tel(); window.addEventListener("resize", tel);
   // PC : flotte et console ouvertes ; téléphone : tout est replié
-  if (!document.body.classList.contains("tel")) { $("pFlotte").classList.remove("shut"); $("pConsole").classList.remove("shut"); }
-  else { $("pFlotte").classList.add("shut"); }
+  if (!document.body.classList.contains("tel")) { $("pFlotte").classList.remove("shut"); $("pConsole").classList.remove("shut"); $("pIngenierie").classList.remove("shut"); }
+  else { for (const p of panneaux()) p.classList.add("shut"); }
   for (const p of panneaux()) p.querySelector("header").addEventListener("click", e => {
     if (e.target.closest("#xFiche")) return;
     const ouvre = p.classList.contains("shut");
-    if (ouvre && document.body.classList.contains("tel")) for (const o of panneaux()) if (o !== p && o.id !== "pConsole") o.classList.add("shut");
+    if (ouvre && document.body.classList.contains("tel")) for (const o of panneaux()) if (o !== p) o.classList.add("shut");
     p.classList.toggle("shut");
   });
+  // Ingénierie : portée du signal, moteurs, soute
+  $("ameliorations").innerHTML = ["por", "mot", "soute"].map(k => '<div class="upg" data-u="' + k + '"><h4>' + (k === "por" ? "Portée du signal" : R.AMELIO[k].n) + '<span class="ul"></span></h4><p class="ud"></p><button class="btn ub" type="button"></button></div>').join("");
+  $("ameliorations").addEventListener("click", e => { const b = e.target.closest(".ub"); if (!b) return; const k = b.closest(".upg").dataset.u; if (k === "por") app.portee(); else app.ameliorer(k); maj(); });
   // quantité d'achat
   $("lots").innerHTML = R.lots.map(l => '<button type="button" data-l="' + l + '" aria-pressed="false">' + (l === "max" ? "max" : "×" + l) + "</button>").join("");
   $("lots").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; app.setLot(b.dataset.l); maj(); });
@@ -48,6 +51,7 @@ function maj(E, V) {
   const lot = app.lot();
   $("vCredits").textContent = "$" + fmt(E.credits); $("hCredits").textContent = "$" + fmt(E.credits);
   $("vRevenu").textContent = "+" + S.revenu(E).toFixed(1) + " / s";
+  $("vZone").textContent = (E.lv + 1) + " / " + R.ZONES.length + " · " + R.ZONES[E.lv].ore;
   $("vNavires").textContent = E.ships.length; $("vM").textContent = S.nombre(E, "m"); $("vT").textContent = S.nombre(E, "t");
   document.querySelectorAll("#lots button").forEach(b => b.setAttribute("aria-pressed", b.dataset.l === lot));
   document.querySelectorAll("#themes button").forEach(b => b.setAttribute("aria-pressed", b.dataset.t === V.theme));
@@ -57,6 +61,20 @@ function maj(E, V) {
     b.disabled = E.credits < R.cout(k, n);
     b.querySelector(".c").textContent = (qte > 1 ? qte + " × " : "") + fmt(R.coutLot(k, n, qte)) + " cr";
   });
+  for (const k of ["por", "mot", "soute"]) {
+    const box = document.querySelector('.upg[data-u="' + k + '"]'), b = box.querySelector(".ub");
+    if (k === "por") {
+      const fin = E.lv >= R.ZONES.length - 1, z = R.ZONES[Math.min(E.lv + 1, R.ZONES.length - 1)];
+      box.querySelector(".ul").textContent = "niv. " + (E.lv + 1) + " / " + R.ZONES.length;
+      box.querySelector(".ud").textContent = fin ? "Toutes les zones sont ouvertes." : "Ouvre : " + z.n + " (" + z.ore + "), un avant-poste de plus.";
+      b.textContent = fin ? "maximum" : fmt(z.cout) + " cr"; b.disabled = fin || E.credits < z.cout;
+    } else {
+      const a = R.AMELIO[k], n = E.up[k], fin = n >= a.max, c = R.coutAmelio(k, n);
+      box.querySelector(".ul").textContent = "niv. " + n + " / " + a.max;
+      box.querySelector(".ud").textContent = a.d + " Actuel : +" + Math.round(a.pas * n * 100) + " %.";
+      b.textContent = fin ? "maximum" : fmt(c) + " cr"; b.disabled = fin || E.credits < c;
+    }
+  }
   $("zPct").textContent = Math.round(V.z * 100) + "%";
   const a = V.sel && E.ships.includes(V.sel) ? V.sel : null;
   $("pFiche").hidden = !a;
@@ -77,7 +95,13 @@ function retour(a, E) {
   $("pRetour").hidden = false;
 }
 
+let toastT = 0;
+function toast(titre, sous) {
+  const t = $("toast"); t.innerHTML = titre + (sous ? "<small>" + sous + "</small>" : ""); t.classList.add("on");
+  clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove("on"), 4500);
+}
+
 function cine(on) { document.body.classList.toggle("cin", !!on); }
 
-F.UI = { init, maj, retour, cine };
+F.UI = { init, maj, retour, cine, toast };
 })();

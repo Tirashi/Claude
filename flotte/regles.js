@@ -12,9 +12,9 @@ const ORE = {
 // Les quatre zones ouvertes par la portée du signal (session 2) : anneau et échelle de la caméra (portion du monde qui tient à l'écran)
 const ZONES = [
   { n: "Système central",   ore: "fer",     anneau: .50, cam: .50, cout: 0 },
-  { n: "Ceinture de glace", ore: "glace",   anneau: .74, cam: .76, cout: 120 },
-  { n: "Champ de cristal",  ore: "cristal", anneau: .97, cam: 1.0, cout: 350 },
-  { n: "Bord du système",   ore: "iridium", anneau: 1.22, cam: 1.26, cout: 900 }
+  { n: "Ceinture de glace", ore: "glace",   anneau: .74, cam: .76, cout: 3000 },
+  { n: "Champ de cristal",  ore: "cristal", anneau: .97, cam: 1.0, cout: 40000 },
+  { n: "Bord du système",   ore: "iridium", anneau: 1.22, cam: 1.26, cout: 100000 }
 ];
 // Coût du n-ième navire d'un rôle : base × facteur^n
 const PRIX = { m: [20, 1.08], t: [60, 1.10], p: [90, 1.20] };
@@ -29,6 +29,14 @@ const ARC = .03;                      // flèche de la trajectoire, en part de l
 // Appli fermée : part des gains, plafond de l'absence, rattrapage complet d'une fenêtre seulement cachée
 const VEILLE = { base: .25, pas: .05, max: .75 };
 const ABSENCE_MAX = 24 * 3600, RATTRAPAGE_MAX = 600, FENETRE_REVENU = 30;
+
+// Améliorations d'Ingénierie payées en crédits : coût = base × facteur^niveau
+const AMELIO = {
+  mot:   { n: "Moteurs",       max: 10, base: 80,  f: 1.8, pas: .08, d: "Vitesse des navires +8 % par niveau." },
+  soute: { n: "Soute étendue", max: 10, base: 120, f: 1.9, pas: .10, d: "Gains de chaque livraison +10 % par niveau." }
+};
+const coutAmelio = (k, n) => Math.round(AMELIO[k].base * Math.pow(AMELIO[k].f, n));
+const multVitesse = n => 1 + AMELIO.mot.pas * (n || 0), multGain = n => 1 + AMELIO.soute.pas * (n || 0);
 
 const lots = ["1", "10", "100", "max"];
 
@@ -49,6 +57,6 @@ function absence(revenu, dt, niveauVeille) {
   return { mode: "veille", dt, duree: d, part, gain: Math.floor(Math.max(0, revenu) * d * part) };
 }
 
-F.R = { ORE, ZONES, PRIX, ROLE, DEPART, VITESSE, X_MARCHAND, FORAGE, QUAI_MINEUR, QUAI_PRIME, QUAI_RELAIS, ARC, VEILLE, ABSENCE_MAX, RATTRAPAGE_MAX, FENETRE_REVENU,
+F.R = { AMELIO, coutAmelio, multVitesse, multGain, ORE, ZONES, PRIX, ROLE, DEPART, VITESSE, X_MARCHAND, FORAGE, QUAI_MINEUR, QUAI_PRIME, QUAI_RELAIS, ARC, VEILLE, ABSENCE_MAX, RATTRAPAGE_MAX, FENETRE_REVENU,
   lots, cout, coutLot, lotMax, gainMineur, gainMarchand, partVeille, absence };
 })();

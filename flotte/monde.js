@@ -32,7 +32,7 @@ function placer(M, t) {
     const a = b.ph + b.om * t;
     b.x = Math.cos(a) * b.rf; b.y = Math.sin(a) * b.rf;
   }
-  for (const b of M.tous) if (b.autour) { const a = b.ph + b.om * t * 8; b.x = b.autour.x + Math.cos(a) * .028; b.y = b.autour.y + Math.sin(a) * .028; }
+  for (const b of M.tous) if (b.autour) { const a = b.ph + b.om * t * 8; b.x = b.autour.x + Math.cos(a) * .05; b.y = b.autour.y + Math.sin(a) * .05; }
 }
 
 const ouvert = (b, lv) => b.lv <= lv;
