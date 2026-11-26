@@ -6,8 +6,8 @@ const hm = s => { const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60);
 
 let E, cv, ctx;
 const V = C.creerVue();
-let prefs = { lot: "1", theme: "bleue" };
-let derniere = 0, derniereAction = 0, cacheDepuis = 0, tUI = 0, tSauve = 0, cine = false, cineSuite = 0;
+let prefs = { lot: "1", theme: "bleue", cineSuivi: false };
+let zAvant = 1, derniere = 0, derniereAction = 0, cacheDepuis = 0, tUI = 0, tSauve = 0, cine = false, cineSuite = 0;
 
 function redim() { C.taille(V, cv, window.innerWidth, window.innerHeight); }
 const maintenant = () => performance.now() / 1000;
@@ -22,8 +22,8 @@ function suivre() {
   if (!E.ships.length) return;
   V.sel = E.ships[Math.floor(Math.random() * E.ships.length)]; V.z = 2.8;
 }
-function sortirCinema() { if (!cine) return; cine = false; UI.cine(false); V.sel = null; V.z = 1; }
-function entrerCinema() { cine = true; UI.cine(true); cineSuite = 0; }
+function sortirCinema() { if (!cine) return; cine = false; UI.cine(false); if (prefs.cineSuivi) { V.sel = null; V.z = zAvant; } }
+function entrerCinema() { cine = true; UI.cine(true); cineSuite = 0; if (prefs.cineSuivi) zAvant = V.z; }
 
 const app = {
   E: () => E, V: () => V,
@@ -36,6 +36,7 @@ const app = {
   },
   theme(n) { prefs.theme = n; Sv.enregistrerPrefs(prefs); C.theme(V, n); },
   nouvelle() { Sv.effacer(); E = S.creer(); V.sel = null; V.z = 1; V.px = V.py = 0; V.cam = R.ZONES[0].cam; V.pops = []; Sv.enregistrer(E); UI.maj(E, V); },
+  cineSuivi: () => !!prefs.cineSuivi, setCineSuivi(v) { prefs.cineSuivi = !!v; Sv.enregistrerPrefs(prefs); },
   zoom(f) { C.zoomer(V, f); },
   suivre,
   cine: on => { if (on) entrerCinema(); else sortirCinema(); },
@@ -95,7 +96,7 @@ function boucle() {
     if (t - tUI > .25) { tUI = t; UI.maj(E, V); }
     if (t - tSauve > 10) { tSauve = t; Sv.enregistrer(E); }
     if (!cine && t - derniereAction > 120) entrerCinema();
-    if (cine && t > cineSuite) { cineSuite = t + 9; V.sel = E.ships[Math.floor(Math.random() * E.ships.length)] || null; V.z = 2.4; }
+    if (cine && prefs.cineSuivi && t > cineSuite) { cineSuite = t + 9; V.sel = E.ships[Math.floor(Math.random() * E.ships.length)] || null; V.z = 2.4; }
   }
   requestAnimationFrame(boucle);
 }

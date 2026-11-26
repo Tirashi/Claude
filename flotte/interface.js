@@ -33,6 +33,7 @@ function init(a) {
   // ambiances
   $("themes").innerHTML = Object.keys(F.Carte.THEMES).map(k => '<button type="button" data-t="' + k + '" aria-pressed="false">' + F.Carte.THEMES[k].nom + "</button>").join("");
   $("themes").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; app.theme(b.dataset.t); maj(); });
+  $("bCineSuivi").addEventListener("click", () => { app.setCineSuivi(!app.cineSuivi()); maj(); });
   // nouvelle partie : deux touchers
   let attente = 0;
   $("bNouvelle").addEventListener("click", () => {
@@ -54,6 +55,7 @@ function maj(E, V) {
   $("vZone").textContent = (E.lv + 1) + " / " + R.ZONES.length + " · " + R.ZONES[E.lv].ore;
   $("vNavires").textContent = E.ships.length; $("vM").textContent = S.nombre(E, "m"); $("vT").textContent = S.nombre(E, "t");
   document.querySelectorAll("#lots button").forEach(b => b.setAttribute("aria-pressed", b.dataset.l === lot));
+  $("bCineSuivi").setAttribute("aria-pressed", app.cineSuivi());
   document.querySelectorAll("#themes button").forEach(b => b.setAttribute("aria-pressed", b.dataset.t === V.theme));
   document.querySelectorAll(".buy").forEach(b => {
     const k = b.dataset.k, n = E.buys[k];

@@ -4,6 +4,7 @@ Incrémental de flotte spatiale qu'on regarde travailler (inspiré de *Desk Spac
 - **Monde en cercles** (unité = rayon de la zone 4 ÷ 1,22) ; la vue aplatit les ellipses (`V.tilt`) et le cap des sprites se recalcule à l'écran. Zoom ≥ 115 % : sprites Relief, sinon petits points.
 - Sauvegarde `flotte.partie` (JSON, `v: 1`), préférences `flotte.prefs`. Fenêtre cachée ≤ 10 min : rattrapage à 100 % ; au-delà : part de veille (25 % + 5 points par niveau, 75 % max, 24 h max). L'autosave ne tourne pas quand la page est cachée (sinon on perdrait le temps à rattraper).
 - Tests : `outils/flotte-simulateur.js` (dans `verifications.js` ; `rythme` donne le revenu d'un joueur qui rachète), bloc dans `fumee.js`. Étiquette et jaquette : `outils/etiquettes.js flotte`.
+- Cinéma : interface masquée seulement ; avec la préférence `cineSuivi` (Options), suit un navire au hasard (`etiquettes.js` l'active pour les images).
 - Session 2 : fenêtre Ingénierie (`R.AMELIO` : moteurs, soute ; portée = `R.ZONES[i].cout`), quatre zones et avant-postes, clavier `P` / `M` / `T` / `C`. Pas de pirates ni de patrouilles (session 3). Artefact : `python3 outils/artefact.py flotte/index.html <sortie>` (lien dans le skill `republier-artefact`).
 
 ## Pièges
