@@ -23,6 +23,7 @@ const JEUX = {
   demineur: {a: [["js", "Demineur.nouvelleGrille({taille: 'moyen'}); Demineur.taper(9 * 12 + 6); const {F} = Demineur.etat(); F.cases.forEach((c, i) => { const y = (i / 12) | 0; if (!c.m && !c.n && y > 4 && y < 15) Demineur.taper(i); }); const ouv = i => F.cases[i] && F.cases[i].o; F.cases.forEach((c, i) => { const x = i % 12; if (c.m && [-13, -12, -11, -1, 1, 11, 12, 13].some(d => Math.abs((i + d) % 12 - x) <= 1 && ouv(i + d))) Demineur.marquer(i); })"], ["attente", 800]], e: [0, 200, 390, 273], j: [60, 150, 270, 356]},
   'doggy-saga': {a: [["clic", "Jouer"], ["attente", 1500], ["clic", "C'est parti"], ["attente", 2000]], e: [10, 230, 370, 259], j: [40, 210, 300, 395]},
   'dragon-simulator': {a: [], e: [0, 30, 390, 273], j: [60, 10, 270, 356]},
+  flotte: {a: [["js", "(() => { const J = Flotte.Jeu, E = J.etat(); E.credits += 5000; J.app.setLot('10'); J.app.acheter('m'); J.app.acheter('t'); J.entrerCinema(); })()"], ["attente", 4500]], e: [0, 200, 390, 273], j: [60, 150, 270, 356]},
   duche: {a: [["clic", "PARTIE LIBRE"], ["attente", 1200], ["clic", "FACILE"], ["attente", 3000]], e: [0, 200, 390, 273], j: [60, 150, 270, 356]},
   empilage: {a: [["xy", [195, 549]], ["attente", 1200]].concat(Array(14).fill([["js", "cur.o = 0; placeCur(); lacher()"], ["attente", 250]]).flat(), [["attente", 1200]]), e: [0, 225, 390, 273], j: [0, 125, 390, 513]},
   escadrille: {a: [["xy", [195, 496]], ["attente", 1500]], e: [10, 120, 370, 259], j: [40, 100, 300, 395]},

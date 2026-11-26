@@ -483,6 +483,15 @@ Combat aérien en 3D low poly au-dessus d'un archipel, au crépuscule, au milieu
 - **Les classements** : meilleur score en vagues sans fin, et total des étoiles des missions.
 - Au téléphone : un joystick sous le pouce et des boutons ronds ; au PC : la souris dirige l'appareil, clic gauche pour le feu, clic droit pour les missiles. Explosions et réacteur enregistrés, musique synthétisée, secousses, épaves qui tombent en fumée, jauge d'énergie du boost. - **Les décors** : crépuscule, nuit étoilée, orage (pluie, éclairs), désert, neige ; chaque mission a le sien, et le temps change toutes les 5 vagues. La nuit et sous l'orage, les appareils allument leurs feux de position.
 
+## Flotte du bureau
+
+Une petite flotte de mineurs et de marchands travaille toute seule dans un système, autour d'un QG (première version, démo). On achète des vaisseaux et on les regarde voler.
+
+- **La carte** : presque nue, avec des astres en petits points nommés, des routes pointillées et des orbites lentes ; zoome (boutons, molette, pincement) et les vaisseaux deviennent des sprites en relief ; touche un navire pour le suivre et voir sa fiche.
+- **Les gains** : les mineurs ramènent du minerai, les marchands vendent au marché Prime ; l'argent achète d'autres vaisseaux (×1, ×10, ×100 ou au maximum).
+- **Appli fermée** : une part des gains continue quand tu pars (25 % de base, jusqu'à 24 h) ; si la fenêtre est seulement cachée, la flotte rattrape tout.
+- **Ordinateur et téléphone** : fenêtres Flotte, Options et Console repliables, trois ambiances (nuit bleue, violette, phosphore), mode cinéma automatique après deux minutes.
+
 ## Écurie miniature
 
 Gestion d'une petite écurie de course (première version). On ne pilote pas : on prépare la semaine, puis on regarde la course en 3D low poly sur un circuit de ville.

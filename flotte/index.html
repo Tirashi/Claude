@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Flotte du bureau</title>
+<meta name="description" content="Flotte du bureau : une petite flotte de mineurs et de marchands travaille seule dans un système. Achète des vaisseaux, étends ta portée, regarde-les voler ; une part des gains continue appli fermée.">
+<link rel="manifest" href="../manifest.webmanifest">
+<meta name="theme-color" content="#091330">
+<link rel="icon" href="../icons/icon-192.png">
+<link rel="apple-touch-icon" href="../icons/apple-touch-icon.png">
+<!-- polices dans le dépôt (hors connexion) ; data-google : le lien utilisé par l'artefact (outils/artefact.py) -->
+<link rel="stylesheet" href="../polices/flotte.css" data-google="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Titillium+Web:wght@400;600&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<canvas id="cv" aria-label="Le système"></canvas>
+
+<div id="ui">
+  <section class="pan fleet" id="pFlotte">
+    <header><b>:: FLOTTE</b><span class="hc" id="hCredits"></span><button class="chev" type="button" aria-label="Replier">⌄</button></header>
+    <div class="pb">
+      <div><div class="lab">Crédits</div><div class="big" id="vCredits">0</div><div class="rate" id="vRevenu"></div></div>
+      <div class="rows"><div>Navires <b id="vNavires"></b></div><div>Mineurs <b id="vM"></b></div><div>Marchands <b id="vT"></b></div></div>
+      <div class="lab">Quantité</div>
+      <div class="amt" id="lots"></div>
+      <button class="btn buy" type="button" data-k="m"><span>Mineurs</span><span class="c"></span></button>
+      <button class="btn buy" type="button" data-k="t"><span>Marchands</span><span class="c"></span></button>
+    </div>
+  </section>
+
+  <section class="pan opts shut" id="pOptions">
+    <header><b>:: OPTIONS</b><button class="chev" type="button" aria-label="Replier">⌄</button></header>
+    <div class="pb">
+      <div class="lab">Ambiance</div>
+      <div class="amt" id="themes"></div>
+      <button class="btn" type="button" id="bNouvelle">Nouvelle partie</button>
+      <a class="btn ludo-retour" id="bRetour" href="../index.html#flotte">Retour à la Ludothèque</a>
+    </div>
+  </section>
+
+  <section class="pan con shut" id="pConsole">
+    <header><b>:: CONSOLE SYSTÈME</b><button class="chev" type="button" aria-label="Replier">⌄</button></header>
+    <div class="pb"><div class="log" id="log"></div></div>
+  </section>
+
+  <section class="pan card" id="pFiche" hidden>
+    <header><b>:: NAVIRE</b><button class="chev" id="xFiche" type="button" aria-label="Fermer">✕</button></header>
+    <div class="pb">
+      <div class="nm" id="fNom"></div>
+      <div class="tg" id="fRole"></div>
+      <div class="rows"><div>Matricule <b id="fMat"></b></div><div>Mode <b id="fMode"></b></div><div>Livraisons <b id="fTrips"></b></div><div>Gains cumulés <b id="fGains"></b></div></div>
+    </div>
+  </section>
+
+  <section class="pan retour" id="pRetour" hidden>
+    <header><b>:: RETOUR</b></header>
+    <div class="pb"><div class="nm" id="rTitre"></div><p id="rTexte"></p><button class="btn" type="button" id="bRetourOk">Récupérer</button></div>
+  </section>
+
+  <div class="zoom">
+    <button type="button" id="zSuivre" aria-label="Suivre un navire" title="Suivre un navire">◎</button>
+    <button type="button" id="zPlus" aria-label="Zoom avant">+</button>
+    <span id="zPct">100%</span>
+    <button type="button" id="zMoins" aria-label="Zoom arrière">−</button>
+  </div>
+  <button class="cinb" id="bCine" type="button">cinéma</button>
+</div>
+
+<script src="regles.js"></script>
+<script src="monde.js"></script>
+<script src="flotte.js"></script>
+<script src="sauvegarde.js"></script>
+<script src="sprites.js"></script>
+<script src="carte.js"></script>
+<script src="interface.js"></script>
+<script src="jeu.js"></script>
+</body>
+</html>

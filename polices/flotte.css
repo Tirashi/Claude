@@ -1,0 +1,5 @@
+/* Polices de Flotte du bureau, hébergées dans le dépôt (sous-ensemble latin de Google Fonts, SIL Open Font License 1.1) :
+   Share Tech Mono (fenêtres et chiffres) et Titillium Web (fiche d'un navire, textes). */
+@font-face { font-family: 'Share Tech Mono'; font-style: normal; font-weight: 400; font-display: swap; src: url(share-tech-mono.woff2) format('woff2'); }
+@font-face { font-family: 'Titillium Web'; font-style: normal; font-weight: 400; font-display: swap; src: url(titillium-web-400.woff2) format('woff2'); }
+@font-face { font-family: 'Titillium Web'; font-style: normal; font-weight: 600; font-display: swap; src: url(titillium-web-600.woff2) format('woff2'); }

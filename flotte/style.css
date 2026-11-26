@@ -1,0 +1,59 @@
+/* Flotte du bureau : une carte plein écran, des fenêtres flottantes repliables par-dessus (couleurs posées par carte.js : --ac, --pb, --pf, --pd). */
+:root { --ac: #f0a830; --pb: rgba(150,190,255,.3); --pf: #b9c9ee; --pd: #7f93c4; --mono: "Share Tech Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace; --texte: "Titillium Web", system-ui, sans-serif; }
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: #050a18; overflow: hidden; overscroll-behavior: none; }
+body { font-family: var(--mono); color: var(--pf); -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
+#cv { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: crosshair; }
+#ui { position: fixed; inset: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px); pointer-events: none; }
+#ui > * { pointer-events: auto; }
+.pan { position: absolute; background: rgba(7,12,22,.84); border: 1px solid var(--pb); border-top: 2px solid var(--ac); color: var(--pf); font: 11px/1.35 var(--mono); transition: opacity .5s; z-index: 2; }
+.pan[hidden] { display: none; }
+.pan header { display: flex; justify-content: space-between; align-items: center; gap: 6px; padding: 7px 9px; text-transform: uppercase; letter-spacing: .06em; font-size: 11px; cursor: pointer; }
+.pan header b { font-weight: 400; color: #fff; }
+.pan .hc { margin-left: auto; color: var(--ac); }
+.pan .chev { font: inherit; background: none; border: 0; color: var(--pf); cursor: pointer; padding: 2px 5px; transition: transform .2s; }
+.pan.shut .pb { display: none; }
+.pan.shut .chev { transform: rotate(-90deg); }
+.pan:not(.shut) .hc { display: none; }
+.pan .pb { padding: 2px 9px 9px; display: grid; gap: 7px; }
+.lab { font-size: 9.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--pd); }
+.big { font-size: 22px; color: #fff; font-variant-numeric: tabular-nums; line-height: 1.1; }
+.rate { color: var(--ac); font-variant-numeric: tabular-nums; }
+.rows { display: grid; gap: 2px; border-top: 1px solid var(--pb); padding-top: 5px; }
+.rows div { display: flex; justify-content: space-between; gap: 8px; }
+.rows b { color: #fff; font-weight: 400; font-variant-numeric: tabular-nums; }
+.amt { display: flex; gap: 4px; flex-wrap: wrap; }
+.amt button, .btn { font: inherit; color: var(--pf); background: transparent; border: 1px solid var(--pb); padding: 4px 8px; cursor: pointer; text-decoration: none; text-align: center; }
+.amt button[aria-pressed="true"] { border-color: var(--ac); color: var(--ac); }
+.btn.buy { display: flex; justify-content: space-between; gap: 8px; width: 100%; text-align: left; text-transform: uppercase; padding: 6px 8px; }
+.btn.buy .c { color: var(--ac); font-variant-numeric: tabular-nums; }
+.btn:disabled { opacity: .38; cursor: default; }
+.btn.danger { border-color: #e0506a; color: #ff9eb0; }
+.log { max-height: 96px; overflow: auto; font-size: 10px; color: var(--pd); display: grid; gap: 1px; align-content: start; }
+.log div b { color: var(--ac); font-weight: 400; }
+.card .nm, .retour .nm { font: 600 16px/1.2 var(--texte); color: #fff; }
+.card .tg { color: var(--ac); }
+.retour p { margin: 0; font: 400 14px/1.4 var(--texte); color: var(--pf); }
+.zoom { position: absolute; right: 10px; bottom: 10px; display: grid; gap: 3px; z-index: 2; transition: opacity .5s; }
+.zoom button { font: 14px var(--mono); width: 32px; height: 30px; background: rgba(7,12,22,.84); border: 1px solid var(--pb); color: var(--pf); cursor: pointer; }
+.zoom span { font: 10px var(--mono); text-align: center; color: var(--pf); background: rgba(7,12,22,.84); padding: 3px 0; }
+.cinb { position: absolute; left: 50%; top: 8px; transform: translateX(-50%); font: 10px var(--mono); text-transform: uppercase; color: var(--pf); background: rgba(7,12,22,.7); border: 1px solid var(--pb); padding: 4px 10px; cursor: pointer; z-index: 2; transition: opacity .5s; }
+body.cin .pan:not(.retour), body.cin .zoom, body.cin .cinb { opacity: 0; pointer-events: none; }
+
+/* PC et grands écrans : fenêtres ouvertes à gauche, options à droite */
+.fleet { left: 10px; top: 10px; width: 232px; }
+.opts { right: 10px; top: 10px; width: 218px; }
+.con { left: 10px; bottom: 10px; width: 320px; }
+.card { left: 50%; transform: translateX(-50%); bottom: 10px; width: 250px; }
+.retour { left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(340px, 92%); z-index: 5; }
+
+/* téléphone : fenêtres repliées, une seule ouverte à la fois */
+body.tel .fleet { left: 8px; top: 8px; width: 156px; }
+body.tel .fleet:not(.shut), body.tel .opts:not(.shut) { width: calc(100% - 16px); z-index: 4; }
+body.tel .opts { right: 8px; top: 8px; width: 118px; }
+body.tel .opts:not(.shut) { left: 8px; right: auto; }
+body.tel .con { left: 8px; bottom: 8px; width: 140px; }
+body.tel .con:not(.shut) { width: calc(100% - 64px); }
+body.tel .card { bottom: 48px; width: min(260px, calc(100% - 16px)); }
+body.tel .zoom { right: 8px; bottom: 8px; }
+body.tel .cinb { top: auto; bottom: 8px; left: 160px; right: auto; transform: none; }

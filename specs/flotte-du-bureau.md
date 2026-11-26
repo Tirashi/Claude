@@ -30,7 +30,7 @@ Départ : 400 crédits, 5 mineurs, 3 marchands, zone 1.
 | Marchand | convoie vers Prime | `d_cargo` | 60 × 1,10^n |
 | Patrouille | orbite autour du QG, tire sur les pirates | `u_garde` | 90 × 1,20^n |
 | Pirate (ennemi) | traque un navire, vole jusqu'à 5 cr | `a_rodeur` | : |
-- **Vitesse** : 15 px/s à l'échelle 1 pour les mineurs, ×1,15 pour les marchands, ×1,1 pour les pirates ; les orbites tournent à 0,007 × rayon^-1,5 rad/s (lentes mais visibles). Valeurs de la maquette 4, jugées bonnes.
+- **Vitesse** (jeu, unités du monde) : 0,04 par seconde pour les mineurs, ×1,15 pour les marchands ; les orbites tournent à 0,007 × rayon^-1,5 rad/s (lentes mais visibles). Équivalent des 15 px/s de la maquette 4, jugés bons.
 - **Comportement** : un navire attend, part en ligne presque droite (léger arc) vers une destination qui bouge (les corps orbitent), arrive, attend (forage 2 s, quai 0,5 s), repart. Le cap suit le trajet.
 - **Variété** (à faire) : 2 ou 3 coques par rôle et teintes légères, pour que la flotte ne soit pas uniforme (moteur de `commun/vaisseaux.js`).
 - **Fiche d'un navire** (au toucher) : nom, matricule, mode (en vol, au travail, à quai), livraisons, gains cumulés ; la caméra le suit et zoome à 240 %.
@@ -108,12 +108,15 @@ Départ : 400 crédits, 5 mineurs, 3 marchands, zone 1.
 Voir la liste de contrôle de `specs/ludotheque.md` (skill `ajouter-un-jeu`) : dossier `flotte/` ; `fiche.js` (carte, meta, `enCours`, transfert, pas de classement ni de défi du jour) ; **démo** sur l'accueil au début (`demo: true`) ; étiquette et jaquette faites avec les images du jeu ; `sw.js` (`FILES`, `VERSION`) ; `README.md`, `CLAUDE.md`, `specs/ludotheque.md`, `specs/suivi.md`, `IDEES.md` ; test de fumée dans `outils/fumee.js` ; artefact (accord avant de créer un lien).
 
 ## 15. Étapes (sessions)
-1. **Socle** : carte et orbites, zone 1, mineurs et marchands, gains, achats par lot, fenêtre Flotte, sauvegarde, veille fixe à 25 %, zoom, ambiances, PC et téléphone, sprites Relief ; démo sur l'accueil.
+1. **Socle (fait le 26/11)** : carte et orbites, zone 1, mineurs et marchands, gains, achats par lot, fenêtre Flotte, sauvegarde, veille fixe à 25 %, zoom, ambiances, PC et téléphone, sprites Relief ; démo sur l'accueil.
 2. **Zones** : portée du signal, avant-postes, Ingénierie (moteurs, soute), console, fiche d'un navire et suivi de caméra, cinéma.
 3. **Pirates** : patrouilles, primes, alertes.
 4. **Prestige** : Horizon, éclats, améliorations permanentes dont la Veille, simulateur et équilibrage.
 5. **Finitions** : sons, performances (super-navire si besoin), variété des coques, étiquette, jaquette, transfert, artefact.
 Modèle : opusplan pour les sessions 1 à 3 et 5 ; Opus pour la session 4 (équilibrage).
+
+## 15 bis. État après la session 1 (26/11)
+`flotte/` est jouable en démo : tout ce qui est listé à la session 1, plus le mode cinéma, la fiche d'un navire avec suivi de caméra et le zoom au pincement ; l'Ingénierie, la portée du signal et les patrouilles ne sont pas dans l'interface (le code de `ouvrirZone` et des corps des zones 2 à 4 existe). **Rythme** : le simulateur (`node outils/flotte-simulateur.js rythme`) montre qu'un joueur simple ouvre les quatre zones en 15 minutes environ et gagne ~100 cr/s au bout d'une heure : les coûts de portée (120, 350, 900) sont trop bas pour la cible de 2 à 3 h, à recaler en session 2.
 
 ## 16. Questions ouvertes
 1. **Nom du jeu** (« Flotte du bureau » est provisoire).

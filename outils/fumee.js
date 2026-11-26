@@ -5,7 +5,7 @@
    node outils/fumee.js [dossier-captures]   (code de sortie 1 en cas d'erreur) */
 const { BASE, phone } = require('./pw');
 const PAGES = ['index.html', 'classements/index.html#sudoku-1', 'queens/index.html', 'demineur/index.html', 'demineur/index.html#prairie', 'picross/index.html', 'lignee/index.html', 'injagility/index.html', 'injagility/parcours.html',
-  'touche-coule/index.html', 'amiral/index.html', 'club/index.html', 'orbite/index.html', 'lune-rover/index.html', 'pont-stellaire/index.html', 'sudoku/index.html', 'calculator/index.html', 'alunissage/index.html', 'nebula/index.html', 'ile/index.html', 'empilage/index.html', 'odyssee/index.html', 'yams/index.html', 'escadrille/index.html', 'capitaine-du-port/index.html', 'magasinier/index.html', 'ciel-de-guerre/index.html', 'ecurie/index.html', 'strategie-ciel/index.html', 'tank-arena/index.html', 'bannis/index.html', 'romet/index.html', 'dragon-simulator/index.html', 'bastion/index.html', 'terres-franches/index.html', 'duche/index.html', 'bannieres/index.html', 'boutique/index.html', 'mineur-de-l-espace/index.html', 'the-des-jarls/index.html', 'doggy-saga/index.html',
+  'touche-coule/index.html', 'amiral/index.html', 'club/index.html', 'orbite/index.html', 'lune-rover/index.html', 'pont-stellaire/index.html', 'sudoku/index.html', 'calculator/index.html', 'alunissage/index.html', 'nebula/index.html', 'ile/index.html', 'empilage/index.html', 'odyssee/index.html', 'yams/index.html', 'escadrille/index.html', 'capitaine-du-port/index.html', 'magasinier/index.html', 'ciel-de-guerre/index.html', 'ecurie/index.html', 'flotte/index.html', 'strategie-ciel/index.html', 'tank-arena/index.html', 'bannis/index.html', 'romet/index.html', 'dragon-simulator/index.html', 'bastion/index.html', 'terres-franches/index.html', 'duche/index.html', 'bannieres/index.html', 'boutique/index.html', 'mineur-de-l-espace/index.html', 'the-des-jarls/index.html', 'doggy-saga/index.html',
   'mot-d-or/index.html', 'lanterne/index.html', 'tetris/index.html', 'snake/index.html', 'asteroids/index.html', 'solitaire/index.html', 'jeu-de-la-vie/index.html', 'pokedex/index.html'];
 const shots = process.argv[2];
 (async () => {
@@ -178,6 +178,24 @@ const shots = process.argv[2];
       });
       if (r !== 'ok') errs.push('Écurie miniature : ' + r);
       if (shots) await p.screenshot({ path: `${shots}/fumee-ecurie.png` });
+    }
+    if (url === 'flotte/index.html') {
+      // Flotte du bureau : la carte se dessine, un achat ajoute des navires, le zoom et le suivi d'un navire marchent, la sauvegarde se relit
+      const r = await p.evaluate(async () => {
+        const wait = ms => new Promise(r => setTimeout(r, ms));
+        const J = window.Flotte && window.Flotte.Jeu; if (!J) return 'pas de Flotte.Jeu';
+        const E = J.etat(), V = J.vue(); if (E.ships.length !== 8) return 'flotte de départ : ' + E.ships.length;
+        await wait(1200); if (!(document.getElementById('cv').width > 100)) return 'pas de carte';
+        E.credits += 2000; J.app.setLot('10'); const n = J.app.acheter('m'); if (n !== 10 || E.ships.length !== 18) return 'achat ×10 : ' + n;
+        J.app.zoom(2); if (!(V.z > 1.9)) return 'zoom'; J.suivre(); await wait(600); if (document.getElementById('pFiche').hidden) return 'pas de fiche de navire';
+        J.app.fermerFiche(); await wait(300);
+        window.dispatchEvent(new Event('pagehide')); const sauve = JSON.parse(localStorage.getItem('flotte.partie') || 'null');
+        if (!sauve || sauve.navires.length !== 18) return 'sauvegarde illisible';
+        J.entrerCinema(); await wait(400); if (!document.body.classList.contains('cin')) return 'pas de mode cinéma';
+        return 'ok';
+      });
+      if (r !== 'ok') errs.push('Flotte du bureau : ' + r);
+      if (shots) await p.screenshot({ path: `${shots}/fumee-flotte.png` });
     }
     if (url === 'magasinier/index.html') {
       // Le Magasinier : un niveau avec de la glace gagné par sa solution, écran de fin ; annuler revient en arrière
