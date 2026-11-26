@@ -232,3 +232,5 @@ L'utilisateur a découvert **Slotbound** (Optima Arch, Steam, sorti vers le 12-1
 6. **Fusion** : deux recrues identiques s'absorbent pour évoluer (déjà l'évolution au butin, à rapprocher).
 
 Recommandation de Claude : 1 + 2 d'abord (le dé reste notre signature, mais sert plus tôt et plus souvent), avec le 3 comme règle de départ (un seul dé au début, les autres arrivent par l'arbre) ; une maquette à 2-3 directions (tirage des recrues aux dés, butin aux dés, variante cartes) avant tout code.
+
+**Maquette 5 (26/11)** : [artefact](https://claude.ai/artifact/GxrBk8wJY34zCzxy4KqMFz), `maquettes/bannis-5.html`, sources `outils/bannis-maquette/source5.html` + `fabriquer5.py` (utilise seulement `bannis/img/`). Trois directions jouables, écrans RECRUES et BUTIN : **A** dés des condamnés (3 d6, la face = la classe, garder + une relance, butin : un dé par objet, Regalia), **B** un seul dé (interface moderne, Outfit ; trois lancers pour l'équipe, un pour le butin), **C** cartes (5 piochées, on en garde 3, butin : 3 cartes face cachée). Choix de l'utilisateur : en attente.
