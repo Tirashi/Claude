@@ -365,7 +365,8 @@ Tout est réglé (20/10, § 0). **Cahier des charges validé.** Prochaine étape
 | 2 | ✅ (22/10) Moteur **combat** au tour par tour, équipe de 4 : règles, classes, talents, niveaux, équipement ; tests Node et combats simulés | Opus |
 | 3 | ✅ (22/10) Contenu **prologue et acte 1** (abbaye et Eloi, Bois Murmurant et Vérène, Crypte des racines, Roi des aulnes) ; solveur d'accessibilité jusqu'à la fin de l'acte 1 | opusplan |
 | 4 | ✅ (29/10) **Actes 2 et 3** (marais, moulin, Hameau caché, mines) : acte 2 (§ 17.1), rebondissement 2 et acte 3 (§ 17.2) | opusplan |
-| 5 | **Acte 4, final, fin**, scène bonus, à-côtés (pages, quêtes des compagnons, lanternes oubliées), donjon facultatif | opusplan |
+| 5a | ✅ (26/11) **Rebondissement 3 et acte 4** (§ 17.3) | opusplan |
+| 5b | **Final** (abbaye, Ysolde, Aubrin), fin, scène bonus, à-côtés (pages, quêtes des compagnons, lanternes oubliées), donjon facultatif | opusplan |
 | 6 | Équilibrage, sons et musique, accueil, `sw.js`, artefact | Sonnet |
 
 ### 17.1 Acte 2 (fait le 29/10)
@@ -390,6 +391,16 @@ Tout est réglé (20/10, § 0). **Cahier des charges validé.** Prochaine étape
 - **Équipement** : Épée runique, Masse d'argent, Bâton de cristal, Arc des cimes, Plastron de mineur et Manteau de laine (boutique de Gaspard), Amulette de sel.
 - **Équilibrage** (`outils/lanterne-combats.js`, 7 cas de plus) : même friction qu'avant (2 à 4,5 tours, 13 à 36 % des PV) ; le Géant est prévu au **niveau 10** (100 %, 9,5 tours, 51 % des PV ; au niveau 9 : 87 %, 13,5 tours) ; deux Chevaliers au niveau 10 : 100 %, 4,4 tours.
 - **Pas encore** (session 5) : le rebondissement 3 (Clairfond éteinte, Ysolde partie), l'acte 4, le final et les à-côtés.
+
+### 17.3 Rebondissement 3 et acte 4 (faits le 26/11)
+- **Rebondissement 3** : à l'arrivée à Clairfond après l'acte 3 (`clairfond_retour`, `ysolde_partie`), la lanterne du village est éteinte (plus de soin ni de sauvegarde à cette lanterne) et Mère Ysolde a disparu de sa maison ; sa **lettre** sur la table (`lettre_ysolde`, `lettre_lue`) : elle soupçonne le Prieur depuis cinquante ans, part à l'abbaye et demande de retourner le voir « comme si de rien n'était ». Au Prieur (`vaast_acte4`) : il prétend qu'elle se repose à l'infirmerie (« vous la verrez » : Vérène relève le mot) et ouvre le portail du cimetière (`mission_cimetiere`).
+- **Lieux** (5 cartes) : **Cimetière des cloches** (à l'est de la route de la forêt, portail aux cases x = 13, y 14-15 de `route_abbaye` ; terre grise, tombes, cloches ; Anselme le fossoyeur, Isée qui s'affaiblit, lanterne oubliée des cloches qui guidaient, 3 coffres dont la Médaille de veilleur), puis **Clocher englouti** en 4 salles : vestibule, **nef noyée** (un canal de 2 cases : le grappin atteint la porte à clé ; rocher fendu d'un coffre à la masse), **crypte** (nappe de brume à dissiper pour la **Clé du clocher**, 3 coffres, lanterne oubliée du sonneur), **haut du clocher** (boss, fresque).
+- **Les trois outils** servent tous dans le clocher (aucun nouvel outil).
+- **Monstres** : Veilleur d'os, goule du caveau, poltergeist du glas, âme perdue (cimetière) ; phantôme du clocher, spectre de la nef (clocher). **Boss : le Sonneur** (tuile `ancient_champion`, 900 PV, rythme fixe : coup, Carillon, coup, Grand Glas annoncé un tour avant, Angélus qui endort ; faible à la lumière et à la foudre). Vaincu, il reconnaît le héros comme « celui qui ouvrira » ; Flamme blanche.
+- **Fresque finale** (`fresque_clocher`) : l'homme malade guéri, qui demande les flammes, refuse, puis capture les quatre Gardiens avec leur propre flamme ; la brume est leur chagrin ; la Grande Lanterne le garde en vie et les Veilleurs sont envoyés pour la nourrir. `acte4_fini`.
+- **Équipement** : Épée du glas, Masse du carillon, Bâton de bronze (vestibule), Arc du veilleur, Cotte de bronze, Médaille de veilleur (icônes réutilisées). Tuiles faites par `outils/lanterne-tuiles.py` (terre grise, 7 monstres).
+- **Équilibrage** : le Sonneur est prévu au **niveau 12** (99 % de victoires, 8,6 tours, 49 % des PV) ; monstres au niveau 11-12 : 3 à 5 tours, 16 à 35 % des PV.
+- **Pas encore** (session 5b) : le final (donjon de l'abbaye, Ysolde captive, Aubrin en deux phases), la fin, la scène bonus, les à-côtés.
 
 ## Détails techniques (déplacés du mémo le 05/11)
 Texte de la ligne de ce jeu dans le tableau « Les jeux existants (détails) » de [`specs/ludotheque.md`](ludotheque.md), recopié tel quel lors du rangement du 05/11 ([`plan-rangement.md`](plan-rangement.md), phase 2). L'essentiel, tenu à jour, est dans le `CLAUDE.md` du dossier du jeu.

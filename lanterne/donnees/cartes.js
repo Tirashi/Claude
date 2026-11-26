@@ -16,13 +16,13 @@ LANTERNE.cartes = {
       'vvvv_vvvv'
     ],
     ornements: [{ type: 'tapis', x: 3, y: 3 }, { type: 'fenetre', x: 3, y: 0 }, { type: 'fenetre', x: 6, y: 0 }, { type: 'etagere', x: 7, y: 0 }],
-    pnj: [{ id: 'ysolde', perso: 'ysolde', x: 5, y: 3, evenement: 'ysolde' }],
-    objets: [{ type: 'deco', x: 2, y: 1, bloque: true, evenement: 'pupitre_ysolde' }],
+    pnj: [{ id: 'ysolde', perso: 'ysolde', x: 5, y: 3, evenement: 'ysolde', si: '!ysolde_partie' }],
+    objets: [{ type: 'deco', x: 2, y: 1, bloque: true, evenement: 'pupitre_ysolde' }, { type: 'deco', x: 6, y: 1, bloque: true, evenement: 'lettre_ysolde', si: 'ysolde_partie' }],
     sorties: [{ x: 4, y: 7, vers: 'clairfond', a: [3, 6], dir: 'bas' }]
   },
 
   clairfond: {
-    nom: 'Clairfond', musique: 'village', exterieur: true, sauvegardeAuto: true,
+    nom: 'Clairfond', musique: 'village', exterieur: true, sauvegardeAuto: true, entree: 'clairfond_retour',
     plan: [
       'TTTTTTTTTTT::TTTTTTTTTTT',
       'TTT......b.::.b......TTT',
@@ -120,8 +120,8 @@ LANTERNE.cartes = {
       'YY,Y::::Y,,,YY',
       'Y,,,::,,,,Y,,Y',
       'Y,,,::Y,,Y,,YY',
-      'YY,,::,,,,,,,Y',
-      'YYY,::,,,,,,,Y',
+      'YY,,::,,,,,,,,',
+      'YYY,::,,,,,,,,',
       'Y,,,::::,,,Y,Y',
       'Y,,Y,Y::,,YY,Y',
       'Y,,,YY::,Y,Y,Y',
@@ -151,7 +151,8 @@ LANTERNE.cartes = {
       { type: 'crapaud', x: 9, y: 12, rayon: 2, groupe: ['crapaud'] },
       { type: 'corbeau', x: 9, y: 8, rayon: 3, groupe: ['corbeau'] }
     ],
-    sorties: [{ x: [6, 7], y: 29, vers: 'clairfond', a: [11, 1], dir: 'bas' }, { x: [6, 7], y: 2, vers: 'abbaye', a: [6, 8], dir: 'haut' }],
+    sorties: [{ x: [6, 7], y: 29, vers: 'clairfond', a: [11, 1], dir: 'bas' }, { x: [6, 7], y: 2, vers: 'abbaye', a: [6, 8], dir: 'haut' },
+      { x: 13, y: [14, 15], vers: 'cimetiere', a: [1, 8], dir: 'droite', si: 'mission_cimetiere', refus: 'cimetiere_ferme' }],
     declencheurs: [
       { x: [4, 5], y: 14, evenement: 'isee_rencontre', si: '!isee_vue' }
     ]
@@ -968,5 +969,165 @@ LANTERNE.cartes = {
     pnj: [{ id: 'geant', perso: 'geant_sel', x: 5, y: 3, evenement: 'geant_parle', si: '!geant_vaincu' }],
     sorties: [{ x: 5, y: 10, vers: 'mines_puits', a: [6, 2], dir: 'bas' }],
     declencheurs: [{ x: [1, 9], y: 6, evenement: 'geant_combat', si: '!geant_vaincu' }]
+  },
+  // ---------- acte 4 : le Cimetière des cloches et le Clocher englouti (quatrième sanctuaire) ----------
+  cimetiere: {
+    nom: 'Cimetière des cloches', musique: 'foret', exterieur: true, brume: .35, sauvegardeAuto: true, entree: 'cimetiere_arrivee',
+    combat: { sol: ['terre_grise0', 'terre_grise1', 'terre_grise2'], decor: 'sapin', brume: .35 },
+    plan: [
+      'YMMMMMMMM88MMMMMMMMY',
+      'YYY88888888888888YYY',
+      'YY8888888888888888YY',
+      'Y889898908809898988Y',
+      'Y888888888888888888Y',
+      'Y889898988889898988Y',
+      'Y888888888888888888Y',
+      'Y889788888888887988Y',
+      '8888888888888888888Y',
+      '8888888888888888888Y',
+      'Y889878888888878988Y',
+      'Y888888888888888888Y',
+      'Y889898988889898988Y',
+      'Y888888888888888888Y',
+      'Y889898988889898988Y',
+      'YY8888888888888888YY',
+      'YYY88888888888888YYY',
+      'YYYYYYYYYYYYYYYYYYYY'
+    ],
+    objets: [
+      { type: 'lanterne', x: 2, y: 10 },
+      { type: 'panneau', x: 8, y: 7, texte: ['CIMETIÈRE DES CLOCHES', 'Ici repose chaque veilleur dont la cloche a sonné.', 'Prière de ne pas sonner les vivants.'] },
+      { type: 'coffre', id: 'cimetiere_herbes', x: 1, y: 3, contenu: { objet: 'herbe', n: 3 } },
+      { type: 'coffre', id: 'cimetiere_fioles', x: 18, y: 12, contenu: { objet: 'fiole', n: 2 } },
+      { type: 'coffre', id: 'cimetiere_medaille', x: 1, y: 12, contenu: { objet: 'medaille', n: 1 } },
+      { type: 'lanterne_oubliee', id: 'cimetiere', x: 17, y: 5, evenement: 'lanterne_oubliee_cimetiere' }
+    ],
+    pnj: [
+      { id: 'fossoyeur', perso: 'ancien', x: 8, y: 6, evenement: 'fossoyeur', erre: 2 },
+      { id: 'isee_cimetiere', perso: 'isee', x: 11, y: 6, evenement: 'isee_route', cache: true }
+    ],
+    monstres: [
+      { type: 'squelette', x: 4, y: 4, rayon: 2 },
+      { type: 'goule', x: 15, y: 4, rayon: 2 },
+      { type: 'poltergeist', x: 5, y: 13, rayon: 2 },
+      { type: 'ame_perdue', x: 14, y: 13, rayon: 2 },
+      { type: 'squelette', x: 12, y: 11, rayon: 2 }
+    ],
+    sorties: [
+      { x: 0, y: [8, 9], vers: 'route_abbaye', a: [12, 14], dir: 'gauche' },
+      { x: [9, 10], y: 0, vers: 'clocher_entree', a: [5, 7], dir: 'haut' }
+    ],
+    declencheurs: [{ x: [9, 10], y: 5, evenement: 'isee_cimetiere', si: '!isee_cimetiere' }]
+  },
+  clocher_entree: {
+    nom: 'Clocher englouti', musique: 'foret', ciel: 0x0a0e12, sauvegardeAuto: true, entree: 'clocher_arrivee',
+    combat: { sol: ['sol_crypte0', 'sol_crypte1'], decor: 'mur_crypte_haut', interieur: true },
+    plan: [
+      'CCCCCnCCCCC',
+      'ZnnnnnnnnnZ',
+      'ZnQnnnnnQnZ',
+      'ZnnnneennnZ',
+      'ZnnnneennnZ',
+      'ZnnnnnnnnnZ',
+      'ZnQnnnnnQnZ',
+      'Zn&nnnnn&nZ',
+      'zzzzznzzzzz'
+    ],
+    ornements: [{ type: 'torche', x: 3, y: 0 }, { type: 'torche', x: 7, y: 0 }],
+    objets: [
+      { type: 'lanterne', x: 1, y: 7 },
+      { type: 'coffre', id: 'clocher_herbes', x: 9, y: 1, contenu: { objet: 'herbe', n: 3 } },
+      { type: 'coffre', id: 'clocher_baton', x: 1, y: 1, contenu: { objet: 'baton_bronze', n: 1 } }
+    ],
+    monstres: [{ type: 'phantome', x: 3, y: 3, rayon: 1 }, { type: 'ame_perdue', x: 8, y: 5, rayon: 1 }],
+    sorties: [
+      { x: 5, y: 8, vers: 'cimetiere', a: [9, 1], dir: 'bas' },
+      { x: 5, y: 0, vers: 'clocher_nef', a: [7, 11], dir: 'haut' }
+    ]
+  },
+  clocher_nef: {
+    nom: 'Nef noyée', musique: 'foret', ciel: 0x0a0e12, sauvegardeAuto: true,
+    combat: { sol: ['sol_crypte0', 'sol_crypte1'], decor: 'mur_crypte_haut', interieur: true },
+    plan: [
+      'CCCCCCCnCCCCCCC',
+      'ZnnnnnnnnnnnQnZ',
+      'ZnQnnnnnnnnnQnZ',
+      'ZnnnnnnnnnnnnnZ',
+      'ZnnnnnnnnnnnnnZ',
+      'ZeeeeeeeeeeeeeZ',
+      'ZeeeeeeeeeeeeeZ',
+      'ZnnnnnnnnnnnnnZ',
+      'ZnQnnnnnnnnnQnZ',
+      'nnnnnnnnnnnnnnZ',
+      'ZnnnnnnnnnnnnnZ',
+      'ZnnnnnnnnnnnnnZ',
+      'zzzzzzznzzzzzzz'
+    ],
+    ornements: [{ type: 'torche', x: 4, y: 0 }, { type: 'torche', x: 10, y: 0 }],
+    objets: [
+      { type: 'pieu', x: 4, y: 3 }, { type: 'pieu', x: 4, y: 8 },
+      { type: 'porte_cle', id: 'nef_porte', x: 7, y: 1, cle: 'cle_clocher' },
+      { type: 'rocher', id: 'nef_rocher', x: 13, y: 2, outil: 'masse', texte: 'Un rocher fendu, tombé de la voûte, bouche l\'angle de la nef. Un coffre brille derrière.' },
+      { type: 'coffre', id: 'nef_arc', x: 13, y: 1, contenu: { objet: 'arc_veilleur', n: 1 } },
+      { type: 'coffre', id: 'nef_herbes', x: 1, y: 11, contenu: { objet: 'herbe', n: 3 } },
+      { type: 'lanterne', x: 13, y: 11 }
+    ],
+    monstres: [
+      { type: 'spectre', x: 10, y: 10, rayon: 1 },
+      { type: 'phantome', x: 9, y: 3, rayon: 1 },
+      { type: 'squelette', x: 4, y: 10, rayon: 1 }
+    ],
+    sorties: [
+      { x: 7, y: 12, vers: 'clocher_entree', a: [5, 1], dir: 'bas' },
+      { x: 0, y: 9, vers: 'clocher_crypte', a: [9, 4], dir: 'gauche' },
+      { x: 7, y: 0, vers: 'clocher_haut', a: [5, 9], dir: 'haut' }
+    ]
+  },
+  clocher_crypte: {
+    nom: 'Crypte du clocher', musique: 'foret', ciel: 0x0a0e12,
+    combat: { sol: ['sol_crypte0', 'sol_crypte1'], decor: 'mur_crypte_haut', interieur: true },
+    plan: [
+      'CCCCCCCCCCC',
+      'ZnnnnZnnnnZ',
+      'ZnRnnZnnRnZ',
+      'ZnnnnZnnnnZ',
+      'Znnnnnnnnnn',
+      'ZnnnnZnnnnZ',
+      'ZnRnnZnnRnZ',
+      'ZnnnnZnnnnZ',
+      'zzzzzzzzzzz'
+    ],
+    ornements: [{ type: 'torche', x: 3, y: 0 }, { type: 'torche', x: 7, y: 0 }],
+    objets: [
+      { type: 'nappe', id: 'crypte_clocher_nappe', x: 5, y: 4, outil: 'lanterne' },
+      { type: 'coffre', id: 'clocher_cle', x: 1, y: 1, contenu: { objet: 'cle_clocher', n: 1 } },
+      { type: 'coffre', id: 'clocher_cotte', x: 1, y: 7, contenu: { objet: 'cotte_bronze', n: 1 } },
+      { type: 'coffre', id: 'clocher_masse', x: 9, y: 7, contenu: { objet: 'masse_carillon', n: 1 } },
+      { type: 'lanterne_oubliee', id: 'clocher', x: 8, y: 1, evenement: 'lanterne_oubliee_clocher' }
+    ],
+    monstres: [{ type: 'goule', x: 7, y: 3, rayon: 1 }, { type: 'squelette', x: 7, y: 6, rayon: 1 }],
+    sorties: [{ x: 10, y: 4, vers: 'clocher_nef', a: [1, 9], dir: 'droite' }]
+  },
+  clocher_haut: {
+    nom: 'Haut du clocher', musique: 'foret', ciel: 0x0a0e12, sauvegardeAuto: true, entree: 'clocher_haut_arrivee',
+    combat: { sol: ['sol_crypte0', 'sol_crypte1'], decor: 'mur_crypte_haut', interieur: true },
+    plan: [
+      'CCCCCCCCCCC',
+      'Z&nnnnnnn&Z',
+      'ZnnnnnnnnnZ',
+      'ZnnnnnnnnnZ',
+      'ZnnnnnnnnnZ',
+      'ZnnnnnnnnnZ',
+      'ZnnnnnnnnnZ',
+      'ZnnnnnnnnnZ',
+      'Z&nnnnnnn&Z',
+      'ZnnnnnnnnnZ',
+      'zzzzznzzzzz'
+    ],
+    ornements: [{ type: 'torche', x: 4, y: 0 }, { type: 'torche', x: 6, y: 0 }],
+    objets: [{ type: 'fresque', x: 5, y: 1, evenement: 'fresque_clocher' }],
+    pnj: [{ id: 'sonneur', perso: 'sonneur', x: 5, y: 3, evenement: 'sonneur_parle', si: '!sonneur_vaincu' }],
+    sorties: [{ x: 5, y: 10, vers: 'clocher_nef', a: [7, 2], dir: 'bas' }],
+    declencheurs: [{ x: [1, 9], y: 6, evenement: 'sonneur_combat', si: '!sonneur_vaincu' }]
   }
 };

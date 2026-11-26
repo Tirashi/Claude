@@ -1,6 +1,9 @@
 {
   "_": "Liste des tuiles de La Dernière Lanterne, lue par outils/lanterne-tuiles.py. Chemins relatifs au dossier rltiles de Dungeon Crawl Stone Soup (CC0). Les personnages sont des poupées : pièces superposées dans l'ordre de Dungeon Crawl (cape, corps, bottes, jambes, armure, gants, arme, bouclier, cheveux, barbe, tête).",
   "tuiles": {
+    "terre_grise0": "dngn/floor/grey_dirt0.png", "terre_grise1": "dngn/floor/grey_dirt1.png", "terre_grise2": "dngn/floor/grey_dirt2.png",
+    "squelette": "mon/undead/skeletal_warrior.png", "goule": "mon/undead/ghoul.png", "poltergeist": "mon/undead/poltergeist.png", "ame_perdue": "mon/undead/lost_soul.png",
+    "phantome": "mon/undead/phantom.png", "spectre": "mon/undead/wraith.png", "sonneur": "mon/undead/ancient_champion.png",
     "sangsue": "mon/animals/tyrant_leech.png", "escargot": "mon/animals/torpor_snail.png", "anguille": "mon/aquatic/electric_eel.png", "phalene": "mon/animals/ghost_moth.png",
     "feu_bleu": "mon/undead/soul_wisp.png", "remous": "mon/nonliving/water_elemental.png", "lavandiere": "mon/undead/glowmurk_ghast.png", "tortue": "mon/animals/snapping_turtle.png",
     "dame_moulin": "mon/undead/silent_spectre.png", "crapaud_roi": "mon/unique/prince_ribbit.png",
