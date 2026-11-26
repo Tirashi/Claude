@@ -207,3 +207,28 @@ Retour de l'utilisateur (19/11) : « c'est pas mal là » : **session 1 validée
 - Simulateur : vague moyenne inchangée (environ 6 avec les dés).
 
 Retour de l'utilisateur : en attente.
+
+## 18. Comparaison avec Slotbound et pistes de simplification (26/11)
+
+L'utilisateur a découvert **Slotbound** (Optima Arch, Steam, sorti vers le 12-13/11/2026, environ 10 $, démo gratuite) : « ils ont fait à peu près ce que je voulais faire ». Démo non jouable depuis l'environnement de Claude (jeu Windows/macOS) ; comparaison faite sur des extraits de recherche web (Steam, TodayWeGame, wikis), pas sur le jeu.
+
+**Slotbound** : roguelite autobattler. Une machine à sous 3×3 invoque les unités (trois symboles alignés sur l'une des huit lignes) ; on les fusionne en les absorbant ; objets et « cores » faussent les probabilités ; vagues de jugement et de boss ; ennemis qui avancent, un cœur perdu par ennemi qui passe, le boss met fin à la partie ; monnaie de méta-progression. Démo « Très positif » (342 avis), jeu complet autour de 77-79 % ; reproche : pics de difficulté aux vagues de jugement. Le code a été écrit par une IA (polémique de presse).
+
+| | Slotbound | Les Bannis |
+|---|---|---|
+| Hasard | la machine crée l'armée | héros tirés au sort ; dés et sorts du Mage |
+| Geste du joueur | tirer le levier, fusionner | placer, garder / relancer les dés, sorts, équiper |
+| Combat | plateau, ennemis qui avancent | mouvement libre façon action-RPG, Muraille |
+| Cadre | défense abstraite | histoire du Mage banni, classes, légendaires |
+
+**À prendre chez eux** : un hasard lisible en un seul geste ; le tirage qui *crée* l'équipe plutôt qu'une liste ; la fusion par absorption comme moteur de progression simple ; surveiller les pics de difficulté des boss.
+
+**Pistes à trancher avec l'utilisateur** (aucune programmée, maquette d'abord) :
+1. **Tirage des condamnés aux dés** : au début de la nuit, on lance les dés pour faire sortir les 3 recrues (valeur = classe / rareté ; relance limitée ; dés gardés) au lieu de la liste imposée. Le tirage devient le premier geste du jeu.
+2. **Dés plus souvent, mais un seul geste** : un lancer par vague pour l'équipement (butin tiré au dé : valeur = rareté, face spéciale = affixe), au lieu de choisir dans une liste.
+3. **Simplifier les dés** : garder un seul dé visible (d6) pour les tirages, et reléguer faces spéciales, combos, d4-d20 et graver une face à l'arbre / aux reliques (introduits un par un).
+4. **Cartes à la place des dés pour les sorts et les objets** : un paquet de sorts et d'objets, on pioche une main, on garde ou on défausse (le « garder / relancer » devient « garder / défausser »). Lisible et connu, mais s'éloigne de l'idée « dompter le dé ».
+5. **Une machine à rouleaux** pour les recrues (copie de Slotbound, à éviter : on voudrait notre propre identité) ; variante : rouleaux de **dés** (trois dés alignés = combo = recrue).
+6. **Fusion** : deux recrues identiques s'absorbent pour évoluer (déjà l'évolution au butin, à rapprocher).
+
+Recommandation de Claude : 1 + 2 d'abord (le dé reste notre signature, mais sert plus tôt et plus souvent), avec le 3 comme règle de départ (un seul dé au début, les autres arrivent par l'arbre) ; une maquette à 2-3 directions (tirage des recrues aux dés, butin aux dés, variante cartes) avant tout code.
