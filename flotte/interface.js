@@ -53,7 +53,8 @@ function maj(E, V) {
   $("vCredits").textContent = "$" + fmt(E.credits); $("hCredits").textContent = "$" + fmt(E.credits);
   $("vRevenu").textContent = "+" + S.revenu(E).toFixed(1) + " / s";
   $("vZone").textContent = (E.lv + 1) + " / " + R.ZONES.length + " · " + R.ZONES[E.lv].ore;
-  $("vNavires").textContent = E.ships.length; $("vM").textContent = S.nombre(E, "m"); $("vT").textContent = S.nombre(E, "t");
+  $("vNavires").textContent = E.ships.length; $("vM").textContent = S.nombre(E, "m"); $("vT").textContent = S.nombre(E, "t"); $("vP").textContent = E.patrouilles.length;
+  $("vPir").textContent = E.pirates.length; $("vPir").style.color = E.pirates.length ? "#ff8aa0" : "";
   document.querySelectorAll("#lots button").forEach(b => b.setAttribute("aria-pressed", b.dataset.l === lot));
   $("bCineSuivi").setAttribute("aria-pressed", app.cineSuivi());
   document.querySelectorAll("#themes button").forEach(b => b.setAttribute("aria-pressed", b.dataset.t === V.theme));

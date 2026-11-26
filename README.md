@@ -489,6 +489,7 @@ Une petite flotte de mineurs et de marchands travaille toute seule dans un syst�
 
 - **La carte** : presque nue, avec des astres en petits points nommés, des routes pointillées et des orbites lentes ; zoome (boutons, molette, pincement) et les vaisseaux deviennent des sprites en relief ; touche un navire pour le suivre et voir sa fiche.
 - **Les gains** : les mineurs ramènent du minerai, les marchands vendent au marché Prime ; l'argent achète d'autres vaisseaux (×1, ×10, ×100 ou au maximum).
+- **Pirates** : de temps en temps un pirate pille un navire chargé ; achète des patrouilles pour garder tes avant-postes : elles le détruisent, te rendent le butin et touchent une prime.
 - **Ingénierie** : la portée du signal ouvre quatre zones (fer, glace, cristal, iridium) avec un avant-poste chacune ; les moteurs accélèrent les navires et la soute augmente les gains.
 - **Appli fermée** : une part des gains continue quand tu pars (25 % de base, jusqu'à 24 h) ; si la fenêtre est seulement cachée, la flotte rattrape tout.
 - **Ordinateur et téléphone** : fenêtres Flotte, Options et Console repliables, trois ambiances (nuit bleue, violette, phosphore), mode cinéma automatique après deux minutes.

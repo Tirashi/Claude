@@ -20,7 +20,7 @@ function charger() {
   return Promise.all(Object.keys(F.SPRITES).map(k => new Promise(ok => { const i = new Image(); i.onload = i.onerror = ok; i.src = F.SPRITES[k].src; IMG[k] = i; })));
 }
 
-function creerVue() { return { W: 0, H: 0, dpr: 1, z: 1, px: 0, py: 0, cam: R.ZONES[0].cam, sel: null, theme: "bleue", pops: [], bg: null, etoiles: [], tilt: .62, u0: 1, cx0: 0, cy0: 0, sc: 1, ue: 1 }; }
+function creerVue() { return { W: 0, H: 0, dpr: 1, z: 1, px: 0, py: 0, cam: R.ZONES[0].cam, sel: null, theme: "bleue", pops: [], booms: [], bg: null, etoiles: [], tilt: .62, u0: 1, cx0: 0, cy0: 0, sc: 1, ue: 1 }; }
 
 // Dimensions de la fenêtre : recalcule la géométrie et le fond (cache)
 function taille(V, cv, W, H) {
@@ -51,9 +51,11 @@ function avancer(E, V, dt) {
   const cible = V.sel && E.ships.includes(V.sel) ? V.sel : null;
   const tx = cible ? cible.x : 0, ty = cible ? cible.y : 0;
   V.px += (tx - V.px) * Math.min(1, dt * 3); V.py += (ty - V.py) * Math.min(1, dt * 3);
-  for (const e of E.evt) V.pops.push({ x: e.x, y: e.y, n: e.n, col: e.col, vie: 1 });
+  for (const e of E.evt) { if (e.kind === "boom") V.booms.push({ x: e.x, y: e.y, vie: 1 }); else V.pops.push({ x: e.x, y: e.y, n: e.n, col: e.col, perte: e.kind === "perte", vie: 1 }); }
   E.evt.length = 0;
   for (const o of V.pops) o.vie -= dt * .7;
+  for (const o of V.booms) o.vie -= dt * 1.4;
+  if (V.booms.length) V.booms = V.booms.filter(o => o.vie > 0);
   if (V.pops.length) V.pops = V.pops.filter(o => o.vie > 0);
   if (V.pops.length > 120) V.pops.splice(0, V.pops.length - 120);
 }
@@ -116,9 +118,23 @@ function dessiner(c, E, V) {
     }
   }
   for (const sh of E.ships) navire(c, V, sh, t);
+  // patrouilles (elles gardent un avant-poste), tirs, pirates
+  for (const q of E.patrouilles) {
+    if (q.tir > 0 && q.cible) { const a = ecran(V, q.x, q.y), b = ecran(V, q.cible.x, q.cible.y); c.strokeStyle = "rgba(150,190,255," + Math.min(1, q.tir) + ")"; c.lineWidth = 1.1; c.beginPath(); c.moveTo(a[0], a[1]); c.lineTo(b[0], b[1]); c.stroke(); }
+    navire(c, V, { type: "p", id: 0, x: q.x, y: q.y, ang: q.ang, etat: "vol" }, t);
+  }
+  for (const p of E.pirates) {
+    const [x, y] = ecran(V, p.x, p.y);
+    c.strokeStyle = "rgba(255,90,110,.65)"; c.lineWidth = .9; c.setLineDash([2, 3]); c.beginPath(); c.arc(x, y, 9 * sc, t * .8, t * .8 + TAU); c.stroke(); c.setLineDash([]);
+    navire(c, V, { type: "x", id: 1, x: p.x, y: p.y, ang: p.ang, etat: "vol" }, t);
+    if (V.z >= .9) { c.font = Math.round(7 * Math.max(1, sc)) + 'px "Share Tech Mono", monospace'; c.fillStyle = "rgba(255,120,140,.9)"; c.textAlign = "center"; c.fillText("HOSTILE", x, y - 13 * sc); }
+  }
+  c.globalCompositeOperation = "lighter";
+  for (const o of V.booms) { const [x, y] = ecran(V, o.x, o.y), r = (1 - o.vie) * 26 * sc + 4, g = c.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, "rgba(255,200,140," + o.vie * .9 + ")"); g.addColorStop(1, "rgba(255,90,60,0)"); c.fillStyle = g; c.beginPath(); c.arc(x, y, r, 0, TAU); c.fill(); }
+  c.globalCompositeOperation = "source-over";
   if (V.sel && E.ships.includes(V.sel)) { const [x, y] = ecran(V, V.sel.x, V.sel.y); c.strokeStyle = "#5dffa6"; c.lineWidth = 1; c.setLineDash([2, 2.5]); c.beginPath(); c.arc(x, y, 9 * sc, t, t + TAU); c.stroke(); c.setLineDash([]); }
   c.font = "600 " + Math.round(8.5 * Math.max(1, sc)) + 'px "Share Tech Mono", monospace'; c.textAlign = "center";
-  for (const o of V.pops) { const [x, y] = ecran(V, o.x, o.y); c.globalAlpha = Math.max(0, o.vie); c.fillStyle = o.col || "#e1fff5"; c.fillText("+" + o.n, x, y - (1 - o.vie) * 12); c.globalAlpha = 1; }
+  for (const o of V.pops) { const [x, y] = ecran(V, o.x, o.y); c.globalAlpha = Math.max(0, o.vie); c.fillStyle = o.perte ? "#ff9eb0" : (o.col || "#e1fff5"); c.fillText((o.perte ? "−" : "+") + o.n, x, y - (1 - o.vie) * 12); c.globalAlpha = 1; }
 }
 
 function navire(c, V, sh, t) {
@@ -128,8 +144,9 @@ function navire(c, V, sh, t) {
   if (V.z >= SEUIL_SPRITE && IMG[sh.type] && IMG[sh.type].complete) { sprite(c, sh.type, x, y, ang, LONGUEUR[sh.type] * sc * clamp(V.z, .8, 2.6), t, sh.id, sh.etat === "vol"); return; }
   c.save(); c.translate(x, y); c.rotate(ang);
   const q = sc * (sh.type === "t" ? 1.1 : 1);
-  c.fillStyle = sh.type === "m" ? TEINTES_M[sh.id % 4] : TEINTES_T[sh.id % 4];
+  c.fillStyle = sh.type === "m" ? TEINTES_M[sh.id % 4] : sh.type === "t" ? TEINTES_T[sh.id % 4] : sh.type === "p" ? "#8ab4ff" : "#ff5a6e";
   if (sh.type === "t") c.fillRect(-2.6 * q, -1 * q, 5.2 * q, 2 * q);
+  else if (sh.type === "x") { c.beginPath(); c.moveTo(3 * q, 0); c.lineTo(0, 2.4 * q); c.lineTo(-3 * q, 0); c.lineTo(0, -2.4 * q); c.closePath(); c.fill(); }
   else { c.beginPath(); c.moveTo(3.2 * q, 0); c.lineTo(-2.4 * q, -2 * q); c.lineTo(-2.4 * q, 2 * q); c.closePath(); c.fill(); }
   c.restore();
 }

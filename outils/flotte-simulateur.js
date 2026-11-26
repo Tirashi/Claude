@@ -5,7 +5,7 @@ const vm = require('vm'), fs = require('fs'), path = require('path');
 const ctx = {console, Math, Date, JSON, Number}; ctx.window = ctx; vm.createContext(ctx);
 // localStorage factice (la sauvegarde l'utilise pour lire et écrire)
 const mem = {}; ctx.localStorage = {getItem: k => (k in mem ? mem[k] : null), setItem: (k, v) => { mem[k] = String(v); }, removeItem: k => { delete mem[k]; }};
-for (const f of ['regles', 'monde', 'flotte', 'sauvegarde']) vm.runInContext(fs.readFileSync(path.join(__dirname, '..', 'flotte', f + '.js'), 'utf8'), ctx, {filename: f});
+for (const f of ['regles', 'monde', 'flotte', 'pirates', 'sauvegarde']) vm.runInContext(fs.readFileSync(path.join(__dirname, '..', 'flotte', f + '.js'), 'utf8'), ctx, {filename: f});
 const F = ctx.Flotte, R = F.R, S = F.Sim, Sv = F.Save;
 const rnd = s => () => (s = (s * 16807) % 2147483647) / 2147483647;
 let pb = 0; const non = m => { console.error('ÉCHEC ' + m); pb++; };
@@ -22,11 +22,13 @@ function racheter(E) {
     const o = [['m', R.cout('m', E.buys.m), par], ['t', R.cout('t', E.buys.t), par]];
     if (E.up.soute < 10) o.push(['soute', R.coutAmelio('soute', E.up.soute), rev * .1 / (1 + .1 * E.up.soute)]);
     if (E.up.mot < 10) o.push(['mot', R.coutAmelio('mot', E.up.mot), rev * .55 * .08 / (1 + .08 * E.up.mot)]);
+    // une patrouille par avant-poste ouvert : elle évite un pillage sur six environ (≈ 15 % du revenu au total)
+    if (E.patrouilles.length < 2 * (E.lv + 1)) o.push(['p', R.cout('p', E.buys.p), rev * .15 / (2 * (E.lv + 1))]);
     o.sort((a, b) => b[2] / b[1] - a[2] / a[1]);
     const [k, c] = o[0];
     if (zc < Infinity && zc - E.credits < rev * 180 && E.credits < zc) return;
     if (E.credits < c) return;
-    if (k === 'm' || k === 't') S.acheter(E, k, 1); else S.ameliorer(E, k);
+    if (k === 'm' || k === 't' || k === 'p') S.acheter(E, k, 1); else S.ameliorer(E, k);
   }
 }
 // Joue une partie et note à quelle minute chaque zone s'ouvre
@@ -61,7 +63,7 @@ if (R.cout('m', 0) !== 20 || R.cout('t', 0) !== 60 || R.cout('m', 10) !== Math.r
 const avant = C.credits, n = S.acheter(C, 'm', 'max');
 if (n < 1 || C.credits < 0 || avant - C.credits !== R.coutLot('m', 0, n)) non('achat au maximum');
 if (S.acheter(C, 'm', 1) !== 0 && C.credits < 0) non('achat sans crédits');
-if (S.acheter(C, 'p', 1) !== 0) non('les patrouilles ne s\'achètent pas encore');
+
 // 3 bis. améliorations : coûts, plafonds, effet sur la vitesse et sur les gains
 const U = S.creer({rng: rnd(6)}); U.credits = 1e9;
 if (R.coutAmelio('mot', 0) !== 80 || R.coutAmelio('soute', 2) !== Math.round(120 * 1.9 * 1.9)) non('coût des améliorations');
@@ -70,6 +72,21 @@ if (U.up.mot !== 10 || U.up.soute !== 10) non('plafond des améliorations');
 if (Math.abs(R.multVitesse(10) - 1.8) > 1e-9 || Math.abs(R.multGain(10) - 2) > 1e-9) non('effets des améliorations');
 const rapide = S.creer({rng: rnd(8)}), lent = S.creer({rng: rnd(8)}); rapide.up.mot = 10; rapide.up.soute = 10; jouer(rapide, 600); jouer(lent, 600);
 if (!(rapide.total > lent.total * 1.8)) non('les améliorations ne rapportent pas : ' + Math.round(rapide.total) + ' contre ' + Math.round(lent.total));
+// 3 ter. pirates : ils arrivent, pillent (jamais plus que les crédits), et les patrouilles les détruisent en rendant le butin plus une prime
+const PA = S.creer({rng: rnd(12)}), PB = S.creer({rng: rnd(12)});
+PB.credits = 1e6; S.acheter(PB, 'p', 3); PB.credits = 400;
+for (let i = 0; i < 1200; i++) { jouer(PA, 1); jouer(PB, 1); if (PA.credits < 0 || PB.credits < 0) { non('crédits négatifs'); break; } }
+if (PA.stats.perdu <= 0) non('aucun pillage en 20 minutes sans patrouille');
+if (PA.stats.detruits !== 0) non('un pirate détruit sans patrouille');
+if (!(PB.stats.detruits >= 2) || !(PB.stats.primes > 0)) non('les patrouilles ne détruisent pas les pirates : ' + PB.stats.detruits);
+if (!(PB.stats.perdu < PA.stats.perdu)) non('les patrouilles ne réduisent pas les pertes : ' + Math.round(PB.stats.perdu) + ' contre ' + Math.round(PA.stats.perdu));
+if (PA.pirates.length > R.maxPirates(PA.lv)) non('trop de pirates à la fois');
+if (R.butin(5, 1e9) !== 50 || R.butin(0.1, 1e9) !== 10 || R.butin(1e6, 30) !== 30) non('formule du butin');
+// la veille ne fait pas venir de pirates, la sauvegarde rend les patrouilles
+const SV = S.creer({rng: rnd(14)}); SV.credits = 1e5; S.acheter(SV, 'p', 4); jouer(SV, 30); Sv.enregistrer(SV);
+const rv = Sv.charger(); if (!rv || rv.patrouilles.length !== 4) non('patrouilles perdues à la sauvegarde');
+const avantStats = JSON.stringify(rv.stats), brutV = Sv.lire(Sv.CLE, null); brutV.quand = Date.now() - 5 * 3600 * 1000; Sv.reprendre(rv, brutV);
+if (JSON.stringify(rv.stats) !== avantStats || rv.pirates.length) non('des pirates sont venus pendant la veille');
 // 4. absence : rattrapage ≤ 10 min, sinon part de veille plafonnée à 24 h
 const a1 = R.absence(2, 120, 0), a2 = R.absence(2, 3600, 0), a3 = R.absence(2, 10 * 86400, 10);
 if (a1.mode !== 'rattrapage' || a2.mode !== 'veille' || a2.gain !== Math.floor(2 * 3600 * .25)) non('absence courte ou moyenne');

@@ -56,11 +56,13 @@ Départ : 400 crédits, 5 mineurs, 3 marchands, zone 1.
 - **La « Veille » n'est pas une amélioration à crédits** : dans la maquette elle l'était pour la démonstration ; elle devient une **amélioration de prestige** (§ 8).
 - Les chiffres sont ceux des maquettes ; **à rééquilibrer au simulateur** (§ 12). Plus tard : matrice d'améliorations de maîtrise (laissée de côté), automatismes d'achat, expéditions, Bourse.
 
-## 7. Pirates, patrouilles, alertes
-- Un pirate apparaît toutes les 24 à 38 s (un seul à la fois), vise un navire, lui vole jusqu'à 5 crédits au contact, puis s'enfuit 5 s.
-- **Patrouilles** : orbitent autour du QG ; dans un rayon de 90 px du QG chaque patrouille inflige 0,8 PV/s (pirate : 2 PV) ; **prime** de 12 crédits à la destruction.
-- Alerte écrite dans la console ; pastille rouge autour du pirate.
-- À améliorer : pirates utiles dès le début (épaves à récupérer, primes) plutôt que simple perte d'argent (leçon du jeu d'origine).
+## 7. Pirates, patrouilles, alertes (fait le 26/11, session 3)
+- **Apparition** : le premier pirate vient 45 à 65 s après le départ, puis un toutes les 40 à 70 s ; au plus `1 + ⌊zone ouverte ÷ 2⌋` à la fois ; il arrive juste au-delà de l'anneau de la zone ouverte (visible), jamais appli fermée.
+- **Pillage** : il vise un navire **chargé en vol** (mineur qui rentre à l'avant-poste, marchand qui va à Prime), touche à 0,02 du monde, prend **10 secondes de revenu** (au moins 10 cr, jamais plus que les crédits) et s'enfuit avec ; sorti de la carte, le butin est perdu. Pastille rouge pointillée et « HOSTILE » sur la carte, ligne dans la console, chiffre rouge.
+- **Patrouilles** (90 × 1,2^n cr, ne livrent rien) : chacune orbite autour d'un avant-poste ouvert (la i-ème sur le (i mod nombre d'avant-postes)-ième), tire sur tout pirate à moins de 0,22 (0,8 PV/s ; pirate : 2 PV + 1 par zone au-delà de la première) ; tirs en ligne bleue, explosion.
+- **Prime** : un pirate détruit **rend son butin** et rapporte **10 secondes de revenu** (au moins 25 cr). Un pirate qui s'échappe garde le butin : défendre rapporte donc plus qu'il ne coûte, surtout aux zones lointaines que les patrouilles couvrent seulement si on en met.
+- Le simulateur contrôle : pillages sans patrouille, destructions et primes avec trois patrouilles, moins de pertes avec elles, pas de pirate pendant la veille, patrouilles gardées à la sauvegarde.
+- **À améliorer plus tard** : épaves à récupérer, tableau de primes, pirates plus forts après le prestige (friction de l'Horizon).
 
 ## 8. Prestige (proposition, à valider)
 - **Nom provisoire : « Horizon »**. Disponible quand les quatre zones sont ouvertes et que la fortune cumulée dépasse un seuil (à régler).
@@ -110,7 +112,7 @@ Voir la liste de contrôle de `specs/ludotheque.md` (skill `ajouter-un-jeu`) : d
 ## 15. Étapes (sessions)
 1. **Socle (fait le 26/11)** : carte et orbites, zone 1, mineurs et marchands, gains, achats par lot, fenêtre Flotte, sauvegarde, veille fixe à 25 %, zoom, ambiances, PC et téléphone, sprites Relief ; démo sur l'accueil.
 2. **Zones (fait le 26/11)** : portée du signal, avant-postes, Ingénierie (moteurs, soute), console, fiche d'un navire et suivi de caméra, cinéma.
-3. **Pirates** : patrouilles, primes, alertes.
+3. **Pirates (fait le 26/11)** : patrouilles, primes, alertes.
 4. **Prestige** : Horizon, éclats, améliorations permanentes dont la Veille, simulateur et équilibrage.
 5. **Finitions** : sons, performances (super-navire si besoin), variété des coques, étiquette, jaquette, transfert, artefact.
 Modèle : opusplan pour les sessions 1 à 3 et 5 ; Opus pour la session 4 (équilibrage).

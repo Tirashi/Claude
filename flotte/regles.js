@@ -38,6 +38,13 @@ const AMELIO = {
 const coutAmelio = (k, n) => Math.round(AMELIO[k].base * Math.pow(AMELIO[k].f, n));
 const multVitesse = n => 1 + AMELIO.mot.pas * (n || 0), multGain = n => 1 + AMELIO.soute.pas * (n || 0);
 
+// Pirates : un par zone paire ouverte au plus, ils pillent les navires chargés ; les patrouilles gardent les avant-postes
+const PIRATE = { grace: 45, mini: 40, maxi: 70, vitesse: .05, pv: 2, contact: .02, fuite: 6, butinSec: 10, butinMin: 10, primeSec: 10, primeMin: 25 };
+const PATROUILLE = { portee: .22, degats: .8, orbite: .035, vitesseAng: .8 };
+const butin = (revenu, credits) => Math.max(0, Math.min(credits, Math.max(PIRATE.butinMin, Math.round(revenu * PIRATE.butinSec))));
+const prime = revenu => Math.max(PIRATE.primeMin, Math.round(revenu * PIRATE.primeSec));
+const maxPirates = lv => 1 + Math.floor((lv || 0) / 2);
+
 const lots = ["1", "10", "100", "max"];
 
 function cout(k, n) { return Math.round(PRIX[k][0] * Math.pow(PRIX[k][1], n)); }
@@ -57,6 +64,6 @@ function absence(revenu, dt, niveauVeille) {
   return { mode: "veille", dt, duree: d, part, gain: Math.floor(Math.max(0, revenu) * d * part) };
 }
 
-F.R = { AMELIO, coutAmelio, multVitesse, multGain, ORE, ZONES, PRIX, ROLE, DEPART, VITESSE, X_MARCHAND, FORAGE, QUAI_MINEUR, QUAI_PRIME, QUAI_RELAIS, ARC, VEILLE, ABSENCE_MAX, RATTRAPAGE_MAX, FENETRE_REVENU,
+F.R = { PIRATE, PATROUILLE, butin, prime, maxPirates, AMELIO, coutAmelio, multVitesse, multGain, ORE, ZONES, PRIX, ROLE, DEPART, VITESSE, X_MARCHAND, FORAGE, QUAI_MINEUR, QUAI_PRIME, QUAI_RELAIS, ARC, VEILLE, ABSENCE_MAX, RATTRAPAGE_MAX, FENETRE_REVENU,
   lots, cout, coutLot, lotMax, gainMineur, gainMarchand, partVeille, absence };
 })();

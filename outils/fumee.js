@@ -190,6 +190,7 @@ const shots = process.argv[2];
         J.app.zoom(2); if (!(V.z > 1.9)) return 'zoom'; J.suivre(); await wait(600); if (document.getElementById('pFiche').hidden) return 'pas de fiche de navire';
         J.app.fermerFiche(); await wait(300);
         E.credits += 1e6; if (!J.app.portee() || E.lv !== 1) return 'la portée n\'ouvre pas la zone 2'; J.app.ameliorer('mot'); if (E.up.mot !== 1) return 'amélioration des moteurs';
+        E.credits += 1e5; if (J.app.acheter && !E.patrouilles.length) { J.app.setLot('1'); J.app.acheter('p'); } await wait(500); if (E.patrouilles.length !== 1 || document.getElementById('vP').textContent !== '1') return 'pas de patrouille'; if (!window.Flotte.Pirates) return 'pas de pirates';
         await wait(300); if (!document.getElementById('toast').classList.contains('on')) return 'pas d\'annonce de la zone'; if (document.querySelectorAll('.upg').length !== 3) return 'fenêtre Ingénierie';
         window.dispatchEvent(new Event('pagehide')); const sauve = JSON.parse(localStorage.getItem('flotte.partie') || 'null');
         if (!sauve || sauve.navires.length !== 18) return 'sauvegarde illisible';

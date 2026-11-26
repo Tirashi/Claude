@@ -14,6 +14,7 @@ function creer(opts) {
   opts = opts || {};
   const M = Mo.creer(); Mo.placer(M, 0);
   const E = { M, t: 0, credits: R.DEPART.credits, total: 0, buys: { m: 0, t: 0, p: 0 }, lv: 0, veille: 0, up: { mot: 0, soute: 0 }, ships: [], inc: [], id: 0, rng: opts.rng || Math.random, evt: [], logs: [] };
+  F.Pirates.init(E);
   if (!opts.vide) {
     for (let i = 0; i < R.DEPART.m; i++) ajouter(E, "m");
     for (let i = 0; i < R.DEPART.t; i++) ajouter(E, "t");
@@ -84,6 +85,7 @@ function maj(E, dt) {
     }
     sh.tt += dt; if (sh.tt > .1) { sh.tt = 0; sh.trace.push([sh.x, sh.y]); if (sh.trace.length > 9) sh.trace.shift(); }
   }
+  F.Pirates.maj(E, dt);
   if (E.inc.length && E.t - E.inc[0].t > 60) E.inc = E.inc.filter(i => E.t - i.t < 60);
 }
 
@@ -96,15 +98,15 @@ function revenu(E, fen) {
 
 function nombre(E, k) { return E.ships.filter(s => s.type === k).length; }
 
-// Achète qte navires (nombre ou « max ») ; renvoie combien ont été achetés. Les patrouilles viendront avec les pirates (session 3).
+// Achète qte navires (nombre ou « max ») ; renvoie combien ont été achetés. Une patrouille garde les avant-postes (elle ne livre rien).
 function acheter(E, k, qte) {
-  if (k !== "m" && k !== "t") return 0;
+  if (k !== "m" && k !== "t" && k !== "p") return 0;
   const n = qte === "max" ? R.lotMax(k, E.buys[k], E.credits, 200) : qte;
   let fait = 0;
   for (let i = 0; i < n; i++) {
     const c = R.cout(k, E.buys[k]);
     if (E.credits < c) break;
-    E.credits -= c; E.buys[k]++; ajouter(E, k); fait++;
+    E.credits -= c; E.buys[k]++; if (k === "p") F.Pirates.ajouterPatrouille(E); else ajouter(E, k); fait++;
   }
   if (fait) log(E, "Acheté : " + fait + " " + R.ROLE[k] + (fait > 1 ? "s" : "") + ".");
   return fait;

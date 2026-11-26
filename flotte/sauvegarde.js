@@ -9,7 +9,7 @@ const ecrire = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } c
 const nb = (v, d) => (Number.isFinite(Number(v)) ? Number(v) : d);
 
 function exporter(E) {
-  return { v: 1, quand: Date.now(), t: E.t, credits: E.credits, total: E.total, buys: E.buys, lv: E.lv, veille: E.veille, up: E.up,
+  return { v: 1, quand: Date.now(), t: E.t, credits: E.credits, total: E.total, buys: E.buys, lv: E.lv, veille: E.veille, up: E.up, stats: E.stats,
     revenu: S.revenu(E, 60), navires: E.ships.map(s => ({ type: s.type, nom: s.nom, trips: s.trips, earn: s.earn })) };
 }
 
@@ -21,7 +21,9 @@ function importer(d) {
   E.lv = Math.max(0, Math.min(R.ZONES.length - 1, Math.floor(nb(d.lv, 0)))); E.veille = Math.max(0, Math.min(10, Math.floor(nb(d.veille, 0))));
   for (const k of ["mot", "soute"]) E.up[k] = Math.max(0, Math.min(R.AMELIO[k].max, Math.floor(nb(d.up && d.up[k], 0))));
   for (const k of ["m", "t", "p"]) E.buys[k] = Math.max(0, Math.floor(nb(d.buys && d.buys[k], 0)));
+  for (const k of ["detruits", "perdu", "primes"]) E.stats[k] = Math.max(0, nb(d.stats && d.stats[k], 0));
   F.Monde.placer(E.M, E.t);
+  for (let i = 0; i < E.buys.p && i < 500; i++) F.Pirates.ajouterPatrouille(E);
   for (const n of d.navires.slice(0, 2000)) if (n && (n.type === "m" || n.type === "t")) S.ajouter(E, n.type, n);
   S.log(E, "Partie reprise.");
   return E;
