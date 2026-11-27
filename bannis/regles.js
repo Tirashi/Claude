@@ -9,7 +9,7 @@ const W = 360;
 const ZONE = {x0: 64, x1: 350, y0: 262, y1: 528};
 const MUR_X = 50;
 const CASES = [[92,290],[92,385],[92,480],[162,290],[162,385],[162,480]];
-const VERSION_RUN = 2;
+const VERSION_RUN = 3;
 
 let alea = Math.random;
 const r = (a, b) => a + alea()*(b-a);
@@ -83,13 +83,10 @@ function genererObjet(vague, mieux, run){
   for (const a of possibles.slice(0, R.aff)) b[a] = Math.max(1, Math.round(D.AFFIXES[a].v * echelle * r(0.8, 1.2)));
   return {slot, n: nom, ic, rar: rar.i, b, pour: pour || null, prix: Math.round(6 + 8*R.k + vague)};
 }
-// butin d'une vague : objets ; parfois un dé, et une page de grimoire après un boss
+// butin d'une vague : 2 objets (3 après un boss), tirés par les dés QUOI et QUALITE
 function genererButin(run, boss){
   const n = boss ? 3 : 2, out = [];
   for (let k = 0; k < n; k++) out.push(genererObjet(run.vague, boss && k === 0, run));
-  const pages = Object.keys(D.SORTS).filter(s => !run.sorts.includes(s));
-  if (boss && pages.length) out[0] = {type: "page", sort: pick(pages), n: "PAGE DE GRIMOIRE"};
-  if (alea() < (boss ? 0.6 : 0.3) && run.des.length < D.MAX_DES){ const de = deTrouve(); out[out.length - 1] = {type: "de", de, n: de.n}; }
   return out;
 }
 // la plus petite face chiffrée d'un dé au hasard devient x2 ; renvoie le dé
@@ -115,7 +112,7 @@ function equiper(h, o){ const ancien = h.equip[o.slot]; const avant = stats(h).p
 /* ---------- run ---------- */
 function nouvelleRun(){
   return {v: VERSION_RUN, vague: 1, or: 20, mur: 100, murMax: 100, heros: [], stock: {potion: 1, parchemin: 1, vue: 1}, kills: 0, boss: 0, revele: false, debut: Date.now(),
-    des: [nouveauDe("d6"), nouveauDe("d6")], sorts: D.SORTS_DEPART.slice(), faces: nouvellesFaces()};
+    des: [nouveauDe("d6"), nouveauDe("d6")], sorts: D.SORTS_DEPART.slice(), faces: nouvellesFaces(), remise: 0, bonusLancers: 0, bonusUrgence: 0, sortsPrets: 0, prix: 10, lancers: 3, urgence: 1};
 }
 function nomsPris(run){ return run.heros.map(h => h.nom); }
 function placerParDefaut(run){
@@ -129,7 +126,7 @@ function placerParDefaut(run){
 // début de vague : les héros tombés reviennent à 30 % de vie
 function preparerVague(run){
   for (const h of run.heros){ const s = stats(h); if (h.mort || h.pv <= 0){ h.mort = false; h.pv = Math.round(s.pv*0.3); } h.pv = Math.min(h.pv, s.pv); }
-  run.revele = false; run.relances = 1;
+  run.revele = false; run.relances = 1; debutLancers(run);
   run.compo = composerVague(run.vague);
 }
 function composerVague(v){
@@ -344,15 +341,61 @@ function utiliserObjet(C, k){
 }
 
 /* ---------- fin de vague, fin de run ---------- */
+// ---- dé d'action (28/11) : de l'or paie des lancers ; le prix monte à chaque lancer et revient à zéro à la vague suivante ----
+const PRIX_BASE = 16, PAS_PRIX = 8, LANCERS_PREP = 3, URGENCES = 1, MAX_HEROS = 4;
+function debutLancers(run){ run.prix = Math.max(4, PRIX_BASE - (run.remise || 0)); run.lancers = LANCERS_PREP + (run.bonusLancers || 0); run.urgence = URGENCES + (run.bonusUrgence || 0); }
+function peutLancer(run, phase){ return run.or >= run.prix && (phase === "combat" ? run.urgence > 0 : run.lancers > 0); }
+function rafraichirUnite(C, h){
+  if (!C) return; const u = C.unites.find(v => v.h === h); if (!u) return; const s = stats(h), dv = s.pv - u.pvMax;
+  u.pvMax = s.pv; if (u.pv > 0) u.pv = Math.min(u.pvMax, u.pv + Math.max(0, dv));
+  u.atq = s.atq; u.def = s.def; u.vit = s.vit; u.crit = s.crit; u.critMul = s.critMul; u.vol = s.vol + (h.leg && h.cls === "guerriere" ? 0.12 : 0); u.rate = s.rate; u.soinRecu = s.soinRecu; u.vitDep = s.vitDep;
+}
+function caseLibre(run, cls, sauf){
+  const pris = new Set(run.heros.filter(h => h !== sauf).map(h => h.slot)), ordre = D.CLASSES[cls].role === "cac" ? [4, 3, 5, 1, 0, 2] : [1, 0, 2, 4, 3, 5];
+  return ordre.find(c => !pris.has(c)); }
+function absorber(run, h, C){ h.niv++; h.xp = Math.max(h.xp, D.XP_NIVEAUX[h.niv - 1] || 0); h.absorbe = (h.absorbe || 0) + 1; const g = monterNiveau(h); rafraichirUnite(C, h); return g; }
+// paie et lance le dé d'action ; applique l'effet et renvoie {k, cout, ...} (null si on ne peut pas). C : le combat en cours, ou rien en préparation.
+function lancerAction(run, phase, C, force){
+  if (!peutLancer(run, phase)) return null;
+  const cout = run.prix; run.or -= cout; run.prix += PAS_PRIX; if (phase === "combat") run.urgence--; else run.lancers--;
+  const k = force || faceAuHasard(run.faces.action), res = {k, cout, phase};
+  if (k === "recrue"){
+    const slot = Math.floor(alea()*3), cls = faceAuHasard(run.faces.slots[slot]), h0 = run.heros.find(h => h.cls === cls); res.slot = slot; res.cls = cls;
+    if (h0 || run.heros.length >= MAX_HEROS){ const h = h0 || pick(run.heros); res.h = h; res.mode = h0 ? "absorbe" : "plein"; res.gains = absorber(run, h, C); }
+    else { const h = creerHeros(cls, nomsPris(run)); run.heros.push(h); h.slot = caseLibre(run, cls, h); res.h = h; res.mode = "nouvelle"; if (C) C.unites.push(uniteHeros(h)); }
+  } else if (k === "objet"){
+    const o = genererObjet(run.vague, false, run), cand = run.heros.filter(h => peutPorter(h, o)); res.o = o;
+    const h = cand.find(x => !x.equip[o.slot]) || cand.find(x => x.equip[o.slot] && x.equip[o.slot].rar < o.rar);
+    if (h){ res.h = h; res.ancien = equiper(h, o); if (res.ancien) run.or += Math.round(res.ancien.prix/2); rafraichirUnite(C, h); }
+    else { res.vendu = Math.round(o.prix/2); run.or += res.vendu; }
+  } else if (k === "progres"){
+    const h = pick(run.heros), b = pick(D.BONUS_NIVEAU); appliquerBonus(h, b); res.h = h; res.b = b; rafraichirUnite(C, h);
+  } else if (k === "soin"){
+    for (const h of run.heros){ h.mort = false; h.pv = stats(h).pv; } run.mur = Math.min(run.murMax, run.mur + 10);
+    if (C) for (const u of C.unites) if (u.camp === "h" && u.pv > 0) u.pv = u.pvMax;
+  } else if (k === "sort"){
+    res.sort = tirerSort(run.sorts); if (!C) run.sortsPrets = (run.sortsPrets || 0) + 1;
+  } else if (k === "relique"){
+    res.choix = melange(D.RELIQUES).slice(0, 3);
+  }
+  return res;
+}
+function appliquerRelique(run, k){
+  if (k === "remise"){ run.remise = (run.remise || 0) + 2; run.prix = Math.max(4, run.prix - 2); }
+  else if (k === "lancer"){ run.bonusLancers = (run.bonusLancers || 0) + 1; run.lancers++; }
+  else if (k === "urgence"){ run.bonusUrgence = (run.bonusUrgence || 0) + 1; run.urgence++; }
+  else if (k === "de"){ const f = run.faces.action, i = f.indexOf("soin") >= 0 ? f.indexOf("soin") : f.indexOf("sort"); if (i >= 0) f[i] = "recrue"; }
+}
+
 // ---- atelier : une amélioration remplace une face d'un dé ----
 // offre = {t: "slot" | "quoi" | "qual", f: face} ; "slot" va sur une face de n'importe quel dé de case
 function offresAtelier(run){
   const classes = melange(Object.keys(D.CLASSES)), q = run.vague >= 6 ? [2, 3] : [1, 2], quoi = melange(Object.keys(D.SLOTS));
-  const o = [{t: "slot", f: classes[0]}, {t: "qual", f: pick(q)}, alea() < .5 ? {t: "slot", f: classes[1]} : {t: "quoi", f: quoi[0]}];
+  const r = alea(), o = [{t: "slot", f: classes[0]}, {t: "qual", f: pick(q)}, r < .34 ? {t: "slot", f: classes[1]} : r < .67 ? {t: "quoi", f: quoi[0]} : {t: "action", f: pick(D.FACES_DEPART.action)}];
   return o;
 }
 function graverSymbole(run, offre, d, i){   // d : indice de la case (offre "slot")
-  if (offre.t === "slot") run.faces.slots[d][i] = offre.f; else run.faces[offre.t][i] = offre.f;
+  if (offre.t === "slot") run.faces.slots[d][i] = offre.f; else run.faces[offre.t][i] = offre.f;   // offre.t : slot, quoi, qual ou action
 }
 // ---- événements ----
 function lancerEvenement(run){ return faceAuHasard(run.faces.event); }
@@ -379,14 +422,14 @@ function charger(txt){
   try { const run = JSON.parse(txt); if (!run || run.v !== VERSION_RUN || !Array.isArray(run.heros) || !run.heros.length) return null;
     for (const h of run.heros) if (!D.CLASSES[h.cls]) return null;
     idSuivant = Math.max(idSuivant, ...run.heros.map(h => h.id + 1)); run.compo = composerVague(run.vague);
-    if (!run.faces || !Array.isArray(run.faces.slots) || run.faces.slots.length !== 3 || !run.faces.quoi || !run.faces.qual || !run.faces.event) return null;
+    if (!run.faces || !Array.isArray(run.faces.slots) || run.faces.slots.length !== 3 || !run.faces.quoi || !run.faces.qual || !run.faces.event || !Array.isArray(run.faces.action)) return null;
     if (!Array.isArray(run.des) || !run.des.length) run.des = [nouveauDe("d6"), nouveauDe("d6")];
     if (!Array.isArray(run.sorts) || !run.sorts.length) run.sorts = D.SORTS_DEPART.slice();
     run.sorts = run.sorts.filter(k => D.SORTS[k]); return run; }
   catch (e){ return null; }
 }
 
-B.R = {W, ZONE, MUR_X, CASES, creerHeros, recrues, recruesDes, recrueDeCase, nouvellesFaces, faceAuHasard, offresAtelier, graverSymbole, lancerEvenement, appliquerEvenement, classesDesDes, stats, classeDe, nivSuivant, gagnerXp, propositionsNiveau, appliquerBonus, peutEvoluer, evoluer,
+B.R = {W, ZONE, MUR_X, CASES, creerHeros, recrues, recruesDes, lancerAction, appliquerRelique, peutLancer, debutLancers, PRIX_BASE, PAS_PRIX, MAX_HEROS, recrueDeCase, nouvellesFaces, faceAuHasard, offresAtelier, graverSymbole, lancerEvenement, appliquerEvenement, classesDesDes, stats, classeDe, nivSuivant, gagnerXp, propositionsNiveau, appliquerBonus, peutEvoluer, evoluer,
   genererObjet, genererButin, graverFace, nouveauDe, deTrouve, texteBonus, equiper, peutPorter, statsAvec, monterNiveau, nouvelleRun, nomsPris, placerParDefaut, preparerVague, composerVague, apercu, debutCombat, vivants, etape,
   lancerDes, resultatDes, tirerSort, jeterSort, utiliserObjet, xpDeVague, eclatsDeRun, sauver, charger,
   graine(f){ alea = f || Math.random; }};

@@ -264,6 +264,20 @@ Recommandation de Claude : 1 + 2 d'abord (le dé reste notre signature, mais ser
 
 **Proposition** : un **dé d'action** à 6 faces payé en or (l'or vient des monstres tués) : RECRUE (dé de la case ; une classe déjà présente est **absorbée** : niveau +1), OBJET (dés QUOI + QUALITÉ), PROGRÈS (bonus de stat), SOIN, SORT (usage unique, au prochain danger), RELIQUE (1 choix sur 3 : lancers moins chers, un lancer de plus, une face remplacée : c'est l'atelier). Prix 10, 15, 20... remis à 10 à chaque vague. Les légendaires viendraient de l'absorption (étoiles).
 
-**[Maquette 7](https://claude.ai/artifact/Ghua5mZn2iLAifw9W8kXhW)** (`maquettes/bannis-7.html`, sources `outils/bannis-maquette/source7.html` + `fabriquer7.py`) : trois téléphones jouables : **A** lancers avant le combat (6 au plus), **B** lancers pendant le combat (sans limite, selon l'or), **C** 3 lancers avant + 1 lancer d'urgence pendant. Choix de l'utilisateur : en attente.
+**[Maquette 7](https://claude.ai/artifact/Ghua5mZn2iLAifw9W8kXhW)** (`maquettes/bannis-7.html`, sources `outils/bannis-maquette/source7.html` + `fabriquer7.py`) : trois téléphones jouables : **A** lancers avant le combat (6 au plus), **B** lancers pendant le combat (sans limite, selon l'or), **C** 3 lancers avant + 1 lancer d'urgence pendant. **Choix de l'utilisateur (28/11) : C** (3 lancers avant le combat + 1 lancer d'urgence pendant), avec des animations et des choses à l'écran pour amuser le joueur, et le simulateur pour régler les prix (« ça me semble pas très cher »).
 
 À décider ensuite : étoiles et évolutions par absorption ; que devient l'ancien atelier (devient la face RELIQUE ?) ; ce que deviennent le marchand et l'événement de nuit ; équilibrage de l'or (4 par monstre, 20 par vague dans la maquette).
+
+## 21. Session 4 : le dé d'action (28/11, direction C)
+
+**Retiré** : la jauge du Mage, le plateau de dés de sorts (réserve, combos, déraillements), l'écran du grimoire, les dés et pages de grimoire du butin, les articles « D8 de sorts » et « face de sort x2 » du marchand. Les sorts restent comme **effets** de la face SORT.
+
+**Fait** :
+- `run.faces.action` (recrue, objet, progrès, soin, sort, relique), `D.ACTIONS`, `D.RELIQUES` ; `R.lancerAction(run, phase, C, force)` paie l'or, tire la face et applique l'effet (en combat, les unités sont rafraîchies : `rafraichirUnite`) ; `R.peutLancer`, `R.debutLancers` (appelé par `preparerVague`), `R.appliquerRelique`. `VERSION_RUN` 3.
+- **Prix** réglés au simulateur (`node outils/bannis-simulateur.js 80 --lancers`) : **16 or, puis +8 à chaque lancer, retour à 16 à la vague suivante**, 3 lancers avant le combat et 1 d'urgence (relique SANG-FROID : +1). Résultat : vague moyenne ≈ 6,6 avec lancers (contre ≈ 5,2 sans), environ 1,7 lancer joué par vague (l'or ne suffit pas pour tout).
+- **Absorption** : une classe déjà là monte d'un niveau (`absorber`) ; escouade pleine (4 héros) : absorbée par un héros au hasard. Pas encore d'étoiles ni d'évolution par absorption (les légendaires restent liés à `bannis.arbre`).
+- **Écran** : panneau « DÉ D'ACTION » dans le placement (prix, lancers restants, les 6 faces expliquées), bouton « LANCER LE DÉ : N OR » en combat (le combat se met en pause pendant le résultat), carte de résultat animée (le dé roule, pièces qui partent du compteur, particules, héros qui tombe ou aura de lumière pour l'absorption, rayons de rareté pour l'objet, croix vertes pour le soin, choix de relique), sort lancé tout de suite (combat) ou gardé pour le premier gros groupe (préparation).
+- Atelier : une 3e offre peut être une face d'action ; 6 rangées de dés à l'atelier.
+- Tests : `outils/fumee.js` (lancers et coût), simulateur `--lancers` (remplace `--des`).
+
+**À voir** : étoiles et évolution par absorption ; or de départ (20) et gains (2 à 4 par monstre, ×3 élite, ×8 boss) ; marchand (potion, parchemin, longue-vue, Muraille) à garder ou à simplifier ; sons dédiés ; essai sur le téléphone.

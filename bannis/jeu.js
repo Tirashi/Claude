@@ -69,7 +69,7 @@ const SON = {
 
 /* ---------- état ---------- */
 const G = {ecran: "titre", run: null, C: null, sel: -1, fiche: null, pause: false, vitesse: lire("bannis.vitesse", 1), t: 0, txt: [], part: [], fx: [], sec: 0, gel: 0,
-  des: null, evo: null, butin: null, recrues: null, choisies: [], fin: null, jauge: 0, ouvert: 0, nuages: []};
+  evo: null, butin: null, recrues: null, choisies: [], fin: null, lancer: null, nuages: []};
 for (let i = 0; i < 40; i++) G.nuages.push({x: Math.random()*W, y: Math.random()*560, v: alea(8, 22), r: alea(.6, 1.8)});
 
 /* ---------- dessin : outils ---------- */
@@ -277,7 +277,7 @@ function boutonM(x, y, w, h, t, f, clair = true, actif = true){
   texteM(t, x + w/2, y + h/2 + 7, 19, !actif ? "#6f9a9a" : clair ? "#05211c" : MOD.txt, "center", {max: w - 24});
   if (actif) zone(x, y, w, h, f);
 }
-function nomFace(type, k){ return type === "slot" ? D.CLASSES[k].n : type === "quoi" ? D.SLOTS[k].n : type === "qual" ? D.RARETES[k].n : NOMFACE[k]; }
+function nomFace(type, k){ return type === "slot" ? D.CLASSES[k].n : type === "quoi" ? D.SLOTS[k].n : type === "qual" ? D.RARETES[k].n : type === "act" ? D.ACTIONS[k].n : NOMFACE[k]; }
 function gemme(cx, cy, r, c){ ctx.save(); ctx.translate(cx, cy); ctx.fillStyle = c; ctx.strokeStyle = "rgba(0,0,0,.55)"; ctx.lineWidth = 2;
   ctx.beginPath(); ctx.moveTo(0, -r); ctx.lineTo(r*.8, 0); ctx.lineTo(0, r); ctx.lineTo(-r*.8, 0); ctx.closePath(); ctx.fill(); ctx.stroke();
   ctx.fillStyle = "rgba(255,255,255,.35)"; ctx.beginPath(); ctx.moveTo(0, -r); ctx.lineTo(r*.8, 0); ctx.lineTo(0, 0); ctx.closePath(); ctx.fill(); ctx.restore(); }
@@ -307,6 +307,7 @@ function tileFace(type, k, x, y, s, o = {}){
   if (type === "slot") dessinerHeros(D.CLASSES[k].spr, "repos", G.t, cx, y + (et ? s*.62 : s*.7), 1, {e: s/(et ? 52 : 44)});
   else if (type === "quoi"){ const t = s*(et ? .5 : .62); icone(D.SLOTS[k].noms[0][1], cx - t/2, y + ch - t/2, t); }
   else if (type === "qual") gemme(cx, y + ch, s*(et ? .27 : .32), D.RARETES[k].c);
+  else if (type === "act"){ const E = D.ACTIONS[k]; if (E.ic){ const t = s*(et ? .5 : .62); icone(E.ic, cx - t/2, y + ch - t/2, t); } else dessinerHeros("glenys-3", "repos", G.t, cx, y + (et ? s*.62 : s*.7), 1, {e: s/(et ? 52 : 44)}); }
   else { const E = D.EVENEMENTS[k]; if (E.ic){ const t = s*(et ? .5 : .62); icone(E.ic, cx - t/2, y + ch - t/2, t); } else dessinerHeros("glenys-3", "repos", G.t, cx, y + (et ? s*.62 : s*.7), 1, {e: s/(et ? 52 : 44)}); }
   if (et) texteM(nomFace(type, k), cx, y + s - 7, Math.max(10, s*.13), MOD.txt, "center", {max: s - 8});
   ctx.restore();
@@ -398,17 +399,18 @@ function ecranRecrutement(){
 
 /* ---------- butin : atelier et événement ---------- */
 function rangeesDes(y0, ok, onTap, gravee){
-  const lignes = [["slot", 0, "CASE 1 · COMBATTANTS"], ["slot", 1, "CASE 2 · COMBATTANTS"], ["slot", 2, "CASE 3 · COMBATTANTS"], ["quoi", 0, "DE QUOI (ARME, ARMURE, BIJOU)"], ["qual", 0, "DE QUALITE (RARETE DE L'OBJET)"]];
+  const lignes = [["slot", 0, "CASE 1 · COMBATTANTS"], ["slot", 1, "CASE 2 · COMBATTANTS"], ["slot", 2, "CASE 3 · COMBATTANTS"], ["quoi", 0, "DE QUOI (ARME, ARMURE, BIJOU)"], ["qual", 0, "DE QUALITE (RARETE DE L'OBJET)"], ["act", 0, "DE D'ACTION (CE QU'UN LANCER RAPPORTE)"]];
   lignes.forEach(([ty, d, nom], r) => {
-    const y = y0 + r*72, f = ty === "slot" ? G.run.faces.slots[d] : G.run.faces[ty], actif = ok(ty, d);
+    const y = y0 + r*62, f = ty === "slot" ? G.run.faces.slots[d] : ty === "act" ? G.run.faces.action : G.run.faces[ty], actif = ok(ty, d);
     texteM(nom, 28, y + 12, 12, actif ? MOD.accent : MOD.doux, "left");
     f.forEach((k, i) => { const x = 28 + i*52, g = gravee && gravee.ty === ty && gravee.d === d && gravee.i === i;
-      tileFace(ty, k, x, y + 18, 46, {sel: actif || g, alpha: actif || g || gravee ? 1 : .35, ...(g ? {t0: gravee.t0, pool: gravee.pool, dur: .7} : {})});
-      if (actif && onTap) zone(x, y + 18, 46, 46, () => onTap(ty, d, i)); });
+      tileFace(ty, k, x, y + 16, 44, {sel: actif || g, alpha: actif || g || gravee ? 1 : .35, ...(g ? {t0: gravee.t0, pool: gravee.pool, dur: .7} : {})});
+      if (actif && onTap) zone(x, y + 16, 44, 44, () => onTap(ty, d, i)); });
   });
 }
 function descOffre(o){
   if (o.t === "slot") return D.CLASSES[o.f].d;
+  if (o.t === "action") return D.ACTIONS[o.f].d;
   if (o.t === "qual") return "Les objets du butin sortent plus souvent en " + D.RARETES[o.f].n.toLowerCase() + ".";
   return "Plus de " + D.SLOTS[o.f].n.toLowerCase() + "s dans le butin.";
 }
@@ -424,10 +426,10 @@ function ecranAtelier(){
   if (!c){
     consigne("choisis une amélioration (1 sur 2)", "Elle remplacera ensuite une face de l'un de tes dés.");
     B.offres.forEach((o, i) => {
-      const y = 176 + i*112, type = o.t;
+      const y = 176 + i*112, type = typeDe(o.t);
       carteM(18, y, W - 36, 104, MOD.bord, MOD.carte);
       tileFace(type, o.f, 28, y + 14, 76, {etiquette: true, deal: B.t0 + i*.12});
-      texteM(o.t === "slot" ? "FACE CLASSE" : o.t === "qual" ? "FACE QUALITE" : "FACE OBJET", 118, y + 30, 13, MOD.accent, "left");
+      texteM(o.t === "slot" ? "FACE CLASSE" : o.t === "qual" ? "FACE QUALITE" : o.t === "action" ? "FACE D'ACTION" : "FACE OBJET", 118, y + 30, 13, MOD.accent, "left");
       texteM(nomFace(type, o.f), 118, y + 52, 19, MOD.txt, "left", {max: W - 150});
       paragrapheM(descOffre(o), 118, y + 70, W - 150, 12, MOD.doux, 1.15);
       zone(18, y, W - 36, 104, () => { B.choix = o; SON.clic(); });
@@ -435,15 +437,15 @@ function ecranAtelier(){
     boutonM(24, 646, W - 48, 56, "PASSER (RIEN CHANGER)", () => { SON.clic(); suiteButin(); }, false);
     return;
   }
-  const type = c.t;
+  const type = typeDe(c.t);
   consigne("touche la face à remplacer (2 sur 2)", "Les dés éclairés peuvent recevoir : " + nomFace(type, c.f) + ".");
   tileFace(type, c.f, 24, 170, 56, {etiquette: true, sel: true});
   texteM("Tu vas graver :", 92, 192, 12, MOD.doux, "left"); texteM(nomFace(type, c.f), 92, 214, 20, MOD.txt, "left", {max: W - 120});
-  rangeesDes(240, ty => ty === c.t, (ty, d, i) => {
-    const ancienK = ty === "slot" ? G.run.faces.slots[d][i] : G.run.faces[ty][i], ancien = nomFace(ty, ancienK);
+  rangeesDes(240, ty => ty === typeDe(c.t), (ty, d, i) => {
+    const ancienK = ty === "slot" ? G.run.faces.slots[d][i] : ty === "act" ? G.run.faces.action[i] : G.run.faces[ty][i], ancien = nomFace(ty, ancienK);
     R.graverSymbole(G.run, c, d, i); SON.or(); SON.des(5);
     B.gravee = {ty, d, i, t0: G.t, pool: [ancienK, c.f]};
-    B.msg = nomFace(type, c.f) + " remplace " + ancien + (ty === "slot" ? " sur le dé de la case " + (d + 1) : " sur le dé " + (ty === "quoi" ? "QUOI" : "QUALITE")) + ".";
+    B.msg = nomFace(type, c.f) + " remplace " + ancien + (ty === "slot" ? " sur le dé de la case " + (d + 1) : " sur le dé " + (ty === "quoi" ? "QUOI" : ty === "act" ? "D'ACTION" : "QUALITE")) + ".";
   });
   boutonM(24, 646, W - 48, 56, "CHOISIR AUTRE CHOSE", () => { B.choix = null; SON.clic(); }, false);
 }
@@ -475,12 +477,12 @@ function ecranEvenement(){
 
 /* ---------- placement et combat ---------- */
 function allerPlacement(){
-  G.ecran = "place"; G.sel = -1; G.C = null; G.des = null; G.sortPret = null; G.evo = null; G.butin = null; G.jauge = 0; G.txt = []; G.part = []; G.fx = [];
+  G.ecran = "place"; G.sel = -1; G.C = null; G.lancer = null; G.evo = null; G.butin = null; G.txt = []; G.part = []; G.fx = [];
   G.unitesPlace = G.run.heros.map(h => { const c = R.CASES[h.slot]; return {h, x: c[0], y: c[1], ta: Math.random()*2}; });
   sauverRun();
 }
 function lancerCombat(){
-  G.C = R.debutCombat(G.run); G.ecran = "combat"; G.jauge = 0; G.sel = -1; SON.pose();
+  G.C = R.debutCombat(G.run); G.ecran = "combat"; G.lancer = null; G.sel = -1; SON.pose();
 }
 function hud(){
   panneau(8, 8, W - 16, 50);
@@ -490,8 +492,6 @@ function hud(){
     petit(W - 112, 14, 46, 38); texte("x" + G.vitesse, W - 89, 40, 16, "#fff", "center");
     zone(W - 112, 14, 46, 38, () => { G.vitesse = G.vitesse === 1 ? 2 : 1; ecrire("bannis.vitesse", G.vitesse); SON.clic(); });
   }
-  const gx = G.ecran === "combat" ? W - 164 : W - 112;
-  petit(gx, 14, 46, 38); icone([13, 13], gx + 9, 19, 28); zone(gx, 14, 46, 38, () => { G.grimoire = true; SON.clic(); });
   petit(W - 60, 14, 46, 38); ctx.fillStyle = "#fff"; ctx.fillRect(W - 44, 23, 5, 20); ctx.fillRect(W - 34, 23, 5, 20);
   zone(W - 60, 14, 46, 38, () => { G.pause = true; SON.clic(); });
 }
@@ -510,11 +510,10 @@ function bandeau(){
     });
   } else if (G.ecran === "combat"){
     panneau(8, 62, W - 16, 50);
-    if (!G.sortPret) texte("LE MAGE INSTABLE", 22, 84, 13, "#ffe3a8");
-    if (G.sortPret){ const S = D.SORTS[G.sortPret]; texte("PRET : " + S.n, 22, 84, 13, S.c, "left", {max: 220}); }
-    const C = G.C, reste = C.file.length + R.vivants(C, "m").length;
-    texte("monstres : " + reste, W - 22, 84, 13, "#fff", "right", {gras: false});
-    barre(36, 92, W - 72, 9, G.jauge, G.jauge >= 1 ? `hsl(${(G.t*200) % 360},90%,62%)` : "#a77bff");
+    const C = G.C, reste = C.file.length + R.vivants(C, "m").length, tot = C.total || 1;
+    texte("monstres : " + reste, W - 22, 86, 14, "#fff", "right", {gras: false});
+    texte("lancers d'urgence : " + G.run.urgence, 22, 86, 14, G.run.urgence ? MOD.or : MOD.doux, "left", {ombre: false});
+    barre(36, 96, W - 72, 7, 1 - reste/tot, MOD.accent);
   }
 }
 function cartes(){
@@ -550,7 +549,7 @@ function objets(){
   });
   const bx = 196, bw = W - 204;
   if (G.ecran === "place") bouton(bx, 648, bw, 58, "COMBATTRE", lancerCombat, true, true);
-  else if (G.ecran === "combat") bouton(bx, 648, bw, 58, "LANCER LES DES", () => { if (G.jauge >= 1 && !G.des) ouvrirPlateau(); }, G.jauge >= 1 && !G.des, G.jauge >= 1);
+  else if (G.ecran === "combat"){ const ok = R.peutLancer(G.run, "combat"); bouton(bx, 648, bw, 58, G.run.urgence ? (ok ? "LANCER LE DE : " + G.run.prix + " OR" : "PAS ASSEZ D'OR (" + G.run.prix + ")") : "PLUS DE LANCER", () => lancerDe("combat"), ok, ok); }
 }
 function champPlacement(){
   // cases de départ devant la Muraille
@@ -563,7 +562,8 @@ function champPlacement(){
       for (const u of G.unitesPlace){ const cc = R.CASES[u.h.slot]; u.tx = cc[0]; u.ty = cc[1]; } sauverRun(); });
   }
   texte("ARRIERE", 92, 540, 12, "#ffe3a8", "center"); texte("AVANT", 162, 540, 12, "#ffe3a8", "center");
-  if (G.sel < 0) texte("Touche un héros, puis une case", 268, 250, 14, "#fff", "center", {max: 170});
+  if (G.sel < 0) texte("Touche un héros, puis une case", 130, 520, 13, "#fff", "center", {max: 190});
+  panneauDe();
   for (const u of G.unitesPlace){ if (u.tx !== undefined){ u.x += (u.tx - u.x)*.25; u.y += (u.ty - u.y)*.25; }
     if (u.h.leg) aura(u.x, u.y, G.t);
     dessinerHeros(R.classeDe(u.h).spr, "repos", G.t + u.ta, u.x, u.y, 1);
@@ -582,7 +582,6 @@ function traiterEvenements(){
       etincelles(e.x, e.y - 30, e.crit ? 16 : 7, e.c || (e.crit ? "#ffdf3a" : "#fff"));
       if (!reduit){ G.gel = Math.max(G.gel, e.crit ? .08 : .035); G.sec = Math.max(G.sec, e.crit ? 6 : 2.5); }
       if (e.crit) { SON.crit(); flotte(e.x, e.y - 96, "CRITIQUE", "#ff6a3a", {petit: true}); } else SON.coup();
-      if (e.u.camp === "m") G.jauge = Math.min(1, G.jauge + .035); else G.jauge = Math.min(1, G.jauge + .02);
     } else if (e.k === "mort"){ SON.mort(); etincelles(e.u.x, e.u.y - 30, 22, e.u.camp === "h" ? "#ff4040" : "#ffb040"); }
     else if (e.k === "or"){ flotte(e.x, e.y - 50, "+" + e.v, "#ffe14a", {petit: true}); SON.or(); }
     else if (e.k === "soin"){ flotte(e.x, e.y - 70, "+" + e.v, "#6dff8a"); etincelles(e.x, e.y - 40, 8, "#6dff8a", true); }
@@ -599,100 +598,27 @@ function traiterEvenements(){
   C.ev.length = 0;
 }
 
-/* ---------- dés du Mage ---------- */
-const COUL_DES = {d4: "#3ac060", d6: "#f4f4f4", d8: "#3866e0", d10: "#9050d0", d12: "#e08030", d20: "#d83030"};
-// ouvre le plateau : le sort annoncé, la réserve de dés ; on lance d'un geste vers le haut (ou le bouton)
-function ouvrirPlateau(){
-  if (!G.sortPret) G.sortPret = R.tirerSort(G.run.sorts);
-  G.des = {etat: "attente", sort: G.sortPret, t: 0, res: null, des: null}; SON.clic();
+/* ---------- dé d'action (28/11) : de l'or contre des lancers ---------- */
+const COUL_ACT = {recrue: "#ffd76a", objet: "#4aa8ff", progres: "#ff9a4a", soin: "#6dff8a", sort: "#d8b8ff", relique: "#3ddcbe"};
+const typeDe = t => t === "action" ? "act" : t;
+function lancerDe(phase, force){
+  const run = G.run;
+  if (G.lancer) return;
+  if (!R.peutLancer(run, phase)){ G.refus = G.t; SON.clic(); return; }
+  const res = R.lancerAction(run, phase, phase === "combat" ? G.C : null, force);
+  G.lancer = {res, phase, t0: G.t, etat: "roule", p: [], pieces: Array.from({length: 7}, (_, i) => ({d: i*.05, x: 150 + alea(-10, 20), y: 34}))};
+  SON.des(13); if (phase === "prep") sauverRun();
 }
-function lancerDes(relance, force){
-  const Dd = G.des, garder = relance && Dd.des ? Dd.des.map(d => d.garde ? d : null) : null;
-  const f = Math.max(.4, Math.min(1.3, force || 1));
-  Dd.des = R.lancerDes(G.run.des, garder).map((d, i) => Object.assign(d, {fin: d.garde ? 0 : (.55 + i*.22)*f, sp: alea(7, 12)*f, h: alea(60, 120)*f, garde: !!d.garde, pose: !!d.garde}));
-  Dd.t = 0; Dd.etat = "roule"; Dd.res = null; SON.clic(); SON.de();
+function fermerLancer(){
+  const L = G.lancer; if (!L) return; G.lancer = null;
+  if (L.res.k === "sort" && L.phase === "combat" && G.C) sortAuto(L.res.sort);
+  if (L.res.k === "recrue" && L.res.mode === "nouvelle" && G.C){ const u = G.C.unites.find(v => v.h === L.res.h); if (u){ etincelles(u.x, u.y - 30, 24, "#ffd76a", true); flotte(u.x, u.y - 80, "ARRIVE !", "#ffd76a", {petit: true}); } }
 }
-function formeDe(k, s){
-  ctx.beginPath();
-  if (k === "d4"){ ctx.moveTo(0, -s*1.1); ctx.lineTo(s*1.05, s*.75); ctx.lineTo(-s*1.05, s*.75); }
-  else if (k === "d6") ctx.rect(-s, -s, 2*s, 2*s);
-  else if (k === "d8"){ ctx.moveTo(0, -s*1.15); ctx.lineTo(s*1.15, 0); ctx.lineTo(0, s*1.15); ctx.lineTo(-s*1.15, 0); }
-  else { const n = k === "d10" ? 4 : k === "d12" ? 5 : 6, rx = k === "d10" ? .85 : 1, ry = k === "d10" ? 1.2 : 1;
-    for (let i = 0; i < n; i++){ const a = -Math.PI/2 + i*2*Math.PI/n; ctx.lineTo(Math.cos(a)*s*1.1*rx, Math.sin(a)*s*1.1*ry); } }
-  ctx.closePath();
-}
-// un dé : sa forme et sa couleur selon le type ; face = {v} ou {s}, ou null (pas encore lancé)
-function dessinerDe(k, face, x, y, taille, rot){
-  const s = taille*.4;
-  ctx.save(); ctx.translate(x, y); ctx.rotate(rot || 0);
-  ctx.fillStyle = "#120a1a"; ctx.save(); ctx.scale(1.14, 1.14); formeDe(k, s); ctx.fill(); ctx.restore();
-  ctx.fillStyle = COUL_DES[k] || "#fff"; formeDe(k, s); ctx.fill();
-  ctx.fillStyle = "rgba(255,255,255,.35)"; ctx.fillRect(-s*.5, -s*.62, s*.6, 3);
-  ctx.rotate(-(rot || 0));
-  const fonce = k === "d6";
-  if (!face) texte("?", 0, s*.42, taille*.36, fonce ? "#202040" : "#fff", "center", {ombre: !fonce});
-  else if (face.v) texte(String(face.v), 0, s*.42, taille*.36, fonce ? "#202040" : "#fff", "center", {ombre: !fonce});
-  else if (face.s === "x2") texte("x2", 0, s*.4, taille*.32, "#ffe14a", "center", {ombreC: "#3a1a00"});
-  else if (face.s === "div2") texte("/2", 0, s*.4, taille*.32, "#9ff0ff", "center", {ombreC: "#00203a"});
-  else if (face.s === "crane") icone([0, 0], -s*.6, -s*.6, s*1.2);
-  else if (face.s === "etoile") icone([0, 5], -s*.6, -s*.6, s*1.2);
-  ctx.restore();
-}
-// petit résumé des faces spéciales d'un dé
-function specialesDe(de){ const c = {}; for (const f of de.f) if (f.s) c[f.s] = (c[f.s] || 0) + 1;
-  return Object.entries(c).map(([k, n]) => (n > 1 ? n + " " : "") + D.FACES_SPECIALES[k].n).join(" "); }
-function plateauDes(dt){
-  const Dd = G.des; if (!Dd) return; Dd.t += dt;
-  const S = D.SORTS[Dd.sort], n = G.run.des.length, py = 300;
-  ctx.fillStyle = "rgba(0,0,0,.55)"; ctx.fillRect(0, 0, W, H);
-  grand(10, 112, W - 20, 470);
-  icone(S.ic, 30, 136, 36);
-  texte(S.n, 74, 162, 14, S.c, "left", {titre: true, max: W - 104});
-  paragraphe(S.d, 30, 196, W - 60, 13, "#fff", 1.15);
-  texte("S'il déraille : " + S.der, 30, 236, 12, "#ffb0a0", "left", {max: W - 60});
-  const pos = i => W/2 + (i - (n - 1)/2)*Math.min(66, (W - 60)/n);
-  let tousFinis = true;
-  G.run.des.forEach((de, i) => {
-    const x = pos(i); let y = py, rot = 0, face = null;
-    if (Dd.etat === "attente"){ y += Math.sin(G.t*3 + i)*3; }
-    else { const d = Dd.des[i], fini = Dd.t >= d.fin; if (!fini) tousFinis = false;
-      if (!fini){ const k = Dd.t/d.fin; y = py + 170*(1 - k) - Math.abs(Math.sin(k*Math.PI*2.5))*d.h*(1 - k); rot = Dd.t*d.sp; face = R.nouveauDe(de.k).f[ent(0, D.TYPES_DES[de.k] - 1)]; if (Math.random() < .3) SON.de(); }
-      else { face = d.face; if (!d.pose){ d.pose = true; SON.pose(); if (!reduit) G.sec = Math.max(G.sec, 3); etincelles(x, py, 8, "#fff"); } }
-      if (fini && d.etoile) icone([0, 5], x + 14, py - 50, 20);
-      if (Dd.etat === "choix"){ zone(x - 32, py - 34, 64, 70, () => { d.garde = !d.garde; SON.clic(); });
-        if (d.garde){ ctx.strokeStyle = "#ffe14a"; ctx.lineWidth = 3; rr(x - 31, py - 34, 62, 68, 8); ctx.stroke(); texte("GARDE", x, py - 40, 11, "#ffe14a", "center"); } } }
-    const z = Dd.etat === "choix" ? 1 + Math.max(0, .25 - (Dd.t - Dd.des[i].fin))*1.2 : 1;
-    dessinerDe(de.k, face, x, y, 58*z, rot);
-    texte(de.k.toUpperCase(), x, py + 50, 12, "#ffe3a8", "center");
-    const sp = specialesDe(de); if (sp) texte(sp, x, py + 64, 10, "#ffe14a", "center", {max: 64});
-  });
-  if (Dd.etat === "attente"){
-    const a = (G.t*1.5) % 1; ctx.save(); ctx.globalAlpha = 1 - a; texte("▲", W/2, 420 - a*30, 22, "#ffe14a", "center"); ctx.restore();
-    texte("Glisse vers le haut pour lancer", W/2, 446, 15, "#fff", "center");
-    bouton(80, 470, W - 160, 48, "LANCER", () => lancerDes(false, 1), true, true);
-    bouton(110, 528, W - 220, 38, "PLUS TARD", () => { G.des = null; SON.clic(); }, true, false, 3);
-  }
-  if (tousFinis && Dd.etat === "roule"){ Dd.res = R.resultatDes(Dd.des); Dd.etat = "choix";
-    if (Dd.res.deraille) SON.defaite(); else if (Dd.res.combo) SON.combo(); else SON.pose(); }
-  if (Dd.etat === "choix"){
-    const r = Dd.res;
-    texte("BASE " + r.base + (r.etapes.length ? "  ·  " + r.etapes.join("  ·  ") : ""), W/2, 392, 13, "#ffe3a8", "center", {max: W - 50});
-    const p = 1 + Math.sin(G.t*8)*.04; ctx.save(); ctx.translate(W/2, 422); ctx.scale(p, p);
-    texte("PUISSANCE " + r.total, 0, 0, 16, r.deraille ? "#ff7a6a" : "#ffe14a", "center", {titre: true}); ctx.restore();
-    if (r.deraille) texte("LE SORT VA DERAILLER !", W/2, 448, 15, "#ff5a4a", "center");
-    else if (r.cranes === 1) texte("Un crâne : encore un et le sort déraille", W/2, 448, 13, "#ffb0a0", "center");
-    const rel = G.run.relances || 0;
-    bouton(26, 466, 150, 48, "RELANCER (" + rel + ")", () => { if (G.run.relances > 0){ G.run.relances--; lancerDes(true, 1); } }, rel > 0, false, 2);
-    bouton(184, 466, W - 210, 48, "LANCER LE SORT", jeterSort, true, true);
-    texte("Touche un dé pour le garder avant de relancer", W/2, 540, 12, "#ffe3a8", "center");
-  }
-}
-function jeterSort(){
-  const Dd = G.des, k = Dd.sort, S = D.SORTS[k], res = Dd.res; G.jauge = 0; G.sortPret = null; G.des = null;
+// sort lancé tout seul (face SORT) : puissance selon la vague, jamais de déraillement
+function sortAuto(k){
+  const S = D.SORTS[k], p = 14 + G.run.vague*2;
   flotte(W/2, 196, S.n, S.c, {titre: true});
-  if (res.deraille){ flotte(W/2, 232, "IL DERAILLE !", "#ff5a4a", {titre: true}); }
-  const appliquer = () => { if (!G.C) return; const r = R.jeterSort(G.C, k, res.total, res.deraille);
-    if (r.poulets){ SON.poule(); flotte(W/2, 268, "DES POULETS ?!", "#fff3c2", {titre: true}); for (let i = 0; i < Math.min(12, 4 + Math.round(res.total/6)); i++) G.fx.push({k: "poule", x: -20 - i*26, y: alea(260, 520), t: 0}); }
+  const appliquer = () => { if (!G.C) return; const r = R.jeterSort(G.C, k, p, false);
     if (k === "meteores") for (const u of r.cibles || []){ G.fx.push({k: "impact", x: u.x, y: u.y, t: 0}); etincelles(u.x, u.y - 20, 24, "#ffb040"); } };
   if (k === "feu"){ SON.boum(); if (!reduit) G.sec = 12; G.fx.push({k: "feu", t: 0}); setTimeout(appliquer, 450); }
   else if (k === "meteores"){ SON.boum(); G.fx.push({k: "meteores", t: 0}); setTimeout(() => { appliquer(); if (!reduit) G.sec = 10; SON.boum(); }, 500); }
@@ -703,6 +629,87 @@ function jeterSort(){
   else if (k === "rempart"){ SON.mur(); G.fx.push({k: "rempart", t: 0}); appliquer(); }
   else appliquer();
 }
+// panneau du dé d'action pendant le placement
+function panneauDe(){
+  const run = G.run, x = 204, y = 158, w = 148, ok = R.peutLancer(run, "prep"), sec = G.refus !== undefined && G.t - G.refus < .4 ? Math.sin(G.t*60)*3 : 0;
+  ctx.save(); ctx.translate(sec, 0);
+  carteM(x, y, w, 300, MOD.bord, "rgba(14,26,34,.93)");
+  texteM("DE D'ACTION", x + w/2, y + 24, 15, MOD.accent, "center");
+  tileFace("act", G.derniereFace || "recrue", x + w/2 - 30, y + 36, 60, {etiquette: true, t0: G.derniereT0, pool: run.faces.action, dur: .9});
+  paragrapheM("Il rapporte une recrue, un objet, un progrès, un soin, un sort ou une relique.", x + 8, y + 112, w - 16, 11, MOD.doux, 1.2);
+  texteM(run.lancers + " lancer" + (run.lancers > 1 ? "s" : "") + " avant le combat", x + w/2, y + 156, 13, run.lancers ? MOD.txt : MOD.doux, "center", {max: w - 12});
+  boutonM(x + 8, y + 164, w - 16, 52, run.lancers ? (ok ? "LANCER : " + run.prix + " OR" : "PAS ASSEZ D'OR") : "PLUS DE LANCER", () => lancerDe("prep"), true, ok);
+  paragrapheM(run.lancers ? "Le prix monte de " + R.PAS_PRIX + " or à chaque lancer, puis revient à " + Math.max(4, R.PRIX_BASE - (run.remise || 0)) + " or à la vague suivante." : "Les lancers reviennent à la vague suivante.", x + 8, y + 232, w - 16, 11, MOD.doux, 1.2);
+  texteM("Lancers d'urgence en combat : " + run.urgence, x + w/2, y + 284, 11, MOD.or, "center", {gras: false, max: w - 12});
+  ctx.restore();
+}
+function ecranLancer(dt){
+  const L = G.lancer, res = L.res, k = res.k, a = G.t - L.t0, A = D.ACTIONS[k], coul = COUL_ACT[k];
+  zone(0, 0, W, H, () => {});
+  ctx.fillStyle = `rgba(5,12,16,${Math.min(.78, a*2)})`; ctx.fillRect(0, 0, W, H);
+  // pièces qui partent du compteur d'or
+  for (const c of L.pieces){ const u = Math.min(1, Math.max(0, (a - c.d)/.5)); if (u <= 0 || u >= 1) continue; ctx.save(); ctx.globalAlpha = 1 - u*.4; icone([12, 7], c.x + (W/2 - 16 - c.x)*u, c.y + (330 - c.y)*u - Math.sin(u*Math.PI)*50, 22); ctx.restore(); }
+  texteM("- " + res.cout + " OR", 172, 74 + Math.min(1, a*2)*0, 15, MOD.or, "left", {ombre: false});
+  if (a < 1.5){   // le dé roule
+    texteM("LE DE D'ACTION ROULE...", W/2, 176, 20, MOD.txt, "center");
+    tileFace("act", k, W/2 - 62, 240, 124, {etiquette: a > 1.15, sel: a > 1.15, t0: L.t0 + .1, pool: G.run.faces.action, dur: 1.1});
+    return;
+  }
+  if (L.etat === "roule"){ L.etat = "montre"; L.t1 = G.t; G.derniereFace = k; G.derniereT0 = G.t - 5;
+    SON.niveau(); for (let i = 0; i < 46; i++){ const an = Math.random()*7, v = alea(60, 260); L.p.push({x: W/2, y: 330, vx: Math.cos(an)*v, vy: Math.sin(an)*v - 80, t: 0, d: alea(.6, 1.3), c: coul}); } }
+  const b = G.t - L.t1, pop = Math.min(1, b*4), sc = 1.7 - .7*pop*pop;
+  // carte du résultat
+  carteM(20, 130, W - 40, 470, coul, "rgba(14,26,34,.97)");
+  ctx.save(); ctx.translate(W/2, 176); ctx.scale(sc, sc); ctx.globalAlpha = pop;
+  const titre = k === "recrue" ? (res.mode === "absorbe" ? "ABSORPTION !" : res.mode === "plein" ? "ESCOUADE PLEINE" : "NOUVELLE RECRUE") : k === "objet" ? "OBJET" : k === "progres" ? "PROGRES" : k === "soin" ? "SOIN" : k === "sort" ? "SORT" : "RELIQUE";
+  texteM(titre, 0, 0, 28, coul, "center", {max: W - 80, ombre: false}); ctx.restore();
+  const cx = W/2, cy = 330;
+  // dessin au centre
+  ctx.save(); ctx.globalAlpha = pop;
+  if (k === "recrue"){
+    const h = res.h, cl = R.classeDe(h), tombe = Math.max(0, 1 - b*3), rebond = b < .5 ? 0 : Math.abs(Math.sin((b - .5)*7))*Math.max(0, 1 - (b - .5)*1.6)*14;
+    if (res.mode === "absorbe" || res.mode === "plein"){ const g = ctx.createLinearGradient(cx - 50, 0, cx + 50, 0); g.addColorStop(0, "rgba(255,220,120,0)"); g.addColorStop(.5, `rgba(255,230,150,${.55*Math.min(1, b*2)})`); g.addColorStop(1, "rgba(255,220,120,0)"); ctx.fillStyle = g; ctx.fillRect(cx - 50, 190, 100, 160); aura(cx, cy + 40, G.t, 1.6); }
+    dessinerHeros(cl.spr, "victoire", G.t, cx, cy + 50 - tombe*160 - rebond, 1, {e: 4});
+    texteM(h.nom + " · " + cl.n, cx, cy + 86, 20, MOD.txt, "center", {max: W - 70});
+    if (res.mode !== "nouvelle"){ ctx.save(); ctx.translate(cx, cy + 118); const z = 1 + Math.max(0, .5 - (b - .3))*1.2; ctx.scale(z, z); texteM("NIVEAU " + h.niv, 0, 0, 26, MOD.or, "center", {ombre: false}); ctx.restore();
+      const g = res.gains || {}, l = []; if (g.pv) l.push("VIE +" + g.pv); if (g.atq) l.push("ATQ +" + g.atq); if (g.def) l.push("DEF +" + g.def); if (g.crit) l.push("CRIT +" + g.crit);
+      texteM(l.join("   "), cx, cy + 142, 16, "#d8ffd8", "center", {ombre: false}); }
+    else texteM("Case " + (h.slot + 1) + " · " + (D.ROLES[D.CLASSES[h.cls].role]), cx, cy + 112, 15, MOD.doux, "center", {gras: false});
+  } else if (k === "objet"){
+    const o = res.o, R0 = D.RARETES[o.rar]; tileFace("quoi", o.slot, cx - 96, 214, 80, {etiquette: true, t0: L.t1, pool: G.run.faces.quoi, dur: .7}); tileFace("qual", o.rar, cx + 16, 214, 80, {etiquette: true, t0: L.t1 + .15, pool: G.run.faces.qual, dur: .7});
+    const rot = G.t*.8; ctx.save(); ctx.translate(cx, 372); ctx.globalCompositeOperation = "lighter"; for (let i = 0; i < 10; i++){ ctx.rotate(Math.PI/5); ctx.fillStyle = R0.c + "33"; ctx.fillRect(-4, -4, 8, 60); } ctx.restore();
+    icone(o.ic, cx - 36, 336, 72);
+    texteM(o.n, cx, 436, 20, R0.c, "center", {max: W - 70}); texteM(D.SLOTS[o.slot].n + " · " + R0.n + " · " + R.texteBonus(o), cx, 458, 14, MOD.txt, "center", {max: W - 60, gras: false});
+  } else if (k === "progres"){
+    const h = res.h; dessinerHeros(R.classeDe(h).spr, "victoire", G.t, cx, 390, 1, {e: 4}); aura(cx, 390, G.t, 1.2);
+    texteM(h.nom + " · " + R.classeDe(h).n, cx, 440, 18, MOD.txt, "center", {max: W - 70}); texteM(res.b.n, cx, 468, 22, coul, "center", {max: W - 60});
+  } else if (k === "soin"){
+    for (let i = 0; i < 8; i++){ const t = (G.t*.7 + i/8) % 1; ctx.fillStyle = `rgba(109,255,138,${1 - t})`; ctx.fillRect(70 + i*28, 460 - t*180, 8, 20); ctx.fillRect(66 + i*28, 466 - t*180, 16, 8); }
+    icone(A.ic, cx - 36, 340, 72); texteM("TOUS LES HEROS SONT SOIGNES", cx, 450, 17, MOD.txt, "center", {max: W - 60});
+  } else if (k === "sort"){
+    const S = D.SORTS[res.sort]; icone(S.ic, cx - 40, 320, 80); texteM(S.n, cx, 436, 24, S.c, "center", {max: W - 60});
+  } else if (k === "relique"){
+    texteM("Une seule relique pour toute la nuit :", cx, 220, 15, MOD.doux, "center", {gras: false});
+  }
+  ctx.restore();
+  // explication
+  const dess = {
+    recrue: () => res.mode === "absorbe" ? "Le dé de la case " + (res.slot + 1) + " a donné " + D.CLASSES[res.cls].n + ", déjà dans l'escouade : elles fusionnent et le héros gagne un niveau." : res.mode === "plein" ? "L'escouade a déjà 4 héros : la recrue est absorbée par un héros au hasard." : "Le dé de la case " + (res.slot + 1) + " a donné " + D.CLASSES[res.cls].n + " : elle rejoint l'escouade.",
+    objet: () => res.h ? "Deux dés ont décidé : QUOI et QUALITE. Équipé sur " + res.h.nom + (res.ancien ? " (l'ancien objet est revendu " + Math.round(res.ancien.prix/2) + " or)." : ".") : "Personne ne peut le porter : revendu " + res.vendu + " or.",
+    progres: () => "Un bonus de statistique, sans attendre la prochaine vague.", soin: () => "La Muraille gagne aussi 10 points.",
+    sort: () => L.phase === "combat" ? "Le sort part tout de suite sur les monstres." : "Mis en réserve : il partira au premier gros groupe de monstres du combat.", relique: () => ""};
+  paragrapheM(dess[k](), 36, k === "relique" ? 238 : 484, W - 72, 14, MOD.doux, 1.25, "left");
+  // particules
+  for (const q of L.p){ q.t += dt; q.x += q.vx*dt; q.y += q.vy*dt; q.vy += 300*dt; ctx.globalAlpha = Math.max(0, 1 - q.t/q.d); ctx.fillStyle = q.c; ctx.fillRect(q.x - 3, q.y - 3, 6, 6); } ctx.globalAlpha = 1; L.p = L.p.filter(q => q.t < q.d);
+  if (k === "relique" && !res.pris){
+    res.choix.forEach((r, i) => { const y = 280 + i*98; boutonM(34, y, W - 68, 88, "", () => { R.appliquerRelique(G.run, r.k); res.pris = r; SON.niveau(); if (G.run) sauverRun(); }, false, true);
+      texteM(r.n, 50, y + 32, 18, MOD.txt, "left", {max: W - 100}); paragrapheM(r.d, 50, y + 54, W - 100, 13, MOD.doux, 1.2); });
+    return;
+  }
+  if (k === "relique" && res.pris){ texteM(res.pris.n, W/2, 330, 24, coul, "center", {max: W - 60}); paragrapheM(res.pris.d, 36, 360, W - 72, 16, MOD.txt, 1.25, "left"); }
+  boutonM(34, 530, W - 68, 58, "SUPER !", () => { SON.clic(); fermerLancer(); });
+}
+
 function effets(dt){
   for (const f of G.fx){ f.t += dt;
     if (f.k === "feu"){ const k = f.t/.9; for (let i = 0; i < 5; i++){ const x = 220 + i*28 - k*60, y = -40 + k*520 - i*30; ctx.fillStyle = "#ff6a1f"; ctx.beginPath(); ctx.arc(x, y, 16, 0, 7); ctx.fill(); ctx.fillStyle = "#ffe08a"; ctx.beginPath(); ctx.arc(x, y, 8, 0, 7); ctx.fill(); }
@@ -790,18 +797,7 @@ function ecranButin(dt){
     if (B.tObj === undefined) B.tObj = G.t;
     grand(8, 162, W - 16, 478);
     B.objets.forEach((o, i) => {
-      const y = 172 + i*112, t0 = B.tObj + .2 + i*.3, vu = o.type || fini(t0, .8);
-      if (o.type === "de" || o.type === "page"){
-        petit(30, y, W - 60, 104); ctx.strokeStyle = "#ffe14a"; ctx.lineWidth = 2; rr(32, y + 2, W - 64, 100, 8); ctx.stroke();
-        if (o.type === "de"){ dessinerDe(o.de.k, {v: D.TYPES_DES[o.de.k]}, 66, y + 50, 52, Math.sin(G.t*2)*.1);
-          texte(o.n, 102, y + 28, 15, "#fff", "left", {max: W - 146}); texte("UN DE DE PLUS POUR LE MAGE", 102, y + 48, 13, "#ffe14a", "left", {max: W - 146});
-          texte(o.de.k.toUpperCase() + (specialesDe(o.de) ? " · " + specialesDe(o.de) : "") + " · réserve " + G.run.des.length + "/" + D.MAX_DES, 102, y + 69, 13, "#d8ffd8", "left", {max: W - 146}); }
-        else { const S = D.SORTS[o.sort]; icone(S.ic, 42, y + 26, 48);
-          texte("PAGE DE GRIMOIRE", 102, y + 28, 15, "#fff", "left", {max: W - 146}); texte("NOUVEAU SORT : " + S.n, 102, y + 48, 13, S.c, "left", {max: W - 146});
-          paragraphe(S.d, 102, y + 68, W - 146, 12, "#d8ffd8", 1.05); }
-        zone(30, y, W - 60, 104, () => { if (o.type === "de") G.run.des.push(o.de); else G.run.sorts.push(o.sort); B.pris = o; SON.butin(); suiteButin(); });
-        return;
-      }
+      const y = 172 + i*112, t0 = B.tObj + .2 + i*.3, vu = fini(t0, .8);
       const R0 = D.RARETES[o.rar];
       if (!vu){ petit(30, y, W - 60, 104); tileFace("quoi", o.slot, 74, y + 16, 72, {t0, pool: G.run.faces.quoi, dur: .8}); tileFace("qual", o.rar, 214, y + 16, 72, {t0: t0 + .1, pool: G.run.faces.qual, dur: .8});
         texte("QUOI", 110, y + 98, 11, MOD.doux, "center", {ombre: false}); texte("QUELLE QUALITE", 250, y + 98, 11, MOD.doux, "center", {ombre: false}); return; }
@@ -840,8 +836,8 @@ function ecranButin(dt){
   } else if (B.etape === "marchand"){
     consigne("dépense ton or, puis lance la vague suivante", "Tu as " + G.run.or + " pièces d'or. Touche un article pour l'acheter.");
     grand(8, 162, W - 16, 548);
-    D.MARCHAND.forEach((m, i) => {
-      const plein = (m.k === "mur" && G.run.mur >= G.run.murMax) || (m.k === "de" && G.run.des.length >= D.MAX_DES);
+    D.MARCHAND.filter(m => m.k !== "de" && m.k !== "graver").forEach((m, i) => {
+      const plein = (m.k === "mur" && G.run.mur >= G.run.murMax);
       const y = 172 + i*66, ok = G.run.or >= m.prix && !plein;
       petit(24, y, W - 48, 62); ctx.save(); if (!ok) ctx.globalAlpha = .5;
       icone(m.ic, 40, y + 13, 38);
@@ -849,12 +845,9 @@ function ecranButin(dt){
       paragraphe(m.d, 88, y + 42, W - 180, 12, "#ffe3a8", 1.0);
       texte(m.prix + " OR", W - 44, y + 24, 15, "#ffe14a", "right");
       if (G.run.stock[m.k] !== undefined) texte("x" + (G.run.stock[m.k] || 0), W - 44, y + 52, 13, "#fff", "right");
-      if (m.k === "de") texte(G.run.des.length + "/" + D.MAX_DES, W - 44, y + 52, 13, "#fff", "right");
       ctx.restore();
       if (ok) zone(24, y, W - 48, 62, () => { G.run.or -= m.prix;
         if (m.k === "mur") G.run.mur = Math.min(G.run.murMax, G.run.mur + 30);
-        else if (m.k === "de") G.run.des.push(R.nouveauDe("d8", "D8 DE SORTS"));
-        else if (m.k === "graver"){ const de = R.graverFace(G.run); if (de) flotte(W/2, 640, de.n + " : une face devient x2", "#ffe14a", {petit: true}); }
         else G.run.stock[m.k] = (G.run.stock[m.k] || 0) + 1; SON.or(); });
     });
     bouton(24, 648, W - 48, 56, "LANCER LA VAGUE SUIVANTE", () => { G.run.vague++; R.preparerVague(G.run); allerPlacement(); SON.pose(); }, true, true);
@@ -929,38 +922,6 @@ function ficheHeros(){
   bouton(90, 664, W - 180, 46, "FERMER", () => { G.fiche = null; SON.clic(); }, true, false, 3);
 }
 
-/* ---------- grimoire : réserve de dés et sorts connus ---------- */
-function ecranGrimoire(){
-  ctx.fillStyle = "rgba(0,0,0,.6)"; ctx.fillRect(0, 0, W, H); zone(0, 0, W, H, () => {});
-  grand(10, 40, W - 20, 690);
-  texte("LE GRIMOIRE", W/2, 90, 16, "#ffe14a", "center", {titre: true});
-  // deux onglets : la réserve de dés, les sorts connus
-  const onglet = G.ongletGrimoire || "des";
-  bouton(30, 106, (W - 72)/2, 40, "DES " + G.run.des.length + "/" + D.MAX_DES, () => { G.ongletGrimoire = "des"; SON.clic(); }, true, onglet === "des", onglet === "des" ? 1 : 3);
-  bouton(42 + (W - 72)/2, 106, (W - 72)/2, 40, "SORTS " + G.run.sorts.length, () => { G.ongletGrimoire = "sorts"; SON.clic(); }, true, onglet === "sorts", onglet === "sorts" ? 1 : 3);
-  if (onglet === "des"){
-  texte("Relances par vague : 1  ·  touche un dé gardé pour ne pas le relancer", W/2, 172, 12, "#ffe3a8", "center", {max: W - 60});
-  G.run.des.forEach((de, i) => {
-    const y = 186 + i*58; petit(26, y, W - 52, 52);
-    dessinerDe(de.k, {v: D.TYPES_DES[de.k]}, 54, y + 24, 38, 0);
-    texte(de.n, 84, y + 20, 14, "#fff", "left", {max: W - 120});
-    // les faces, en petit
-    de.f.forEach((f, j) => { const x = 84 + j*13, yy = y + 28; if (x > W - 44) return;
-      ctx.fillStyle = f.s ? (f.s === "crane" ? "#5a2030" : "#5a4a10") : "rgba(0,0,0,.3)"; ctx.fillRect(x, yy, 12, 14);
-      texte(f.v ? String(f.v) : f.s === "x2" ? "x2" : f.s === "div2" ? "/2" : f.s === "crane" ? "X" : "*", x + 6, yy + 11, 9, f.s ? "#ffe14a" : "#fff", "center", {ombre: false}); });
-  });
-  Object.entries(D.FACES_SPECIALES).forEach(([k, f], i) => texte(f.n + " : " + f.d, 30, 494 + i*20, 12, "#ffe14a", "left", {max: W - 60}));
-  } else {
-  const y = 160;
-  G.run.sorts.forEach((k, i) => { const S = D.SORTS[k], yy = y + i*68;
-    icone(S.ic, 28, yy + 6, 32); texte(S.n, 68, yy + 20, 14, S.c, "left", {max: W - 96});
-    paragraphe(S.d, 68, yy + 38, W - 96, 12, "#fff", 1.05); texte("déraille : " + S.der, 68, yy + 64, 11, "#ffb0a0", "left", {max: W - 96}); });
-  if (G.run.sorts.length < Object.keys(D.SORTS).length) texte("D'autres sorts dorment dans les pages du grimoire (butin des boss).", W/2, y + G.run.sorts.length*68 + 10, 12, "#ffe3a8", "center", {max: W - 60});
-  }
-  bouton(90, 664, W - 180, 46, "FERMER", () => { G.grimoire = false; SON.clic(); }, true, false, 3);
-}
-
-/* ---------- pause ---------- */
 function ecranPause(){
   ctx.fillStyle = "rgba(0,0,0,.6)"; ctx.fillRect(0, 0, W, H); zone(0, 0, W, H, () => {});
   grand(30, 170, W - 60, 420);
@@ -987,13 +948,13 @@ function boucle(now){
   else if (G.ecran === "butin") ecranButin(dt);
   else if (G.ecran === "place" || G.ecran === "combat"){
     // simulation
-    if (G.ecran === "combat" && !G.pause && !G.fiche && !G.grimoire){
-      let ds = dt*G.vitesse; if (G.gel > 0){ G.gel -= dt; ds = 0; } if (G.des) ds = 0;
+    if (G.ecran === "combat" && !G.pause && !G.fiche){
+      let ds = dt*G.vitesse; if (G.gel > 0){ G.gel -= dt; ds = 0; } if (G.lancer) ds = 0;
       for (let pas = ds; pas > 0; pas -= 1/60) R.etape(G.C, Math.min(1/60, pas));
       for (const u of G.C.unites){ u.ta += ds; u.flash = Math.max(0, u.flash - ds); u.lunge = Math.max(0, u.lunge - ds); if (u.pv <= 0) u.mort += ds;
         if (u.pv > 0 && (u.act === "coup" || u.act === "mal") && u.ta > .45){ u.act = "repos"; u.ta = 0; } }
       traiterEvenements();
-      if (G.jauge >= 1 && !G.sortPret){ G.sortPret = R.tirerSort(G.run.sorts); SON.niveau(); flotte(W/2, 170, "SORT PRET", "#d8b8ff", {titre: true}); }
+      if (G.run.sortsPrets > 0 && R.vivants(G.C, "m").filter(m => m.x < W).length >= 3){ G.run.sortsPrets--; sortAuto(R.tirerSort(G.run.sorts)); }
       if (G.C.fin && !G.attenteFin){ G.attenteFin = true; const f = G.C.fin; setTimeout(() => { G.attenteFin = false; if (f === "victoire") finDeVague(); else finDeNuit(false); }, 1300); }
     }
     fond(); muraille();
@@ -1013,26 +974,19 @@ function boucle(now){
       texte(t.v, 0, 0, t.petit ? 13 : 20, t.c, "center"); ctx.restore(); t.d = 1; }
     G.txt = G.txt.filter(t => t.t < (t.d || 1));
     hud(); bandeau(); cartes(); objets();
-    plateauDes(dt);
+    if (G.lancer) ecranLancer(dt);
   }
   ctx.restore();
   if (G.fiche) ficheHeros();
-  if (G.grimoire) ecranGrimoire();
   if (G.pause) ecranPause();
   requestAnimationFrame(boucle);
 }
 
 /* ---------- toucher et taille ---------- */
 function coords(e){ const r = cv.getBoundingClientRect(); return [(e.clientX - r.left)*W/r.width, (e.clientY - r.top)*H/r.height]; }
-cv.addEventListener("pointerup", e => {
-  const g = G.geste; G.geste = null; if (!g || !G.des || G.des.etat !== "attente") return;
-  const [, y] = coords(e), dy = g.y - y, dt = Math.max(.05, (performance.now() - g.t)/1000);
-  if (dy > 40) lancerDes(false, .6 + Math.min(.7, dy/dt/2500));
-});
 cv.addEventListener("pointerdown", e => {
   audio();
   const r = cv.getBoundingClientRect(), x = (e.clientX - r.left)*W/r.width, y = (e.clientY - r.top)*H/r.height;
-  if (G.des && G.des.etat === "attente" && y > 250 && y < 460) G.geste = {y, t: performance.now()};
   for (let i = zones.length - 1; i >= 0; i--){ const z = zones[i]; if (x >= z.x && x <= z.x + z.w && y >= z.y && y <= z.y + z.h){ z.f(); return; } }
   if (G.ecran === "place") G.sel = -1;
 });
@@ -1047,6 +1001,6 @@ window.addEventListener("resize", taille); taille();
 document.addEventListener("visibilitychange", () => { if (document.hidden && G.ecran === "combat") G.pause = true; });
 // pour les tests
 window.Bannis.G = G;
-window.Bannis.J = {nouvelleNuit, allerPlacement, lancerCombat, finDeVague, finDeNuit, ouvrirPlateau, lancerDes, jeterSort, suiteButin};
+window.Bannis.J = {nouvelleNuit, allerPlacement, lancerCombat, finDeVague, finDeNuit, lancerDe, fermerLancer, suiteButin};
 requestAnimationFrame(boucle);
 })();

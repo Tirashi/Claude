@@ -170,8 +170,25 @@ const FACES_DEPART = {
           ["pretresse", "pretresse", "pretresse", "barde", "barde", "barde"]],
   quoi: ["arme", "arme", "armure", "armure", "bijou", "bijou"],
   qual: [0, 0, 0, 0, 1, 1],
-  event: ["recrue", "atelier", "benediction", "danger", "coffre", "calme"]
+  event: ["recrue", "atelier", "benediction", "danger", "coffre", "calme"],
+  action: ["recrue", "objet", "progres", "soin", "sort", "relique"]
 };
+// Dé d'action (28/11) : une face = ce que rapporte un lancer payé en or. ic : icône de img/icones.png (recrue : sprite d'une classe)
+const ACTIONS = {
+  recrue:  {n: "RECRUE", ic: null, d: "Le dé d'une case donne une classe : elle rejoint l'escouade, ou absorbe sa jumelle (niveau +1)."},
+  objet:   {n: "OBJET", ic: [5, 1], d: "Les dés QUOI et QUALITE donnent un objet, équipé tout de suite."},
+  progres: {n: "PROGRES", ic: [10, 4], d: "Un héros gagne un bonus de statistique."},
+  soin:    {n: "SOIN", ic: [9, 0], d: "Tous les héros sont soignés, la Muraille se répare de 10."},
+  sort:    {n: "SORT", ic: [21, 1], d: "Un sort du grimoire part tout seul (en préparation : au premier gros groupe de monstres)."},
+  relique: {n: "RELIQUE", ic: [13, 13], d: "Une relique au choix : elle change les prix ou les dés pour toute la nuit."}
+};
+const RELIQUES = [
+  {k: "remise", n: "MARCHANDAGE", d: "Les lancers coûtent 2 or de moins, pour toute la nuit."},
+  {k: "lancer", n: "TOUR DE PASSE-PASSE", d: "Un lancer de plus avant chaque vague."},
+  {k: "urgence", n: "SANG-FROID", d: "Un lancer d'urgence de plus pendant chaque combat."},
+  {k: "de", n: "DE TRUQUE", d: "Une face SOIN du dé d'action devient RECRUE."}
+];
+
 // Événements (dé lancé après les vagues 3, 6 et 9) ; ic = icône dans img/icones.png (ligne, colonne), sauf recrue (sprite d'une classe)
 const EVENEMENTS = {
   recrue:      {n: "UN CONDAMNE SE PRESENTE", ic: null, d: "Un nouveau combattant rejoint la Muraille (quatre au plus)."},
@@ -181,5 +198,5 @@ const EVENEMENTS = {
   coffre:      {n: "UN COFFRE", ic: [12, 7], d: "Un objet rare ou mieux, à prendre tout de suite."},
   calme:       {n: "UNE NUIT CALME", ic: [13, 13], d: "+10 pièces d'or et la Muraille se répare de 10."}
 };
-B.D = {FACES_DEPART, EVENEMENTS, HEROS, CLASSES, PORTEE, ROLES, CROISSANCE, TRAITS, MONSTRES, PALIERS, BOSS, NB_VAGUES, SLOTS, RARETES, AFFIXES, BONUS_NIVEAU, XP_NIVEAUX, NIV_LEGENDAIRE, SORTS, SORTS_DEPART, TYPES_DES, FACES_SPECIALES, DES_TROUVES, MAX_DES, MARCHAND, NOMS, NOMS_F};
+B.D = {FACES_DEPART, EVENEMENTS, ACTIONS, RELIQUES, HEROS, CLASSES, PORTEE, ROLES, CROISSANCE, TRAITS, MONSTRES, PALIERS, BOSS, NB_VAGUES, SLOTS, RARETES, AFFIXES, BONUS_NIVEAU, XP_NIVEAUX, NIV_LEGENDAIRE, SORTS, SORTS_DEPART, TYPES_DES, FACES_SPECIALES, DES_TROUVES, MAX_DES, MARCHAND, NOMS, NOMS_F};
 })();

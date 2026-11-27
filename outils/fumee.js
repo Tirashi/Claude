@@ -235,6 +235,8 @@ const shots = process.argv[2];
         B.R.graverSymbole(run, {t: 'slot', f: 'barde'}, 1, 2); if (run.faces.slots[1][2] !== 'barde') return 'la face ne se grave pas';
         if (B.R.appliquerEvenement(run, 'recrue').h === undefined || run.heros.length !== 4) return "l'événement recrue n'ajoute pas de héros";
         if (B.R.genererObjet(2, true, run).rar < 1) return 'le coffre ne donne pas un objet rare';
+        run.or = 500; B.R.debutLancers(run); const ln = B.R.lancerAction(run, 'prep', null, 'recrue'); if (!ln || ln.k !== 'recrue' || run.or >= 500 || run.prix <= B.R.PRIX_BASE) return 'le dé d\'action ne se lance pas ou ne coûte rien';
+        if (!B.R.lancerAction(run, 'prep', null, 'objet') || !B.R.lancerAction(run, 'prep', null, 'soin') || B.R.peutLancer(run, 'prep')) return 'les lancers de la vague ne se comptent pas';
         B.J.finDeNuit(false); await wait(100);
         if (G.ecran !== 'fin' || !(JSON.parse(localStorage.getItem('bannis.stats') || '{}').nuits >= 1)) return "la fin de nuit ne s'enregistre pas";
         return 'ok';
