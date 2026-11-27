@@ -367,7 +367,8 @@ Tout est réglé (20/10, § 0). **Cahier des charges validé.** Prochaine étape
 | 4 | ✅ (29/10) **Actes 2 et 3** (marais, moulin, Hameau caché, mines) : acte 2 (§ 17.1), rebondissement 2 et acte 3 (§ 17.2) | opusplan |
 | 5a | ✅ (26/11) **Rebondissement 3 et acte 4** (§ 17.3) | opusplan |
 | 5b | ✅ (26/11) **Final** (abbaye, Ysolde, Aubrin) et fin (§ 17.4) | opusplan |
-| 5c | Scène bonus, 12 pages du journal, quêtes des compagnons, donjon facultatif | opusplan |
+| 5c | ✅ (27/11) 12 pages du journal et scène bonus (§ 17.5) | opusplan |
+| 5d | Quêtes des compagnons, donjon facultatif | opusplan |
 | 6 | Équilibrage, sons et musique, accueil, `sw.js`, artefact | Sonnet |
 
 ### 17.1 Acte 2 (fait le 29/10)
@@ -408,6 +409,11 @@ Tout est réglé (20/10, § 0). **Cahier des charges validé.** Prochaine étape
 - **Sommet** (`abbaye_sommet`) : Aubrin (le Prieur, tuile `vaast_c`) demande les flammes ; Eloi refuse. **Deux combats d'affilée** (le moteur n'a pas de phases) : Aubrin (niveau prévu 13 : 100 %, 7,1 tours, 49 % des PV) puis, après un soin, **la Grande Lanterne** (99 %, 9 tours, 50 % des PV) ; en cas de défaite, le déclencheur rejoue la scène (`boss: true`, `sauvegardeAuto`).
 - **Fin** (`fin_du_jeu`) : le héros brise la Grande Lanterne, les Gardiens s'éveillent, on est ramené à Clairfond à l'aube (`ysolde_partie` effacé : la lanterne et Mère Ysolde reviennent) ; Maud retrouve **Tiennot** (tuile `enfant`, il n'a pas grandi), **Isée** s'efface avec l'aube, les lanternes s'allument pour la nuit seulement (`jeu_fini`). Le jeu continue ensuite en promenade.
 - **Pas encore** (5c) : la scène bonus (12 pages du journal), les à-côtés, un donjon facultatif ; l'écran « FIN » est une simple fenêtre de dialogue ; `demo: true` encore sur l'accueil.
+
+### 17.5 Pages du journal et scène bonus (faites le 27/11)
+- **12 pages** du journal d'Aubrin : `page_sceau` (Mines de sel) et `page_j1` à `page_j11`, des coffres posés dans 11 cartes de Clairfond à la crypte du cachot (ids `pj1`…`pj11`, textes dans `PAGES_JOURNAL` à la fin d'`evenements.js`). Elles racontent la fièvre, la gratitude, le refus des Gardiens, le vol des flammes, la brume cachée et les regrets. Le Journal du menu en donne le compte.
+- **Scène bonus** (`bonus_vu`) : une fois `jeu_fini` et les 12 pages trouvées, en entrant à Clairfond : au printemps, une jeune fille aux yeux gris passe la porte, Mère Ysolde sourit ; dernière ligne sur un prochain RPG.
+- **Pas encore** (5d) : quêtes des compagnons, donjon facultatif ; `demo: true` encore sur l'accueil.
 
 ## Détails techniques (déplacés du mémo le 05/11)
 Texte de la ligne de ce jeu dans le tableau « Les jeux existants (détails) » de [`specs/ludotheque.md`](ludotheque.md), recopié tel quel lors du rangement du 05/11 ([`plan-rangement.md`](plan-rangement.md), phase 2). L'essentiel, tenu à jour, est dans le `CLAUDE.md` du dossier du jeu.

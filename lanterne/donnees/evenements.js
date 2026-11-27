@@ -4,6 +4,8 @@ window.LANTERNE = window.LANTERNE || {};
 
 /* Une boutique : un choix par article (un achat par visite), puis la réplique du marchand.
    articles : [[objet, prix], …] ; merci : ce que dit le marchand après un achat. */
+// les douze pages du journal d'Aubrin (la scène bonus les demande toutes)
+const TOUTES_LES_PAGES = ['page_sceau'].concat(Array.from({ length: 11 }, (_, i) => 'page_j' + (i + 1)));
 const boutique = (qui, articles, merci) => [
   { choix: 'Que veux-tu acheter ? (Tu as {ECUS} écus.)', options: articles.map(([id, prix]) => `${LANTERNE.objets[id].nom} : ${prix} écus`).concat(['Rien, merci.']),
     suites: articles.map(([id, prix]) => [{ si: { ecus: prix },
@@ -836,6 +838,18 @@ LANTERNE.evenements = {
 
   // ---------- rebondissement 3 : Clairfond éteinte, Mère Ysolde partie ----------
   clairfond_retour: [
+    { si: 'jeu_fini', alors: [{ si: 'bonus_vu', sinon: [{ si: { tous: TOUTES_LES_PAGES }, alors: [
+      { drapeau: 'bonus_vu' },
+      { dire: 'Quelques mois plus tard. Le printemps est arrivé à Clairfond : les lanternes de la place restent éteintes la journée, et personne ne s\'en inquiète.' },
+      { pnj: 'isee_aube', montrer: true }, { attendre: .7 },
+      { dire: ['Une jeune fille aux yeux gris passe la porte du village. Elle s\'arrête devant la lanterne et pose la main sur la pierre tiède.', 'Mère Ysolde, sur le pas de sa porte, sourit sans rien dire.'] },
+      { dire: 'Tu es en retard, petite. J\'ai gardé du thé.', qui: 'ysolde' },
+      { dire: 'Je… je ne sais pas pourquoi je suis venue. J\'ai rêvé d\'un village avec une lanterne.', qui: 'isee' },
+      { dire: ['Entre. On va t\'expliquer. C\'est une longue histoire.', 'Heureusement, quelqu\'un en a rassemblé les douze pages.'], qui: 'ysolde' },
+      { pnj: 'isee_aube', cacher: true },
+      { dire: ['Quelque part, dans une autre vallée, une autre lanterne commence à vaciller…', '(Scène bonus. Un prochain jeu du moteur RPG de la Ludothèque racontera peut-être la suite.)'] },
+      { chapitre: 'Scène bonus' }, { sauver: 'auto' }
+    ] }] }] },
     { si: { tous: ['acte3_fini', { non: 'acte4_fini' }] }, alors: [{ si: 'ysolde_partie', sinon: [
       { drapeau: 'ysolde_partie' },
       { attendre: .5 },
@@ -1097,3 +1111,27 @@ LANTERNE.evenements = {
       ] }
   ]
 };
+
+// les onze autres pages du journal d'Aubrin (la douzième est « page_sceau », aux Mines de sel)
+const PAGES_JOURNAL = [
+  "« Premier jour. La fièvre est tombée. Je ne sais pas qui m'a recueilli, mais ils ont des lanternes dans les mains et des voix douces. Je crois que je vais vivre. »",
+  "« Ils m'ont appris leurs noms : le Roi des aulnes, la Dame, le Géant, le Sonneur. Ils m'ont appris que la brume est leur manteau, qu'on peut s'y reposer. J'ai pleuré de gratitude. »",
+  "« La fièvre revient parfois, la nuit. Le Sonneur me veille à l'oreille : une note, toujours la même. Quand elle cesse, j'ai peur. »",
+  "« Un médecin de la vallée m'a dit : « Vous avez deux ans, peut-être trois. » J'ai remercié. J'ai fait semblant d'être calme. »",
+  "« Les flammes des Gardiens ne s'éteignent jamais. Je les regarde brûler, elles me regardent mourir. Ce n'est pas juste. »",
+  "« Je leur ai demandé. Poliment. Une seule flamme, pour quelques années. Ils ont dit non : ce sont leurs cœurs. J'ai souri. J'ai dit que je comprenais. »",
+  "« Ils auraient pu mourir avec moi, après tout. Je n'avais rien à leur reprocher. Ce n'est pas une raison pour me laisser. »",
+  "« Une lanterne, un cercle de pierre, quatre flammes. J'ai appelé ça la Grande Lanterne. Ils n'ont pas compris tout de suite. Ils m'ont tendu la main, même à ce moment-là. »",
+  "« La brume est montée dès la première nuit. Je n'ai pas voulu l'arrêter : elle cache bien ce que je fais. Qu'on la prenne pour un fléau, c'est tant mieux. »",
+  "« J'ai fondé l'abbaye. Des veilleurs, des moines, des chevaliers. Chacun croit servir la lumière. Quand la lanterne faiblit, j'envoie quelqu'un chercher les flammes. Elles ne reviennent jamais jusqu'à moi. »",
+  "« Il y aura bientôt trois siècles. Je ne me souviens plus de mon visage. Je me souviens de leurs voix, et de la façon dont elles se taisent quand j'entre. Si quelqu'un lit ceci : je regrette. Je ne sais pas encore comment. »"
+];
+PAGES_JOURNAL.forEach((texte, i) => {
+  LANTERNE.evenements['page_j' + (i + 1)] = [
+    { si: 'coffre:pj' + (i + 1), alors: [{ dire: 'Le coffre est vide.' }, { stop: true }] },
+    { drapeau: 'coffre:pj' + (i + 1) }, { son: 'coffre' },
+    { dire: ['Une page de journal, jaunie, glissée dans un coin. L\'écriture est fine et penchée.', texte] },
+    { drapeau: 'page_j' + (i + 1) },
+    { dire: 'Une page de plus. Le journal d\'Aubrin se reconstitue, feuille après feuille.', qui: 'verene' }
+  ];
+});

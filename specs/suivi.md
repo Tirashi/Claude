@@ -186,3 +186,6 @@ Session 5a : rebondissement 3 (Clairfond éteinte, lettre d'Ysolde), Cimetière 
 
 ## La Dernière Lanterne, final (26/11)
 Session 5b : cachots de l'abbaye (levier, grille, Ysolde libérée), sommet, Aubrin puis la Grande Lanterne (deux combats), fin à Clairfond (Tiennot, Isée, lanternes de nuit). 2 cartes, 2 boss, cas d'équilibrage au niveau 13. Détails : `specs/rpg.md` § 17.4. Cache v130. Correction : la lettre d'Ysolde se lisait même avant la disparition (les objets ignorent `si`). Reste 5c : scène bonus et à-côtés.
+
+## La Dernière Lanterne, pages et scène bonus (27/11)
+Session 5c : 11 nouvelles pages du journal d'Aubrin dans 11 cartes (12 avec la page des mines), compte dans le Journal, scène bonus du printemps à Clairfond quand tout est trouvé après la fin. Cache v131. Reste 5d : quêtes des compagnons, donjon facultatif.

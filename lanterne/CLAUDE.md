@@ -4,7 +4,7 @@ RPG au tour par tour en HD-2D, premier jeu du moteur `moteur-rpg/` (`window.Mote
 - `donnees/` : `base.js` (classes, héros, objets, monstres, départ, légende des cartes, style), `cartes.js` (cartes en lettres), `combat.js` (équipement, talents, rencontres), `evenements.js` (dialogues), `tuiles.js` (fabriqué par `outils/lanterne-tuiles.py`, ne pas modifier à la main).
 - `tuiles.png` (Dungeon Crawl, CC0), `sons/`, `style.css` ; police Pixelify Sans (`polices/lanterne.css`).
 - Sauvegardes `lanterne.partie1..3` (copies `auto` / `main` / `reprise`), réglages `lanterne.reglages`. Pas de classement, pas encore dans `LUDO1-`.
-- Histoire complète jusqu'à la **fin** (`jeu_fini`) ; reste la scène bonus et les à-côtés : voir `specs/rpg.md` § 17.3 et § 17.4.
+- Histoire complète jusqu'à la **fin** (`jeu_fini`) ; pages du journal et scène bonus faites ; reste les quêtes des compagnons et le donjon facultatif : voir `specs/rpg.md` § 17.3 à 17.5.
 - Accueil : `demo: true` dans `GAMES` (étiquette DEMO, pas « à la une ») ; à retirer quand le jeu sera fini.
 - Tests : `window.Lanterne` (`nouvelle(n, nom)`, `continuer(n)`, `partie`, `etat`, `entrees.simuler(touche, ms)`, `sauvegardes`, `combat`). `outils/lanterne-tests.js` (dans `verifications.js`, avec le solveur d'accessibilité qui vise `LANTERNE.fin`), `outils/lanterne-combats.js` (équilibrage), bloc dans `fumee.js`.
 

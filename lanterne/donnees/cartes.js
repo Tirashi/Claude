@@ -51,6 +51,7 @@ LANTERNE.cartes = {
       { x: 2, y: 10, l: 4, p: 3, mur: 'mur_pierre', toit: 'toit_ardoise', porte: 1, fenetres: [2.5] }
     ],
     objets: [
+      { type: 'coffre', id: 'pj2', x: 22, y: 15, evenement: 'page_j2' },
       { type: 'lanterne', x: 13, y: 10, evenement: 'lanterne_clairfond' },
       { type: 'deco', x: 10, y: 10, bloque: true, evenement: 'statue_aubrin' },
       { type: 'panneau', x: 13, y: 1, texte: 'Au nord : la route de la forêt et l\'abbaye de Saint-Cendre.' },
@@ -176,6 +177,7 @@ LANTERNE.cartes = {
     ],
     ornements: [{ type: 'tapis_long', x: 6, y: 4, h: 5 }, { type: 'vitrail', x: 2, y: 0 }, { type: 'vitrail', x: 4, y: 0 }, { type: 'vitrail', x: 8, y: 0 }, { type: 'vitrail', x: 10, y: 0 }, { type: 'tapisserie', x: 5, y: 0 }, { type: 'tapisserie', x: 7, y: 0 }],
     objets: [
+      { type: 'coffre', id: 'pj10', x: 1, y: 8, evenement: 'page_j10' },
       { type: 'grande_lanterne', x: 6, y: 3, evenement: 'grande_lanterne' },
       { type: 'lanterne', x: 11, y: 8 }
     ],
@@ -249,6 +251,7 @@ LANTERNE.cartes = {
     ],
     ornements: [{ type: 'torche', x: 3, y: 0 }, { type: 'torche', x: 9, y: 0 }],
     objets: [
+      { type: 'coffre', id: 'pj1', x: 10, y: 5, evenement: 'page_j1' },
       { type: 'grille', id: 'crypte_grille', x: 6, y: 1, ouvertSi: 'levier_crypte', texte: 'Une grille rouillée, prise dans les racines. Un mécanisme doit l\'ouvrir.' },
       { type: 'levier', id: 'crypte_levier', x: 1, y: 3, drapeau: 'levier_crypte', texte: 'Le levier grince… Au fond de la salle, la grille remonte dans un nuage de poussière.' },
       { type: 'lanterne', x: 11, y: 6 },
@@ -591,6 +594,7 @@ LANTERNE.cartes = {
     ],
     ornements: [{ type: 'torche', x: 4, y: 0 }, { type: 'torche', x: 10, y: 0 }],
     objets: [
+      { type: 'coffre', id: 'pj4', x: 13, y: 2, evenement: 'page_j4' },
       { type: 'porte_cle', id: 'moulin_porte', x: 7, y: 1, cle: 'cle_moulin' },
       { type: 'nappe', id: 'moulin_nappe', x: 1, y: 6, outil: 'lanterne' },
       { type: 'coffre', id: 'meules_herbes', x: 13, y: 9, contenu: { objet: 'herbe', n: 2 } }
@@ -742,6 +746,7 @@ LANTERNE.cartes = {
       '555555555555555555'
     ],
     objets: [
+      { type: 'coffre', id: 'pj3', x: 2, y: 12, evenement: 'page_j3' },
       { type: 'panneau', x: 10, y: 1, texte: ['Village des Hautes-Roches : tout en haut du col.', 'Les Mines de sel : au-dessus du village. FERMÉES.'] },
       { type: 'rocher', id: 'cimes_rocher', x: 12, y: 3, outil: 'masse', texte: 'Un gros rocher fendu bouche un creux de la falaise. Derrière, quelque chose brille.' },
       { type: 'coffre', id: 'cimes_amulette', x: 15, y: 1, contenu: { objet: 'amulette', n: 1 } },
@@ -791,6 +796,7 @@ LANTERNE.cartes = {
       { x: 13, y: 10, l: 5, p: 3, mur: 'mur_pierre', toit: 'toit', fenetres: [1.5, 3.5] }
     ],
     objets: [
+      { type: 'coffre', id: 'pj5', x: 18, y: 5, evenement: 'page_j5' },
       { type: 'deco', x: 10, y: 8, bloque: true, evenement: 'statue_roches' },
       { type: 'lanterne', x: 7, y: 6 },
       { type: 'panneau', x: 12, y: 7, texte: ['HAUTES-ROCHES', 'Mines de sel de la Compagnie. Entrée interdite par ordre de l\'abbaye.'] }
@@ -828,6 +834,7 @@ LANTERNE.cartes = {
     ],
     ornements: [{ type: 'torche', x: 3, y: 0 }, { type: 'torche', x: 9, y: 0 }],
     objets: [
+      { type: 'coffre', id: 'pj6', x: 10, y: 3, evenement: 'page_j6' },
       { type: 'lanterne', x: 2, y: 8 },
       { type: 'coffre', id: 'mines_fioles', x: 10, y: 8, contenu: { objet: 'fiole', n: 2 } }
     ],
@@ -998,6 +1005,7 @@ LANTERNE.cartes = {
       'YYYYYYYYYYYYYYYYYYYY'
     ],
     objets: [
+      { type: 'coffre', id: 'pj7', x: 18, y: 7, evenement: 'page_j7' },
       { type: 'lanterne', x: 2, y: 10 },
       { type: 'panneau', x: 8, y: 7, texte: ['CIMETIÈRE DES CLOCHES', 'Ici repose chaque veilleur dont la cloche a sonné.', 'Prière de ne pas sonner les vivants.'] },
       { type: 'coffre', id: 'cimetiere_herbes', x: 1, y: 3, contenu: { objet: 'herbe', n: 3 } },
@@ -1038,6 +1046,7 @@ LANTERNE.cartes = {
     ],
     ornements: [{ type: 'torche', x: 3, y: 0 }, { type: 'torche', x: 7, y: 0 }],
     objets: [
+      { type: 'coffre', id: 'pj8', x: 9, y: 5, evenement: 'page_j8' },
       { type: 'lanterne', x: 1, y: 7 },
       { type: 'coffre', id: 'clocher_herbes', x: 9, y: 1, contenu: { objet: 'herbe', n: 3 } },
       { type: 'coffre', id: 'clocher_baton', x: 1, y: 1, contenu: { objet: 'baton_bronze', n: 1 } }
@@ -1068,6 +1077,7 @@ LANTERNE.cartes = {
     ],
     ornements: [{ type: 'torche', x: 4, y: 0 }, { type: 'torche', x: 10, y: 0 }],
     objets: [
+      { type: 'coffre', id: 'pj9', x: 13, y: 9, evenement: 'page_j9' },
       { type: 'pieu', x: 4, y: 3 }, { type: 'pieu', x: 4, y: 8 },
       { type: 'porte_cle', id: 'nef_porte', x: 7, y: 1, cle: 'cle_clocher' },
       { type: 'rocher', id: 'nef_rocher', x: 13, y: 2, outil: 'masse', texte: 'Un rocher fendu, tombé de la voûte, bouche l\'angle de la nef. Un coffre brille derrière.' },
@@ -1153,6 +1163,7 @@ LANTERNE.cartes = {
     ],
     ornements: [{ type: 'torche', x: 4, y: 0 }, { type: 'torche', x: 8, y: 0 }],
     objets: [
+      { type: 'coffre', id: 'pj11', x: 11, y: 5, evenement: 'page_j11' },
       { type: 'grille', id: 'cachot_grille', x: 3, y: 2, ouvertSi: 'levier_cachots', texte: 'Une grille de fer ferme la cellule. Derrière, une silhouette familière, assise, qui ne bouge pas.' },
       { type: 'levier', id: 'cachot_levier', x: 11, y: 1, drapeau: 'levier_cachots', texte: 'Le levier grince… Dans le fond, la grille de la cellule se soulève.' },
       { type: 'lanterne', x: 1, y: 9 },

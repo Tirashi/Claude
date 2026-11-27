@@ -82,7 +82,7 @@ LANTERNE.aide = [
 LANTERNE.fin = ['vaast_vu', 'verene_rejoint', 'outil:lanterne', 'roi_vaincu', 'acte1_fini', 'mission_marais', 'maud_rejoint', 'outil:grappin', 'dame_vaincue', 'acte2_fini',
   'isee_avouee', 'echarpe_trouvee', 'isee_conseil', 'mission_roches', 'outil:masse', 'page_sceau', 'geant_vaincu', 'acte3_fini',
   'ysolde_partie', 'lettre_lue', 'mission_cimetiere', 'sonneur_vaincu', 'fresque_finale', 'acte4_fini',
-  'ysolde_libre', 'aubrin_vaincu', 'jeu_fini'];
+  'ysolde_libre', 'aubrin_vaincu', 'jeu_fini', 'bonus_vu'];
 
 LANTERNE.depart = { carte: 'maison_ysolde', x: 2, y: 4, dir: 'bas', equipe: ['heros'], niveau: 1, ecus: 0, chapitre: 'Prologue' };
 
@@ -114,7 +114,9 @@ LANTERNE.journal = e => {
   if (!d.acte4_fini) return 'La Flamme blanche brille. Lire la fresque du clocher avec Vérène.';
   if (!d.ysolde_libre) return 'Quatre flammes dans la lanterne. Retourner à l\'abbaye : une porte de fer s\'ouvre derrière la Grande Lanterne. Délivrer Mère Ysolde dans les cachots.';
   if (!d.aubrin_vaincu) return 'Mère Ysolde est libre. Monter au sommet de l\'abbaye affronter le Prieur et la Grande Lanterne.';
-  return 'La brume se lève au matin et revient le soir. Les villageois allument leurs lanternes pour la nuit seulement.';
+  const pages = ['page_sceau'].concat(Array.from({ length: 11 }, (_, i) => 'page_j' + (i + 1))).filter(f => d[f]).length;
+  if (pages < 12) return 'La brume se lève au matin et revient le soir. Pages du journal d\'Aubrin retrouvées : ' + pages + ' sur 12. Les autres dorment dans des coffres déjà visités.';
+  return 'Les douze pages du journal d\'Aubrin sont rassemblées. Retourner à Clairfond voir si le printemps a changé quelque chose.';
 };
 
 /* Légende commune des cartes : une lettre par case.
