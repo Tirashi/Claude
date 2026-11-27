@@ -3,7 +3,7 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700&display=swap">
 <style>
-/* Comparaison des deux sources d'icônes (4e et 7e génération) et de leur conversion 15×15, pour les 107 Pokémon de Sinnoh. Un tableau, une ligne par Pokémon. */
+/* Comparaison des deux sources d'icônes (4e et 7e génération) et de leur conversion 15×15, pour les 107 Pokémon de Sinnoh. Un tableau, une ligne par Pokémon ; un clic choisit la source de la ligne, un champ de texte récapitule le choix à coller dans la conversation. */
 :root { --page:#17181d; --page-2:#22242b; --line:#34363f; --text:#eceae4; --dim:#9a9aa6; --accent:#ffd23f; --screen:#cde1c8; color-scheme: dark; }
 * { box-sizing:border-box; }
 body { background:var(--page); color:var(--text); font:15px/1.45 "Rubik",system-ui,sans-serif; margin:0;
@@ -22,7 +22,13 @@ thead th.g4 { color:#8fd3ff; } thead th.g7 { color:#ffb86b; }
 tbody td { padding:4px; text-align:center; border-bottom:1px solid var(--line); vertical-align:middle; }
 td.nm { text-align:left; font-size:11px; line-height:1.25; min-width:68px; }
 td.nm b { display:block; color:var(--accent); font-weight:700; font-variant-numeric:tabular-nums; }
-td.src { background:rgba(143,211,255,.05); } td.src.s7 { background:rgba(255,184,107,.05); }
+td.src { background:rgba(143,211,255,.05); cursor:pointer; } td.src.s7 { background:rgba(255,184,107,.05); }
+tbody tr.p4 td.s4, tbody tr.p7 td.s7 { box-shadow:inset 0 0 0 2px var(--accent); background:rgba(255,210,63,.12); }
+tbody tr.p4 td.s7, tbody tr.p7 td.s4 { opacity:.45; }
+.panel { position:sticky; bottom:0; background:var(--page-2); border:1px solid var(--line); border-radius:10px; padding:10px; display:flex; flex-direction:column; gap:8px; margin-top:8px; padding-bottom:calc(10px + env(safe-area-inset-bottom,0px)); }
+.panel textarea { width:100%; min-height:44px; height:44px; resize:vertical; background:var(--page); color:var(--text); border:1px solid var(--line); border-radius:8px; padding:8px; font:12px/1.4 ui-monospace,Menlo,monospace; }
+.panel .row { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+.panel .n { color:var(--dim); font-size:13px; flex:1 1 140px; }
 .cv { background:var(--screen); border-radius:6px; padding:3px; display:inline-block; line-height:0; }
 .cv img, .cv canvas { image-rendering:pixelated; display:block; }
 .cv img { width:46px; height:auto; } .cv canvas { width:52px; height:52px; }
@@ -30,7 +36,7 @@ td.src { background:rgba(143,211,255,.05); } td.src.s7 { background:rgba(255,184
 <div class="wrap">
   <header>
     <h1>Sinnoh : quelle source ?</h1>
-    <p>Les 107 Pokémon de la 4e génération (n° 387 à 493), avec pour chacun l'icône de menu de la 4e génération, son dessin 15×15, l'icône de la 7e génération et son dessin 15×15. La même méthode (version A) a servi pour les deux. Choisissez la colonne qui vous plaît le plus, dans l'ensemble.</p>
+    <p>Les 107 Pokémon de la 4e génération (n° 387 à 493), avec pour chacun l'icône de menu de la 4e génération, son dessin 15×15, l'icône de la 7e génération et son dessin 15×15. La même méthode (version A) a servi pour les deux. <b>Touchez la source que vous préférez</b> pour chaque Pokémon (icône ou dessin) : elle s'entoure en jaune. Le champ en bas se remplit tout seul : copiez-le et collez-le dans la conversation.</p>
   </header>
   <div class="bar" role="group" aria-label="Couleurs">
     <button class="tog" id="b-norm" aria-pressed="true" type="button">Couleurs normales</button>
@@ -40,6 +46,15 @@ td.src { background:rgba(143,211,255,.05); } td.src.s7 { background:rgba(255,184
     <thead><tr><th>N°</th><th class="g4">Icône 4e</th><th class="g4">Dessin 4e</th><th class="g7">Icône 7e</th><th class="g7">Dessin 7e</th></tr></thead>
     <tbody id="rows"></tbody>
   </table></div>
+  <div class="panel" role="group" aria-label="Mon choix">
+    <div class="row">
+      <span class="n" id="count">Tout en 4e génération.</span>
+      <button class="tog" id="all4" type="button">Tout en 4e</button>
+      <button class="tog" id="all7" type="button">Tout en 7e</button>
+    </div>
+    <textarea id="out" readonly aria-label="Choix à copier"></textarea>
+    <div class="row"><button class="tog" id="copy" type="button">Copier le choix</button><span class="n" id="msg"></span></div>
+  </div>
 </div>
 <script>
 const PAL = {"k": "#20182e", "r": "#e0383e", "w": "#f6f4ee", "b": "#a86a3c", "p": "#f4a3b8", "n": "#6b4428", "m": "#b58ad8", "u": "#3a7bd5", "y": "#ffd23f", "g": "#4fa86a", "G": "#2f7a48", "t": "#7fd0b8", "d": "#3f9a86", "o": "#f58a3a", "v": "#7c5cb8", "e": "#2f6f78", "c": "#f1e2c0", "a": "#5cb8e8", "h": "#7a2e14", "s": "#b8703a", "q": "#3a2c58", "i": "#4a78d0", "l": "#e0a83a", "x": "#f6f1de", "f": "#ff7aa8", "z": "#b8c0cc", "B": "#86b8f0", "P": "#e8607a", "R": "#e0502a", "T": "#2f8f9f", "U": "#8fa8f0", "A": "#3f6fb0", "M": "#6cc04a", "O": "#d8903a", "j": "#c8954a", "W": "#ddd0ea", "C": "#a8b8cc", "D": "#a898c8", "E": "#a09a8a", "F": "#6e685c", "H": "#c8e890"};
@@ -49,20 +64,41 @@ function draw(cv, art, map){
   cv.width = 15; cv.height = 15; const x = cv.getContext("2d");
   art.forEach((row,r) => [...row].forEach((c,i) => { const k = map && map[c] || c; if (PAL[k]){ x.fillStyle = PAL[k]; x.fillRect(i,r,1,1); } }));
 }
+let pick = {};   // numéro -> "4" ou "7" ; absent = 4e génération
+try { pick = JSON.parse(localStorage.getItem("sinnoh-choix") || "{}") || {}; } catch (e) { pick = {}; }
 const tb = document.getElementById("rows"), cvs = [];
 DATA.rows.forEach(r => {
   const tr = document.createElement("tr");
+  tr.dataset.n = r.n; tr.className = "p" + (pick[r.n] || "4");
   tr.innerHTML = `<td class="nm"><b>${r.n}</b>${r.name}</td>
-    <td class="src"><span class="cv"><img alt="" src="${r.i4}"></span></td>
-    <td class="src"><span class="cv"><canvas aria-label="${r.name}, dessin d'après la 4e génération"></canvas></span></td>
+    <td class="src s4"><span class="cv"><img alt="" src="${r.i4}"></span></td>
+    <td class="src s4"><span class="cv"><canvas aria-label="${r.name}, dessin d'après la 4e génération"></canvas></span></td>
     <td class="src s7"><span class="cv"><img alt="" src="${r.i7}"></span></td>
     <td class="src s7"><span class="cv"><canvas aria-label="${r.name}, dessin d'après la 7e génération"></canvas></span></td>`;
   tb.appendChild(tr);
   const c = tr.querySelectorAll("canvas"); cvs.push([c[0], r.a4, r.id, "ch4"], [c[1], r.a7, r.id, "ch7"]);
 });
+function summary(){
+  const l4 = [], l7 = [];
+  DATA.rows.forEach(r => (pick[r.n] === "7" ? l7 : l4).push(r.n));
+  document.getElementById("out").value = "4e : " + (l4.join(", ") || "aucun") + "\n7e : " + (l7.join(", ") || "aucun");
+  document.getElementById("count").textContent = `${l4.length} en 4e génération, ${l7.length} en 7e.`;
+  try { localStorage.setItem("sinnoh-choix", JSON.stringify(pick)); } catch (e) {}
+}
+function choose(n, v){ pick[n] = v; const tr = tb.querySelector(`tr[data-n="${n}"]`); tr.className = "p" + v; summary(); }
+tb.addEventListener("click", e => { const td = e.target.closest("td.src"); if (!td) return; choose(td.parentNode.dataset.n, td.classList.contains("s7") ? "7" : "4"); });
+function all(v){ DATA.rows.forEach(r => { pick[r.n] = v; tb.querySelector(`tr[data-n="${r.n}"]`).className = "p" + v; }); summary(); }
+document.getElementById("all4").onclick = () => all("4");
+document.getElementById("all7").onclick = () => all("7");
+document.getElementById("copy").onclick = () => {
+  const o = document.getElementById("out"), m = document.getElementById("msg");
+  o.focus(); o.select();
+  try { navigator.clipboard.writeText(o.value).then(() => m.textContent = "Copié.", () => m.textContent = "Sélectionné : copiez-le à la main."); }
+  catch (e) { m.textContent = "Sélectionné : copiez-le à la main."; }
+};
 function render(){ cvs.forEach(([cv, art, id, key]) => draw(cv, art, shiny ? DATA[key][id] : null)); }
 function setShiny(v){ shiny = v; document.getElementById("b-norm").setAttribute("aria-pressed", !v); document.getElementById("b-shiny").setAttribute("aria-pressed", v); render(); }
 document.getElementById("b-norm").onclick = () => setShiny(false);
 document.getElementById("b-shiny").onclick = () => setShiny(true);
-render();
+render(); summary();
 </script>
