@@ -11,7 +11,7 @@ const nuits = Number(process.argv[2]) || 40, avecDes = process.argv.includes("--
 const atteint = [], causes = {mur: 0, heros: 0, gagne: 0}, morts = {};
 let tempsTotal = 0; const murVague = {}, nbVague = {};
 for (let n = 0; n < nuits; n++){
-  const run = R.nouvelleRun(); run.heros = R.recrues(3); R.placerParDefaut(run);
+  const run = R.nouvelleRun(); run.heros = R.recruesDes(run); R.placerParDefaut(run);
   let fin = null;
   while (!fin){
     R.preparerVague(run);

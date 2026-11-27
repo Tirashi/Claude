@@ -1,16 +1,16 @@
 # Les Bannis (`bannis/`) — notes pour Claude
 
-Autobattler rogue-lite, démo sur l'accueil. Cahier des charges : [`specs/bannis.md`](../specs/bannis.md) (sessions § 15).
+Autobattler rogue-lite, démo sur l'accueil. Cahier des charges : [`specs/bannis.md`](../specs/bannis.md) (§ 19 : dés à symboles).
 
 ## Fichiers
 - `donnees.js` : `Bannis.D` — classes (et légendaires), traits, monstres (`i` = case de `img/monstres.png`), vagues, boss, objets, niveaux, sorts, marchand.
-- `regles.js` : `Bannis.R` — sans affichage : héros (`stats()` = base + trait + équipement + légendaire), run, vagues (`composerVague`, `apercu`), **combat** (`debutCombat`, `etape(C, dt)` ; il remplit `C.ev` d'événements : degats, mort, or, soin, tir, mur, boss, chant, rate, eclair), dés (`lancerDes`, `resultatDes`) et sorts (`jeterSort`), sauvegarde (`sauver` / `charger`, `VERSION_RUN`).
-- `jeu.js` : canvas 360 × 760 agrandi sans lissage ; tous les écrans, fiche d'un héros, pause, sons synthétisés. `Bannis.G` (état) et `Bannis.J` (fonctions) servent aux tests.
+- `regles.js` : `Bannis.R` — sans affichage : héros (`stats()`), run, vagues, **combat** (`debutCombat`, `etape(C, dt)`, événements `C.ev`), dés de sorts (`lancerDes`, `jeterSort`), **dés à symboles** (`run.faces` : `recruesDes`, `genererObjet(v, mieux, run)`, `offresAtelier`, `graverSymbole`, `appliquerEvenement`), sauvegarde (`VERSION_RUN` 2).
+- `jeu.js` : canvas 360 × 760 ; écrans, sons synthétisés. Écrans des dés (recrues, atelier, événement, tuto) en style moderne (`MOD`, Titillium). `Bannis.G` / `Bannis.J` pour les tests.
 - `img/` : planches de `outils/bannis-atlas.py` : `heros.png` (12 feuilles RPG Maker MV, ordre `D.HEROS`), `monstres.png` (31 × 2 cases de 96), `icones.png` (Shikashi), `ui-*.png` (Dragon Regalia).
-- Polices : `polices/bannis.css` (Jersey 10 pour les textes, Press Start 2P pour les titres).
+- Polices : `polices/bannis.css` (Jersey 10, Press Start 2P, Titillium Web).
 
 ## Sauvegardes
-`bannis.run` (écrite au début de chaque vague, au placement), `bannis.stats` (nuits, record, gagnees, eclats, kills ; transfert dans `fiche.js`), `bannis.son`, `bannis.vitesse`.
+`bannis.run` (début de chaque vague), `bannis.stats` (transfert dans `fiche.js`), `bannis.son`, `bannis.vitesse`, `bannis.tuto`.
 
 ## Artefact
 https://claude.ai/artifact/XnEsz7CYgnAcRDCfhchcHh : `python3 outils/bannis-artefact.py <sortie>` puis republier au même lien.

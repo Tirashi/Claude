@@ -161,5 +161,25 @@ const MARCHAND = [
 const NOMS = ["BRAM", "ODA", "KESS", "MARL", "TOVE", "RHYS", "ILSE", "GARN", "SEFA", "OREK", "VALE", "NELL", "JORN", "AUDE", "THEO", "MAUD", "YSOLDE", "CORBIN", "ELNA", "HUGUES", "ISEUT", "BALDO", "RENAUD", "OLWEN"];
 const NOMS_F = ["ODA", "KESS", "TOVE", "ILSE", "SEFA", "VALE", "NELL", "AUDE", "MAUD", "YSOLDE", "ELNA", "ISEUT", "OLWEN"];
 
-B.D = {HEROS, CLASSES, PORTEE, ROLES, CROISSANCE, TRAITS, MONSTRES, PALIERS, BOSS, NB_VAGUES, SLOTS, RARETES, AFFIXES, BONUS_NIVEAU, XP_NIVEAUX, NIV_LEGENDAIRE, SORTS, SORTS_DEPART, TYPES_DES, FACES_SPECIALES, DES_TROUVES, MAX_DES, MARCHAND, NOMS, NOMS_F};
+
+// Dés à symboles (27/11) : une face = une classe (dés des cases de recrues), un emplacement d'objet (QUOI), une rareté (QUALITE, indice de RARETES) ou un événement.
+// Départ : trois faces de chaque classe d'une paire par case ; les améliorations de l'atelier remplacent une face.
+const FACES_DEPART = {
+  slots: [["guerriere", "guerriere", "guerriere", "mercenaire", "mercenaire", "mercenaire"],
+          ["illusionniste", "illusionniste", "illusionniste", "magicienne", "magicienne", "magicienne"],
+          ["pretresse", "pretresse", "pretresse", "barde", "barde", "barde"]],
+  quoi: ["arme", "arme", "armure", "armure", "bijou", "bijou"],
+  qual: [0, 0, 0, 0, 1, 1],
+  event: ["recrue", "atelier", "benediction", "danger", "coffre", "calme"]
+};
+// Événements (dé lancé après les vagues 3, 6 et 9) ; ic = icône dans img/icones.png (ligne, colonne), sauf recrue (sprite d'une classe)
+const EVENEMENTS = {
+  recrue:      {n: "UN CONDAMNE SE PRESENTE", ic: null, d: "Un nouveau combattant rejoint la Muraille (quatre au plus)."},
+  atelier:     {n: "UNE FORGE ABANDONNEE", ic: [10, 4], d: "Une amélioration de dé de plus à l'atelier."},
+  benediction: {n: "UNE BENEDICTION", ic: [9, 0], d: "Tous les héros retrouvent toute leur vie."},
+  danger:      {n: "UN RAID DE LA GUEULE", ic: [0, 0], d: "La Muraille perd 15 points, mais tu pilles 30 pièces d'or."},
+  coffre:      {n: "UN COFFRE", ic: [12, 7], d: "Un objet rare ou mieux, à prendre tout de suite."},
+  calme:       {n: "UNE NUIT CALME", ic: [13, 13], d: "+10 pièces d'or et la Muraille se répare de 10."}
+};
+B.D = {FACES_DEPART, EVENEMENTS, HEROS, CLASSES, PORTEE, ROLES, CROISSANCE, TRAITS, MONSTRES, PALIERS, BOSS, NB_VAGUES, SLOTS, RARETES, AFFIXES, BONUS_NIVEAU, XP_NIVEAUX, NIV_LEGENDAIRE, SORTS, SORTS_DEPART, TYPES_DES, FACES_SPECIALES, DES_TROUVES, MAX_DES, MARCHAND, NOMS, NOMS_F};
 })();
