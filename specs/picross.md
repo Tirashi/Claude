@@ -52,3 +52,9 @@ Pistes :
   - Minidex 3G : lien donné par l'utilisateur, <https://www.deviantart.com/eeveeee1999/art/Gen-5-GBC-Party-Sprites-807196588> (auteur eeveeee1999). Le titre de la page parle de la 5e génération : à vérifier que la planche rangée est bien celle de la 3e.
   - Badges, objets d'Émeraude, menu old school : The Spriters Resource (spriters-resource.com), page exacte de chaque planche à retrouver.
 - Ordre proposé : 3e génération (Minidex 3G), puis chromatiques, puis maquette Boutique et Arène, puis Pokédex old school.
+
+## 3e génération (Hoenn), 27/11
+- Source de forme : Minidex 3G (`reference-minidex-3g.png`, lien correct : <https://www.deviantart.com/eeveeee1999/art/Gen-3-GBC-Party-Sprites-830673924>) ; planches couleur Hoenn normal et chromatique (`reference-hoenn-*.png`, A. J. Nitro, The Spriters Resource, « give credit if used »).
+- **135 dessins faits** (n° 252 à 386), 15×15, tous résolubles sans deviner (11 retouchés d'une ou deux cases), rangés dans `specs/picross/hoenn-dessins.json`, **pas encore dans `dessins.js`** : le jeu range tout ce qui dépasse n° 151 dans Johto (`regionOf`), il faut d'abord un 3e onglet **Hoenn** (ouverture, légendaires : Regirock, Regice, Registeel, Latias, Latios, Kyogre, Groudon, Rayquaza, Jirachi, Deoxys).
+- Aperçu : <https://claude.ai/artifact/UJXCRa1LLv43BFDC6dZkCB>. Couleurs choisies à la main d'après les vrais Pokémon (la lecture automatique des couleurs de la planche était mal alignée).
+- Fichier pour reconstruire : `outils/` n'a pas de script ; la méthode est la même que Johto (sprite 16×16 moins une rangée et une colonne, recoloré).
