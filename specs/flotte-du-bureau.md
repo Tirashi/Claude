@@ -82,7 +82,7 @@ Départ : 400 crédits, 5 mineurs, 3 marchands, zone 1.
 - **À régler plus tard** : valeur du seuil et des éclats après des essais à la main, deuxième voie (plusieurs systèmes ?), mode infini (le jeu d'origine en a un), sons et succès.
 
 ## 9. Appli fermée et fenêtre cachée
-- **Appli fermée ou onglet longtemps absent** : au retour, gain = revenu moyen des 60 dernières secondes × durée × **part de veille**, **plafonné** (proposition : 24 h) ; une carte « Retour » le résume ; pas de pirates ni de pertes hors ligne.
+- **Appli fermée ou onglet longtemps absent** : au retour, gain = revenu moyen des 60 dernières secondes × durée × **part de veille**, **plafonné à 24 h** (validé par l'utilisateur le 27/11) ; une carte « Retour » le résume ; pas de pirates ni de pertes hors ligne.
 - **Fenêtre seulement cachée ou couverte** (PC, deuxième écran) : `requestAnimationFrame` s'arrête ; au retour, **rattrapage à 100 %** par pas de 0,25 s jusqu'à 10 minutes ; au-delà, règle de la veille.
 - Horodatage de la dernière sortie dans la sauvegarde ; le revenu moyen est enregistré avec elle.
 
@@ -133,7 +133,7 @@ L'Horizon est jouable ([artefact](https://claude.ai/artifact/G8fypxapvG7eFT7PaSv
 ## 16. Questions ouvertes
 1. **Nom du jeu** (« Flotte du bureau » est provisoire).
 2. **Prestige** : thème et nom (« Horizon »), seuil, friction ajoutée à chaque relance.
-3. **Plafond d'absence** (24 h proposé) et part de veille (25 % à 75 %).
+3. ~~Plafond d'absence~~ : 24 h validé le 27/11 ; part de veille 25 % à 75 % en attente d'essais.
 4. **Sons** : aucun, sobres, ou musique douce ?
 5. Garder en vue : expéditions, Bourse, plusieurs systèmes (après le premier prestige), fusion en super-navire.
 
