@@ -294,3 +294,9 @@ Recommandation de Claude : 1 + 2 d'abord (le dé reste notre signature, mais ser
 - Tests : `outils/fumee.js` (gravure de l'arbre, achat de palier).
 
 **À voir** : prix des paliers (revenu d'une nuit : environ 30 à 60 éclats) ; faut-il des gravures pour le dé d'événement ; légendes liées à l'évolution niveau 3 ; essai sur le téléphone.
+
+## 23. Maquette 8 : le jeu en paysage ? (28/11)
+
+**Question de l'utilisateur (28/11)** : le téléphone en paysage améliorerait-il la visibilité ? Le terrain est déjà horizontal (Muraille à gauche, monstres à droite). Coût : tout est à redessiner (canvas 760 × 360 au lieu de 360 × 760), un seul sens pour tout le jeu, deux mains au lieu d'une, pas de verrouillage possible dans un artefact ; le manifeste de la Ludothèque est en `orientation: any` (verrouillage possible par le jeu en plein écran sur Android, sinon message « tourne ton téléphone »).
+
+**[Maquette 8](https://claude.ai/artifact/4GEgrkeqHy1KKdWrw7jQft)** (`maquettes/bannis-8.html`, sources `outils/bannis-maquette/source8.html` + `fabriquer8.py`) : **A** terrain pleine largeur (bande de cartes en bas, potions et gros bouton à droite, carte flottante du dé d'action au placement), **B** trois colonnes (héros à gauche, terrain au centre, dé d'action et bouton à droite), **C** le portrait actuel en captures. Trois écrans jouables par téléphone : PLACEMENT, COMBAT (en direct), ÉQUIPER (objet à gauche, héros en grille 2 × 2). Choix de l'utilisateur : en attente.

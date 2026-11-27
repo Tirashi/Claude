@@ -1,0 +1,167 @@
+<title>Les Bannis 8</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght@400;600;700;900&display=swap">
+<style>
+/* Maquette 8 « Les Bannis » (28/11) : et si le jeu passait en paysage ?
+   A terrain pleine largeur, interface en bandes ; B trois colonnes (héros, terrain, dé d'action) ; C le portrait d'aujourd'hui, pour comparer.
+   Mise en page : en-tête, A et B (téléphones couchés, jouables), C (deux captures), questions. */
+:root{--fond:#0b141a;--texte:#e8f4f2;--doux:#8fb0ad;--accent:#3ddcbe;--carte:#16303a;--bord:#24505a;--or:#ffd76a;--ligne:#1c3a44;--f:"Titillium Web",system-ui,sans-serif;color-scheme:dark}
+html,body{background:var(--fond);color:var(--texte)}
+body{margin:0;font-family:var(--f);font-size:17px;line-height:1.4;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px 48px}
+.page{max-width:900px;margin:0 auto;display:flex;flex-direction:column;gap:28px}
+h1{font-weight:900;font-size:clamp(22px,4.5vw,32px);margin:0}
+header p{margin:10px 0 0;color:var(--doux);max-width:80ch}
+b{color:var(--texte)}
+.dir{display:flex;flex-direction:column;gap:10px;min-width:0}
+.dir h2{font-size:18px;color:var(--accent);margin:0}
+.dir p{margin:0;color:var(--doux);max-width:80ch}
+.onglets{display:flex;gap:8px;flex-wrap:wrap}
+.onglets button{font:inherit;font-size:16px;padding:6px 14px;border-radius:999px;border:2px solid var(--ligne);background:transparent;color:var(--doux);cursor:pointer}
+.onglets button[aria-pressed=true]{background:var(--accent);color:#05211c;border-color:var(--accent)}
+.tel{border:9px solid #04090c;border-radius:30px;overflow:hidden;box-shadow:0 18px 40px rgba(0,0,0,.6);background:#0e1a22;line-height:0}
+.tel canvas{width:100%;aspect-ratio:760/360;display:block;touch-action:manipulation;cursor:pointer}
+.refs{display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start}
+.refs figure{margin:0;flex:0 1 240px;min-width:0}
+.refs img{width:100%;border:9px solid #04090c;border-radius:26px;display:block;box-sizing:border-box}
+.refs figcaption{color:var(--doux);font-size:15px;margin-top:6px}
+button:focus-visible{outline:2px solid #fff;outline-offset:2px}
+section.q{border-top:1px solid var(--ligne);padding-top:20px;display:flex;flex-direction:column;gap:10px;min-width:0}
+section.q h2{font-size:18px;color:var(--accent);margin:0}
+section.q p,section.q li{color:var(--doux);max-width:80ch;margin:0}
+section.q li{margin:4px 0}
+.tabw{overflow-x:auto}
+table{border-collapse:collapse;min-width:640px;width:100%;font-size:16px}
+th,td{border:1px solid var(--ligne);padding:8px 10px;text-align:left;vertical-align:top;color:var(--doux)}
+th{color:var(--texte)}
+</style>
+<div class="page">
+<header>
+  <h1>LES BANNIS : EN PAYSAGE ?</h1>
+  <p>Le terrain du jeu est déjà horizontal : la Muraille à gauche, les monstres qui viennent de la droite. Voici le jeu <b>couché</b> (comme un téléphone tenu à deux mains), en deux dispositions : <b>A</b> le terrain prend toute la largeur et l'interface passe en bandes ; <b>B</b> trois colonnes (les héros à gauche, le terrain au centre, le dé d'action à droite). Chaque téléphone a trois écrans : <b>PLACEMENT</b>, <b>COMBAT</b> (en direct) et <b>ÉQUIPER</b>. Touchez le dé d'action pour le lancer. En <b>C</b>, le portrait d'aujourd'hui, pour comparer.</p>
+</header>
+<div id="grille" style="display:flex;flex-direction:column;gap:28px"></div>
+<section class="dir">
+  <h2>C · Le portrait d'aujourd'hui (pour comparer)</h2>
+  <div class="refs"><figure><img src="/*PORTRAIT1*/" alt="Placement en portrait, quatre héros"><figcaption>Placement : terrain étroit, panneau serré</figcaption></figure>
+  <figure><img src="/*PORTRAIT2*/" alt="Combat en portrait, quatre héros"><figcaption>Combat : quatre cartes en grille sous le terrain</figcaption></figure></div>
+</section>
+<section class="q">
+  <h2>COMPARAISON</h2>
+  <div class="tabw"><table>
+    <tr><th></th><th>A · Pleine largeur</th><th>B · Trois colonnes</th><th>C · Portrait</th></tr>
+    <tr><th>Terrain</th><td>tout l'écran : le plus grand</td><td>un peu plus étroit (au centre)</td><td>étroit</td></tr>
+    <tr><th>Héros</th><td>une bande de cartes en bas</td><td>une colonne à gauche, lisible</td><td>grille 2 × 2 sous le terrain</td></tr>
+    <tr><th>Dé d'action</th><td>carte flottante, bouton en bas</td><td>colonne à droite, toujours visible</td><td>panneau serré à droite</td></tr>
+    <tr><th>Prise en main</th><td>deux pouces, boutons aux coins</td><td>deux pouces, tout à portée</td><td>une main</td></tr>
+    <tr><th>Risque</th><td>interface par-dessus le terrain</td><td>terrain moins large</td><td>textes petits</td></tr>
+  </table></div>
+</section>
+<section class="q">
+  <h2>QUESTIONS</h2>
+  <ul>
+    <li>Le paysage vous semble-t-il meilleur que le portrait ? Si oui, A ou B ?</li>
+    <li>Jouez-vous plutôt à une main ou à deux mains sur ce jeu ?</li>
+    <li>Le menu d'accueil de la Ludothèque reste en portrait : acceptez-vous de tourner le téléphone en entrant dans Les Bannis (et d'en ressortir) ?</li>
+  </ul>
+</section>
+</div>
+<script>
+const IMG = /*IMAGES*/{};
+try { document.fonts.load('700 20px "Titillium Web"'); document.fonts.load('600 20px "Titillium Web"'); } catch (e) {}
+const CL = {guerriere:["GUERRIÈRE",0,"Mêlée"],mercenaire:["MERCENAIRE",2,"Mêlée"],illusionniste:["ILLUSIONNISTE",4,"Distance"],magicienne:["MAGICIENNE",6,"Magie"],pretresse:["PRÊTRESSE",8,"Soin"],barde:["BARDE",10,"Chant"]};
+const NOMS = {guerriere:"KESS",illusionniste:"BALDO",pretresse:"ILSE",mercenaire:"RHYS",magicienne:"ISEUT",barde:"GARN"};
+const MOD = {fond:"#0e1a22",carte:"#16303a",bord:"#24505a",accent:"#3ddcbe",doux:"#8fb0ad",txt:"#e8f4f2",or:"#ffd76a",alerte:"#ffb08a"};
+const MONS = [19,22,20,15,11,23];
+const pick = a => a[Math.floor(Math.random()*a.length)];
+const img = s => { const i = new Image(); i.src = s; return i; };
+const imH = img(IMG.heros), imM = img(IMG.monstres), imI = img(IMG.icones);
+const ACT = {recrue:["RECRUE",null],objet:["OBJET",[5,1]],progres:["PROGRÈS",[10,4]],soin:["SOIN",[9,0]],sort:["SORT",[21,1]],relique:["RELIQUE",[13,13]]};
+const FACES = Object.keys(ACT);
+function phone(titre, texte, disp){
+  const W = 760, H = 360, k = 2;
+  const w = document.createElement("div"); w.className = "dir";
+  w.innerHTML = `<h2>${titre}</h2><p>${texte}</p><div class="onglets"><button data-o="place">PLACEMENT</button><button data-o="combat">COMBAT</button><button data-o="equiper">ÉQUIPER</button></div><div class="tel"><canvas width="${W*k}" height="${H*k}"></canvas></div>`;
+  const cv = w.querySelector("canvas"), ctx = cv.getContext("2d"); ctx.imageSmoothingEnabled = false;
+  const S = {o:"place", t:0, or:84, prix:16, lancers:3, team:[{c:"guerriere",n:2},{c:"mercenaire",n:1},{c:"illusionniste",n:1},{c:"pretresse",n:1}], mons:[], spawn:0, kills:0, flo:[], roule:-9, face:"recrue", toast:null, zones:[]};
+  // zone de terrain selon la disposition
+  const T = disp === "A" ? {x0:0, x1:760, mur:60, hx:[150,230], spawn:790, stop:330} : {x0:160, x1:600, mur:210, hx:[270,340], spawn:630, stop:440};
+  const rr = (x,y,wd,h,r) => { ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+wd,y,x+wd,y+h,r); ctx.arcTo(x+wd,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+wd,y,r); ctx.closePath(); };
+  const carte = (x,y,wd,h,bord,fond) => { ctx.fillStyle = fond || MOD.carte; rr(x,y,wd,h,10); ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = bord || MOD.bord; rr(x,y,wd,h,10); ctx.stroke(); };
+  const txt = (t,x,y,px,c=MOD.txt,al="left",gras=700,max) => { let p = px; ctx.font = `${gras} ${p}px "Titillium Web",sans-serif`; if (max) while (p > 8 && ctx.measureText(t).width > max){ p--; ctx.font = `${gras} ${p}px "Titillium Web",sans-serif`; } ctx.textAlign = al; ctx.fillStyle = c; ctx.fillText(t,x,y); };
+  const zone = (x,y,wd,h,f) => S.zones.push({x,y,wd,h,f});
+  const bouton = (x,y,wd,h,t,f,clair=true,actif=true,sub) => { ctx.fillStyle = !actif ? "#1b3038" : clair ? MOD.accent : MOD.carte; rr(x,y,wd,h,10); ctx.fill(); if (!clair && actif){ ctx.lineWidth = 2; ctx.strokeStyle = MOD.accent; rr(x,y,wd,h,10); ctx.stroke(); }
+    txt(t, x+wd/2, y+h/2+(sub?-1:6), sub?15:16, !actif ? "#6f9a9a" : clair ? "#05211c" : MOD.txt, "center", 900, wd-12); if (sub) txt(sub, x+wd/2, y+h/2+14, 11, !actif ? "#6f9a9a" : clair ? "#0b3a31" : MOD.doux, "center", 600, wd-12); if (actif) zone(x,y,wd,h,f); };
+  const hero = (c, x, y, e=1.6, f=0, row=1) => { const idx = CL[c][1]; ctx.drawImage(imH, ((0*3)+f)*32, idx*192+32*row, 32, 32, x-16*e, y-30*e, 32*e, 32*e); };
+  const mons = (i, x, y, e=.8) => ctx.drawImage(imM, (i-1)*96, 0, 96, 96, x-48*e, y-92*e, 96*e, 96*e);
+  const icone = (rc,x,y,s) => ctx.drawImage(imI, rc[1]*32, rc[0]*32, 32, 32, x, y, s, s);
+  const pieces = (x,y,s) => icone([12,7],x,y,s);
+  function tile(face, x, y, s, rolling){
+    carte(x,y,s,s,MOD.accent); let f = face; if (rolling) f = FACES[Math.floor(S.t*15)%6];
+    if (f==="recrue") hero("guerriere", x+s/2, y+s*.75, s/38); else icone(ACT[f][1], x+s*.2, y+s*.2, s*.6);
+    if (!rolling) txt(ACT[f][0], x+s/2, y+s-5, Math.max(9,s*.15), MOD.txt, "center", 700, s-4);
+  }
+  function fond(){ const g = ctx.createLinearGradient(0,0,0,H); g.addColorStop(0,"#241a3a"); g.addColorStop(.5,"#3a2b52"); g.addColorStop(1,"#2a2040"); ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle = "#4a3a62"; ctx.fillRect(T.x0, 108, T.x1-T.x0, H-108); for (let y = 128; y < H; y += 26){ ctx.fillStyle = "rgba(0,0,0,.12)"; ctx.fillRect(T.x0, y, T.x1-T.x0, 2); }
+    ctx.fillStyle = "#6b6f80"; ctx.fillRect(T.x0, 86, T.mur-T.x0, H-86); ctx.fillStyle = "#8a8ea0"; for (let x = T.x0; x < T.mur; x += 18) ctx.fillRect(x, 76, 11, 12); }
+  function haut(){ const x0 = disp==="A" ? 0 : 0; ctx.fillStyle = "rgba(10,20,26,.92)"; ctx.fillRect(0,0,W,34); txt("VAGUE 3/12", 12, 23, 17, MOD.txt, "left", 900); pieces(124,6,22); txt(String(S.or), 150, 23, 17, MOD.or, "left", 700);
+    if (S.o==="combat"){ ctx.fillStyle = "#08121a"; rr(300,12,200,10,5); ctx.fill(); ctx.fillStyle = MOD.accent; rr(300,12,Math.max(8,200*S.kills/10),10,5); ctx.fill(); txt("monstres : "+(10-S.kills), 400, 31, 10, MOD.doux, "center", 600); }
+    txt("x1", W-96, 23, 15, MOD.txt, "center", 700); ctx.fillStyle = MOD.txt; ctx.fillRect(W-40,10,5,16); ctx.fillRect(W-30,10,5,16); }
+  function cartesHeros(mode){   // "bande" (A) ou "colonne" (B)
+    S.team.forEach((h,i) => { const bande = mode==="bande", x = bande ? 8+i*122 : 6, y = bande ? 302 : 42+i*79, wd = bande ? 118 : 148, ht = bande ? 52 : 74;
+      carte(x,y,wd,ht,MOD.bord,"rgba(14,26,34,.93)"); txt(NOMS[h.c], x+10, y+20, 16, MOD.txt, "left", 700, wd-44); ctx.fillStyle = MOD.accent; ctx.beginPath(); ctx.arc(x+wd-15,y+15,10,0,7); ctx.fill(); txt(String(h.n), x+wd-15, y+20, 13, "#05211c", "center", 900);
+      txt(CL[h.c][0], x+10, y+36, 11, "#d8e4ff", "left", 600, wd-20);
+      ctx.fillStyle = "#08121a"; rr(x+10,y+(bande?42:46),wd-20,7,3); ctx.fill(); ctx.fillStyle = "#4ad05a"; rr(x+10,y+(bande?42:46),(wd-20)*(.55+.4*Math.sin(i+S.t*.3)**2),7,3); ctx.fill();
+      if (!bande){ hero(h.c, x+wd-30, y+ht-8, 1.2, Math.floor(S.t*4+i)%3); ctx.fillStyle = "#08121a"; ctx.fillRect(x+10,y+60,wd-20,4); ctx.fillStyle = "#9ad8ff"; ctx.fillRect(x+10,y+60,(wd-20)*.5,4); } }); }
+  function terrain(placement){
+    const cases = [[T.hx[0],150],[T.hx[0],215],[T.hx[0],280],[T.hx[1],150],[T.hx[1],215],[T.hx[1],280]];
+    if (placement) cases.forEach(c => { ctx.strokeStyle = "rgba(255,255,255,.35)"; ctx.setLineDash([5,4]); ctx.lineWidth = 1.5; ctx.beginPath(); ctx.ellipse(c[0],c[1]+2,26,10,0,0,7); ctx.stroke(); ctx.setLineDash([]); });
+    const pos = [[T.hx[1],215],[T.hx[1],280],[T.hx[0],180],[T.hx[0],250]];
+    S.team.forEach((h,i) => { const p = pos[i]; ctx.fillStyle = "rgba(0,0,0,.3)"; ctx.beginPath(); ctx.ellipse(p[0],p[1]+2,18,6,0,0,7); ctx.fill(); hero(h.c, p[0], p[1], 1.7, Math.floor(S.t*4+i)%3, S.o==="combat" ? 1 : 1); }); }
+  function panneauDe(x, y, wd, ht, large){
+    carte(x,y,wd,ht,MOD.bord,"rgba(14,26,34,.95)"); txt("DÉ D'ACTION", x+10, y+20, 14, MOD.accent, "left", 700);
+    const rolling = S.t - S.roule < 1; tile(S.face, x+wd/2-(large?32:28), y+28, large?64:56, rolling);
+    const ty = y+28+(large?64:56)+18; txt(S.lancers+" lancers avant le combat", x+wd/2, ty, 12, MOD.txt, "center", 600, wd-10); txt("Prochain : "+S.prix+" or", x+wd/2, ty+18, 14, MOD.or, "center", 700, wd-10);
+    bouton(x+8, ty+26, wd-16, large?42:38, S.lancers && S.or>=S.prix ? "LANCER" : "PLUS DE LANCER", lancer, true, S.lancers>0 && S.or>=S.prix); }
+  function lancer(){ if (S.lancers<=0 || S.or<S.prix || S.t-S.roule<1) return; S.or -= S.prix; S.prix += 8; S.lancers--; S.roule = S.t; const f = pick(FACES); setTimeout(() => { S.face = f; S.toast = {t:S.t, txt: f==="recrue" ? "RECRUE : la dé de la case 2 donne MAGICIENNE !" : ACT[f][0]+" : un bonus pour l'escouade !"}; }, 1000); }
+  function toast(){ if (S.toast && S.t-S.toast.t < 2.4){ carte(W/2-170, 44, 340, 34, MOD.accent, "rgba(14,26,34,.97)"); txt(S.toast.txt, W/2, 66, 15, MOD.or, "center", 700, 320); } }
+  function sim(dt){ if (S.o!=="combat") return; S.spawn -= dt; if (S.spawn<=0 && S.kills + S.mons.length < 10){ S.mons.push({x:T.spawn,y:140+Math.random()*140,i:pick(MONS),stop:T.stop+Math.floor(Math.random()*4)*34,hit:0}); S.spawn = 1.4; }
+    for (const m of S.mons){ m.x -= 60*dt; if (m.x<m.stop) m.x = m.stop; if (m.x<=m.stop+2){ m.hit += dt; if (m.hit>1){ m.dead = true; S.kills++; S.or += 4; S.flo.push({x:m.x,y:m.y-60,t:0}); } } }
+    S.mons = S.mons.filter(m => !m.dead); if (S.kills>=10){ S.kills = 0; S.or += 20; S.prix = 16; S.lancers = 3; S.toast = {t:S.t, txt:"VAGUE GAGNÉE : +20 or, les lancers reviennent"}; } }
+  function dessinerMons(){ S.mons.slice().sort((a,b)=>a.y-b.y).forEach(m => mons(m.i, m.x, m.y)); S.flo.forEach(f => { f.t += 1/60; ctx.globalAlpha = Math.max(0,1-f.t); txt("+4", f.x, f.y-f.t*30, 16, MOD.or, "center", 700); ctx.globalAlpha = 1; }); S.flo = S.flo.filter(f=>f.t<1); }
+  function potions(x,y){ [[9,0],[21,1],[10,7]].forEach((ic,i) => { carte(x+i*38,y,34,34,MOD.bord,"rgba(14,26,34,.93)"); icone(ic,x+i*38+4,y+3,26); }); }
+  function ecranEquiper(){
+    ctx.fillStyle = MOD.fond; ctx.fillRect(0,0,W,H); haut();
+    ctx.fillStyle = "rgba(61,220,190,.12)"; rr(8,40,W-16,34,8); ctx.fill(); ctx.fillStyle = MOD.accent; rr(8,40,5,34,2); ctx.fill(); txt("A FAIRE : touche le héros qui portera l'objet", 24, 63, 16, MOD.or, "left", 700);
+    carte(8,82,230,230); icone([6,1],89,96,68); txt("BOUCLIER DE CHENE", 123, 190, 17, "#d8d0bc", "center", 700, 214); txt("ARMURE · COMMUN · +16 VIE", 123, 210, 13, MOD.txt, "center", 600, 214);
+    txt("Les stats en vert montent,", 123, 244, 13, MOD.doux, "center", 600); txt("celles en rouge baissent.", 123, 262, 13, MOD.doux, "center", 600);
+    bouton(8,320,230,34,"NE PAS L'ÉQUIPER : VENDRE (8 OR)", ()=>{}, false);
+    S.team.forEach((h,i) => { const x = 248+(i%2)*258, y = 82+Math.floor(i/2)*138, ok = i!==1; carte(x,y,250,130,ok?MOD.bord:"#1c3a44"); ctx.globalAlpha = ok?1:.45; hero(h.c, x+34, y+80, 1.9, Math.floor(S.t*4+i)%3);
+      txt(NOMS[h.c]+" · "+CL[h.c][0], x+68, y+26, 15, MOD.txt, "left", 700, 176); txt(ok ? "ARMURE : rien" : "ne peut pas porter cet objet", x+68, y+44, 12, ok ? "#c8e8c8" : MOD.alerte, "left", 600, 176);
+      [["VIE","84","+16"],["ATQ","12",""],["DEF","3","+0"],["CRIT","9",""]].forEach(([a,b,c],j) => { const xx = x+68+(j%2)*88, yy = y+70+Math.floor(j/2)*24; txt(a+" "+b, xx, yy, 14, "#e8f0ff", "left", 700); if (ok && c && c!=="+0") txt(c, xx+54, yy, 14, "#6dff8a", "left", 700); }); ctx.globalAlpha = 1; if (ok) zone(x,y,250,130,()=>{}); }); }
+  function dessiner(){
+    S.zones = []; ctx.setTransform(k,0,0,k,0,0); ctx.clearRect(0,0,W,H);
+    if (S.o==="equiper"){ ecranEquiper(); return; }
+    fond(); const place = S.o==="place"; terrain(place); if (!place) dessinerMons();
+    if (disp==="A"){
+      haut(); cartesHeros("bande"); potions(512,306);
+      if (place){ panneauDe(566, 44, 186, 214, false); bouton(626, 304, 126, 48, "COMBATTRE", () => { S.o = "combat"; maj(); }, true, true); }
+      else bouton(626, 304, 126, 48, S.or>=S.prix?"LANCER":"PAS D'OR", lancer, true, S.or>=S.prix, "urgence · "+S.prix+" or");
+    } else {
+      haut(); ctx.fillStyle = "rgba(10,20,26,.88)"; ctx.fillRect(0,34,160,326); ctx.fillRect(600,34,160,326); cartesHeros("colonne");
+      if (place){ panneauDe(606, 40, 148, 214, false); potions(612, 262); bouton(606, 304, 148, 48, "COMBATTRE", () => { S.o = "combat"; maj(); }, true, true); }
+      else { carte(606,40,148,80,MOD.bord,"rgba(14,26,34,.95)"); txt("Lancers d'urgence : 1", 680, 62, 13, MOD.or, "center", 700, 136); txt("Tu as "+S.or+" or", 680, 84, 14, MOD.txt, "center", 600); txt("Prix : "+S.prix+" or", 680, 106, 14, MOD.or, "center", 700); potions(612, 262); bouton(606, 304, 148, 48, S.or>=S.prix?"LANCER":"PAS D'OR", lancer, true, S.or>=S.prix, "dé d'urgence"); }
+    }
+    toast();
+  }
+  function maj(){ w.querySelectorAll(".onglets button").forEach(b => b.setAttribute("aria-pressed", b.dataset.o===S.o)); if (S.o==="combat"){ S.mons = []; S.kills = 0; S.spawn = 0; } }
+  w.querySelectorAll(".onglets button").forEach(b => b.onclick = () => { S.o = b.dataset.o; maj(); });
+  cv.addEventListener("pointerdown", e => { const r = cv.getBoundingClientRect(), x = (e.clientX-r.left)*W/r.width, y = (e.clientY-r.top)*H/r.height; for (let i = S.zones.length-1; i>=0; i--){ const z = S.zones[i]; if (x>=z.x && x<=z.x+z.wd && y>=z.y && y<=z.y+z.h){ z.f(); return; } } });
+  document.getElementById("grille").append(w); maj();
+  return dt => { S.t += dt; sim(dt); dessiner(); };
+}
+const fn = [phone("A · Terrain pleine largeur","Le terrain prend tout l'écran. Les cartes des héros forment une bande en bas, les potions et le gros bouton à droite. Au placement, le dé d'action est une carte flottante en haut à droite.","A"),
+  phone("B · Trois colonnes","Les héros dans une colonne à gauche (avec leur expérience), le terrain au centre, le dé d'action, les potions et le gros bouton dans une colonne à droite.","B")];
+let der = performance.now();
+function boucle(t){ const dt = Math.min(.1,(t-der)/1000); der = t; fn.forEach(f => f(dt)); requestAnimationFrame(boucle); }
+requestAnimationFrame(boucle);
+</script>
