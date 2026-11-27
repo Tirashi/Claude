@@ -125,6 +125,10 @@ body.index .scroller{flex:1 1 0; min-height:200px}
 #dexView.hoenn .grass{box-shadow:0 0 0 3px #2f8f9f, 3px 3px 0 3px var(--ink-soft)}
 #dexView.hoenn .entry{border-color:#1f5f6a}
 #dexView.hoenn .meter span{background:#2f8f9f}
+.tabs .btn.boutique[aria-selected="true"]{background:#5a9a4a; color:var(--ink)}
+#dexView.boutique .grass{display:none}
+#dexView.boutique .entry{border-color:#3a6a30}
+#dexView.boutique .meter span{background:#5a9a4a}
 /* Pokémon chromatique capturé : étoile dorée dans le coin de sa case */
 .entry.shiny{position:relative}
 .entry.shiny::after{content:"★"; position:absolute; top:2px; right:4px; color:#e8b830; font-size:14px; line-height:1; text-shadow:1px 1px 0 var(--ink)}

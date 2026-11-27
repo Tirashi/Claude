@@ -69,3 +69,8 @@ Pistes :
 - **Piste 1 (préférée)** : trouver le Minidex 4G (« Gen 4 GBC Party Sprites », sans doute chez eeveeee1999 comme les 3G et 5G) ; même méthode que Hoenn.
 - **Piste 2 (de secours)** : conversion automatique des sprites Platinum 80×80 de PokéAPI (`raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-iv/platinum/<n°>.png`, version chromatique dans `.../platinum/shiny/`, joignable depuis l'environnement), puis retouches à la main par lots de 10. Essai du 27/11 : couleurs bonnes, formes bruitées pour les Pokémon complexes ; l'utilisateur le juge « pas si mal » en secours. Les couleurs chromatiques se calculent automatiquement (sprite normal contre chromatique, même méthode que `chroma.js`).
 - Rien n'est stocké dans le dépôt : les sprites sont lus au moment de la conversion, seuls les dessins 15×15 sont gardés.
+
+## Boutique faite le 27/11
+- 41 objets (`shop: true`, `no: "OBJ"`), région `boutique` (toujours ouverte, onglet BOUTIQUE) ; pas d'herbes, pas de fuite, noms visibles avant résolution ; Charme Chroma (`charmechroma`, dessiné à la main) : `shinyChance()` ×2 une fois capturé.
+- Reste de la planche d'objets (environ 200 icônes non identifiées : potions, baies, pierres, CT…) : à ajouter par lots, nom à vérifier à l'œil.
+- Prochaine étape : Arène (badges par génération, seuil de captures à fixer), Pokédex old school.

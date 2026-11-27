@@ -112,6 +112,7 @@ Un picross (nonogramme) dans un boîtier de Dex rouge façon 16 bits. Chaque gri
 - Les nouvelles grilles sont toujours ajoutées en fin de liste, sans toucher aux anciennes, pour que les sauvegardes restent valides.
 - **Johto** s'ouvre après la capture de Mewtwo (100 Pokémon) et **Hoenn** après celle de Celebi (135 Pokémon, de n° 252 à 386), chacun dans son onglet. Les légendaires de Hoenn arrivent par étapes : Regirock, Regice et Registeel après 10 captures à Hoenn, Latias et Latios (qui rôdent dans l'herbe) après 20, Kyogre et Groudon après 30, Rayquaza une fois les deux capturés, Jirachi après 100 et Deoxys quand tous les autres sont capturés.
 - **Pokémon chromatiques** : une rencontre sur dix environ fait surgir un Pokémon aux couleurs spéciales (« Quelque chose brille dans les hautes herbes ! »). Une fois la grille terminée, il rejoint le Dex avec ses couleurs chromatiques et une étoile ★ ; le Dex compte aussi les chromatiques.
+- **Boutique** : un onglet toujours ouvert avec 41 objets (balls, soins, minéraux, baies…) à obtenir en résolvant leur grille, sans condition. Le Charme Chroma double la chance de rencontrer un Pokémon chromatique.
 - **Mode test** : toucher 5 fois le titre PICROSS DEX ouvre toutes les grilles du Dex (légendaires compris) et rend les indices illimités ; 5 nouveaux appuis le coupent. Les captures y comptent comme d'habitude.
 - Clic ou toucher pour remplir, clic droit ou outil CROIX pour marquer, glisser pour peindre une ligne.
 - Indices barrés quand une ligne est juste, aperçu miniature, chrono, annuler.

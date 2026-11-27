@@ -198,3 +198,6 @@ Session 5c : 11 nouvelles pages du journal d'Aubrin dans 11 cartes (12 avec la p
 ## La Dernière Lanterne, quêtes et Catacombes (27/11)
 Session 5d : trois quêtes de compagnons (menu des lanternes après la fin), Catacombes des premiers veilleurs (2 salles, 5 équipements, Premier Veilleur niveau 15). Cache v132. Reste : essai sur le téléphone, sons, sortie de démo, `LUDO1-`.
 - **27/11 — Démineur, thème sombre** : maquette 4 (3 thèmes), A « Nuit d'été » choisie ; réglage Auto · Clair · Sombre dans le menu, couleurs en variables, tuiles de nuit, lune et lucioles, pas d'éclair blanc au chargement.
+
+## Picross Dex : la Boutique (27/11)
+4e onglet **Boutique**, ouvert dès le début : 41 objets d'Émeraude en picross 15×15 (12 balls, soins, minéraux, baies, objets) convertis automatiquement depuis la planche d'objets (24×24), plus le **Charme Chroma** dessiné à la main (sa capture double la chance de chromatique, `shinyChance()`). Les objets (`shop: true` dans `dessins.js`) ne sont pas sauvages, n'ont pas de fuite et ne comptent ni pour les légendaires ni pour le classement du Dex. Pas de monnaie. Noms français à relire (certains objets ont été reconnus à l'œil). Crédits ajoutés dans `credits/index.html`.

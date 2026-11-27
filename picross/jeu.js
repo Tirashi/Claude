@@ -51,7 +51,7 @@ function shinyMap(p){   // lettres qui changent de couleur chez le Pokémon chro
 }
 const canShiny = p => !!shinyMap(p) && !p.legend && p.no !== "OBJ";
 const SHINY_CHANCE = 0.1;                    // une rencontre sur dix ; un objet de la Boutique (Charme Chroma) pourra l'augmenter
-const shinyChance = () => SHINY_CHANCE;
+const shinyChance = () => captured["charmechroma"] ? SHINY_CHANCE * 2 : SHINY_CHANCE;   // le Charme Chroma double la chance
 function drawArt(canvas, p, size, shiny){
   const H = p.art.length, W = p.art[0].length, sm = shiny ? shinyMap(p) : null;
   canvas.width = W; canvas.height = H;
@@ -153,11 +153,11 @@ const LOCK = {art:[
   ".kkkkkkkk.",
   ".........."]};
 const MEWTWO_AT = 40;
-const solvedCount = () => PUZZLES.filter(p => (!p.legend || p.legend === "mew") && captured[p.id]).length;
+const solvedCount = () => PUZZLES.filter(p => (!p.legend || p.legend === "mew") && !p.shop && captured[p.id]).length;
 const legendsOpen = () => solvedCount() >= UNLOCK_AT;
 const BIRDS = PUZZLES.filter(p => p.legend === true);
 const birdsDone = () => BIRDS.filter(p => captured[p.id]).length;
-const allDone = () => PUZZLES.filter(p => p.legend !== "mewtwo" && captured[p.id]).length;   // oiseaux compris
+const allDone = () => PUZZLES.filter(p => p.legend !== "mewtwo" && !p.shop && captured[p.id]).length;   // oiseaux compris
 const mewtwoOpen = () => birdsDone() === BIRDS.length && allDone() >= MEWTWO_AT;
 const MEWTWO = PUZZLES.find(p => p.legend === "mewtwo");
 const mewOpen = () => !!captured[MEWTWO.id];
@@ -218,14 +218,22 @@ const DEX_ORDER = PUZZLES.map((_, i) => i).sort((a, b) => dexNum(PUZZLES[a]) - d
 const johtoUnlocked = () => !!captured[MEWTWO.id];
 const johtoVisible = () => johtoUnlocked() || testMode;
 // Togepi (#175) waits in the Kanto Dex and moves to Johto when it opens
-const regionOf = p => { if (p.no === "OBJ") return "kanto"; const n = dexNum(p); return n > 251 ? "hoenn" : n > 151 && (p.id !== "togepi" || johtoUnlocked()) ? "johto" : "kanto"; };
+const regionOf = p => { if (p.shop) return "boutique"; if (p.no === "OBJ") return "kanto"; const n = dexNum(p); return n > 251 ? "hoenn" : n > 151 && (p.id !== "togepi" || johtoUnlocked()) ? "johto" : "kanto"; };
 // Hoenn (n° 252 à 386) opens once Celebi, the last Pokémon of Johto, is captured
 const CELEBI = PUZZLES.find(p => p.legend === "celebi");
 const hoennUnlocked = () => !!captured[CELEBI.id];
 const hoennVisible = () => hoennUnlocked() || testMode;
 let region = store.get("region", "kanto");
-const curRegion = () => region === "hoenn" && hoennVisible() ? "hoenn" : region === "johto" && johtoVisible() ? "johto" : "kanto";
-function setRegion(r){ region = r; store.set("region", r); if (r === "johto") store.set("johtoSeen", true); if (r === "hoenn") store.set("hoennSeen", true); renderList(); }
+const curRegion = () => region === "boutique" ? "boutique" : region === "hoenn" && hoennVisible() ? "hoenn" : region === "johto" && johtoVisible() ? "johto" : "kanto";
+function setRegion(r){ region = r; store.set("region", r); if (r === "johto") store.set("johtoSeen", true); if (r === "hoenn") store.set("hoennSeen", true); if (r === "boutique") store.set("boutiqueSeen", true); renderList(); }
+
+function boutiqueMsg(){
+  const got = PUZZLES.filter(p => p.shop && captured[p.id]).length, all = PUZZLES.filter(p => p.shop).length;
+  const out = [`Bienvenue à la <b>Boutique</b> ! Chaque grille est un objet à obtenir (${got}/${all}), sans condition.`];
+  if (!captured["charmechroma"]) out.push("Le <b>Charme Chroma</b> double la chance de rencontrer un Pokémon chromatique.");
+  else out.push("Le <b>Charme Chroma</b> brille dans ton sac : les Pokémon chromatiques se montrent deux fois plus souvent.");
+  return out.join("<br>");
+}
 
 function hoennMsg(){
   const n = hoennCount(), out = [];
@@ -265,7 +273,7 @@ function dogRunsAway(p){
 const sizeOf = p => p.art[0].length + "x" + p.art.length;
 const bySize = (a, b) => { const [aw, ah] = a.split("x").map(Number), [bw, bh] = b.split("x").map(Number); return aw*ah - bw*bh; };
 const sizesOf = r => [...new Set(PUZZLES.filter(p => regionOf(p) === r).map(sizeOf))].sort(bySize);
-const wildPool = (size, r = curRegion()) => PUZZLES.filter(p => !p.legend && !captured[p.id] && sizeOf(p) === size && regionOf(p) === r);
+const wildPool = (size, r = curRegion()) => PUZZLES.filter(p => !p.legend && !p.shop && !captured[p.id] && sizeOf(p) === size && regionOf(p) === r);
 const encKey = (size, r = curRegion()) => r === "kanto" ? size : r + ":" + size;   // Kanto keeps the old keys
 function currentEncounter(size, r = curRegion()){
   const k = encKey(size, r), id = encounters[k], p = id && PUZZLES.find(q => q.id === id);
@@ -274,7 +282,7 @@ function currentEncounter(size, r = curRegion()){
   return null;
 }
 const inPlay = p => !!progress[p.id] || Object.values(encounters).includes(p.id);
-const isWild = p => !p.legend && !captured[p.id];   // still hidden in the grass
+const isWild = p => !p.legend && !p.shop && !captured[p.id];   // still hidden in the grass
 function encounter(size){
   let p = currentEncounter(size);
   if (!p){
@@ -349,8 +357,10 @@ function renderList(){
   if (!$("dexView").hidden) dexMode(true);
   list.innerHTML = "";
   const r = curRegion(), shown = DEX_ORDER.filter(idx => regionOf(PUZZLES[idx]) === r);
-  $("tabs").hidden = !johtoVisible();
-  $("tabHoenn").hidden = !hoennVisible();
+  $("tabs").hidden = false; $("tabJohto").hidden = !johtoVisible(); $("tabHoenn").hidden = !hoennVisible();
+  document.querySelector(".grass").hidden = r === "boutique";
+  $("tabBoutique").setAttribute("aria-selected", r === "boutique"); $("tabBoutique").classList.toggle("new", !store.get("boutiqueSeen", false) && r !== "boutique");
+  $("dexView").classList.toggle("boutique", r === "boutique");
   $("tabKanto").setAttribute("aria-selected", r === "kanto"); $("tabJohto").setAttribute("aria-selected", r === "johto"); $("tabHoenn").setAttribute("aria-selected", r === "hoenn");
   $("tabJohto").classList.toggle("new", !store.get("johtoSeen", false) && r !== "johto");
   $("tabHoenn").classList.toggle("new", !store.get("hoennSeen", false) && r !== "hoenn");
@@ -359,7 +369,7 @@ function renderList(){
     const got = captured[p.id];
     const b = document.createElement("button");
     b.className = "entry" + (p.legend ? " legend" : ""); b.type = "button";
-    b.innerHTML = `<span class="no">${p.no === "OBJ" && !got ? "#???" : p.no === "OBJ" ? "OBJ" : "#"+p.no}</span>`;
+    b.innerHTML = `<span class="no">${p.shop ? "OBJ" : p.no === "OBJ" && !got ? "#???" : p.no === "OBJ" ? "OBJ" : "#"+p.no}</span>`;
     if (isLocked(p) && !testMode){
       b.classList.add("locked");
       const cv = document.createElement("canvas"); drawArt(cv, LOCK, 60); b.appendChild(cv);
@@ -400,7 +410,7 @@ function renderList(){
     }
     if (got){ const cv = document.createElement("canvas"); drawArt(cv, p, 60, got.shiny); b.appendChild(cv); if (got.shiny) b.classList.add("shiny"); }
     else { const u = document.createElement("div"); u.className = "unk"; u.textContent = "?"; b.appendChild(u); }
-    b.insertAdjacentHTML("beforeend", `<span class="nm">${got ? p.name : "???"}</span><span class="meta">${p.art[0].length}×${p.art.length}${got ? " · "+fmt(got.time) : progress[p.id] ? " · en cours" : ""}</span>`);
+    b.insertAdjacentHTML("beforeend", `<span class="nm">${got || p.shop ? p.name : "???"}</span><span class="meta">${p.art[0].length}×${p.art.length}${got ? " · "+fmt(got.time) : progress[p.id] ? " · en cours" : ""}</span>`);
     b.setAttribute("aria-label", got ? `${p.name}, capturé en ${fmt(got.time)}` : isWild(p) ? `Pokémon sauvage en cours, grille ${p.art[0].length} par ${p.art.length}` : `N° ${p.no}, grille ${p.art[0].length} par ${p.art.length}, pas encore capturé`);
     if (!got && isWild(p)) b.querySelector(".no").textContent = "#???";
     if (got) b.dataset.id = p.id;
@@ -412,7 +422,7 @@ function renderList(){
   const shinies = shown.filter(idx => captured[PUZZLES[idx].id] && captured[PUZZLES[idx].id].shiny).length;
   $("capCount").textContent = `${n}/${shown.length}` + (shinies ? ` · ★${shinies}` : "");
   $("capBar").style.width = (100*n/shown.length)+"%";
-  const msg = r === "kanto" ? legendMsg() : r === "johto" ? johtoMsg() : hoennMsg();
+  const msg = r === "kanto" ? legendMsg() : r === "johto" ? johtoMsg() : r === "hoenn" ? hoennMsg() : boutiqueMsg();
   $("dexMsg").innerHTML = msg; $("dexMsg").hidden = !msg;
   renderSizes();
   $("testNote").hidden = !testMode;
@@ -447,7 +457,7 @@ function open(idx, saved){
   $("win").hidden = true; $("tools").hidden = false; $("gpad").classList.remove("off");
   if (window.scrollY > $("playView").getBoundingClientRect().top + window.scrollY) window.scrollTo(0, 0);
   const roaming = isDog(P) && !captured[P.id];
-  $("pNo").textContent = isWild(P) ? "???" : P.no; $("pName").textContent = captured[P.id] || roaming ? P.name : "???";
+  $("pNo").textContent = isWild(P) ? "???" : P.no; $("pName").textContent = captured[P.id] || roaming || P.shop ? P.name : "???";
   $("fleeBtn").hidden = !(isWild(P) || roaming); $("fleeBtn").textContent = "FUIR";
   build(); render(); applyZoom();
   if (roaming){
@@ -455,6 +465,7 @@ function open(idx, saved){
     setTimeout(() => blip([131, 196, 262, 196, 262, 330, 392, 523], "sawtooth", .09, .05), 150);
   }
   setMsg(roaming ? `<span class="hl">${P.name}</span> surgit des hautes herbes ! Termine la grille sans la quitter, sinon il s'enfuit.` : captured[P.id] ? `Déjà capturé. Rejoue pour battre <span class="hl">${fmt(captured[P.id].time)}</span>.`
+    : P.shop ? `Résous la grille pour obtenir <span class="hl">${P.name}</span>.`
     : isWild(P) ? (shinyRun ? `<span class="hl">★ Quelque chose brille dans les hautes herbes !</span> ` : "") + (cells.some(v => v) ? `Le Pokémon sauvage t'attend toujours…` : `Un Pokémon sauvage apparaît ! Qui se cache dans cette grille ?`)
     : `Qui se cache dans cette grille ?`);
   startT = performance.now() - elapsed; clearInterval(timer); timer = setInterval(tick, 250); tick();
@@ -593,17 +604,19 @@ function win(){
   $("pName").textContent = P.name;
   SFX.win();
   $("tools").hidden = true; $("gpad").classList.add("off"); padHold = null; setMsg("");
-  $("winTitle").innerHTML = P.no === "OBJ" ? `Tu as trouvé une <span class="hl">${P.name}</span> !`
+  $("winTitle").innerHTML = P.shop ? `Tu as obtenu : <span class="hl">${P.name}</span> !`
+    : P.no === "OBJ" ? `Tu as trouvé une <span class="hl">${P.name}</span> !`
     : P.legend === "mew" || P.legend === "celebi" ? `<span class="hl">${P.name}</span>, Pokémon fabuleux, rejoint ton Dex !`
     : P.legend ? `<span class="hl">${P.name}</span>, Pokémon légendaire, rejoint ton Dex !`
     : `<span class="hl">${P.name}</span> a été enregistré dans le Dex !`;
   $("winStats").innerHTML = `TEMPS ${fmt(elapsed)} · INDICES ${hints}` + (before ? (record ? `<br>NOUVEAU RECORD !` : `<br>RECORD ${fmt(before.time)}`) : "")
-    + (wonShiny ? `<br><span class="hl">★ POKÉMON CHROMATIQUE !</span>` : "");
+    + (wonShiny ? `<br><span class="hl">★ POKÉMON CHROMATIQUE !</span>` : "")
+    + (P.id === "charmechroma" && !before ? `<br><span class="hl">LES POKÉMON CHROMATIQUES SE MONTRERONT PLUS SOUVENT !</span>` : "");
   // classement familial : temps + 30 s par indice, et taille du Pokédex
   const L = window.LudoScores;
   if (L && !testMode){
     const id = P.id, name = P.name, value = Math.round(elapsed) + HINT_MS * hints, same = () => myWin === winToken && P && P.id === id && solved;
-    L.submit("picross", "dex", Object.entries(captured).filter(([k, v]) => k !== "pokeball" && !v.test).length, false);
+    L.submit("picross", "dex", Object.entries(captured).filter(([k, v]) => k !== "pokeball" && !v.test && !(PUZZLES.find(q => q.id === k) || {}).shop).length, false);
     if (L.joined()) L.submit("picross", "t:" + id, value, true).then(r => {
       crowns = null; if (!$("dexView").hidden) markCrowns();
       if (!r || !same()) return;
@@ -779,6 +792,7 @@ $("fleeBtn").onclick = () => {
 let titleTaps = 0, titleT = null;
 $("tabKanto").onclick = () => { if (curRegion() !== "kanto"){ SFX.nav(); setRegion("kanto"); } };
 $("tabJohto").onclick = () => { if (curRegion() !== "johto"){ SFX.nav(); setRegion("johto"); } };
+$("tabBoutique").onclick = () => { if (curRegion() !== "boutique"){ SFX.nav(); setRegion("boutique"); } };
 $("tabHoenn").onclick = () => { if (curRegion() !== "hoenn"){ SFX.nav(); setRegion("hoenn"); } };
 $("title").addEventListener("click", () => {
   titleTaps++; clearTimeout(titleT); titleT = setTimeout(() => { titleTaps = 0; }, 1500);
