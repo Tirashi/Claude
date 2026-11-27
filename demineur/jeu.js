@@ -379,7 +379,9 @@ setInterval(() => {
 }, 250);
 document.addEventListener("visibilitychange", () => { dernier = performance.now(); if (document.hidden && mode === "jour") garderRun(); });
 addEventListener("pagehide", () => { if (mode === "jour") garderRun(); });
-addEventListener("resize", () => { if (mode === "prairie" || F){ dimensionner(); } });
+const redim = () => { if (mode === "prairie" || F) dimensionner(); };
+addEventListener("resize", redim);
+if (window.visualViewport) visualViewport.addEventListener("resize", redim);
 
 window.Demineur = {grilleDuJour, tailleDuJour, cleJour, TAILLES, JOURS,
   etat: () => ({mode, F, P}), nouvelleGrille, nouvellePrairie, lancerJour, menu, taper, marquer};
