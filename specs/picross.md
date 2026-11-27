@@ -28,3 +28,17 @@ Les 46 Pokémon de Johto déjà faits sont le sprite du Minidex 16×16 **moins u
 - **Lot 1 fait (25/11)** : n° 201 à 210 (Zarbi à Granbull) écrits dans `picross/dessins.js`, cache `ludotheque-v126`. Steelix : la version issue du Minidex (les versions redessinées de tête ou de profil ont été refusées).
 - **Lot 2 fait (25/11)** : n° 211 à 220 (Qwilfish à Marcacrin), cache `ludotheque-v127`.
 - **Lot 3 fait (25/11)** : n° 221 à 242 et 246 à 248 (25 Pokémon d'un coup), cache `ludotheque-v128`. **Le Pokédex de Johto est complet** (Togepi n° 175 reste dans Kanto jusqu'à l'ouverture de Johto).
+
+## Idées de la suite (27/11, de l'utilisateur) — à valider par maquette avant de programmer
+Planches de référence ajoutées dans `specs/picross/` :
+- `reference-minidex-3g.png` (171×477) : **Minidex de la 3e génération**, sprites d'environ 15×15 déjà au bon format, **2 images d'animation par Pokémon** (deux rangées successives), 10 par rangée. Utilisable tel quel (couleurs à reclasser : l'image est un peu bruitée). Origine à préciser pour les crédits.
+- `reference-menu-old-school.png` (500×500) : icônes de menu « à l'ancienne » en deux tons rouge / orange, pour une partie **Pokédex old school** disponible dès le début.
+- `reference-badges-1g.png`, `reference-badges-2g.png` : cartes de dresseur avec les **badges** de Kanto (8) et de Johto (8 + Kanto).
+- `reference-objets-emeraude.png` (496×416) : icônes d'objets de Pokémon Émeraude, pour des **picross d'objets** (section boutique, sans condition).
+
+Pistes :
+1. **Chromatiques** (rejouabilité) : taux généreux, palettes chromatiques de la planche Or / Argent (2e génération) ; un objet comme le **Charme Chroma** augmente le taux ; compteur de chromatiques dans le Pokédex.
+2. **3e génération** (n° 252 à 386, 135 Pokémon) avec le Minidex 3G, par lots comme Johto.
+3. **Pokédex old school** : menu simplifié, disponible dès le début.
+4. **Badges** de Kanto et de Johto comme petits picross à gagner.
+5. **Objets** (picross d'objets, boutique, Charme Chroma qui augmente les apparitions).
