@@ -177,3 +177,4 @@ Maquettes de la carte 2 à 4 (isométrique, puis papier à l'encre validée), é
 - **19/11 — Les Bannis, session 2** : dés et sorts du Mage (réserve de dés à faces spéciales, combos, sort annoncé, lancer d'un geste, déraillements, pages de grimoire, grimoire à onglets) ; artefact republié.
 - 23/11 — Les Bannis : étiquette et jaquette faites avec une image de combat (`outils/etiquettes.js`, entrée `bannis`) ; session 2 sur main.
 - 26/11 — Les Bannis : comparaison avec Slotbound (cdc § 18) et maquette 5 « le dé d'abord » (A dés des condamnés, B un seul dé, C cartes), à choisir.
+- 27/11 — Les Bannis : maquette 6 « dés à symboles » (classe, équipement, rareté ; atelier qui remplace des faces), après le retour sur la maquette 5.
