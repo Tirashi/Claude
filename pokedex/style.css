@@ -144,7 +144,7 @@ body.clair { background: #f4f1fb; }
 
 /* équipe */
 select { width: 100%; font: inherit; font-size: 16px; padding: 11px 12px; border-radius: 14px; border: 2px solid var(--carte2); background: var(--carte2); color: var(--texte); }
-.coche { display: flex; align-items: center; gap: 8px; margin-top: 10px; font-weight: 600; font-size: 14px; }
+.coche { display: flex; align-items: flex-start; gap: 8px; margin-top: 10px; font-weight: 600; font-size: 14px; }
 .coche input { width: 20px; height: 20px; accent-color: var(--accent); }
 .petit { margin: 8px 0 0; font-size: 13px; color: var(--doux); line-height: 1.4; }
 .bloc h3.sous { margin-top: 12px; }
@@ -164,7 +164,8 @@ select { width: 100%; font: inherit; font-size: 16px; padding: 11px 12px; border
 .sugs { display: grid; gap: 6px; margin-top: 10px; }
 .sug { display: flex; align-items: center; gap: 8px; width: 100%; text-align: left; padding: 6px 12px; border-radius: 16px; background: var(--carte2); font-weight: 600; font-size: 16px; min-height: 44px; }
 .sug img { width: 36px; height: 36px; object-fit: contain; }
-.sug span { flex: 1; }
+.sug .sn { flex: 1; min-width: 0; }
+.sug .bulle { flex: none; }
 .sug .bulle { width: 24px; height: 24px; }
 .sug:hover, .sug:focus-visible { background: color-mix(in srgb, var(--accent) 22%, var(--carte2)); }
 .sug-vide { color: var(--doux); padding: 8px 4px; }
@@ -182,6 +183,7 @@ select { width: 100%; font: inherit; font-size: 16px; padding: 11px 12px; border
 .resultat .mult small { font-size: 22px; color: var(--doux); }
 @media (min-width: 900px) {
   .cases { grid-template-columns: repeat(6, 1fr); }
+  .picker .sugs { grid-template-columns: 1fr 1fr; }
   .equipe .picker, .fiche .quiz, .fiche .quizdebut { grid-column: 1 / -1; }
   .fiche .quiz, .fiche .quizdebut { max-width: 560px; justify-self: center; width: 100%; }
   .equipe > .bloc:nth-child(2) { grid-column: 1 / -1; }
