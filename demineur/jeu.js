@@ -47,14 +47,41 @@ function tuile(b, v, ouverte){
     }
     if (!ouverte){
       for (let k = 0; k < 7; k++){ const x = 2 + (r() * 12 | 0), y = 3 + (r() * 9 | 0); p(x, y, b.tex); p(x, y + 1, b.tex); p(x + 1, y - 1, b.tex2); }
-      if (b.fleurs && v % 2 === 0){ const x = 3 + (r() * 9 | 0), y = 3 + (r() * 8 | 0), f = v === 0 ? "#ff8fc8" : "#fff"; p(x, y, f); p(x + 1, y, f); p(x, y + 1, f); p(x + 1, y + 1, "#ffd23f"); }
-    } else for (let k = 0; k < 3; k++) p(2 + (r() * 12 | 0), 2 + (r() * 12 | 0), "#a88550");
+      if (b.fleurs && v % 2 === 0){ const x = 3 + (r() * 9 | 0), y = 3 + (r() * 8 | 0), f = v === 0 ? (b.fl || "#ff8fc8") : "#fff"; p(x, y, f); p(x + 1, y, f); p(x, y + 1, f); p(x + 1, y + 1, "#ffd23f"); }
+    } else for (let k = 0; k < 3; k++) p(2 + (r() * 12 | 0), 2 + (r() * 12 | 0), b.speck || "#a88550");
   });
 }
 let css = "";
 for (const k in SPR) css += `i.${k}{background-image:url(${SPR[k]})}`;
 BIOMES.forEach((b, i) => { for (let v = 0; v < 4; v++) css += `.c.g${i}${v}{background-image:url(${tuile(b, v, false)})}.c.d${i}${v}{background-image:url(${tuile(b, v, true)})}`; });
+// thème sombre « Nuit d'été » : chaque paysage assombri vers le bleu nuit, la terre vers le brun sombre (maquette 4, direction A)
+const hexa = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+const vers = (a, b, t) => "#" + hexa(a).map((x, i) => Math.round(x + (hexa(b)[i] - x) * t).toString(16).padStart(2, "0")).join("");
+BIOMES.forEach((b0, i) => {
+  const b = {...b0}; ["base", "lo", "tex", "tex2"].forEach(c => b[c] = vers(b0[c], "#06162a", .5));
+  b.hi = vers(vers(b0.hi, "#06162a", .42), "#9fd8ff", .12); ["ouv", "ouvT"].forEach(c => b[c] = vers(b0[c], "#120c08", .66));
+  b.speck = "#5a4a38"; b.fl = "#d6c2ff";
+  for (let v = 0; v < 4; v++) css += `.sombre .c.g${i}${v}{background-image:url(${tuile(b, v, false)})}.sombre .c.d${i}${v}{background-image:url(${tuile(b, v, true)})}`;
+});
 const feuille = document.createElement("style"); feuille.textContent = css; document.head.appendChild(feuille);
+
+/* ---------- Thème : Auto (suit le téléphone) · Clair · Sombre ---------- */
+const nuitSys = window.matchMedia ? matchMedia("(prefers-color-scheme: dark)") : null;
+let theme = load("theme", "auto");
+function appliquerTheme(){
+  const sombre = theme === "sombre" || (theme === "auto" && !!(nuitSys && nuitSys.matches));
+  document.documentElement.classList.toggle("sombre", sombre);
+  const m = document.querySelector('meta[name="theme-color"]'); if (m) m.content = sombre ? "#0c1a2c" : "#cfe9d8";
+  document.querySelectorAll("#themes button").forEach(b => b.classList.toggle("on", b.dataset.t === theme));
+}
+document.querySelectorAll("#themes button").forEach(b => b.onclick = () => { theme = b.dataset.t; save("theme", theme); appliquerTheme(); });
+if (nuitSys){ if (nuitSys.addEventListener) nuitSys.addEventListener("change", appliquerTheme); else if (nuitSys.addListener) nuitSys.addListener(appliquerTheme); }
+// lucioles (visibles seulement en sombre)
+(() => { const n = $("nuit"); if (!n) return;
+  for (let k = 0; k < 14; k++){ const s = document.createElement("span"); s.className = "luciole";
+    s.style.left = (6 + Math.random() * 88) + "%"; s.style.top = (10 + Math.random() * 78) + "%";
+    s.style.animationDelay = (-Math.random() * 7) + "s"; s.style.animationDuration = (5 + Math.random() * 5) + "s"; n.appendChild(s); } })();
+appliquerTheme();
 
 /* ---------- Tailles, défi du jour ---------- */
 const TAILLES = {facile: {nom: "Facile", w: 8, h: 10, m: 10}, moyen: {nom: "Moyen", w: 12, h: 18, m: 35}, difficile: {nom: "Difficile", w: 16, h: 26, m: 80}};

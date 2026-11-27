@@ -4,7 +4,7 @@ Ludo.fiche({
   carte: {n: "DEMINEUR", img: "demineur/etiquette.jpg", jaq: "demineur/jaquette.jpg", s: "DEMINEUR", ic: "mine", fam: "32", lb: "linear-gradient(#7ccb5c, #3d8532)", lt: "#fff6c2", sh: "#4fa33c", rank: "demineur",
     d: "Le démineur dans une prairie en pixel art : trois tailles, la Grande prairie sans fin et un défi du jour qui grandit au fil de la semaine.",
     tags: ["3 TAILLES", "PRAIRIE SANS FIN"], more: [["DEFI DU JOUR", "demineur/index.html#jour"], ["GRANDE PRAIRIE", "demineur/index.html#prairie"]]},
-  meta: {added: "2026-11-22", genres: ["LOGIQUE", "DU JOUR"]},
+  meta: {added: "2026-11-22", updated: "2026-11-27", genres: ["LOGIQUE", "DU JOUR"]},
   nom: "le Démineur",
   enCours: () => { const r = rk("demineur.jourRun", null); return r && r.day === dayNum() && !r.perdu && !(rk("demineur.jour", {}) || {})[dayNum()] ? "DEFI DU JOUR" : null; },
   duJour: () => { const r = rk("demineur.jourRun", null); return !!(rk("demineur.jour", {}) || {})[dayNum()] || !!(r && r.day === dayNum() && r.perdu); },
