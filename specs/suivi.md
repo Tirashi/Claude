@@ -179,3 +179,4 @@ Maquettes de la carte 2 à 4 (isométrique, puis papier à l'encre validée), é
 - 26/11 — Les Bannis : comparaison avec Slotbound (cdc § 18) et maquette 5 « le dé d'abord » (A dés des condamnés, B un seul dé, C cartes), à choisir.
 - 27/11 — Les Bannis : maquette 6 « dés à symboles » (classe, équipement, rareté ; atelier qui remplace des faces), après le retour sur la maquette 5.
 - 27/11 — Les Bannis, session 3 : dés à symboles jouables (recrues par dés de case, objets QUOI + QUALITE, atelier, dé d'événement, tuto), direction B (cdc § 19).
+- 27/11 — Les Bannis, session 3b : interface moderne dans tout le jeu, dés qui roulent (rebond, faces qui défilent, ombre), fil d'étapes et consignes « A FAIRE » (cdc § 19).

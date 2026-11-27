@@ -154,8 +154,8 @@ const MARCHAND = [
   {k: "parchemin", n: "PARCHEMIN D'ECLAIR", prix: 16, ic: [21,1], d: "Foudroie un monstre pendant le combat."},
   {k: "vue", n: "LONGUE-VUE", prix: 8, ic: [10,7], d: "Montre toute la vague suivante."},
   {k: "mur", n: "REPARER LA MURAILLE", prix: 15, ic: [10,4], d: "+30 de vie pour la Muraille."},
-  {k: "de", n: "D8 DU PASSEUR", prix: 22, ic: [13,13], d: "Un dé de plus dans la réserve du Mage."},
-  {k: "graver", n: "GRAVER UNE FACE", prix: 18, ic: [10,4], d: "La plus petite face d'un de tes dés devient x2."}
+  {k: "de", n: "D8 DE SORTS", prix: 22, ic: [13,13], d: "Un dé de plus pour les sorts du Mage."},
+  {k: "graver", n: "FACE DE SORT x2", prix: 18, ic: [10,4], d: "La plus petite face d'un dé de sorts devient x2."}
 ];
 
 const NOMS = ["BRAM", "ODA", "KESS", "MARL", "TOVE", "RHYS", "ILSE", "GARN", "SEFA", "OREK", "VALE", "NELL", "JORN", "AUDE", "THEO", "MAUD", "YSOLDE", "CORBIN", "ELNA", "HUGUES", "ISEUT", "BALDO", "RENAUD", "OLWEN"];

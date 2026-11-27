@@ -5,8 +5,8 @@ Autobattler rogue-lite, démo sur l'accueil. Cahier des charges : [`specs/bannis
 ## Fichiers
 - `donnees.js` : `Bannis.D` — classes (et légendaires), traits, monstres (`i` = case de `img/monstres.png`), vagues, boss, objets, niveaux, sorts, marchand.
 - `regles.js` : `Bannis.R` — sans affichage : héros (`stats()`), run, vagues, **combat** (`debutCombat`, `etape(C, dt)`, événements `C.ev`), dés de sorts (`lancerDes`, `jeterSort`), **dés à symboles** (`run.faces` : `recruesDes`, `genererObjet(v, mieux, run)`, `offresAtelier`, `graverSymbole`, `appliquerEvenement`), sauvegarde (`VERSION_RUN` 2).
-- `jeu.js` : canvas 360 × 760 ; écrans, sons synthétisés. Écrans des dés (recrues, atelier, événement, tuto) en style moderne (`MOD`, Titillium). `Bannis.G` / `Bannis.J` pour les tests.
-- `img/` : planches de `outils/bannis-atlas.py` : `heros.png` (12 feuilles RPG Maker MV, ordre `D.HEROS`), `monstres.png` (31 × 2 cases de 96), `icones.png` (Shikashi), `ui-*.png` (Dragon Regalia).
+- `jeu.js` : canvas 360 × 760 ; écrans, sons synthétisés. Interface moderne dessinée en code (`MOD`, `carteM`, `consigne`, `tileFace` pour les dés animés) ; plus de planches `ui-*`. `Bannis.G` / `Bannis.J` pour les tests.
+- `img/` : `heros.png` (12 feuilles RPG Maker MV, ordre `D.HEROS`), `monstres.png` (31 × 2 cases de 96), `icones.png` (Shikashi) ; `ui-*.png` inutilisées.
 - Polices : `polices/bannis.css` (Jersey 10, Press Start 2P, Titillium Web).
 
 ## Sauvegardes
