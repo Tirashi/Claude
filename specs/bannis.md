@@ -281,3 +281,16 @@ Recommandation de Claude : 1 + 2 d'abord (le dé reste notre signature, mais ser
 - Tests : `outils/fumee.js` (lancers et coût), simulateur `--lancers` (remplace `--des`).
 
 **À voir** : étoiles et évolution par absorption ; or de départ (20) et gains (2 à 4 par monstre, ×3 élite, ×8 boss) ; marchand (potion, parchemin, longue-vue, Muraille) à garder ou à simplifier ; sons dédiés ; essai sur le téléphone.
+
+## 22. Retours du 28/11 : panneau, quatre héros, arbre des dés
+
+**Retours de l'utilisateur** : le panneau du dé d'action à droite est presque trop petit ; avec plus de 3 héros, les infos du bas sont trop petites et des boutons chevauchent le dernier héros de la liste ; les dés de classes et de qualité devraient se **graver entre les nuits, via un arbre d'améliorations** qu'on débloque entre les runs (et non pendant la nuit).
+
+**Fait** :
+- Panneau du dé d'action agrandi (dé de 80 px, prix et lancers en 15-16 px, gros bouton LANCER), explications déplacées dans un bouton « ? » et dans le tuto (page « LE DE D'ACTION », ouverte à la première nuit).
+- **Quatre héros** : cartes du bas en grille 2 × 2 (plus larges, nom et classe lisibles, barres de vie et d'expérience) ; écran « QUI LE PORTE ? » à lignes compactes ; bouton et texte du bas repoussés.
+- **Arbre des dés** (`ecranArbre`, accès par le titre et par l'écran de fin) : les éclats de Gueule (`bannis.stats.eclats`) achètent des paliers : CLASSES (6 paliers : 8, 14, 22, 32, 45, 60), QUALITE (3 : 10, 24, 45 ; palier 1 = face RARE, 2 = EPIQUE, 3 = LEGENDAIRE), OBJETS (2 : 10, 20), ACTION (3 : 14, 28, 48) et LEGENDES (35 par classe, débloque `legendaires()`). Chaque palier donne un **crédit de gravure** ; l'onglet **FORGE** pose la gravure pour de bon sur une face d'un dé de départ (type, face, puis face à remplacer) ; « tout remettre à zéro » rend les crédits. Sauvegarde : `bannis.arbre` ({niv, gravees, legendaires, faces}) ; `R.facesDeDepart(arbre)` fournit les dés d'une nouvelle nuit.
+- **Retiré** : l'atelier pendant la nuit (le dé d'événement a une face BOURSE, +30 or, à la place de la forge) ; le fil d'étapes du butin n'a plus ATELIER.
+- Tests : `outils/fumee.js` (gravure de l'arbre, achat de palier).
+
+**À voir** : prix des paliers (revenu d'une nuit : environ 30 à 60 éclats) ; faut-il des gravures pour le dé d'événement ; légendes liées à l'évolution niveau 3 ; essai sur le téléphone.

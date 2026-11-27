@@ -1,6 +1,6 @@
 # Les Bannis (`bannis/`) — notes pour Claude
 
-Autobattler rogue-lite, démo sur l'accueil. Cahier des charges : [`specs/bannis.md`](../specs/bannis.md) (§ 19 à 21 : dés à symboles, dé d'action).
+Autobattler rogue-lite, démo sur l'accueil. Cahier des charges : [`specs/bannis.md`](../specs/bannis.md) (§ 19 à 22 : dés, dé d'action, arbre).
 
 ## Fichiers
 - `donnees.js` : `Bannis.D` — classes (et légendaires), traits, monstres (`i` = case de `img/monstres.png`), vagues, boss, objets, niveaux, sorts, marchand.
@@ -10,7 +10,7 @@ Autobattler rogue-lite, démo sur l'accueil. Cahier des charges : [`specs/bannis
 - Polices : `polices/bannis.css` (Jersey 10, Press Start 2P, Titillium Web).
 
 ## Sauvegardes
-`bannis.run` (début de chaque vague), `bannis.stats` (transfert dans `fiche.js`), `bannis.son`, `bannis.vitesse`, `bannis.tuto`.
+`bannis.run` (début de vague), `bannis.stats` (éclats ; transfert dans `fiche.js`), `bannis.arbre` (paliers, gravures, dés de départ), `.son`, `.vitesse`, `.tuto`, `.tuto2`.
 
 ## Artefact
 https://claude.ai/artifact/XnEsz7CYgnAcRDCfhchcHh : `python3 outils/bannis-artefact.py <sortie>` puis republier au même lien.

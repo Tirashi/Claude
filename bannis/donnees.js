@@ -170,7 +170,7 @@ const FACES_DEPART = {
           ["pretresse", "pretresse", "pretresse", "barde", "barde", "barde"]],
   quoi: ["arme", "arme", "armure", "armure", "bijou", "bijou"],
   qual: [0, 0, 0, 0, 1, 1],
-  event: ["recrue", "atelier", "benediction", "danger", "coffre", "calme"],
+  event: ["recrue", "bourse", "benediction", "danger", "coffre", "calme"],
   action: ["recrue", "objet", "progres", "soin", "sort", "relique"]
 };
 // Dé d'action (28/11) : une face = ce que rapporte un lancer payé en or. ic : icône de img/icones.png (recrue : sprite d'une classe)
@@ -192,11 +192,20 @@ const RELIQUES = [
 // Événements (dé lancé après les vagues 3, 6 et 9) ; ic = icône dans img/icones.png (ligne, colonne), sauf recrue (sprite d'une classe)
 const EVENEMENTS = {
   recrue:      {n: "UN CONDAMNE SE PRESENTE", ic: null, d: "Un nouveau combattant rejoint la Muraille (quatre au plus)."},
-  atelier:     {n: "UNE FORGE ABANDONNEE", ic: [10, 4], d: "Une amélioration de dé de plus à l'atelier."},
+  bourse:      {n: "UNE BOURSE OUBLIEE", ic: [8, 4], d: "Tu ramasses 30 pièces d'or."},
   benediction: {n: "UNE BENEDICTION", ic: [9, 0], d: "Tous les héros retrouvent toute leur vie."},
   danger:      {n: "UN RAID DE LA GUEULE", ic: [0, 0], d: "La Muraille perd 15 points, mais tu pilles 30 pièces d'or."},
   coffre:      {n: "UN COFFRE", ic: [12, 7], d: "Un objet rare ou mieux, à prendre tout de suite."},
   calme:       {n: "UNE NUIT CALME", ic: [13, 13], d: "+10 pièces d'or et la Muraille se répare de 10."}
 };
-B.D = {FACES_DEPART, EVENEMENTS, ACTIONS, RELIQUES, HEROS, CLASSES, PORTEE, ROLES, CROISSANCE, TRAITS, MONSTRES, PALIERS, BOSS, NB_VAGUES, SLOTS, RARETES, AFFIXES, BONUS_NIVEAU, XP_NIVEAUX, NIV_LEGENDAIRE, SORTS, SORTS_DEPART, TYPES_DES, FACES_SPECIALES, DES_TROUVES, MAX_DES, MARCHAND, NOMS, NOMS_F};
+// Arbre des dés (28/11) : les éclats de Gueule gagnés à la fin d'une nuit achètent des paliers ; chaque palier donne une gravure
+// (à poser pour de bon sur une face d'un dé de départ) ou, pour les légendes, débloque la classe légendaire.
+const ARBRE = {
+  classes: {n: "CLASSES", d: "Une gravure de classe par palier (face d'un dé de case).", couts: [8, 14, 22, 32, 45, 60]},
+  qual:    {n: "QUALITE", d: "Une gravure par palier : RARE, puis EPIQUE, puis LEGENDAIRE.", couts: [10, 24, 45]},
+  quoi:    {n: "OBJETS", d: "Une gravure d'objet par palier (arme, armure, bijou).", couts: [10, 20]},
+  action:  {n: "ACTION", d: "Une gravure par palier sur le dé d'action.", couts: [14, 28, 48]},
+  legendes: {n: "LEGENDES", d: "Classe légendaire (évolution au niveau 3).", cout: 35}
+};
+B.D = {ARBRE, FACES_DEPART, EVENEMENTS, ACTIONS, RELIQUES, HEROS, CLASSES, PORTEE, ROLES, CROISSANCE, TRAITS, MONSTRES, PALIERS, BOSS, NB_VAGUES, SLOTS, RARETES, AFFIXES, BONUS_NIVEAU, XP_NIVEAUX, NIV_LEGENDAIRE, SORTS, SORTS_DEPART, TYPES_DES, FACES_SPECIALES, DES_TROUVES, MAX_DES, MARCHAND, NOMS, NOMS_F};
 })();

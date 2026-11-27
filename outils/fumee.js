@@ -231,10 +231,12 @@ const shots = process.argv[2];
         for (let i = 0; i < 400 && G.ecran === 'combat'; i++){ B.R.etape(G.C, 0.1); await wait(10); }
         for (let i = 0; i < 40 && G.ecran === 'combat'; i++) await wait(100);
         if (G.ecran !== 'butin') return 'la vague 1 ne se termine pas par le butin (' + G.ecran + ')';
-        const run = G.run; if (!run.faces || run.faces.slots.length !== 3 || B.R.offresAtelier(run).length !== 3) return 'pas de dés à symboles';
+        const run = G.run; if (!run.faces || run.faces.slots.length !== 3 || !run.faces.action || !B.R.arbreCharger(null).niv) return 'pas de dés à symboles';
         B.R.graverSymbole(run, {t: 'slot', f: 'barde'}, 1, 2); if (run.faces.slots[1][2] !== 'barde') return 'la face ne se grave pas';
         if (B.R.appliquerEvenement(run, 'recrue').h === undefined || run.heros.length !== 4) return "l'événement recrue n'ajoute pas de héros";
         if (B.R.genererObjet(2, true, run).rar < 1) return 'le coffre ne donne pas un objet rare';
+        const ar = B.R.arbreDefaut(); ar.niv.classes = 1; if (B.R.graverArbre(ar, 'classes', 'barde', 0, 0) !== true || B.R.facesDeDepart(ar).slots[0][0] !== 'barde' || B.R.graverArbre(ar, 'classes', 'barde', 1, 0)) return "la gravure de l'arbre ne se pose pas ou ne se compte pas";
+        if (!B.R.acheter(ar, 50, 'classes') || ar.niv.classes !== 2 || B.R.acheter(ar, 1, 'classes')) return "l'arbre des dés ne vend pas ses paliers";
         run.or = 500; B.R.debutLancers(run); const ln = B.R.lancerAction(run, 'prep', null, 'recrue'); if (!ln || ln.k !== 'recrue' || run.or >= 500 || run.prix <= B.R.PRIX_BASE) return 'le dé d\'action ne se lance pas ou ne coûte rien';
         if (!B.R.lancerAction(run, 'prep', null, 'objet') || !B.R.lancerAction(run, 'prep', null, 'soin') || B.R.peutLancer(run, 'prep')) return 'les lancers de la vague ne se comptent pas';
         B.J.finDeNuit(false); await wait(100);

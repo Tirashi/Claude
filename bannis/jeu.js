@@ -245,20 +245,21 @@ function ecranTitre(){
   // l'escouade de l'écran titre
   [["glenys-3", 120, 470], ["ley-2", 92, 400], ["linail-2", 160, 410]].forEach(([spr, x, y], i) => dessinerHeros(spr, "repos", G.t + i, x, y, 1));
   dessinerMonstre(19, false, 290, 440, -1, {e: 1.2}); dessinerMonstre(14, false, 320, 360, -1, {e: 1.5});
-  panneau(24, 520, W - 48, 210);
-  let y = 548;
-  if (sauve){ bouton(44, y, W - 88, 46, "CONTINUER  ·  VAGUE " + sauve.vague, () => { G.run = sauve; R.preparerVague(G.run); allerPlacement(); SON.clic(); }, true, true); y += 54; }
-  bouton(44, y, W - 88, 46, "NOUVELLE NUIT", () => { if (sauve) effacer("bannis.run"); nouvelleNuit(); SON.clic(); }, true, !sauve, sauve ? 2 : 0); y += 54;
-  if (!window.ludoArtefact){ bouton(44, y, W - 88, 40, "◀ LUDOTHEQUE", () => { location.href = "../index.html"; }, true, false, 3); y += 48; }
-  const rec = s.nuits ? `Record : vague ${s.record}${s.gagnees ? "  ·  nuits tenues : " + s.gagnees : ""}  ·  éclats : ${s.eclats}` : "Le Mage banni et ses condamnés contre la Gueule.";
-  texte(rec, W/2, Math.min(y + 18, 718), 13, "#ffe3a8", "center", {gras: false, max: W - 70});
+  panneau(24, 504, W - 48, 244);
+  let y = 524;
+  if (sauve){ bouton(44, y, W - 88, 42, "CONTINUER  ·  VAGUE " + sauve.vague, () => { G.run = sauve; R.preparerVague(G.run); allerPlacement(); SON.clic(); }, true, true); y += 48; }
+  bouton(44, y, W - 88, 42, "NOUVELLE NUIT", () => { if (sauve) effacer("bannis.run"); nouvelleNuit(); SON.clic(); }, true, !sauve, sauve ? 2 : 0); y += 48;
+  bouton(44, y, W - 88, 42, "L'ARBRE DES DES  ·  " + s.eclats + " ECLATS", () => ouvrirArbre("titre"), true, false, 2); y += 48;
+  if (!window.ludoArtefact){ bouton(44, y, W - 88, 38, "◀ LUDOTHEQUE", () => { location.href = "../index.html"; }, true, false, 3); y += 44; }
+  const rec = s.nuits ? `Record : vague ${s.record}${s.gagnees ? "  ·  nuits tenues : " + s.gagnees : ""}` : "Le Mage banni et ses condamnés contre la Gueule.";
+  texte(rec, W/2, Math.min(y + 14, 738), 13, "#ffe3a8", "center", {gras: false, max: W - 70});
   // son
   petit(W - 58, 14, 44, 40); texte(sonOn ? "SON" : "MUET", W - 36, 40, 12, "#fff", "center"); zone(W - 58, 14, 44, 40, () => { sonOn = !sonOn; ecrire("bannis.son", sonOn); audio(); SON.clic(); });
 }
 
 /* ---------- dés à symboles : interface moderne (maquette 6, direction B, 27/11) ---------- */
 try { document.fonts.load("700 20px \"Titillium Web\""); document.fonts.load("600 20px \"Titillium Web\""); } catch (e){}
-const NOMFACE = {recrue: "RECRUE", atelier: "FORGE", benediction: "BENEDICTION", danger: "RAID", coffre: "COFFRE", calme: "CALME"};
+const NOMFACE = {recrue: "RECRUE", bourse: "BOURSE", benediction: "BENEDICTION", danger: "RAID", coffre: "COFFRE", calme: "CALME"};
 function policeM(px, gras){ ctx.font = `${gras === false ? 600 : 700} ${Math.round(px)}px "Titillium Web", "Jersey 10", sans-serif`; }
 function texteM(t, x, y, px, c = MOD.txt, al = "left", opt = {}){
   policeM(px, opt.gras); let p = px;
@@ -319,8 +320,9 @@ const aRoule = t0 => t0 !== undefined && G.t - t0 < .5 ? {rot: (G.t - t0)/.5*Mat
 const TUTO = [
   {t: "UN DE PAR CASE", d: "Chaque case de la Muraille a son propre dé. Sur chaque face, il y a une classe de combattant. La face qui sort décide qui vient te défendre.", f: [["slot", "guerriere"], ["slot", "magicienne"], ["slot", "pretresse"]]},
   {t: "DEUX DES POUR LE BUTIN", d: "Après une vague, deux dés tombent : QUOI (une arme, une armure ou un bijou) et QUELLE QUALITE (gris : commun, bleu : rare, violet : épique, or : légendaire).", f: [["quoi", "arme"], ["quoi", "armure"], ["qual", 1], ["qual", 2]]},
-  {t: "L'ATELIER", d: "Une amélioration remplace UNE face d'un dé. Tu choisis donc ce qui sortira : grave la même classe sur les six faces d'une case, et elle sortira toujours.", f: [["slot", "mercenaire"], ["qual", 3], ["quoi", "bijou"]]},
-  {t: "LES EVENEMENTS", d: "Toutes les trois vagues, un dé d'événement tombe : un nouveau condamné, un coffre, une bénédiction, un raid... Le hasard continue, mais tu peux le préparer.", f: [["event", "recrue"], ["event", "coffre"], ["event", "danger"]]}
+  {t: "L'ARBRE DES DES", d: "À la fin d'une nuit, tu gagnes des éclats de Gueule. Entre deux nuits, ils achètent des paliers dans l'arbre : chaque palier te donne une gravure, que tu poses pour de bon sur une face d'un dé. Grave la même classe sur les six faces d'une case, et elle sortira toujours.", f: [["slot", "mercenaire"], ["qual", 3], ["quoi", "bijou"]]},
+  {t: "LES EVENEMENTS", d: "Toutes les trois vagues, un dé d'événement tombe : un nouveau condamné, un coffre, une bénédiction, un raid... Le hasard continue, mais tu peux le préparer.", f: [["event", "recrue"], ["event", "coffre"], ["event", "danger"]]},
+  {t: "LE DE D'ACTION", d: "Tes combattants rapportent de l'or. Chaque lancer du dé d'action en coûte : une recrue (ou un héros qui monte de niveau s'il est déjà là), un objet, un progrès, un soin, un sort ou une relique. Le prix monte à chaque lancer et revient à zéro à la vague suivante : 3 lancers avant le combat, 1 en urgence.", f: [["act", "recrue"], ["act", "objet"], ["act", "relique"]]}
 ];
 function ecranTuto(){
   const p = G.tuto.p, P = TUTO[p];
@@ -334,14 +336,13 @@ function ecranTuto(){
   paragrapheM(P.d, 44, 376, W - 88, 17, MOD.txt, 1.3);
   if (p) boutonM(36, 516, 90, 44, "RETOUR", () => { G.tuto.p--; G.tuto.t0 = G.t; SON.clic(); }, false);
   boutonM(p ? 138 : 36, 516, p ? W - 174 : W - 72, 44, p === TUTO.length - 1 ? "COMPRIS !" : "SUIVANT", () => {
-    SON.clic(); if (p === TUTO.length - 1){ G.tuto = null; ecrire("bannis.tuto", 1); if (G.ecran === "recrutement") lancerAnim(); } else { G.tuto.p++; G.tuto.t0 = G.t; } }, true);
+    SON.clic(); if (p === TUTO.length - 1){ G.tuto = null; if (G.ecran !== "recrutement") return; ecrire("bannis.tuto", 1); if (G.ecran === "recrutement") lancerAnim(); } else { G.tuto.p++; G.tuto.t0 = G.t; } }, true);
 }
 function ouvrirTuto(){ G.tuto = {p: 0, t0: G.t}; SON.clic(); }
 
 /* ---------- fil d'étapes et consigne (butin) ---------- */
 function etapesButin(){
   const v = G.run.vague, B = G.butin, l = [["BILAN", ["bilan", "niveau", "evolution"]], ["OBJET", ["objet", "equiper"]]];
-  if (v % 2 === 0 || B.extraAtelier || B.atelierFait) l.push(["ATELIER", ["atelier"]]);
   if (v % 3 === 0 || B.evFait) l.push(["EVENEMENT", ["evenement"]]);
   l.push(["MARCHAND", ["marchand"]]);
   return l;
@@ -360,10 +361,76 @@ function consigne(t, sous){
   if (sous) texte(sous, 22, 140, 13, MOD.doux, "left", {ombre: false, gras: false, max: W - 40});
 }
 
+/* ---------- l'arbre des dés : entre les nuits, les éclats de Gueule achètent des gravures ---------- */
+const BR_TYPE = {classes: "slot", qual: "qual", quoi: "quoi", action: "act"};
+const BR_NOM = {classes: "CLASSE", qual: "QUALITE", quoi: "OBJET", action: "ACTION"};
+function ouvrirArbre(retour){ G.a = R.arbreCharger(lire("bannis.arbre", null)); G.ecran = "arbre"; G.arbreOnglet = "arbre"; G.forge = {br: null, face: null}; G.arbreRetour = retour || "titre"; G.arbreMsg = null; SON.clic(); }
+function msgArbre(t){ G.arbreMsg = {t, t0: G.t}; }
+function acheterArbre(b, cle){
+  const s = statsJoueur(), c = R.acheter(G.a, s.eclats, b, cle);
+  if (!c){ msgArbre(s.eclats ? "Pas assez d'éclats." : "Tu n'as pas d'éclats : gagne une nuit ou tiens longtemps."); SON.clic(); return; }
+  s.eclats -= c; ecrire("bannis.stats", s); ecrire("bannis.arbre", G.a); SON.niveau(); SON.des(4);
+  msgArbre(b === "legendes" ? "Légende débloquée : " + D.CLASSES[cle].leg.n + "." : "Palier acheté : une gravure de plus dans la FORGE.");
+}
+function ecranArbre(){
+  const a = G.a, s = statsJoueur();
+  ctx.fillStyle = MOD.fond; ctx.fillRect(0, 0, W, H);
+  texteM("L'ARBRE DES DES", 20, 44, 24, MOD.txt, "left", {max: 210});
+  texteM(s.eclats + " éclats", W - 20, 44, 18, MOD.or, "right", {max: 120});
+  paragrapheM("Les éclats de Gueule, gagnés à la fin d'une nuit, achètent des gravures. Tu les poses sur tes dés pour toutes les nuits suivantes.", 20, 68, W - 40, 13, MOD.doux, 1.25);
+  const ong = G.arbreOnglet, wt = (W - 48)/2;
+  boutonM(20, 106, wt, 36, "ARBRE (ACHETER)", () => { G.arbreOnglet = "arbre"; SON.clic(); }, ong === "arbre");
+  boutonM(28 + wt, 106, wt, 36, "FORGE (GRAVER)", () => { G.arbreOnglet = "forge"; SON.clic(); }, ong === "forge");
+  const msg = G.arbreMsg && G.t - G.arbreMsg.t0 < 3 ? G.arbreMsg.t : null;
+  if (msg) texteM(msg, W/2, 161, 13, MOD.or, "center", {max: W - 30});
+  if (ong === "arbre"){
+    let y = 176;
+    for (const b of ["classes", "qual", "quoi", "action"]){
+      const T = D.ARBRE[b], n = T.couts.length;
+      carteM(14, y, W - 28, 92); texteM(T.n, 28, y + 24, 17, MOD.txt, "left"); texteM(a.niv[b] + " / " + n, W - 28, y + 24, 14, MOD.accent, "right");
+      texteM(T.d, 28, y + 41, 11.5, MOD.doux, "left", {gras: false, max: W - 56});
+      for (let i = 0; i < n; i++){
+        const x = 28 + i*52, cy = y + 54, ach = i < a.niv[b], proch = i === a.niv[b], cout = T.couts[i], peut = proch && s.eclats >= cout;
+        ctx.fillStyle = ach ? MOD.accent : MOD.carte; rr(x, cy, 46, 32, 8); ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = ach ? MOD.accent : proch ? (peut ? MOD.accent : MOD.alerte) : MOD.bord; rr(x, cy, 46, 32, 8); ctx.stroke();
+        texteM(ach ? "OK" : String(cout), x + 23, cy + 22, 15, ach ? "#05211c" : proch ? (peut ? MOD.txt : MOD.alerte) : MOD.doux, "center", {ombre: false});
+        if (proch) zone(x, cy, 46, 32, () => acheterArbre(b));
+      }
+      y += 98;
+    }
+    const T = D.ARBRE.legendes; carteM(14, y, W - 28, 92); texteM(T.n, 28, y + 24, 17, MOD.txt, "left"); texteM(a.legendaires.length + " / 6", W - 28, y + 24, 14, MOD.accent, "right");
+    texteM(T.d + " " + T.cout + " éclats chacune.", 28, y + 41, 11.5, MOD.doux, "left", {gras: false, max: W - 56});
+    Object.keys(D.CLASSES).forEach((k, i) => { const x = 28 + i*52, cy = y + 52, ach = a.legendaires.includes(k), peut = s.eclats >= T.cout;
+      ctx.fillStyle = ach ? "rgba(61,220,190,.25)" : MOD.carte; rr(x, cy, 46, 34, 8); ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = ach ? MOD.accent : peut ? MOD.bord : "#1c3a44"; rr(x, cy, 46, 34, 8); ctx.stroke();
+      ctx.save(); ctx.globalAlpha = ach || peut ? 1 : .45; dessinerHeros(D.CLASSES[k].leg.spr, "repos", G.t, x + 23, cy + 32, 1, {e: 1}); ctx.restore();
+      if (!ach) zone(x, cy, 46, 34, () => acheterArbre("legendes", k)); });
+  } else {
+    const br = G.forge.br, creds = b => R.creditsGravure(a, b);
+    texteM("1. CHOISIS UNE GRAVURE (tes crédits)", 20, 182, 13, MOD.accent, "left");
+    R.BRANCHES.forEach((b, i) => { const x = 20 + i*81, c = creds(b), sel = br === b;
+      ctx.fillStyle = sel ? MOD.accent : MOD.carte; rr(x, 190, 76, 46, 10); ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = c ? MOD.accent : MOD.bord; rr(x, 190, 76, 46, 10); ctx.stroke();
+      texteM(BR_NOM[b], x + 38, 210, 12, sel ? "#05211c" : c ? MOD.txt : MOD.doux, "center", {ombre: false}); texteM("x" + c, x + 38, 228, 16, sel ? "#05211c" : c ? MOD.or : MOD.doux, "center", {ombre: false});
+      if (c) zone(x, 190, 76, 46, () => { G.forge = {br: b, face: null}; SON.clic(); }); });
+    if (!br){ paragrapheM("Aucune gravure choisie. Un palier acheté dans l'ARBRE donne un crédit ici. Les dés ci-dessous sont ceux avec lesquels tu commenceras la prochaine nuit.", 20, 256, W - 40, 13, MOD.doux, 1.25); }
+    else {
+      const poss = R.facesGravables(a, br), ty = BR_TYPE[br];
+      texteM("2. CHOISIS LA FACE A GRAVER", 20, 256, 13, MOD.accent, "left");
+      poss.forEach((f, i) => { const x = 20 + i*52; tileFace(ty, f, x, 264, 46, {sel: G.forge.face === f}); zone(x, 264, 46, 46, () => { G.forge.face = f; SON.clic(); }); });
+      if (!poss.length) texteM("Achète le palier 1 de QUALITE dans l'arbre.", 20, 292, 13, MOD.alerte, "left");
+      if (G.forge.face !== null) texteM("3. TOUCHE LA FACE A REMPLACER : " + nomFace(ty, G.forge.face), 20, 334, 13, MOD.accent, "left", {max: W - 40});
+    }
+    const src = R.facesDeDepart(a), face = G.forge.face;
+    rangeesDes(344, (ty) => br && face !== null && ty === BR_TYPE[br], (ty, d, i) => {
+      if (!R.graverArbre(a, br, face, i, d)) return; ecrire("bannis.arbre", a); SON.or(); SON.des(5); G.forge.face = null; if (!creds(br)) G.forge.br = null; msgArbre("Gravé pour de bon sur le dé."); }, null, src, 52, 38);
+    boutonM(20, 686, (W - 52)/2, 44, "TOUT REMETTRE A ZERO", () => { R.remettreAZero(a); ecrire("bannis.arbre", a); G.forge = {br: null, face: null}; msgArbre("Dés remis comme au départ : les gravures sont rendues."); SON.clic(); }, false);
+  }
+  boutonM(W/2 + 6, 686, (W - 52)/2, 44, "RETOUR", () => { G.ecran = G.arbreRetour; SON.clic(); }, true);
+  if (ong === "arbre") boutonM(20, 686, (W - 52)/2, 44, "VOIR LA FORGE", () => { G.arbreOnglet = "forge"; SON.clic(); }, false);
+}
+
 /* ---------- recrutement : un dé par case ---------- */
 function lancerAnim(){ G.rolls = [G.t + .2, G.t + .55, G.t + .9]; SON.des(11, .2); }
 function nouvelleNuit(){
-  G.run = R.nouvelleRun(); G.recrues = R.recruesDes(G.run); G.choisies = G.recrues.slice(); G.relR = 1; G.ecran = "recrutement";
+  G.run = R.nouvelleRun(); G.run.faces = R.facesDeDepart(R.arbreCharger(lire("bannis.arbre", null))); G.recrues = R.recruesDes(G.run); G.choisies = G.recrues.slice(); G.relR = 1; G.ecran = "recrutement";
   G.tuto = lire("bannis.tuto", 0) ? null : {p: 0, t0: G.t}; G.rolls = [-9, -9, -9]; if (!G.tuto) lancerAnim();
 }
 function ecranRecrutement(){
@@ -398,56 +465,16 @@ function ecranRecrutement(){
 }
 
 /* ---------- butin : atelier et événement ---------- */
-function rangeesDes(y0, ok, onTap, gravee){
+function rangeesDes(y0, ok, onTap, gravee, src, pas = 62, ts = 44){
+  src = src || G.run.faces;
   const lignes = [["slot", 0, "CASE 1 · COMBATTANTS"], ["slot", 1, "CASE 2 · COMBATTANTS"], ["slot", 2, "CASE 3 · COMBATTANTS"], ["quoi", 0, "DE QUOI (ARME, ARMURE, BIJOU)"], ["qual", 0, "DE QUALITE (RARETE DE L'OBJET)"], ["act", 0, "DE D'ACTION (CE QU'UN LANCER RAPPORTE)"]];
   lignes.forEach(([ty, d, nom], r) => {
-    const y = y0 + r*62, f = ty === "slot" ? G.run.faces.slots[d] : ty === "act" ? G.run.faces.action : G.run.faces[ty], actif = ok(ty, d);
-    texteM(nom, 28, y + 12, 12, actif ? MOD.accent : MOD.doux, "left");
-    f.forEach((k, i) => { const x = 28 + i*52, g = gravee && gravee.ty === ty && gravee.d === d && gravee.i === i;
-      tileFace(ty, k, x, y + 16, 44, {sel: actif || g, alpha: actif || g || gravee ? 1 : .35, ...(g ? {t0: gravee.t0, pool: gravee.pool, dur: .7} : {})});
-      if (actif && onTap) zone(x, y + 16, 44, 44, () => onTap(ty, d, i)); });
+    const y = y0 + r*pas, f = ty === "slot" ? src.slots[d] : ty === "act" ? src.action : src[ty], actif = ok(ty, d);
+    texteM(nom, 20, y + 11, 11, actif ? MOD.accent : MOD.doux, "left");
+    f.forEach((k, i) => { const x = 20 + i*52, g = gravee && gravee.ty === ty && gravee.d === d && gravee.i === i;
+      tileFace(ty, k, x, y + 14, ts, {sel: actif || g, alpha: actif || g || gravee ? 1 : .35, ...(g ? {t0: gravee.t0, pool: gravee.pool, dur: .7} : {})});
+      if (actif && onTap) zone(x, y + 14, ts, ts, () => onTap(ty, d, i)); });
   });
-}
-function descOffre(o){
-  if (o.t === "slot") return D.CLASSES[o.f].d;
-  if (o.t === "action") return D.ACTIONS[o.f].d;
-  if (o.t === "qual") return "Les objets du butin sortent plus souvent en " + D.RARETES[o.f].n.toLowerCase() + ".";
-  return "Plus de " + D.SLOTS[o.f].n.toLowerCase() + "s dans le butin.";
-}
-function ecranAtelier(){
-  const B = G.butin, c = B.choix;
-  carteM(8, 162, W - 16, 552, MOD.bord, "rgba(14,26,34,.97)");
-  if (B.gravee){
-    consigne("c'est fait !", B.msg);
-    rangeesDes(190, () => false, null, B.gravee);
-    boutonM(24, 646, W - 48, 56, "CONTINUER", () => { SON.clic(); suiteButin(); });
-    return;
-  }
-  if (!c){
-    consigne("choisis une amélioration (1 sur 2)", "Elle remplacera ensuite une face de l'un de tes dés.");
-    B.offres.forEach((o, i) => {
-      const y = 176 + i*112, type = typeDe(o.t);
-      carteM(18, y, W - 36, 104, MOD.bord, MOD.carte);
-      tileFace(type, o.f, 28, y + 14, 76, {etiquette: true, deal: B.t0 + i*.12});
-      texteM(o.t === "slot" ? "FACE CLASSE" : o.t === "qual" ? "FACE QUALITE" : o.t === "action" ? "FACE D'ACTION" : "FACE OBJET", 118, y + 30, 13, MOD.accent, "left");
-      texteM(nomFace(type, o.f), 118, y + 52, 19, MOD.txt, "left", {max: W - 150});
-      paragrapheM(descOffre(o), 118, y + 70, W - 150, 12, MOD.doux, 1.15);
-      zone(18, y, W - 36, 104, () => { B.choix = o; SON.clic(); });
-    });
-    boutonM(24, 646, W - 48, 56, "PASSER (RIEN CHANGER)", () => { SON.clic(); suiteButin(); }, false);
-    return;
-  }
-  const type = typeDe(c.t);
-  consigne("touche la face à remplacer (2 sur 2)", "Les dés éclairés peuvent recevoir : " + nomFace(type, c.f) + ".");
-  tileFace(type, c.f, 24, 170, 56, {etiquette: true, sel: true});
-  texteM("Tu vas graver :", 92, 192, 12, MOD.doux, "left"); texteM(nomFace(type, c.f), 92, 214, 20, MOD.txt, "left", {max: W - 120});
-  rangeesDes(240, ty => ty === typeDe(c.t), (ty, d, i) => {
-    const ancienK = ty === "slot" ? G.run.faces.slots[d][i] : ty === "act" ? G.run.faces.action[i] : G.run.faces[ty][i], ancien = nomFace(ty, ancienK);
-    R.graverSymbole(G.run, c, d, i); SON.or(); SON.des(5);
-    B.gravee = {ty, d, i, t0: G.t, pool: [ancienK, c.f]};
-    B.msg = nomFace(type, c.f) + " remplace " + ancien + (ty === "slot" ? " sur le dé de la case " + (d + 1) : " sur le dé " + (ty === "quoi" ? "QUOI" : ty === "act" ? "D'ACTION" : "QUALITE")) + ".";
-  });
-  boutonM(24, 646, W - 48, 56, "CHOISIR AUTRE CHOSE", () => { B.choix = null; SON.clic(); }, false);
 }
 function ecranEvenement(){
   const B = G.butin, e = B.ev, E = e.k ? D.EVENEMENTS[e.k] : null, DUR = 1.4;
@@ -471,13 +498,13 @@ function ecranEvenement(){
   boutonM(24, 646, W - 48, 56, "CONTINUER", () => {
     SON.clic();
     if (e.k === "coffre"){ B.objets = [R.genererObjet(G.run.vague, true, G.run)]; B.pris = null; B.tObj = undefined; }
-    if (e.k === "atelier"){ B.atelierFait = false; B.extraAtelier = true; }
     suiteButin(); });
 }
 
 /* ---------- placement et combat ---------- */
 function allerPlacement(){
-  G.ecran = "place"; G.sel = -1; G.C = null; G.lancer = null; G.evo = null; G.butin = null; G.txt = []; G.part = []; G.fx = [];
+  G.ecran = "place"; G.sel = -1; G.C = null; G.lancer = null; G.evo = null; G.butin = null;
+  if (!lire("bannis.tuto2", 0) && !G.tuto){ G.tuto = {p: TUTO.length - 1, t0: G.t, seul: true}; ecrire("bannis.tuto2", 1); } G.txt = []; G.part = []; G.fx = [];
   G.unitesPlace = G.run.heros.map(h => { const c = R.CASES[h.slot]; return {h, x: c[0], y: c[1], ta: Math.random()*2}; });
   sauverRun();
 }
@@ -517,18 +544,25 @@ function bandeau(){
   }
 }
 function cartes(){
-  const hs = G.run.heros, n = hs.length, w = Math.floor((W - 16 - (n - 1)*6)/n);
+  const hs = G.run.heros, n = hs.length, grille = n > 3, w = grille ? Math.floor((W - 22)/2) : Math.floor((W - 16 - (n - 1)*6)/n);
   hs.forEach((h, i) => {
-    const x = 8 + i*(w + 6), y = 552, hh = 88, s = R.stats(h), cl = R.classeDe(h);
+    const x = grille ? 8 + (i % 2)*(w + 6) : 8 + i*(w + 6), y = grille ? 500 + Math.floor(i/2)*70 : 552, hh = grille ? 64 : 88, s = R.stats(h), cl = R.classeDe(h);
     const u = G.C ? G.C.unites.find(v => v.h === h) : null, pv = u ? u.pv : h.pv, pvMax = u ? u.pvMax : s.pv, mort = pv <= 0;
     panneau(x, y, w, hh);
     ctx.save(); if (mort) ctx.globalAlpha = .5;
-    texte(h.nom, x + 10, y + 26, n > 3 ? 15 : 17, "#fff", "left", {max: w - 44});
+    texte(h.nom, x + 10, y + 24, 17, "#fff", "left", {max: w - 48});
     ctx.fillStyle = MOD.accent; ctx.beginPath(); ctx.arc(x + w - 17, y + 19, 10, 0, 7); ctx.fill(); texte(String(h.niv), x + w - 17, y + 24, 13, "#05211c", "center", {ombre: false});
-    texte(cl.n, x + 10, y + 46, 13, h.leg ? "#ffd76a" : "#d8e4ff", "left", {max: w - 20, gras: !!h.leg});
-    barre(x + 22, y + 56, w - 44, 8, pv/pvMax, pv/pvMax > .35 ? "#4ad05a" : "#e8402a");
-    const xp0 = D.XP_NIVEAUX[h.niv - 1] || 0, xp1 = R.nivSuivant(h);
-    ctx.fillStyle = "rgba(0,0,0,.35)"; ctx.fillRect(x + 12, y + 72, w - 24, 3); ctx.fillStyle = "#9ad8ff"; ctx.fillRect(x + 12, y + 72, (w - 24)*Math.min(1, (h.xp - xp0)/Math.max(1, xp1 - xp0)), 3);
+    if (grille){
+      texte(cl.n, x + 10, y + 42, 13, h.leg ? "#ffd76a" : "#d8e4ff", "left", {max: 84, gras: !!h.leg});
+      barre(x + 98, y + 34, w - 112, 8, pv/pvMax, pv/pvMax > .35 ? "#4ad05a" : "#e8402a");
+      const xp0 = D.XP_NIVEAUX[h.niv - 1] || 0, xp1 = R.nivSuivant(h);
+      ctx.fillStyle = "rgba(0,0,0,.35)"; ctx.fillRect(x + 10, y + 52, w - 20, 4); ctx.fillStyle = "#9ad8ff"; ctx.fillRect(x + 10, y + 52, (w - 20)*Math.min(1, (h.xp - xp0)/Math.max(1, xp1 - xp0)), 4);
+    } else {
+      texte(cl.n, x + 10, y + 46, 13, h.leg ? "#ffd76a" : "#d8e4ff", "left", {max: w - 20, gras: !!h.leg});
+      barre(x + 22, y + 56, w - 44, 8, pv/pvMax, pv/pvMax > .35 ? "#4ad05a" : "#e8402a");
+      const xp0 = D.XP_NIVEAUX[h.niv - 1] || 0, xp1 = R.nivSuivant(h);
+      ctx.fillStyle = "rgba(0,0,0,.35)"; ctx.fillRect(x + 12, y + 72, w - 24, 3); ctx.fillStyle = "#9ad8ff"; ctx.fillRect(x + 12, y + 72, (w - 24)*Math.min(1, (h.xp - xp0)/Math.max(1, xp1 - xp0)), 3);
+    }
     ctx.restore();
     if (G.sel === i){ ctx.strokeStyle = "#ffe14a"; ctx.lineWidth = 3; rr(x + 3, y + 3, w - 6, hh - 6, 6); ctx.stroke(); }
     zone(x, y, w, hh, () => { G.fiche = h; SON.clic(); });
@@ -561,8 +595,8 @@ function champPlacement(){
       const h = G.run.heros[G.sel]; if (occ >= 0 && occ !== G.sel) G.run.heros[occ].slot = h.slot; h.slot = s; G.sel = -1; SON.pose();
       for (const u of G.unitesPlace){ const cc = R.CASES[u.h.slot]; u.tx = cc[0]; u.ty = cc[1]; } sauverRun(); });
   }
-  texte("ARRIERE", 92, 540, 12, "#ffe3a8", "center"); texte("AVANT", 162, 540, 12, "#ffe3a8", "center");
-  if (G.sel < 0) texte("Touche un héros, puis une case", 130, 520, 13, "#fff", "center", {max: 190});
+  texte("ARRIERE", 92, 500, 12, "#ffe3a8", "center"); texte("AVANT", 162, 500, 12, "#ffe3a8", "center");
+  if (G.sel < 0) texte("Touche un héros, puis une case", 108, 196, 13, "#fff", "center", {max: 176});
   panneauDe();
   for (const u of G.unitesPlace){ if (u.tx !== undefined){ u.x += (u.tx - u.x)*.25; u.y += (u.ty - u.y)*.25; }
     if (u.h.leg) aura(u.x, u.y, G.t);
@@ -631,16 +665,18 @@ function sortAuto(k){
 }
 // panneau du dé d'action pendant le placement
 function panneauDe(){
-  const run = G.run, x = 204, y = 158, w = 148, ok = R.peutLancer(run, "prep"), sec = G.refus !== undefined && G.t - G.refus < .4 ? Math.sin(G.t*60)*3 : 0;
+  const run = G.run, x = 200, y = 156, w = 156, ok = R.peutLancer(run, "prep"), sec = G.refus !== undefined && G.t - G.refus < .4 ? Math.sin(G.t*60)*3 : 0;
   ctx.save(); ctx.translate(sec, 0);
-  carteM(x, y, w, 300, MOD.bord, "rgba(14,26,34,.93)");
-  texteM("DE D'ACTION", x + w/2, y + 24, 15, MOD.accent, "center");
-  tileFace("act", G.derniereFace || "recrue", x + w/2 - 30, y + 36, 60, {etiquette: true, t0: G.derniereT0, pool: run.faces.action, dur: .9});
-  paragrapheM("Il rapporte une recrue, un objet, un progrès, un soin, un sort ou une relique.", x + 8, y + 112, w - 16, 11, MOD.doux, 1.2);
-  texteM(run.lancers + " lancer" + (run.lancers > 1 ? "s" : "") + " avant le combat", x + w/2, y + 156, 13, run.lancers ? MOD.txt : MOD.doux, "center", {max: w - 12});
-  boutonM(x + 8, y + 164, w - 16, 52, run.lancers ? (ok ? "LANCER : " + run.prix + " OR" : "PAS ASSEZ D'OR") : "PLUS DE LANCER", () => lancerDe("prep"), true, ok);
-  paragrapheM(run.lancers ? "Le prix monte de " + R.PAS_PRIX + " or à chaque lancer, puis revient à " + Math.max(4, R.PRIX_BASE - (run.remise || 0)) + " or à la vague suivante." : "Les lancers reviennent à la vague suivante.", x + 8, y + 232, w - 16, 11, MOD.doux, 1.2);
-  texteM("Lancers d'urgence en combat : " + run.urgence, x + w/2, y + 284, 11, MOD.or, "center", {gras: false, max: w - 12});
+  carteM(x, y, w, 330, MOD.bord, "rgba(14,26,34,.95)");
+  texteM("DE D'ACTION", x + 12, y + 28, 17, MOD.accent, "left", {max: w - 56});
+  boutonM(x + w - 38, y + 8, 30, 30, "?", () => { G.tuto = {p: TUTO.length - 1, t0: G.t, seul: true}; SON.clic(); }, false);
+  tileFace("act", G.derniereFace || "recrue", x + w/2 - 40, y + 46, 80, {etiquette: true, t0: G.derniereT0, pool: run.faces.action, dur: .9});
+  texteM(run.lancers + " lancer" + (run.lancers > 1 ? "s" : "") + " avant le combat", x + w/2, y + 154, 15, run.lancers ? MOD.txt : MOD.doux, "center", {max: w - 12});
+  texteM("Prochain : " + run.prix + " or", x + w/2, y + 176, 16, MOD.or, "center", {max: w - 12});
+  boutonM(x + 8, y + 188, w - 16, 62, run.lancers ? (ok ? "LANCER" : "PAS ASSEZ D'OR") : "PLUS DE LANCER", () => lancerDe("prep"), true, ok);
+  texteM("Tu as " + run.or + " or", x + w/2, y + 274, 15, run.or >= run.prix ? MOD.txt : MOD.alerte, "center", {max: w - 12});
+  texteM("Urgence en combat : " + run.urgence, x + w/2, y + 298, 14, MOD.or, "center", {max: w - 12, gras: false});
+  texteM("(touche ? pour comprendre)", x + w/2, y + 318, 11, MOD.doux, "center", {gras: false, max: w - 12});
   ctx.restore();
 }
 function ecranLancer(dt){
@@ -751,7 +787,6 @@ function suiteButin(){
   const ev = run.heros.find(h => R.peutEvoluer(h, legendaires()));
   if (ev){ B.etape = "evolution"; G.evo = {h: ev, t: 0, fait: false, avant: R.classeDe(ev).n}; SON.sort(); return; }
   if (!B.pris){ B.etape = "objet"; return; }
-  if (!B.atelierFait && (run.vague % 2 === 0 || B.extraAtelier)){ B.atelierFait = true; B.extraAtelier = false; B.offres = R.offresAtelier(run); B.choix = null; B.gravee = null; B.t0 = G.t; B.etape = "atelier"; return; }
   if (!B.evFait && run.vague % 3 === 0){ B.evFait = true; B.ev = {t0: null, k: null, res: null}; B.etape = "evenement"; return; }
   B.etape = "marchand";
 }
@@ -786,8 +821,6 @@ function ecranButin(dt){
     texte(h.nom + " · " + cl.n, W/2, 316, 16, "#fff", "center", {max: W - 80});
     texte("Choisis un bonus :", W/2, 346, 15, "#ffe3a8", "center");
     B.choix.forEach((b, i) => bouton(44, 362 + i*58, W - 88, 50, b.n, () => { R.appliquerBonus(h, b); SON.pose(); suiteButin(); }, true, false, i ? 2 : 1));
-  } else if (B.etape === "atelier"){
-    ecranAtelier();
   } else if (B.etape === "evenement"){
     ecranEvenement();
   } else if (B.etape === "evolution"){
@@ -816,23 +849,24 @@ function ecranButin(dt){
     grand(8, 162, W - 16, 540);
     icone(o.ic, 24, 170, 40); texte(o.n, 74, 188, 15, R0.c, "left", {max: W - 100}); texte(R.texteBonus(o), 74, 208, 14, "#d8ffd8", "left", {gras: false, max: W - 100});
     const hs = G.run.heros.slice().sort((a, b) => (R.peutPorter(b, o) ? 1 : 0) - (R.peutPorter(a, o) ? 1 : 0));
+    const n4 = hs.length > 3;
     hs.forEach((h, i) => {
-      const y = 218 + i*118, ok = R.peutPorter(h, o), ac = h.equip[o.slot], s0 = R.stats(h), s1 = R.statsAvec(h, o);
-      petit(20, y, W - 40, 112); ctx.save(); if (!ok) ctx.globalAlpha = .45;
-      dessinerHeros(R.classeDe(h).spr, "repos", G.t + i, 52, y + 68, 1, {e: 1.7});
-      texte(h.nom + " · " + R.classeDe(h).n, 88, y + 24, 15, "#fff", "left", {max: W - 124});
-      texte(ok ? (ac ? "porte : " + ac.n : D.SLOTS[o.slot].n + " : rien") : "ne peut pas porter cet objet", 88, y + 44, 12, ok ? (ac ? D.RARETES[ac.rar].c : "#c8e8c8") : "#ffb0a0", "left", {gras: !ac, max: W - 124});
+      const pas = n4 ? 104 : 118, hl = n4 ? 98 : 112, y = 216 + i*pas, ok = R.peutPorter(h, o), ac = h.equip[o.slot], s0 = R.stats(h), s1 = R.statsAvec(h, o);
+      petit(20, y, W - 40, hl); ctx.save(); if (!ok) ctx.globalAlpha = .45;
+      dessinerHeros(R.classeDe(h).spr, "repos", G.t + i, 52, y + (n4 ? 62 : 68), 1, {e: 1.7});
+      texte(h.nom + " · " + R.classeDe(h).n, 88, y + (n4 ? 20 : 24), 15, "#fff", "left", {max: W - 124});
+      texte(ok ? (ac ? "porte : " + ac.n : D.SLOTS[o.slot].n + " : rien") : "ne peut pas porter cet objet", 88, y + (n4 ? 38 : 44), 12, ok ? (ac ? D.RARETES[ac.rar].c : "#c8e8c8") : "#ffb0a0", "left", {gras: !ac, max: W - 124});
       // stats actuelles et changement
       const L = [["VIE", s0.pv, s1.pv], ["ATQ", s0.atq, s1.atq], ["DEF", s0.def, s1.def], ["CRIT", s0.crit, s1.crit], ["VIT", s0.vit, s1.vit, 2], ["VOL", Math.round(s0.vol*100), Math.round(s1.vol*100)]];
       // deux colonnes ; le changement suit la valeur
-      L.forEach(([n, a, b, dec], j) => { const x = 88 + (j % 2)*((W - 120)/2), yy = y + 66 + Math.floor(j/2)*20, d = Math.round((b - a)*100)/100;
+      L.forEach(([n, a, b, dec], j) => { const x = 88 + (j % 2)*((W - 120)/2), yy = y + (n4 ? 56 : 66) + Math.floor(j/2)*(n4 ? 17 : 20), d = Math.round((b - a)*100)/100;
         const t = n + " " + (dec ? a.toFixed(dec) : a); texte(t, x, yy, 13, "#e8f0ff", "left"); police(13); const lw = ctx.measureText(t).width;
         if (ok && d) texte((d > 0 ? "+" : "") + (dec ? d.toFixed(dec) : d), x + lw + 6, yy, 13, d > 0 ? "#6dff8a" : "#ff7a6a", "left"); });
       ctx.restore();
-      if (ok) zone(20, y, W - 40, 112, () => { const ancien = R.equiper(h, o); if (ancien) G.run.or += Math.round(ancien.prix/2); SON.pose(); suiteButin(); });
+      if (ok) zone(20, y, W - 40, hl, () => { const ancien = R.equiper(h, o); if (ancien) G.run.or += Math.round(ancien.prix/2); SON.pose(); suiteButin(); });
     });
-    texte("L'objet remplacé est revendu automatiquement.", W/2, 590, 12, "#ffe3a8", "center", {gras: false});
-    bouton(40, 640, W - 80, 48, "NE PAS L'EQUIPER : VENDRE (" + Math.round(o.prix/2) + " OR)", () => { G.run.or += Math.round(o.prix/2); SON.or(); suiteButin(); }, true, false, 3);
+    texte("L'objet remplacé est revendu automatiquement.", W/2, n4 ? 646 : 590, 12, "#ffe3a8", "center", {gras: false});
+    bouton(40, n4 ? 656 : 640, W - 80, 44, "NE PAS L'EQUIPER : VENDRE (" + Math.round(o.prix/2) + " OR)", () => { G.run.or += Math.round(o.prix/2); SON.or(); suiteButin(); }, true, false, 3);
   } else if (B.etape === "marchand"){
     consigne("dépense ton or, puis lance la vague suivante", "Tu as " + G.run.or + " pièces d'or. Touche un article pour l'acheter.");
     grand(8, 162, W - 16, 548);
@@ -882,14 +916,15 @@ function ecranFin(){
   fond(); muraille();
   const F = G.fin;
   ctx.fillStyle = F.gagne ? "rgba(40,20,0,.35)" : "rgba(30,0,0,.55)"; ctx.fillRect(0, 0, W, H);
-  grand(20, 140, W - 40, 470);
+  grand(20, 140, W - 40, 560);
   texte(F.gagne ? "LE JOUR SE LEVE" : "LA MURAILLE", W/2, 200, 16, F.gagne ? "#ffe14a" : "#ff6a4a", "center", {titre: true});
   texte(F.gagne ? "LA NUIT EST TENUE" : "EST TOMBEE", W/2, 228, 16, F.gagne ? "#ffe14a" : "#ff6a4a", "center", {titre: true});
   const l = [["Vague atteinte", F.vague + " / " + D.NB_VAGUES], ["Monstres abattus", F.kills], ["Boss abattus", F.boss], ["Éclats de Gueule gagnés", "+" + F.eclats], ["Éclats en réserve", F.total], ["Record", "vague " + F.record]];
   l.forEach(([a, b], i) => { texte(a, 50, 280 + i*34, 16, "#fff"); texte(String(b), W - 50, 280 + i*34, 16, "#ffe14a", "right"); });
-  paragraphe("Les éclats serviront à l'arbre de compétences (bientôt) : choix des recrues, classes légendaires, dés...", 50, 500, W - 100, 13, "#ffe3a8");
-  bouton(50, 540, W - 100, 50, "NOUVELLE NUIT", () => { nouvelleNuit(); SON.clic(); }, true, true);
-  bouton(80, 620, W - 160, 44, "TITRE", () => { G.ecran = "titre"; SON.clic(); }, true, false, 3);
+  paragraphe("Les éclats achètent des gravures et des légendes dans l'arbre des dés.", 50, 470, W - 100, 13, "#ffe3a8");
+  bouton(50, 520, W - 100, 46, "NOUVELLE NUIT", () => { nouvelleNuit(); SON.clic(); }, true, true);
+  bouton(50, 574, W - 100, 44, "L'ARBRE DES DES", () => ouvrirArbre("fin"), true, false, 2);
+  bouton(80, 628, W - 160, 40, "TITRE", () => { G.ecran = "titre"; SON.clic(); }, true, false, 3);
 }
 
 /* ---------- fiche d'un héros ---------- */
@@ -944,6 +979,7 @@ function boucle(now){
   if (G.sec > 0 && !G.pause){ ctx.translate(alea(-G.sec, G.sec), alea(-G.sec, G.sec)); G.sec = Math.max(0, G.sec - dt*40); }
   if (G.ecran === "titre") ecranTitre();
   else if (G.ecran === "recrutement") ecranRecrutement();
+  else if (G.ecran === "arbre") ecranArbre();
   else if (G.ecran === "fin") ecranFin();
   else if (G.ecran === "butin") ecranButin(dt);
   else if (G.ecran === "place" || G.ecran === "combat"){
@@ -975,6 +1011,7 @@ function boucle(now){
     G.txt = G.txt.filter(t => t.t < (t.d || 1));
     hud(); bandeau(); cartes(); objets();
     if (G.lancer) ecranLancer(dt);
+    if (G.tuto) ecranTuto();
   }
   ctx.restore();
   if (G.fiche) ficheHeros();
@@ -1001,6 +1038,6 @@ window.addEventListener("resize", taille); taille();
 document.addEventListener("visibilitychange", () => { if (document.hidden && G.ecran === "combat") G.pause = true; });
 // pour les tests
 window.Bannis.G = G;
-window.Bannis.J = {nouvelleNuit, allerPlacement, lancerCombat, finDeVague, finDeNuit, lancerDe, fermerLancer, suiteButin};
+window.Bannis.J = {ouvrirArbre, nouvelleNuit, allerPlacement, lancerCombat, finDeVague, finDeNuit, lancerDe, fermerLancer, suiteButin};
 requestAnimationFrame(boucle);
 })();

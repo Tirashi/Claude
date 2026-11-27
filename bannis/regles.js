@@ -387,16 +387,42 @@ function appliquerRelique(run, k){
   else if (k === "de"){ const f = run.faces.action, i = f.indexOf("soin") >= 0 ? f.indexOf("soin") : f.indexOf("sort"); if (i >= 0) f[i] = "recrue"; }
 }
 
-// ---- atelier : une amélioration remplace une face d'un dé ----
-// offre = {t: "slot" | "quoi" | "qual", f: face} ; "slot" va sur une face de n'importe quel dé de case
-function offresAtelier(run){
-  const classes = melange(Object.keys(D.CLASSES)), q = run.vague >= 6 ? [2, 3] : [1, 2], quoi = melange(Object.keys(D.SLOTS));
-  const r = alea(), o = [{t: "slot", f: classes[0]}, {t: "qual", f: pick(q)}, r < .34 ? {t: "slot", f: classes[1]} : r < .67 ? {t: "quoi", f: quoi[0]} : {t: "action", f: pick(D.FACES_DEPART.action)}];
-  return o;
-}
-function graverSymbole(run, offre, d, i){   // d : indice de la case (offre "slot")
+// ---- gravure : remplace une face d'un dé (l'arbre des dés, entre les nuits) ----
+function graverSymbole(run, offre, d, i){   // run : un objet portant .faces   // d : indice de la case (offre "slot")
   if (offre.t === "slot") run.faces.slots[d][i] = offre.f; else run.faces[offre.t][i] = offre.f;   // offre.t : slot, quoi, qual ou action
 }
+// ---- arbre des dés (entre les nuits) ----
+const BRANCHES = ["classes", "qual", "quoi", "action"];
+function arbreDefaut(){ return {niv: {classes: 0, qual: 0, quoi: 0, action: 0}, gravees: {classes: 0, qual: 0, quoi: 0, action: 0}, legendaires: [], faces: null}; }
+function arbreCharger(a){
+  const d = arbreDefaut(); if (!a || typeof a !== "object") return d;
+  for (const b of BRANCHES){ d.niv[b] = Math.max(0, Math.min(D.ARBRE[b].couts.length, (a.niv && a.niv[b]) | 0)); d.gravees[b] = Math.max(0, Math.min(d.niv[b], (a.gravees && a.gravees[b]) | 0)); }
+  d.legendaires = Array.isArray(a.legendaires) ? a.legendaires.filter(k => D.CLASSES[k]) : [];
+  const f = a.faces; if (f && Array.isArray(f.slots) && f.slots.length === 3 && f.slots.every(x => Array.isArray(x) && x.length === 6 && x.every(c => D.CLASSES[c])) && ["quoi", "qual", "action"].every(k => Array.isArray(f[k]) && f[k].length === 6)) d.faces = f;
+  return d;
+}
+const creditsGravure = (a, b) => a.niv[b] - a.gravees[b];
+function prochainCout(a, b){ return a.niv[b] < D.ARBRE[b].couts.length ? D.ARBRE[b].couts[a.niv[b]] : null; }
+// faces qu'on peut graver pour une branche
+function facesGravables(a, b){
+  if (b === "classes") return Object.keys(D.CLASSES);
+  if (b === "qual") return [1, 2, 3].slice(0, a.niv.qual);
+  if (b === "quoi") return Object.keys(D.SLOTS);
+  return D.FACES_DEPART.action.slice();
+}
+// dés de départ d'une nuit : ceux de l'arbre s'il y en a, sinon ceux d'origine (l'événement n'est jamais gravé)
+function facesDeDepart(a){ const f = nouvellesFaces(); if (a && a.faces){ f.slots = JSON.parse(JSON.stringify(a.faces.slots)); f.quoi = a.faces.quoi.slice(); f.qual = a.faces.qual.slice(); f.action = a.faces.action.slice(); } return f; }
+function acheter(a, eclats, b, cle){   // renvoie le coût payé, ou 0 si impossible
+  if (b === "legendes"){ if (a.legendaires.includes(cle) || eclats < D.ARBRE.legendes.cout) return 0; a.legendaires.push(cle); return D.ARBRE.legendes.cout; }
+  const c = prochainCout(a, b); if (c === null || eclats < c) return 0; a.niv[b]++; return c; }
+function graverArbre(a, b, face, i, d){   // pose une gravure permanente ; d : case (branche classes)
+  if (creditsGravure(a, b) <= 0) return false;
+  if (!a.faces) a.faces = {slots: JSON.parse(JSON.stringify(D.FACES_DEPART.slots)), quoi: D.FACES_DEPART.quoi.slice(), qual: D.FACES_DEPART.qual.slice(), action: D.FACES_DEPART.action.slice()};
+  if (b === "classes") a.faces.slots[d][i] = face; else a.faces[b === "qual" ? "qual" : b === "quoi" ? "quoi" : "action"][i] = face;
+  a.gravees[b]++; return true;
+}
+function remettreAZero(a){ a.faces = null; for (const b of BRANCHES) a.gravees[b] = 0; }
+
 // ---- événements ----
 function lancerEvenement(run){ return faceAuHasard(run.faces.event); }
 function classesDesDes(run){ const s = new Set(); for (const d of run.faces.slots) for (const c of d) s.add(c); return [...s]; }
@@ -407,6 +433,7 @@ function appliquerEvenement(run, k){
     const h = creerHeros(pick(classesDesDes(run)), nomsPris(run)); h.slot = 0; run.heros.push(h); placerParDefaut(run);
     return {texte: h.nom + " rejoint la Muraille.", h};
   }
+  if (k === "bourse"){ run.or += 30; return {texte: "+30 pièces d'or."}; }
   if (k === "benediction"){ for (const h of run.heros){ h.mort = false; h.pv = stats(h).pv; } return {texte: "Tous les héros sont soignés."}; }
   if (k === "danger"){ run.mur = Math.max(1, run.mur - 15); run.or += 30; return {texte: "La Muraille perd 15 points, tu gagnes 30 pièces d'or."}; }
   if (k === "calme"){ run.or += 10; run.mur = Math.min(run.murMax, run.mur + 10); return {texte: "+10 pièces d'or, la Muraille gagne 10 points."}; }
@@ -429,7 +456,7 @@ function charger(txt){
   catch (e){ return null; }
 }
 
-B.R = {W, ZONE, MUR_X, CASES, creerHeros, recrues, recruesDes, lancerAction, appliquerRelique, peutLancer, debutLancers, PRIX_BASE, PAS_PRIX, MAX_HEROS, recrueDeCase, nouvellesFaces, faceAuHasard, offresAtelier, graverSymbole, lancerEvenement, appliquerEvenement, classesDesDes, stats, classeDe, nivSuivant, gagnerXp, propositionsNiveau, appliquerBonus, peutEvoluer, evoluer,
+B.R = {W, ZONE, MUR_X, CASES, creerHeros, recrues, recruesDes, BRANCHES, arbreDefaut, arbreCharger, creditsGravure, prochainCout, facesGravables, facesDeDepart, acheter, graverArbre, remettreAZero, lancerAction, appliquerRelique, peutLancer, debutLancers, PRIX_BASE, PAS_PRIX, MAX_HEROS, recrueDeCase, nouvellesFaces, faceAuHasard, graverSymbole, lancerEvenement, appliquerEvenement, classesDesDes, stats, classeDe, nivSuivant, gagnerXp, propositionsNiveau, appliquerBonus, peutEvoluer, evoluer,
   genererObjet, genererButin, graverFace, nouveauDe, deTrouve, texteBonus, equiper, peutPorter, statsAvec, monterNiveau, nouvelleRun, nomsPris, placerParDefaut, preparerVague, composerVague, apercu, debutCombat, vivants, etape,
   lancerDes, resultatDes, tirerSort, jeterSort, utiliserObjet, xpDeVague, eclatsDeRun, sauver, charger,
   graine(f){ alea = f || Math.random; }};
