@@ -85,3 +85,7 @@ Pistes :
 - Aperçu : <https://claude.ai/artifact/VCwUJi4bjFvMxcYx7FYYei>. Reste 97 Pokémon (n° 397 à 493), par lots.
 - **Les 107 dessins de Sinnoh sont faits** (27/11, n° 387 à 493, version A, tous résolubles sans deviner, 30 retouchés d'une ou deux cases), avec leurs couleurs chromatiques (champ `chroma`, calculé sur les sprites Platinum normal et chromatique ; 105 sur 107, pas pour Boskara ni Cheniselle) : `specs/picross/sinnoh-dessins.json`. Aperçu : <https://claude.ai/artifact/LZstbDoafY2QArZ7MGdE3u>. Pas encore dans le jeu : il faut l'onglet Sinnoh (même schéma que Hoenn).
 - Sources à citer dans `credits/index.html` à l'intégration : icônes de menu et sprites Platinum du dépôt PokeAPI/sprites (déjà cité pour le Pokédex).
+
+## Sinnoh : deux sources à comparer (27/11)
+- Les icônes de la 4e génération existent aussi dans PokéAPI (`.../versions/generation-iv/icons/<n°>.png`, 32×32) ; le Pokémon y fait environ 20 px, comme dans celles de la 7e génération (40×30) : pas de gain de finesse, mais style d'époque. Les 107 dessins ont été faits avec les deux (version A, mêmes réglages) : `specs/picross/sinnoh-dessins-gen4.json` et `sinnoh-dessins-gen7.json` (champ `chroma` calculé sur les sprites Platinum).
+- **Maquette de choix** : [`maquettes/picross-sinnoh.html`](../maquettes/picross-sinnoh.html), [artefact](https://claude.ai/artifact/FuaarsHDk67zKY8E5guCPU) : tableau des 107 lignes (icône et dessin des deux sources, couleurs normales ou chromatiques). Choix définitif de l'utilisateur à noter ici ; ensuite on supprime le fichier non retenu.
