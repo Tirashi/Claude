@@ -231,6 +231,10 @@ const shots = process.argv[2];
         for (let i = 0; i < 400 && G.ecran === 'combat'; i++){ B.R.etape(G.C, 0.1); await wait(10); }
         for (let i = 0; i < 40 && G.ecran === 'combat'; i++) await wait(100);
         if (G.ecran !== 'butin') return 'la vague 1 ne se termine pas par le butin (' + G.ecran + ')';
+        const run = G.run; if (!run.faces || run.faces.slots.length !== 3 || B.R.offresAtelier(run).length !== 3) return 'pas de dés à symboles';
+        B.R.graverSymbole(run, {t: 'slot', f: 'barde'}, 1, 2); if (run.faces.slots[1][2] !== 'barde') return 'la face ne se grave pas';
+        if (B.R.appliquerEvenement(run, 'recrue').h === undefined || run.heros.length !== 4) return "l'événement recrue n'ajoute pas de héros";
+        if (B.R.genererObjet(2, true, run).rar < 1) return 'le coffre ne donne pas un objet rare';
         B.J.finDeNuit(false); await wait(100);
         if (G.ecran !== 'fin' || !(JSON.parse(localStorage.getItem('bannis.stats') || '{}').nuits >= 1)) return "la fin de nuit ne s'enregistre pas";
         return 'ok';

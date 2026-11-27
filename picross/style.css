@@ -112,7 +112,7 @@ body.index .scroller{flex:1 1 0; min-height:200px}
   .entry .meta{font-size:12px}
 }
 .testnote{margin:10px 0 0; padding:8px 10px; border:3px dashed var(--ink); background:var(--gold); color:var(--ink); font-family:var(--f-display); font-size:8px; line-height:1.9}
-/* régions : Kanto, puis Johto (caché jusqu'à la capture de Mewtwo) */
+/* régions : Kanto, puis Johto (caché jusqu'à la capture de Mewtwo), puis Hoenn (après Celebi) */
 .tabs{display:flex; gap:8px; margin-bottom:10px}
 .tabs .btn{flex:1 1 0; background:var(--screen-2); color:var(--ink); box-shadow:2px 2px 0 var(--ink)}
 .tabs .btn[aria-selected="true"]{background:var(--dex-lo); color:var(--paper)}
@@ -121,6 +121,13 @@ body.index .scroller{flex:1 1 0; min-height:200px}
 #dexView.johto .grass{box-shadow:0 0 0 3px #c8a030, 3px 3px 0 3px var(--ink-soft)}
 #dexView.johto .entry{border-color:#7a5a10}
 #dexView.johto .meter span{background:#c8a030}
+.tabs .btn.hoenn[aria-selected="true"]{background:#2f8f9f; color:var(--paper)}
+#dexView.hoenn .grass{box-shadow:0 0 0 3px #2f8f9f, 3px 3px 0 3px var(--ink-soft)}
+#dexView.hoenn .entry{border-color:#1f5f6a}
+#dexView.hoenn .meter span{background:#2f8f9f}
+/* Pokémon chromatique capturé : étoile dorée dans le coin de sa case */
+.entry.shiny{position:relative}
+.entry.shiny::after{content:"★"; position:absolute; top:2px; right:4px; color:#e8b830; font-size:14px; line-height:1; text-shadow:1px 1px 0 var(--ink)}
 @keyframes burst{0%,40%{filter:brightness(3) saturate(0)} 20%,60%{filter:none} 80%{filter:brightness(2) saturate(0)} 100%{filter:none}}
 .board-wrap.burst{animation:burst .9s steps(5)}
 /* transfert de sauvegarde */

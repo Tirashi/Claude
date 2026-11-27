@@ -207,3 +207,53 @@ Retour de l'utilisateur (19/11) : « c'est pas mal là » : **session 1 validée
 - Simulateur : vague moyenne inchangée (environ 6 avec les dés).
 
 Retour de l'utilisateur : en attente.
+
+## 18. Comparaison avec Slotbound et pistes de simplification (26/11)
+
+L'utilisateur a découvert **Slotbound** (Optima Arch, Steam, sorti vers le 12-13/11/2026, environ 10 $, démo gratuite) : « ils ont fait à peu près ce que je voulais faire ». Démo non jouable depuis l'environnement de Claude (jeu Windows/macOS) ; comparaison faite sur des extraits de recherche web (Steam, TodayWeGame, wikis), pas sur le jeu.
+
+**Slotbound** : roguelite autobattler. Une machine à sous 3×3 invoque les unités (trois symboles alignés sur l'une des huit lignes) ; on les fusionne en les absorbant ; objets et « cores » faussent les probabilités ; vagues de jugement et de boss ; ennemis qui avancent, un cœur perdu par ennemi qui passe, le boss met fin à la partie ; monnaie de méta-progression. Démo « Très positif » (342 avis), jeu complet autour de 77-79 % ; reproche : pics de difficulté aux vagues de jugement. Le code a été écrit par une IA (polémique de presse).
+
+| | Slotbound | Les Bannis |
+|---|---|---|
+| Hasard | la machine crée l'armée | héros tirés au sort ; dés et sorts du Mage |
+| Geste du joueur | tirer le levier, fusionner | placer, garder / relancer les dés, sorts, équiper |
+| Combat | plateau, ennemis qui avancent | mouvement libre façon action-RPG, Muraille |
+| Cadre | défense abstraite | histoire du Mage banni, classes, légendaires |
+
+**À prendre chez eux** : un hasard lisible en un seul geste ; le tirage qui *crée* l'équipe plutôt qu'une liste ; la fusion par absorption comme moteur de progression simple ; surveiller les pics de difficulté des boss.
+
+**Pistes à trancher avec l'utilisateur** (aucune programmée, maquette d'abord) :
+1. **Tirage des condamnés aux dés** : au début de la nuit, on lance les dés pour faire sortir les 3 recrues (valeur = classe / rareté ; relance limitée ; dés gardés) au lieu de la liste imposée. Le tirage devient le premier geste du jeu.
+2. **Dés plus souvent, mais un seul geste** : un lancer par vague pour l'équipement (butin tiré au dé : valeur = rareté, face spéciale = affixe), au lieu de choisir dans une liste.
+3. **Simplifier les dés** : garder un seul dé visible (d6) pour les tirages, et reléguer faces spéciales, combos, d4-d20 et graver une face à l'arbre / aux reliques (introduits un par un).
+4. **Cartes à la place des dés pour les sorts et les objets** : un paquet de sorts et d'objets, on pioche une main, on garde ou on défausse (le « garder / relancer » devient « garder / défausser »). Lisible et connu, mais s'éloigne de l'idée « dompter le dé ».
+5. **Une machine à rouleaux** pour les recrues (copie de Slotbound, à éviter : on voudrait notre propre identité) ; variante : rouleaux de **dés** (trois dés alignés = combo = recrue).
+6. **Fusion** : deux recrues identiques s'absorbent pour évoluer (déjà l'évolution au butin, à rapprocher).
+
+Recommandation de Claude : 1 + 2 d'abord (le dé reste notre signature, mais sert plus tôt et plus souvent), avec le 3 comme règle de départ (un seul dé au début, les autres arrivent par l'arbre) ; une maquette à 2-3 directions (tirage des recrues aux dés, butin aux dés, variante cartes) avant tout code.
+
+**Maquette 5 (26/11)** : [artefact](https://claude.ai/artifact/GxrBk8wJY34zCzxy4KqMFz), `maquettes/bannis-5.html`, sources `outils/bannis-maquette/source5.html` + `fabriquer5.py` (utilise seulement `bannis/img/`). Trois directions jouables, écrans RECRUES et BUTIN : **A** dés des condamnés (3 d6, la face = la classe, garder + une relance, butin : un dé par objet, Regalia), **B** un seul dé (interface moderne, Outfit ; trois lancers pour l'équipe, un pour le butin), **C** cartes (5 piochées, on en garde 3, butin : 3 cartes face cachée). Choix de l'utilisateur : en attente.
+
+**Maquette 6 (27/11)** : retour de l'utilisateur sur la maquette 5 : « pas super compréhensible » ; nouvelle approche : **dés à symboles**. Une face = une classe, un équipement ou une rareté ; au départ 3 faces d'une classe et 3 d'une autre (exemple de l'utilisateur : guerrier + archer) ; les améliorations **remplacent une ou deux faces** (le dé devient le deck). [Artefact](https://claude.ai/artifact/AwB6sRPUD5MaA7oupRYPXn), `maquettes/bannis-6.html`, sources `outils/bannis-maquette/source6.html` + `fabriquer6.py`. Deux habillages jouables aux mêmes règles : A Regalia, B interface moderne ; trois écrans : RECRUES (dé des classes, trois lancers, un relancer), BUTIN (dé QUOI + dé QUALITÉ), ATELIER (choisir une amélioration parmi 3 et la graver sur une face). Idées proposées, pas encore en maquette : les recrues ajoutent leurs faces au dé des classes, dé des sorts à symboles, combat à dés (classe qui porte son coup spécial), dé d'événement par nuit. À trancher : un dé de classes pour les trois recrues ou un par recrue ; deux dés d'objets ou un seul ; sprite d'archère à trouver (l'illusionniste fait le tireur dans la maquette).
+
+## 19. Session 3 : les dés à symboles (27/11)
+
+**Décisions de l'utilisateur (27/11, après la maquette 6)** : direction **B** (interface moderne) ; **un dé par case de recrue** (on peut ainsi graver toujours la même classe dans une case) ; **deux dés pour l'objet** (QUOI + QUELLE QUALITÉ) ; les améliorations **remplacent une face** d'un dé choisi ; un dé de sorts pour le Mage « à voir » (pas trop lourd pour un autobattler : **pas fait**, les dés chiffrés de la session 2 restent pour les sorts) ; **un dé d'événement** par nuit, c'est lui qui amène un nouveau combattant ; petit tuto et menus plus bavards.
+
+**Fait** :
+- `run.faces` : `slots` (3 dés de 6 classes : guerrière/mercenaire, illusionniste/magicienne, prêtresse/barde, 3 faces de chaque), `quoi` (arme, armure, bijou ×2), `qual` (4 communs, 2 rares ; indices de `RARETES`), `event` (recrue, forge, bénédiction, raid, coffre, nuit calme). `VERSION_RUN` 2 (anciennes sauvegardes ignorées).
+- Recrutement : les 3 condamnés sortent des 3 dés (une relance au toucher), les 6 faces de chaque dé sont visibles.
+- Butin : `genererObjet(vague, mieux, run)` tire QUOI et QUALITÉ dans les dés ; boss : le premier objet est au moins rare.
+- **Atelier** après les vagues paires : 3 offres (face classe, face qualité, face classe ou objet), on touche la face à remplacer.
+- **Événement** après les vagues 3, 6 et 9 : dé lancé à la main ; recrue (4 héros au plus, sinon 20 or), forge (une amélioration de plus), bénédiction (soins), raid (−15 Muraille, +30 or), coffre (objet rare ou mieux), nuit calme (+10 or, +10 Muraille).
+- Tuto en 4 pages à la première nuit (`bannis.tuto`), bouton « ? » ensuite. Titillium Web pour ces écrans.
+- Simulateur : vague moyenne ≈ 5,9 (inchangée). Tests : `outils/fumee.js` (faces, gravure, événement recrue, coffre).
+
+**À faire / à voir** : tester sur le téléphone ; style moderne pour tout le jeu ? ; dé de sorts pour le Mage ; recrues qui ajoutent leurs faces ; équilibrage des faces (quelles classes en plus ? légendaire dès la vague 6) ; sprite d'archère.
+
+**Session 3b (27/11, retours : « on passe en moderne », animations des dés, menus incompréhensibles)** :
+- **Tout le jeu en interface moderne** : `panneau`, `grand`, `petit`, `bouton`, `barre` et `texte` de `jeu.js` redessinés (cartes arrondies sombres, liseré teal, Titillium Web) ; les planches Dragon Regalia ne sont plus chargées (`img/ui-*.png` restent dans le dépôt, inutilisées). Les sprites restent en pixel art. Pas de nouvelle maquette : extension du style validé de la maquette 6 (direction B).
+- **Animations des dés** (`tileFace` : `t0`, `pool`, `dur`, `deal`) : le dé rebondit, tourne en ralentissant, ses faces défilent, une ombre suit, puis il se tasse en se posant ; sons `SON.des` (tic-tac puis choc) ; les trois dés des recrues tombent l'un après l'autre et leur combattant n'apparaît qu'une fois posés ; le butin fait rouler les deux dés (QUOI, QUALITÉ) de chaque objet avant de le montrer ; l'événement roule 1,4 s ; l'atelier fait entrer les offres en glissant et la face gravée passe de l'ancienne à la nouvelle.
+- **Menus** : fil d'étapes en haut du butin (BILAN, OBJET, ATELIER, EVENEMENT, MARCHAND ; seules les étapes de la vague), bandeau « A FAIRE : … » avec une phrase d'aide sur chaque écran (recrues, bilan, niveau, objet, équipement, atelier en 2 temps, événement, marchand) ; boutons plus explicites (« NE RIEN PRENDRE : 12 PIECES D'OR », « NE PAS L'EQUIPER : VENDRE », « LANCER LA VAGUE SUIVANTE ») ; atelier : une carte par offre avec sa description ; événement : légende des 6 faces avant le lancer ; marchand : « D8 DE SORTS » et « FACE DE SORT x2 » (plus de confusion avec les faces de l'atelier) ; cartes des héros : niveau dans une pastille.
+- **À voir** : le placement, le combat et l'écran du plateau de dés de sorts ont gardé leur mise en page, seulement restylés ; essai sur le téléphone ; fusionner les dés de sorts chiffrés avec le principe des symboles ?
