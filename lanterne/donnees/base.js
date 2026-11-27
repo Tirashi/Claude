@@ -36,7 +36,11 @@ LANTERNE.persos = {
   // le Hameau caché et l'acte 3 : les Hautes-Roches et les Mines de sel
   dormeur: { nom: 'Un dormeur', perso: 'dormeur' }, berger: { nom: 'Colin le berger', perso: 'berger' },
   garance: { nom: 'Garance', perso: 'garance' }, mineur: { nom: 'Le vieux Barnabé', perso: 'mineur' },
-  chevalier: { nom: 'Chevalier de cendre', perso: 'chevalier' }, geant: { nom: 'Géant de sel', perso: 'geant_sel' }
+  chevalier: { nom: 'Chevalier de cendre', perso: 'chevalier' }, geant: { nom: 'Géant de sel', perso: 'geant_sel' },
+  // acte 4 : le Cimetière des cloches et le Clocher englouti
+  fossoyeur: { nom: 'Anselme le fossoyeur', perso: 'ancien' }, sonneur: { nom: 'Le Sonneur', perso: 'sonneur' },
+  // le final : l'abbaye de Saint-Cendre
+  premier: { nom: 'Le Premier Veilleur', perso: 'premier_veilleur' }, aubrin: { nom: 'Aubrin', perso: 'vaast' }, tiennot: { nom: 'Tiennot', perso: 'enfant' }
 };
 
 LANTERNE.statistiques = [
@@ -76,7 +80,9 @@ LANTERNE.aide = [
 ];
 
 LANTERNE.fin = ['vaast_vu', 'verene_rejoint', 'outil:lanterne', 'roi_vaincu', 'acte1_fini', 'mission_marais', 'maud_rejoint', 'outil:grappin', 'dame_vaincue', 'acte2_fini',
-  'isee_avouee', 'echarpe_trouvee', 'isee_conseil', 'mission_roches', 'outil:masse', 'page_sceau', 'geant_vaincu', 'acte3_fini'];
+  'isee_avouee', 'echarpe_trouvee', 'isee_conseil', 'mission_roches', 'outil:masse', 'page_sceau', 'geant_vaincu', 'acte3_fini',
+  'ysolde_partie', 'lettre_lue', 'mission_cimetiere', 'sonneur_vaincu', 'fresque_finale', 'acte4_fini',
+  'ysolde_libre', 'aubrin_vaincu', 'jeu_fini', 'bonus_vu', 'premier_vaincu', 'quete_eloi_fin', 'quete_verene_fin', 'quete_maud_fin'];
 
 LANTERNE.depart = { carte: 'maison_ysolde', x: 2, y: 4, dir: 'bas', equipe: ['heros'], niveau: 1, ecus: 0, chapitre: 'Prologue' };
 
@@ -100,7 +106,17 @@ LANTERNE.journal = e => {
   if (!d['outil:masse']) return 'Descendre dans les Mines de sel, au nord du village des Hautes-Roches.';
   if (!d.geant_vaincu) return 'La masse brise les rochers fendus et les murs fissurés. Trouver la clé des mines et la Flamme d\'or.';
   if (!d.acte3_fini) return 'La Flamme d\'or brille. Lire la fresque des mines avec Vérène.';
-  return 'Trois flammes dans la lanterne… et un Prieur qui « s\'inquiète ». La suite (le retour à Clairfond) arrive bientôt.';
+  if (!d.lettre_lue) return 'Rentrer à Clairfond voir Mère Ysolde, comme Maud le propose.';
+  if (!d.mission_cimetiere) return 'Mère Ysolde est partie à l\'abbaye : porter sa lettre au Prieur, au nord de Clairfond.';
+  if (!d.cimetiere_vu) return 'Prendre la route de la forêt vers l\'abbaye : un portail s\'ouvre à l\'est, sur le Cimetière des cloches.';
+  if (!d.clocher_vu) return 'Traverser le Cimetière des cloches jusqu\'au Clocher englouti, derrière l\'église.';
+  if (!d.sonneur_vaincu) return 'Dans le Clocher englouti : grappin, masse et lanterne servent tous. Trouver la clé du clocher et la Flamme blanche.';
+  if (!d.acte4_fini) return 'La Flamme blanche brille. Lire la fresque du clocher avec Vérène.';
+  if (!d.ysolde_libre) return 'Quatre flammes dans la lanterne. Retourner à l\'abbaye : une porte de fer s\'ouvre derrière la Grande Lanterne. Délivrer Mère Ysolde dans les cachots.';
+  if (!d.aubrin_vaincu) return 'Mère Ysolde est libre. Monter au sommet de l\'abbaye affronter le Prieur et la Grande Lanterne.';
+  const pages = ['page_sceau'].concat(Array.from({ length: 11 }, (_, i) => 'page_j' + (i + 1))).filter(f => d[f]).length;
+  if (pages < 12) return 'La brume se lève au matin et revient le soir. Pages du journal d\'Aubrin retrouvées : ' + pages + ' sur 12. Les autres dorment dans des coffres déjà visités.';
+  return 'Les douze pages du journal d\'Aubrin sont rassemblées. Retourner à Clairfond voir si le printemps a changé quelque chose.';
 };
 
 /* Légende commune des cartes : une lettre par case.
@@ -141,6 +157,9 @@ LANTERNE.legende = {
   // acte 3 : les Hautes-Roches
   '4': { sol: 'rocaille' }, '5': { sol: 'rocaille', decor: 'falaise', bloque: true }, '6': { sol: 'rocaille', decor: 'gros_rocher', bloque: true },
   '7': { sol: 'herbe_sombre', decor: 'sapin', bloque: true },
+  // acte 4 : le Cimetière des cloches (le Clocher englouti réutilise la crypte et l'eau trouble)
+  '8': { sol: 'terre_grise' }, '9': { sol: 'terre_grise', decor: 'tombe', bloque: true }, '0': { sol: 'terre_grise', decor: 'cloche', bloque: true },
+  '&': { sol: 'crypte', decor: 'cloche', bloque: true },
   // les Mines de sel
   '!': { sol: 'sel' }, '#': { sol: 'vide', decor: 'mur_mine_haut', bloque: true }, '|': { sol: 'vide', decor: 'mur_mine_cote', bloque: true },
   '-': { sol: 'vide', decor: 'mur_mine_bas', bloque: true }, '*': { sol: 'sel', decor: 'cristaux', bloque: true },
@@ -159,6 +178,7 @@ LANTERNE.style = {
     herbe_marais: { tuiles: ['herbe_marais0', 'herbe_marais1', 'herbe_marais2'] }, vase: { tuiles: ['vase0', 'vase1'] },
     eau_trouble: { tuiles: ['eau_trouble', 'eau_trouble2'], eau: true }, ponton: { tuiles: ['ponton'] },
     rocaille: { tuiles: ['rocaille0', 'rocaille1', 'rocaille2'] }, sel: { tuiles: ['sel0', 'sel1', 'sel2'] },
+    terre_grise: { tuiles: ['terre_grise0', 'terre_grise1', 'terre_grise2'] },
     vide: null
   },
   decors: {
@@ -209,6 +229,8 @@ LANTERNE.style = {
     // le Hameau caché : les Brumiens endormis, figés en statues de brume
     statue_brume: { type: 'panneau', tuiles: ['statue_brume0', 'statue_brume1', 'statue_brume2', 'statue_brume3', 'statue_brume4'], taille: 1.45 },
     colonne_brisee: { type: 'panneau', tuiles: ['colonne_brisee'], taille: 1.3 },
+    // acte 4
+    tombe: { type: 'panneau', tuiles: ['tombe'], taille: 1 },
     // acte 3
     falaise: { type: 'bloc', tuile: 'falaise', hauteur: 1.5 }, gros_rocher: { type: 'panneau', tuiles: ['gros_rocher'], taille: 1.1 },
     mur_mine_haut: { type: 'bloc', tuile: 'mur_mine', hauteur: 1.8 }, mur_mine_cote: { type: 'bloc', tuile: 'mur_mine', hauteur: .9 }, mur_mine_bas: { type: 'bloc', tuile: 'mur_mine', hauteur: .35 },

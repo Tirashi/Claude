@@ -365,7 +365,10 @@ Tout est réglé (20/10, § 0). **Cahier des charges validé.** Prochaine étape
 | 2 | ✅ (22/10) Moteur **combat** au tour par tour, équipe de 4 : règles, classes, talents, niveaux, équipement ; tests Node et combats simulés | Opus |
 | 3 | ✅ (22/10) Contenu **prologue et acte 1** (abbaye et Eloi, Bois Murmurant et Vérène, Crypte des racines, Roi des aulnes) ; solveur d'accessibilité jusqu'à la fin de l'acte 1 | opusplan |
 | 4 | ✅ (29/10) **Actes 2 et 3** (marais, moulin, Hameau caché, mines) : acte 2 (§ 17.1), rebondissement 2 et acte 3 (§ 17.2) | opusplan |
-| 5 | **Acte 4, final, fin**, scène bonus, à-côtés (pages, quêtes des compagnons, lanternes oubliées), donjon facultatif | opusplan |
+| 5a | ✅ (26/11) **Rebondissement 3 et acte 4** (§ 17.3) | opusplan |
+| 5b | ✅ (26/11) **Final** (abbaye, Ysolde, Aubrin) et fin (§ 17.4) | opusplan |
+| 5c | ✅ (27/11) 12 pages du journal et scène bonus (§ 17.5) | opusplan |
+| 5d | ✅ (27/11) Quêtes des compagnons, donjon facultatif (§ 17.6) | opusplan |
 | 6 | Équilibrage, sons et musique, accueil, `sw.js`, artefact | Sonnet |
 
 ### 17.1 Acte 2 (fait le 29/10)
@@ -390,6 +393,32 @@ Tout est réglé (20/10, § 0). **Cahier des charges validé.** Prochaine étape
 - **Équipement** : Épée runique, Masse d'argent, Bâton de cristal, Arc des cimes, Plastron de mineur et Manteau de laine (boutique de Gaspard), Amulette de sel.
 - **Équilibrage** (`outils/lanterne-combats.js`, 7 cas de plus) : même friction qu'avant (2 à 4,5 tours, 13 à 36 % des PV) ; le Géant est prévu au **niveau 10** (100 %, 9,5 tours, 51 % des PV ; au niveau 9 : 87 %, 13,5 tours) ; deux Chevaliers au niveau 10 : 100 %, 4,4 tours.
 - **Pas encore** (session 5) : le rebondissement 3 (Clairfond éteinte, Ysolde partie), l'acte 4, le final et les à-côtés.
+
+### 17.3 Rebondissement 3 et acte 4 (faits le 26/11)
+- **Rebondissement 3** : à l'arrivée à Clairfond après l'acte 3 (`clairfond_retour`, `ysolde_partie`), la lanterne du village est éteinte (plus de soin ni de sauvegarde à cette lanterne) et Mère Ysolde a disparu de sa maison ; sa **lettre** sur la table (`lettre_ysolde`, `lettre_lue`) : elle soupçonne le Prieur depuis cinquante ans, part à l'abbaye et demande de retourner le voir « comme si de rien n'était ». Au Prieur (`vaast_acte4`) : il prétend qu'elle se repose à l'infirmerie (« vous la verrez » : Vérène relève le mot) et ouvre le portail du cimetière (`mission_cimetiere`).
+- **Lieux** (5 cartes) : **Cimetière des cloches** (à l'est de la route de la forêt, portail aux cases x = 13, y 14-15 de `route_abbaye` ; terre grise, tombes, cloches ; Anselme le fossoyeur, Isée qui s'affaiblit, lanterne oubliée des cloches qui guidaient, 3 coffres dont la Médaille de veilleur), puis **Clocher englouti** en 4 salles : vestibule, **nef noyée** (un canal de 2 cases : le grappin atteint la porte à clé ; rocher fendu d'un coffre à la masse), **crypte** (nappe de brume à dissiper pour la **Clé du clocher**, 3 coffres, lanterne oubliée du sonneur), **haut du clocher** (boss, fresque).
+- **Les trois outils** servent tous dans le clocher (aucun nouvel outil).
+- **Monstres** : Veilleur d'os, goule du caveau, poltergeist du glas, âme perdue (cimetière) ; phantôme du clocher, spectre de la nef (clocher). **Boss : le Sonneur** (tuile `ancient_champion`, 900 PV, rythme fixe : coup, Carillon, coup, Grand Glas annoncé un tour avant, Angélus qui endort ; faible à la lumière et à la foudre). Vaincu, il reconnaît le héros comme « celui qui ouvrira » ; Flamme blanche.
+- **Fresque finale** (`fresque_clocher`) : l'homme malade guéri, qui demande les flammes, refuse, puis capture les quatre Gardiens avec leur propre flamme ; la brume est leur chagrin ; la Grande Lanterne le garde en vie et les Veilleurs sont envoyés pour la nourrir. `acte4_fini`.
+- **Équipement** : Épée du glas, Masse du carillon, Bâton de bronze (vestibule), Arc du veilleur, Cotte de bronze, Médaille de veilleur (icônes réutilisées). Tuiles faites par `outils/lanterne-tuiles.py` (terre grise, 7 monstres).
+- **Équilibrage** : le Sonneur est prévu au **niveau 12** (99 % de victoires, 8,6 tours, 49 % des PV) ; monstres au niveau 11-12 : 3 à 5 tours, 16 à 35 % des PV.
+- **Pas encore** (session 5b) : le final (donjon de l'abbaye, Ysolde captive, Aubrin en deux phases), la fin, la scène bonus, les à-côtés.
+
+### 17.4 Final et fin (faits le 26/11)
+- **L'abbaye** : après `acte4_fini`, le Prieur a quitté la grande salle ; une porte de fer s'ouvre derrière la Grande Lanterne (case x = 6, y = 0) sur les **cachots** (`donjon_cachots` : levier et grille, Chevaliers de cendre, spectres, phantômes ; **Mère Ysolde** captive : « rentrez », le mot des veilleurs, ouvre la porte du sommet, `ysolde_libre`).
+- **Sommet** (`abbaye_sommet`) : Aubrin (le Prieur, tuile `vaast_c`) demande les flammes ; Eloi refuse. **Deux combats d'affilée** (le moteur n'a pas de phases) : Aubrin (niveau prévu 13 : 100 %, 7,1 tours, 49 % des PV) puis, après un soin, **la Grande Lanterne** (99 %, 9 tours, 50 % des PV) ; en cas de défaite, le déclencheur rejoue la scène (`boss: true`, `sauvegardeAuto`).
+- **Fin** (`fin_du_jeu`) : le héros brise la Grande Lanterne, les Gardiens s'éveillent, on est ramené à Clairfond à l'aube (`ysolde_partie` effacé : la lanterne et Mère Ysolde reviennent) ; Maud retrouve **Tiennot** (tuile `enfant`, il n'a pas grandi), **Isée** s'efface avec l'aube, les lanternes s'allument pour la nuit seulement (`jeu_fini`). Le jeu continue ensuite en promenade.
+- **Pas encore** (5c) : la scène bonus (12 pages du journal), les à-côtés, un donjon facultatif ; l'écran « FIN » est une simple fenêtre de dialogue ; `demo: true` encore sur l'accueil.
+
+### 17.5 Pages du journal et scène bonus (faites le 27/11)
+- **12 pages** du journal d'Aubrin : `page_sceau` (Mines de sel) et `page_j1` à `page_j11`, des coffres posés dans 11 cartes de Clairfond à la crypte du cachot (ids `pj1`…`pj11`, textes dans `PAGES_JOURNAL` à la fin d'`evenements.js`). Elles racontent la fièvre, la gratitude, le refus des Gardiens, le vol des flammes, la brume cachée et les regrets. Le Journal du menu en donne le compte.
+- **Scène bonus** (`bonus_vu`) : une fois `jeu_fini` et les 12 pages trouvées, en entrant à Clairfond : au printemps, une jeune fille aux yeux gris passe la porte, Mère Ysolde sourit ; dernière ligne sur un prochain RPG.
+- **Pas encore** (5d) : quêtes des compagnons, donjon facultatif ; `demo: true` encore sur l'accueil.
+
+### 17.6 Quêtes des compagnons et Catacombes (faites le 27/11)
+- **Quêtes** (après `jeu_fini`, à une lanterne : « Parler à un compagnon ? ») : **Eloi** veut un éclat de la grande cloche (coffre au haut du clocher, chapelet de bronze), **Vérène** son carnet (coffre de la galerie des Mines de sel, écritoire), **Maud** le sifflet de roseau de Tiennot (coffre du Moulin noyé, écharpe de Tiennot). Les objets se trouvent à tout moment ; le compagnon les réclame une fois le jeu fini (`quete_<nom>_debut` / `_fin`).
+- **Catacombes des premiers veilleurs** (donjon facultatif) : dalle à l'est du Cimetière des cloches (x = 19, y = 8, ouverte après `jeu_fini`), 2 salles : 5 coffres d'équipement (une arme par classe + cuirasse) et le **Premier Veilleur** (niveau 15 prévu : 100 %, 8,1 tours ; 1000 PV), qui donne la Lanterne des premiers. Tuile `lich` de Dungeon Crawl.
+- **Pas encore** : sons et musiques propres, sortie de démo, `LUDO1-`.
 
 ## Détails techniques (déplacés du mémo le 05/11)
 Texte de la ligne de ce jeu dans le tableau « Les jeux existants (détails) » de [`specs/ludotheque.md`](ludotheque.md), recopié tel quel lors du rangement du 05/11 ([`plan-rangement.md`](plan-rangement.md), phase 2). L'essentiel, tenu à jour, est dans le `CLAUDE.md` du dossier du jeu.

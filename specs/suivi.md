@@ -186,3 +186,15 @@ Affichage PC élargi (1280 px, liste en colonnes, fiche en deux colonnes) ; ongl
 - **Hoenn** (27/11) : 135 dessins d'après le Minidex 3G (n° 252 à 386), 3e onglet ouvert par Celebi ; légendaires : Regirock / Regice / Registeel (10 captures), Latias et Latios rôdeurs (20), Kyogre et Groudon (30), Rayquaza (après les deux), Jirachi (100), Deoxys (tous les autres). `regionOf` gère trois régions.
 - **Chromatiques** : `picross/chroma.js`, 382 Pokémon, calculé pixel par pixel d'après les planches Or / Argent et Hoenn (décalage de teinte, saturation et clarté estimé sur les couleurs dominantes) ; teinte de remplacement quand le chromatique est quasi identique ; une rencontre sur dix (`SHINY_CHANCE`), étoile ★ dans le Dex, drapeau `s` dans le code de sauvegarde. Le Charme Chroma (picross d'objet, Boutique) augmentera le taux plus tard.
 - À venir : Boutique (picross d'objets), Arène (badges par génération), Pokédex old school ([`specs/picross.md`](picross.md)).
+## La Dernière Lanterne, acte 4 (26/11)
+Session 5a : rebondissement 3 (Clairfond éteinte, lettre d'Ysolde), Cimetière des cloches, Clocher englouti (4 salles, les trois outils), le Sonneur (niveau 12), fresque finale, Flamme blanche ; 5 cartes, 7 monstres, 6 objets d'équipement. Détails : `specs/rpg.md` § 17.3. Cache v129. À essayer sur le téléphone ; ensuite le final (5b).
+
+## La Dernière Lanterne, final (26/11)
+Session 5b : cachots de l'abbaye (levier, grille, Ysolde libérée), sommet, Aubrin puis la Grande Lanterne (deux combats), fin à Clairfond (Tiennot, Isée, lanternes de nuit). 2 cartes, 2 boss, cas d'équilibrage au niveau 13. Détails : `specs/rpg.md` § 17.4. Cache v130. Correction : la lettre d'Ysolde se lisait même avant la disparition (les objets ignorent `si`). Reste 5c : scène bonus et à-côtés.
+
+## La Dernière Lanterne, pages et scène bonus (27/11)
+Session 5c : 11 nouvelles pages du journal d'Aubrin dans 11 cartes (12 avec la page des mines), compte dans le Journal, scène bonus du printemps à Clairfond quand tout est trouvé après la fin. Cache v131. Reste 5d : quêtes des compagnons, donjon facultatif.
+
+## La Dernière Lanterne, quêtes et Catacombes (27/11)
+Session 5d : trois quêtes de compagnons (menu des lanternes après la fin), Catacombes des premiers veilleurs (2 salles, 5 équipements, Premier Veilleur niveau 15). Cache v132. Reste : essai sur le téléphone, sons, sortie de démo, `LUDO1-`.
+- **27/11 — Démineur, thème sombre** : maquette 4 (3 thèmes), A « Nuit d'été » choisie ; réglage Auto · Clair · Sombre dans le menu, couleurs en variables, tuiles de nuit, lune et lucioles, pas d'éclair blanc au chargement.
