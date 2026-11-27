@@ -1,0 +1,182 @@
+<title>Les Bannis 7</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght@400;600;700;900&display=swap">
+<style>
+/* Maquette 7 « Les Bannis » (28/11) : le dé d'action remplace la jauge et les sorts chiffrés.
+   De l'or (gagné en tuant des monstres) paie des lancers dont le prix monte, puis revient à zéro à chaque vague (idée de Slotbound).
+   Trois façons : A lancers avant le combat, B lancers pendant le combat, C les deux.
+   Mise en page : en-tête, trois téléphones jouables, règles, questions. */
+:root{
+  --fond:#0b141a; --texte:#e8f4f2; --doux:#8fb0ad; --accent:#3ddcbe; --carte:#16303a; --bord:#24505a; --or:#ffd76a; --alerte:#ffb08a; --ligne:#1c3a44;
+  --f:"Titillium Web", system-ui, sans-serif; color-scheme:dark;
+}
+html,body{background:var(--fond);color:var(--texte)}
+body{margin:0;font-family:var(--f);font-size:17px;line-height:1.4;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px 48px}
+.page{max-width:1100px;margin:0 auto;display:flex;flex-direction:column;gap:28px}
+h1{font-weight:900;font-size:clamp(22px,4.5vw,32px);margin:0;letter-spacing:-.01em}
+header p{margin:10px 0 0;color:var(--doux);max-width:80ch}
+b{color:var(--texte)}
+.grille{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:28px;justify-items:center}
+.dir{display:flex;flex-direction:column;align-items:center;gap:12px;min-width:0;width:100%;max-width:370px}
+.dir h2{font-size:18px;font-weight:700;color:var(--accent);margin:4px 0 0;text-align:center}
+.dir p{margin:0;color:var(--doux);text-align:center;min-height:5.2em}
+.tel{width:100%;aspect-ratio:360/760;border:9px solid #04090c;border-radius:28px;overflow:hidden;position:relative;box-shadow:0 18px 40px rgba(0,0,0,.6);background:#0e1a22;container-type:inline-size}
+.ecran{position:absolute;inset:0;display:flex;flex-direction:column;font-size:4cqw;color:var(--texte)}
+.haut{display:flex;align-items:center;gap:2.4cqw;padding:3cqw 4cqw;background:#0a141a;border-bottom:2px solid var(--ligne);flex:none}
+.haut .vag{font-weight:900;font-size:5cqw}.haut .or{margin-left:auto;font-weight:700;color:var(--or);font-size:4.8cqw}
+.haut .mode{font-size:3.2cqw;color:var(--doux);font-weight:600}
+canvas.scene{width:100%;aspect-ratio:360/270;display:block;flex:none;background:#241a3a;image-rendering:pixelated}
+.corps{flex:1;display:flex;flex-direction:column;gap:2.6cqw;padding:3.6cqw 4cqw;min-height:0;overflow:hidden}
+.equipe{display:flex;gap:2cqw}
+.heros{flex:1;background:var(--carte);border:2px solid var(--bord);border-radius:3cqw;padding:1.2cqw;display:flex;flex-direction:column;align-items:center;font-size:2.7cqw;font-weight:600;min-width:0;position:relative;transition:transform .2s,border-color .2s}
+.heros.nouv{border-color:var(--accent);transform:scale(1.07)}
+.heros .n{position:absolute;top:.8cqw;right:.8cqw;background:var(--accent);color:#05211c;border-radius:50%;width:5cqw;height:5cqw;display:grid;place-items:center;font-weight:900;font-size:3cqw}
+.spr,.ico{background-repeat:no-repeat;image-rendering:pixelated;flex:none}
+.carte{background:var(--carte);border:2px solid var(--bord);border-radius:3.4cqw;padding:3cqw}
+.de{display:flex;gap:3cqw;align-items:center}
+.face{background:var(--carte);border:2px solid var(--bord);border-radius:20%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.6cqw;font-size:2.7cqw;font-weight:600;text-align:center;flex:none;aspect-ratio:1;padding:.8cqw;box-sizing:border-box;min-width:0}
+.faces{display:grid;grid-template-columns:repeat(6,1fr);gap:1.4cqw}
+.faces .face{width:100%;font-size:2.2cqw}
+.btn{font:inherit;font-weight:900;border:0;border-radius:3.2cqw;padding:3.2cqw;cursor:pointer;font-size:4.6cqw;background:var(--accent);color:#05211c;width:100%}
+.btn.sec{background:var(--carte);color:var(--texte);border:2px solid var(--bord)}
+.btn:disabled{background:#1b3038;color:#5f8a8a;border-color:#1b3038;cursor:default}
+.btn small{display:block;font-weight:600;font-size:3cqw;opacity:.8}
+.titre{font-weight:900;font-size:4.4cqw;color:var(--accent)}
+.doux{color:var(--doux);font-size:3.3cqw}
+.res h4{margin:0;font-size:4.6cqw}.res p{margin:.6cqw 0 0;font-size:3.5cqw;color:var(--texte)}
+.nope{animation:sec .4s}@keyframes sec{25%{transform:translateX(-1.6cqw)}75%{transform:translateX(1.6cqw)}}
+.roule{animation:roule .5s ease-in-out}
+@keyframes roule{0%{transform:rotate(0) scale(1)}40%{transform:rotate(200deg) scale(1.2)}100%{transform:rotate(360deg) scale(1)}}
+@media (prefers-reduced-motion:reduce){.roule,.nope{animation:none}}
+.choix{display:flex;flex-direction:column;gap:1.6cqw}
+.choix .btn{font-size:3.6cqw;text-align:left;font-weight:700}
+.bande{background:rgba(61,220,190,.12);border-left:1cqw solid var(--accent);border-radius:2cqw;padding:2cqw 3cqw;font-size:3.4cqw}
+button:focus-visible{outline:2px solid #fff;outline-offset:2px}
+section.q{border-top:1px solid var(--ligne);padding-top:20px;display:flex;flex-direction:column;gap:10px;min-width:0}
+section.q h2{font-size:18px;color:var(--accent);margin:0}
+section.q p,section.q li{color:var(--doux);max-width:80ch;margin:0}
+section.q li{margin:4px 0}
+.tabw{overflow-x:auto}
+table{border-collapse:collapse;min-width:640px;width:100%;font-size:16px}
+th,td{border:1px solid var(--ligne);padding:8px 10px;text-align:left;vertical-align:top;color:var(--doux)}
+th{color:var(--texte)}
+</style>
+<div class="page">
+<header>
+  <h1>LES BANNIS : LE DÉ D'ACTION</h1>
+  <p>La jauge et les sorts chiffrés disparaissent. À la place : de <b>l'or</b>, gagné en tuant des monstres, paie des <b>lancers</b> d'un dé à symboles. Chaque lancer peut donner une <b>recrue</b> (ou faire monter de niveau un héros déjà là : c'est l'<b>absorption</b>), un <b>objet</b> (deux dés : QUOI et QUALITÉ), un <b>progrès</b>, un <b>soin</b>, un <b>sort</b> ou une <b>relique</b>. Le prix monte à chaque lancer et revient à zéro à la vague suivante. Trois façons de le faire : <b>A</b> les lancers se font avant le combat, <b>B</b> pendant le combat, <b>C</b> un peu des deux. Jouez chaque téléphone sur plusieurs vagues.</p>
+</header>
+<div class="grille" id="grille"></div>
+<section class="q">
+  <h2>COMPARAISON</h2>
+  <div class="tabw"><table>
+    <tr><th></th><th>A · Avant le combat</th><th>B · Pendant le combat</th><th>C · Les deux</th></tr>
+    <tr><th>Quand on lance</th><td>au calme, entre deux vagues, 6 lancers au plus</td><td>à tout moment, sans limite, tant qu'on a de l'or</td><td>3 lancers au calme, 1 lancer d'urgence en combat</td></tr>
+    <tr><th>Pendant le combat</th><td>on regarde</td><td>on garde un doigt sur le bouton</td><td>on garde un lancer pour la crise</td></tr>
+    <tr><th>Ambiance</th><td>réfléchie, comme Slotbound</td><td>nerveuse, action</td><td>équilibrée</td></tr>
+    <tr><th>Risque</th><td>combat trop passif</td><td>stress sur téléphone, on rate les moments</td><td>deux écrans à comprendre</td></tr>
+  </table></div>
+</section>
+<section class="q">
+  <h2>QUESTIONS</h2>
+  <ul>
+    <li>Quelle façon est la plus agréable à jouer : A, B ou C ?</li>
+    <li>L'absorption (une classe déjà là monte de niveau) est-elle claire ? Faut-il des étoiles et des évolutions ?</li>
+    <li>Les 6 faces du dé d'action vous conviennent-elles ? Les sorts à usage unique ont-ils leur place ?</li>
+    <li>Le prix qui monte (10, 15, 20…) et revient à zéro : trop dur, trop facile ?</li>
+  </ul>
+</section>
+</div>
+<script>
+const IMG = /*IMAGES*/{};
+const CL = {guerriere:["GUERRIÈRE",0,"Mêlée"],mercenaire:["MERCENAIRE",2,"Mêlée"],illusionniste:["ILLUSIONNISTE",4,"Distance"],magicienne:["MAGICIENNE",6,"Magie"],pretresse:["PRÊTRESSE",8,"Soin"],barde:["BARDE",10,"Chant"]};
+const SLOTS = [["guerriere","mercenaire"],["illusionniste","magicienne"],["pretresse","barde"]];
+const ACT = {recrue:["RECRUE",null],objet:["OBJET",[5,1]],progres:["PROGRÈS",[10,4]],soin:["SOIN",[9,0]],sort:["SORT",[21,1]],relique:["RELIQUE",[13,13]]};
+const OBJ = [["ARME",[5,1],"+4 ATQ"],["ARMURE",[7,5],"+14 VIE"],["BIJOU",[8,5],"+4 % CRIT"]];
+const RAR = [["COMMUN","#d8d0bc"],["RARE","#4aa8ff"],["ÉPIQUE","#c45cff"]];
+const MONS = [19,22,20,15,11,23];
+const pick = a => a[Math.floor(Math.random()*a.length)];
+const $ = h => { const t = document.createElement("template"); t.innerHTML = h.trim(); return t.content.firstChild; };
+const spr = (cls,k=2) => `<div class="spr" style="width:${32*k}px;height:${32*k}px;background-image:url(${IMG.heros});background-size:${288*k}px ${2304*k}px;background-position:0 -${(CL[cls][1]*192+32)*k}px"></div>`;
+const ico = (rc,k=1.5) => `<div class="ico" style="width:${32*k}px;height:${32*k}px;background-image:url(${IMG.icones});background-size:${512*k}px ${867*k}px;background-position:-${rc[1]*32*k}px -${rc[0]*32*k}px"></div>`;
+const gem = c => `<div style="width:6cqw;height:6cqw;background:${c};transform:rotate(45deg) scale(.75);border:.5cqw solid rgba(0,0,0,.5)"></div>`;
+const faceA = (k,extra="") => `<div class="face" ${extra}>${k==="recrue"?spr("guerriere",1.3):ico(ACT[k][1],1.3)}<span>${ACT[k][0]}</span></div>`;
+const FACES = ["recrue","objet","progres","soin","sort","relique"];
+function phone(titre, texte, cfg){
+  const S = {or:60, vague:1, base:10, prix:10, prep:cfg.prep, lancers:cfg.prepRolls, urgence:cfg.combatRolls, team:[{c:"guerriere",n:1},{c:"illusionniste",n:1},{c:"pretresse",n:1}], res:null, rolling:false, des:[...FACES], relique:null, sorts:0, kills:0, but:10, phase:cfg.prep?"prep":"combat", msg:"", nouv:-1, bonusLancers:0};
+  const w = $(`<div class="dir"><h2>${titre}</h2><div class="tel"><div class="ecran"><div class="haut"></div><canvas class="scene" width="360" height="270"></canvas><div class="corps"></div></div></div><p>${texte}</p></div>`);
+  const haut = w.querySelector(".haut"), cv = w.querySelector("canvas"), corps = w.querySelector(".corps"), ctx = cv.getContext("2d"); ctx.imageSmoothingEnabled = false;
+  const imH = new Image(); imH.src = IMG.heros; const imM = new Image(); imM.src = IMG.monstres;
+  const sim = {mons:[], t:0, spawn:0, flo:[], fin:0};
+  const peutLancer = () => S.or >= S.prix && !S.rolling && (S.phase==="prep" ? S.lancers>0 : S.urgence>0);
+  function rendre(){
+    haut.innerHTML = `<span class="vag">VAGUE ${S.vague}/12</span><span class="mode">${S.phase==="prep"?"PRÉPARATION":"COMBAT"}</span><span class="or">${S.or} OR</span>`;
+    cv.style.display = S.phase==="combat" ? "block" : "none";
+    const eq = `<div class="equipe">${S.team.map((h,i)=>`<div class="heros ${S.nouv===i?"nouv":""}">${spr(h.c,S.phase==="prep"?2.2:1.5)}<span>${CL[h.c][0].slice(0,9)}</span><span class="n">${h.n}</span></div>`).join("")}</div>`;
+    const lim = S.phase==="prep" ? `${S.lancers} lancer${S.lancers>1?"s":""} restant${S.lancers>1?"s":""} cette vague` : cfg.combatRolls===Infinity ? "autant de lancers que tu as d'or" : S.urgence>0 ? "1 lancer d'urgence" : "plus de lancer d'urgence";
+    const b = S.rolling ? "Le dé roule..." : peutLancer() ? `LANCER LE DÉ <small>${S.prix} or · ${lim}</small>` : S.or < S.prix ? `PAS ASSEZ D'OR <small>il faut ${S.prix} or (tu as ${S.or})</small>` : `PLUS DE LANCER <small>${S.phase==="prep"?"prépare-toi au combat":"reviens à la prochaine vague"}</small>`;
+    const R = S.res;
+    let res = "";
+    if (S.relique){ res = `<div class="carte res"><h4>RELIQUE : CHOISIS</h4><div class="choix">${S.relique.map((r,i)=>`<button class="btn sec" data-a="rel" data-i="${i}">${r[0]}<small>${r[1]}</small></button>`).join("")}</div></div>`; }
+    else if (R){ res = `<div class="carte res de">${R.vis||""}<div><h4>${R.t}</h4><p>${R.d}</p></div></div>`; }
+    else res = `<div class="bande">${S.phase==="prep"?"Lance le dé : il donne une recrue, un objet, un progrès, un soin, un sort ou une relique.":"Chaque monstre tué rapporte de l'or. Dépense-le en lançant le dé."}</div>`;
+    const legende = S.phase==="prep" || cfg.combatRolls!==Infinity ? `<div class="titre" style="margin-top:.6cqw">LES 6 FACES DU DÉ D'ACTION</div><div class="faces">${S.des.map(k=>faceA(k)).join("")}</div>` : "";
+    corps.innerHTML = `${eq}${res}${legende}<div style="flex:1"></div>
+      <button class="btn" data-a="lancer" ${peutLancer()||S.rolling?"":"disabled"}>${b}</button>
+      ${S.phase==="prep" ? `<button class="btn sec" data-a="combat">COMBATTRE LA VAGUE ${S.vague}</button>` : ""}`;
+  }
+  function resoudre(){
+    const k = pick(S.des), t = S.team; S.res = null; S.nouv = -1;
+    if (k==="recrue"){ const slot = Math.floor(Math.random()*3), c = pick(SLOTS[slot]), i = t.findIndex(h=>h.c===c);
+      if (i>=0){ t[i].n++; S.nouv=i; S.res = {t:"ABSORPTION", d:`Le dé de la case ${slot+1} donne ${CL[c][0]} : elle est déjà dans l'escouade, elle absorbe sa sœur d'armes et passe niveau ${t[i].n}.`, vis:spr(c,2)}; }
+      else if (t.length<4){ t.push({c,n:1}); S.nouv=t.length-1; S.res = {t:"NOUVELLE RECRUE", d:`Le dé de la case ${slot+1} donne ${CL[c][0]} : elle rejoint l'escouade (${t.length}/4).`, vis:spr(c,2)}; }
+      else { const j = Math.floor(Math.random()*t.length); t[j].n++; S.nouv=j; S.res = {t:"ESCOUADE PLEINE", d:`${CL[c][0]} arrive mais il n'y a plus de place : son énergie va à ${CL[t[j].c][0]} (niveau ${t[j].n}).`, vis:spr(c,2)}; } }
+    else if (k==="objet"){ const o = pick(OBJ), q = Math.random()<.35?1:0, h = pick(t); S.res = {t:`${o[0]} ${RAR[q][0]}`, d:`Deux dés : QUOI = ${o[0]}, QUALITÉ = ${RAR[q][0]}. Équipé sur ${CL[h.c][0]} (${o[2]}).`, vis:`<div style="display:flex;flex-direction:column;align-items:center;gap:1cqw">${ico(o[1],2)}${gem(RAR[q][1])}</div>`}; }
+    else if (k==="progres"){ const h = pick(t); S.res = {t:"PROGRÈS", d:`${CL[h.c][0]} gagne +15 % de vie et +2 d'attaque.`, vis:ico(ACT.progres[1],2)}; }
+    else if (k==="soin"){ S.res = {t:"SOIN", d:"Tous les héros retrouvent toute leur vie, et la Muraille gagne 10 points.", vis:ico(ACT.soin[1],2)}; }
+    else if (k==="sort"){ S.sorts++; S.res = {t:"SORT À UN USAGE", d:`Boule de feu prête (${S.sorts}) : elle part toute seule au prochain monstre dangereux.`, vis:ico(ACT.sort[1],2)}; }
+    else { S.relique = [["MARCHANDAGE","les lancers coûtent 2 or de moins"],["TOUR DE PASSE-PASSE","1 lancer de plus à chaque vague"],["DÉ TRUQUÉ","une face SOIN devient RECRUE"]]; S.res = null; }
+  }
+  function lancer(){
+    if (S.rolling) return;
+    if (!peutLancer()){ corps.classList.remove("nope"); void corps.offsetWidth; corps.classList.add("nope"); return; }
+    S.or -= S.prix; S.prix += 5; if (S.phase==="prep") S.lancers--; else S.urgence--;
+    S.rolling = true; S.relique = null; S.res = {t:"Le dé roule...", d:"", vis:`<div class="face roule" style="width:16cqw">${ico(ACT[pick(FACES)][1]||ACT.objet[1],1.5)}</div>`}; rendre();
+    setTimeout(()=>{ S.rolling = false; resoudre(); rendre(); }, 900);
+  }
+  function finVague(){ S.vague = Math.min(12, S.vague+1); S.or += 20; S.base = Math.max(4, S.base); S.prix = S.base; S.kills = 0; S.res = {t:"VAGUE GAGNÉE", d:"+20 or. Le prix des lancers revient à "+S.base+" or.", vis:ico([12,7],2)}; S.relique = null; S.nouv = -1;
+    if (cfg.prep){ S.phase = "prep"; S.lancers = cfg.prepRolls + S.bonusLancers; } else { S.urgence = Infinity; }
+    if (cfg.combatRolls!==Infinity && cfg.prep) S.urgence = cfg.combatRolls;
+    sim.mons = []; sim.spawn = 0; rendre(); }
+  w.querySelector(".tel").addEventListener("click", ev => { const t = ev.target.closest("[data-a]"); if(!t) return; const a = t.dataset.a;
+    if (a==="lancer") lancer();
+    else if (a==="combat"){ S.phase = "combat"; S.res = null; S.relique = null; S.nouv = -1; S.kills = 0; sim.mons = []; sim.spawn = 0; rendre(); }
+    else if (a==="rel"){ const i = +t.dataset.i; if (i===0){ S.base = Math.max(4, S.base-2); S.prix = Math.max(4, S.prix-2); } else if (i===1){ S.bonusLancers++; if (S.phase==="prep") S.lancers++; } else { const j = S.des.indexOf("soin"); if (j>=0) S.des[j] = "recrue"; else S.des[S.des.indexOf("sort")] = "recrue"; }
+      S.res = {t:"RELIQUE PRISE", d:S.relique[i][0]+" : "+S.relique[i][1]+".", vis:ico(ACT.relique[1],2)}; S.relique = null; rendre(); } });
+  // scène de combat très simple
+  function scene(dt){
+    if (S.phase!=="combat") return;
+    sim.t += dt; sim.spawn -= dt;
+    if (sim.spawn<=0 && S.kills + sim.mons.length < S.but){ sim.mons.push({x:380, y:150 + Math.random()*90, i:pick(MONS), pv:1, hit:0, stop:150 + Math.floor(Math.random()*4)*30}); sim.spawn = 1.3; }
+    ctx.fillStyle = "#2b2146"; ctx.fillRect(0,0,360,270); ctx.fillStyle = "#3a2b52"; ctx.fillRect(0,170,360,100);
+    ctx.fillStyle = "#6b6f80"; ctx.fillRect(0,60,34,210); ctx.fillStyle = "#8a8ea0"; for (let x=0;x<34;x+=11) ctx.fillRect(x,52,7,10);
+    S.team.forEach((h,i)=>{ const f = Math.floor(sim.t*5+i)%4; const fr = [0,1,2,1][f]; ctx.drawImage(imH,(0*3+fr)*32,CL[h.c][1]*192+32,32,32,50+ (i%2)*34, 118+i*34, 64,64); });
+    sim.mons.forEach(m=>{ m.x -= 22*dt; if (m.x<m.stop) m.x = m.stop; m.hit += dt; if (m.x<=m.stop+2 && m.hit>.9){ m.pv--; m.hit = 0; } ctx.drawImage(imM,(m.i-1)*96,0,96,96,m.x-40,m.y-82,96*.9,96*.9); });
+    const morts = sim.mons.filter(m=>m.pv<=0); if (morts.length){ morts.forEach(m=>{ S.kills++; S.or += 4; sim.flo.push({x:m.x,y:m.y-60,t:0}); }); sim.mons = sim.mons.filter(m=>m.pv>0); rendre(); }
+    sim.flo.forEach(f=>{ f.t += dt; ctx.fillStyle = "rgba(255,215,106,"+Math.max(0,1-f.t)+")"; ctx.font = "bold 18px sans-serif"; ctx.fillText("+4 or", f.x-10, f.y - f.t*30); }); sim.flo = sim.flo.filter(f=>f.t<1);
+    ctx.fillStyle = "#08121a"; ctx.fillRect(60,8,240,12); ctx.fillStyle = "#3ddcbe"; ctx.fillRect(60,8,240*S.kills/S.but,12); ctx.fillStyle = "#e8f4f2"; ctx.font = "bold 12px sans-serif"; ctx.fillText("Monstres : "+S.kills+" / "+S.but, 130, 18);
+    if (S.kills>=S.but){ finVague(); }
+  }
+  rendre(); document.getElementById("grille").append(w);
+  return scene;
+}
+const sc = [
+  phone("A · Avant le combat","On lance au calme, entre deux vagues : 6 lancers au plus, prix 10, 15, 20... Puis on appuie sur COMBATTRE et on regarde la vague se jouer seule. À la fin, l'or gagné sert au tour suivant.",{prep:true,prepRolls:6,combatRolls:0}),
+  phone("B · Pendant le combat","Pas de préparation : la vague se joue tout de suite. L'or des monstres tués s'accumule, et le bouton LANCER reste sous le pouce. Le prix monte à chaque lancer, puis revient à zéro à la vague suivante.",{prep:false,prepRolls:0,combatRolls:Infinity}),
+  phone("C · Les deux","3 lancers au calme avant le combat, puis un seul lancer d'urgence pendant la vague : on le garde pour la crise.",{prep:true,prepRolls:3,combatRolls:1})
+];
+let dernier = performance.now();
+function boucle(t){ const dt = Math.min(.1,(t-dernier)/1000); dernier = t; sc.forEach(f=>f(dt)); requestAnimationFrame(boucle); }
+requestAnimationFrame(boucle);
+</script>

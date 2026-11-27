@@ -202,3 +202,4 @@ Session 5d : trois quêtes de compagnons (menu des lanternes après la fin), Cat
 - 27/11 — Les Bannis : maquette 6 « dés à symboles » (classe, équipement, rareté ; atelier qui remplace des faces), après le retour sur la maquette 5.
 - 27/11 — Les Bannis, session 3 : dés à symboles jouables (recrues par dés de case, objets QUOI + QUALITE, atelier, dé d'événement, tuto), direction B (cdc § 19).
 - 27/11 — Les Bannis, session 3b : interface moderne dans tout le jeu, dés qui roulent (rebond, faces qui défilent, ombre), fil d'étapes et consignes « A FAIRE » (cdc § 19).
+- 28/11 — Les Bannis : recherche Slotbound (lancers en cours de partie), maquette 7 « le dé d'action » (A avant, B pendant, C les deux), cdc § 20.
