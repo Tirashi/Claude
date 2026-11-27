@@ -5,7 +5,7 @@
 *{box-sizing:border-box}
 html,body{margin:0;height:100%;background:#05070d;overflow:hidden;overscroll-behavior:none}
 button{font:inherit;color:inherit}
-.boite{width:min(100vw,520px);height:100dvh;margin:0 auto;container-type:inline-size;position:relative}
+.boite{width:min(100vw,520px);height:var(--h,100dvh);margin:0 auto;container-type:inline-size;position:relative}
 .app{position:absolute;inset:0;display:flex;flex-direction:column;overflow:hidden;background:var(--fond);color:var(--texte);font:400 3.3cqi/1.35 var(--police);
   padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 .charge{position:absolute;inset:0;display:grid;place-items:center;font:900 italic 4cqi var(--police);color:var(--doux);text-transform:uppercase;letter-spacing:.1em}

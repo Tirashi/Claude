@@ -1,6 +1,12 @@
 /* Écurie miniature : les écrans (titre, gestion en six onglets, grille de départ, course 3D, résultats, fin de saison).
    Direction A « la télé » de la maquette 9 (21/11). Partie sauvée dans localStorage « ecurie.partie », records dans « ecurie.record ». */
 (function () {
+  // Hauteur réelle de l'écran : sur Android (appli installée), 100dvh est parfois mesuré avant les barres du système au lancement
+  // et le bas des menus est coupé jusqu'à ce qu'on repasse par l'arrière-plan ; on mesure donc nous-mêmes, et on remesure.
+  const hauteur = () => { const h = (window.visualViewport && window.visualViewport.height) || window.innerHeight; if (h > 0) document.documentElement.style.setProperty('--h', Math.round(h) + 'px'); };
+  hauteur(); ['resize', 'orientationchange', 'pageshow', 'focus'].forEach(e => window.addEventListener(e, hauteur));
+  if (window.visualViewport) window.visualViewport.addEventListener('resize', hauteur);
+  document.addEventListener('visibilitychange', hauteur); [100, 400, 1000, 2500].forEach(t => setTimeout(hauteur, t));
   const R = Regles, app = document.getElementById('app'), SON = window.EcurieSons;
   const CLE = 'ecurie.partie', CLE_REC = 'ecurie.record';
   const lire = (k, d) => { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } };

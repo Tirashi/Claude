@@ -69,7 +69,7 @@ Les gros jeux ont leur propre `CLAUDE.md` dans leur dossier (fichiers, tests, pi
 |---|---|---|
 | Démineur | `demineur/` | Style Prairie (tuiles en pixel art dessinées par le code, chiffres en Outfit). Classique 3 tailles (`best:<taille>`), Grande prairie sans fin (`prairie`, points), défi du jour de 8×10 le lundi à 16×26 le dimanche (graine = date, départ ouvert, `demineur.jourRun`, `daily:AAAAMMJJ`, liens `#jour` / `#prairie`). `window.Demineur`. [cdc](demineur.md) |
 | Queens 16-Bit | `queens/` | Puzzle des reines, records par taille, classement. Grille du jour (graine = date, 5×5 le lundi → 9×9 le week-end, temps + 30 s par indice, `queens16.daily`, classement `queens` / `daily:AAAAMMJJ`, lien `#jour`). `window.Queens` expose `generate`, `startDaily`, `setCell`, `puzzle`. |
-| Picross Dex | `picross/` | Picross Pokémon (fan-game). Temps par Pokémon (+30 s par indice), Pokédex qui défile, nombres d'indice grisés un par un. |
+| Picross Dex | `picross/` | Picross Pokémon (fan-game). Temps par Pokémon (+30 s par indice), Pokédex qui défile, nombres d'indice grisés un par un. 3 régions (Kanto, Johto après Mewtwo, Hoenn après Celebi : `regionOf` dans `jeu.js`, légendaires par région), 387 dessins 15×15 (`dessins.js`) et couleurs chromatiques (`chroma.js`, tirage `shinyChance()` = 1 sur 10). Cahier des charges et références : [`specs/picross.md`](picross.md). |
 | Lignée | `lignee/` | Arbre généalogique à reconstituer, 3 vies, arbre du jour, classements. |
 | Injagility | `injagility/` | Agility canine 32 bits : mode Infini (chiens adoptés seulement) + Parcours vu du dessus (`parcours.html`), 6 races. |
 | Touché Coulé | `touche-coule/` | Bataille navale classique / Arsenal, record en moins de tirs. |

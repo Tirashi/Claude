@@ -36,6 +36,7 @@
         <div class="tabs" id="tabs" role="tablist" aria-label="Pokédex" hidden>
           <button class="btn" type="button" role="tab" id="tabKanto">KANTO</button>
           <button class="btn johto" type="button" role="tab" id="tabJohto">JOHTO</button>
+          <button class="btn hoenn" type="button" role="tab" id="tabHoenn" hidden>HOENN</button>
         </div>
         <div class="bar"><span>CAPTURÉS <b id="capCount">0/0</b></span><div class="meter" aria-hidden="true"><span id="capBar"></span></div></div>
         <p class="testnote" id="testNote" hidden>MODE TEST : toutes les grilles du Dex sont jouables, légendaires compris. Les captures comptent comme d'habitude. Touche 5 fois le titre pour le couper.</p>
@@ -120,6 +121,7 @@
 
 <script src="../ludo-scores.js"></script>
 <script src="dessins.js"></script>
+<script src="chroma.js"></script>
 <script src="jeu.js"></script>
 <script>
 /* Ludothèque : mode hors connexion. Pas de bouton « ◀ MENU » ajouté par-dessus le jeu :
