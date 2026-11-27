@@ -1,0 +1,222 @@
+[
+{
+"id": "turtwig",
+"no": "387",
+"name": "TORTIPOUSS",
+"art": [
+"....k..........",
+"...kgk..k......",
+"...kgGkkgk.....",
+"....kGjGk......",
+".....kbk.......",
+"....kjHjk......",
+"...EHHHHFk.....",
+"..kHHHkHHFkk...",
+".kHHFHkyyFbk...",
+"..kHHHHlyjFFk..",
+"...kHjjHyFFFk..",
+"....kEEFFMMMMk.",
+"....kFkMMHFkjk.",
+".....k.kHHk.k..",
+"........kk....."
+]
+},
+{
+"id": "grotle",
+"no": "388",
+"name": "BOSKARA",
+"art": [
+"...kkk.........",
+"..kGGGk..k.....",
+".kGGGGFkkgkk...",
+".kGGGFFGGgggkkk",
+".kGGbFFGggggFjk",
+"..kbFlFGgGgGFbk",
+"..kFlbbFFbFjlk.",
+".kbbllblFlljbk.",
+".kllllFFMFFFMk.",
+"kkllkFjMMMMMjjk",
+"kjFFkHljMMkkzEk",
+".kMgjlkFjjk.kk.",
+".kkklk.kllk....",
+"....k..kkk.....",
+"..............."
+]
+},
+{
+"id": "torterra",
+"no": "389",
+"name": "TORTERRA",
+"art": [
+"...............",
+".......kkk.....",
+"....kkkGGGGk...",
+"....kEkGGGkkkgk",
+"..kkGgGGGGGGFgk",
+"..kEGGgGGGGGFFk",
+".kGEzEgbbFGFFb.",
+".kzzEggggEEFFk.",
+"kkFEEEzzEFgFbk.",
+".FggFEFFFgFbFk.",
+".kFGEEEEFbkkk..",
+"..kkbkkFbsk....",
+"....k..kcE.....",
+"........k......",
+"..............."
+]
+},
+{
+"id": "chimchar",
+"no": "390",
+"name": "OUISTICRAM",
+"art": [
+".....k.........",
+".....kkk.......",
+".....kOk.......",
+"..k.ksOOk......",
+".kHkOOOOOkk....",
+".kjjjHjlbHHk...",
+"..kpcpPcFpck...",
+"..kHcExlcjkkR..",
+"...kckxHjk.RR..",
+"..kbEHFFkkRRRR.",
+".kHkkksEFOklR..",
+".kk..kFHlbykR..",
+".....ksEsbHk...",
+"......kkklEk...",
+".........kk...."
+]
+},
+{
+"id": "monferno",
+"no": "391",
+"name": "CHIMPENFEU",
+"art": [
+".............k.",
+"......kkk...kok",
+".....klk...kok.",
+"..kkkllkk..kok.",
+".kEblllllkkyook",
+"..klEAElbckyyyk",
+".kiEiuiEEpkkyk.",
+"..kuElEAEjk.kyk",
+"..kEokzljk..klk",
+".kkccccFEk..kk.",
+"ksskEEExjykkkk.",
+"ksk.kbccbylFk..",
+".k..kkjOOFOOk..",
+"......kcpkjck..",
+".......kk.kk..."
+]
+},
+{
+"id": "infernape",
+"no": "392",
+"name": "SIMIABRAZ",
+"art": [
+"...............",
+"......kkk..kk..",
+"...kkkRookkllk.",
+".kbolsoysRRR...",
+".kpEWEEbbkk....",
+"..kxxxxbk......",
+".kpjRpEFk...kkk",
+".kbRoRxFk..kOkk",
+"kEFssEElykkb...",
+"kFkkjzzjybbk...",
+".k..ExlEkkO....",
+"...kEkzskklj...",
+"....k.klk.kik..",
+"......kik.kk...",
+".......k......."
+]
+},
+{
+"id": "piplup",
+"no": "393",
+"name": "TIPLOUF",
+"art": [
+".....kkkk......",
+"...kk.uuukk....",
+"...kuuuuuuk....",
+"..kiuuuuuuik...",
+"..kuBuuxxuuk...",
+"..kkDBxkxBkk...",
+"..kyyzxixBk....",
+"...klExxzk.....",
+"....kEzzFekk...",
+"...kdAeuuAeek..",
+"..kakkBFFBBFk..",
+"..kk.kBxFBBk...",
+".....kABBTFk...",
+".....kkkkjkk...",
+".........k....."
+]
+},
+{
+"id": "prinplup",
+"no": "394",
+"name": "PRINPLOUF",
+"art": [
+".....kk........",
+"....kjEkkkk....",
+"...klFBlyylk...",
+"...klElyjjlk...",
+"....kjyHielk...",
+"....kjHWBik....",
+"...kbybBiik....",
+"..keFFiAiAk....",
+".kBdxABeiiik...",
+"..kkWaxaFiiik..",
+"....kBBBBdBik..",
+"....kFkBBDkkk..",
+"....kk.kBk.....",
+".......kkk.....",
+".......k.k....."
+]
+},
+{
+"id": "empoleon",
+"no": "395",
+"name": "PINGOLÉON",
+"art": [
+"......k........",
+"......k........",
+"...kkyyk.......",
+"...kbkkkkk.....",
+"..kjklkklk.....",
+"..kbklekykk....",
+"..kjlkAalAuk...",
+"...kyckyEak....",
+".kkkyyjEukk....",
+".kkkEiBkkFFkk..",
+"...kzuzFkkFFk..",
+"...kuaWzFkkFFk.",
+"...kuDEFFFkaAak",
+"....kkFFFk.kaak",
+"......kkk...kk."
+]
+},
+{
+"id": "starly",
+"no": "396",
+"name": "ÉTOURMI",
+"art": [
+".....kk........",
+".....kFk.......",
+"....kkFk..k.kk.",
+"..kkFFFFkkFkxk.",
+".kExzFFFFkFExEk",
+".kxxzCCFFFFWEFk",
+".kxxxkExFFFFFk.",
+".kooxkkxFFFFk..",
+"kkoookzFFFFFk..",
+"kkbbCCFFFFFkk..",
+".kzzFFFFEEEk...",
+".kFxxzFEEEk....",
+"..kkEEEFFk.....",
+"....kkkkkk.....",
+"..............."
+]
+}
+]
