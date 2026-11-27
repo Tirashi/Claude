@@ -5,7 +5,7 @@
    - Lignée : arbres du jour (classique et royal) avec une seule solution ;
    - Alunissage : chaque site de la mission du jour a ses 3 aires et un vent plus faible que les réacteurs ;
    - Injagility Parcours : les 200 premiers parcours se génèrent et leur chemin prévu est praticable ;
-   - Picross Dex : chaque dessin se résout ligne par ligne, sans deviner (donc une seule solution) ;
+   - Picross Dex : chaque dessin se résout ligne par ligne, sans deviner (donc une seule solution) ; les couleurs chromatiques visent des Pokémon qui existent ;
    - Yams : points de chaque case pour des mains connues, bonus de 35 ;
    - Amiral ! : bataille du jour (flottes complètes, mêmes flottes et même placement ennemi pour tous) ;
    - Capitaine du port : bassin du jour des 20 prochains jours (optimum de 12 à 30 coups, vérifié par le solveur, le même pour tous, vite généré) ;
@@ -141,6 +141,12 @@ const TESTS = {
     }
     if (solved(['k.', '.k'])) out.push('le solveur du test ne voit pas un dessin ambigu');
     for (const P of PUZZLES) if (!solved(P.art)) out.push(`${P.id} : il faut deviner (plusieurs solutions possibles)`);
+    // couleurs chromatiques (chroma.js) : chaque entrée vise un Pokémon qui existe et reste bien écrite
+    const ids = new Set(PUZZLES.map(q => q.id));
+    for (const [id, m] of Object.entries(CHROMA)) {
+      if (!ids.has(id)) out.push(`CHROMA : ${id} n'existe pas dans le Dex`);
+      else if (!/^[A-Za-z]{2}(,[A-Za-z]{2})*$/.test(m)) out.push(`CHROMA : ${id} est mal écrit`);
+    }
     return out;
   }),
   'yams/index.html': async p => p.evaluate(() => {

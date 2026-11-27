@@ -1,0 +1,165 @@
+<title>Les Bannis 6</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Jersey+10&family=Outfit:wght@400;600;800&display=swap">
+<style>
+/* Maquette 6 « Les Bannis » (27/11) : les dés à symboles. Une face = une classe, un équipement ou une rareté.
+   Au départ 3 + 3 faces ; les améliorations remplacent une face. Deux habillages (A Regalia, B moderne), mêmes règles.
+   Mise en page : en-tête, deux téléphones jouables (RECRUES, BUTIN, ATELIER), idées, questions. */
+:root{
+  --fond:#15111c; --texte:#f1e8d6; --doux:#b4a796; --or:#f2c14e; --ligne:#352c3e; --cadre:#050307;
+  --f-titre:"Press Start 2P", ui-monospace, monospace; --f-texte:"Jersey 10", system-ui, sans-serif;
+  color-scheme:dark;
+}
+html,body{background:var(--fond);color:var(--texte)}
+body{margin:0;font-family:var(--f-texte);font-size:18px;line-height:1.4;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px 48px}
+.page{max-width:1000px;margin:0 auto;display:flex;flex-direction:column;gap:28px}
+h1{font-family:var(--f-titre);font-size:clamp(16px,4vw,24px);line-height:1.4;color:var(--or);margin:0;text-shadow:3px 3px 0 #000}
+header p{margin:10px 0 0;color:var(--doux);max-width:76ch}
+b{color:var(--texte)}
+.grille{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:28px;justify-items:center}
+.dir{display:flex;flex-direction:column;align-items:center;gap:12px;min-width:0;width:100%;max-width:370px}
+.dir h2,section.q h2{font-family:var(--f-titre);font-size:12px;line-height:1.5;color:var(--or);margin:4px 0 0;text-align:center}
+.dir p{margin:0;color:var(--doux);text-align:center;min-height:4.4em}
+.onglets{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.onglets button{font:inherit;font-size:16px;padding:6px 14px;border-radius:999px;border:2px solid var(--ligne);background:transparent;color:var(--doux);cursor:pointer}
+.onglets button[aria-pressed=true]{background:var(--or);color:#201000;border-color:var(--or)}
+.tel{width:100%;aspect-ratio:360/760;border:9px solid var(--cadre);border-radius:28px;overflow:hidden;position:relative;box-shadow:0 18px 40px rgba(0,0,0,.6);background:#000;container-type:inline-size}
+.ecran{position:absolute;inset:0;display:flex;flex-direction:column;padding:6cqw;gap:3cqw;overflow:hidden}
+.spr,.ico{background-repeat:no-repeat;image-rendering:pixelated;flex:none}
+.rang{display:grid;gap:2.2cqw}
+.r3{grid-template-columns:repeat(3,1fr)}.r2{grid-template-columns:repeat(2,1fr)}.r6{grid-template-columns:repeat(6,1fr);gap:1.2cqw}
+.face{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.6cqw;border:0;font:inherit;aspect-ratio:1;min-width:0;cursor:pointer;padding:1cqw;text-align:center}
+.face .t{font-size:2.9cqw;line-height:1.05;word-break:break-word}
+.r6 .face .t{display:none}
+.gem{width:9cqw;height:9cqw;transform:rotate(45deg) scale(.72);border:.6cqw solid rgba(0,0,0,.55);flex:none}
+.r6 .gem{width:5.6cqw;height:5.6cqw}
+.roule{animation:roule .5s ease-in-out}
+@keyframes roule{0%{transform:rotate(0) scale(1)}40%{transform:rotate(200deg) scale(1.2)}100%{transform:rotate(360deg) scale(1)}}
+@media (prefers-reduced-motion:reduce){.roule{animation:none}}
+.flash{animation:fl .8s ease-out}
+@keyframes fl{0%{transform:scale(1.35)}100%{transform:scale(1)}}
+button:focus-visible{outline:2px solid #fff;outline-offset:2px}
+.objet{display:flex;gap:3cqw;align-items:center;padding:3cqw;text-align:left}
+.objet b{display:block}
+/* A : Regalia */
+.A .ecran{background:linear-gradient(#2a1b3a,#120a1c 60%,#3b2433);font-family:var(--f-texte);font-size:5cqw;color:#fff}
+.A h3{font-family:var(--f-titre);font-size:4.4cqw;color:#ffd76a;margin:0;text-align:center;text-shadow:2px 2px 0 #000;line-height:1.4}
+.A .sub{color:#ffe3a8;font-size:4.6cqw;margin:0;text-align:center}
+.A .face{background:#f4ecd8;color:#2a1620;border-radius:12%;box-shadow:inset -3px -3px 0 #c9bd9e,0 3px 0 #000}
+.A .face.sel{outline:3px solid #ffd76a;outline-offset:2px}
+.A .face.use{opacity:.45;cursor:default}
+.A .cadre,.A .objet{border:3px solid #e8a23a;background:#2c4f9e;border-radius:6px;box-shadow:inset 0 0 0 2px #17306a,0 3px 0 #000;padding:2.4cqw}
+.A .btn{font-family:var(--f-titre);font-size:3.4cqw;background:#e07a5a;color:#2a0f08;border:3px solid #000;border-radius:6px;padding:3cqw;box-shadow:0 4px 0 #8a3a22;cursor:pointer}
+.A .btn:disabled{background:#6b6b7a;box-shadow:none;color:#222;cursor:default}
+.A .btn.ok{background:#6fbf5a;box-shadow:0 4px 0 #2f6a22}
+/* B : moderne */
+.B .ecran{background:#0e1a22;font-family:Outfit,system-ui,sans-serif;font-size:4cqw;color:#e8f4f2}
+.B h3{font-weight:800;font-size:6.4cqw;margin:0;letter-spacing:-.01em}
+.B .sub{color:#8fb0ad;font-size:3.6cqw;margin:0}
+.B .face{background:#16303a;color:#e8f4f2;border-radius:22%;border:2px solid #24505a}
+.B .face.sel{border-color:#3ddcbe;box-shadow:0 0 0 2px #3ddcbe}
+.B .face.use{opacity:.5;cursor:default}
+.B .cadre,.B .objet{background:#16303a;border-radius:3cqw;padding:3cqw;border:2px solid #24505a}
+.B .btn{font:inherit;font-weight:800;background:#3ddcbe;color:#05211c;border:0;border-radius:3cqw;padding:3.2cqw;cursor:pointer;font-size:4.2cqw}
+.B .btn:disabled{background:#24444b;color:#6f9a9a;cursor:default}
+.B .btn.ok{background:#e8f4f2}
+section.q{border-top:1px solid var(--ligne);padding-top:20px;display:flex;flex-direction:column;gap:10px;min-width:0}
+section.q h2{text-align:left;margin:0 0 4px}
+section.q p,section.q li{color:var(--doux);max-width:78ch;margin:0}
+section.q li{margin:4px 0}
+</style>
+<div class="page">
+<header>
+  <h1>LES BANNIS : DES DÉS À SYMBOLES</h1>
+  <p>Plus de nombres : chaque face montre <b>une classe</b>, <b>un équipement</b> ou <b>une rareté</b>. Au départ, 3 faces d'une classe et 3 d'une autre. Les <b>améliorations remplacent une face</b> : le dé devient votre deck. Trois écrans par téléphone : <b>RECRUES</b> (tirer l'escouade), <b>BUTIN</b> (deux dés : QUOI + QUELLE QUALITÉ), <b>ATELIER</b> (choisir une amélioration et la graver sur une face). Touchez un dé pour le <b>relancer (une fois)</b>. Mêmes règles dans les deux téléphones : A en <b>Regalia</b>, B en <b>interface moderne</b> (hors rétro).</p>
+</header>
+<div class="grille" id="grille"></div>
+<section class="q">
+  <h2>AUTRES IDÉES</h2>
+  <ul>
+    <li><b>Les recrues ajoutent leurs faces</b> : chaque condamné gardé grave sa classe sur une face du dé des classes. Une équipe de guerrières tire plus de guerrières : on se spécialise, ou on varie exprès en cassant le dé.</li>
+    <li><b>Le dé des sorts</b> : mêmes symboles (feu, soin, foudre, crâne = déraillement) ; le Mage grave de nouvelles pages sur ses faces.</li>
+    <li><b>Combat à dés</b> : à chaque vague, un dé de classes décide quel héros porte son coup spécial (façon Slice &amp; Dice) ; une classe absente de l'escouade fait « rien », donc il faut des faces utiles.</li>
+    <li><b>Dé d'événement</b> par nuit (marchand, danger, bénédiction) pour que le hasard ne soit pas que du butin.</li>
+  </ul>
+</section>
+<section class="q">
+  <h2>QUESTIONS</h2>
+  <ul>
+    <li>Est-ce plus clair qu'avec des nombres ? Les symboles se lisent-ils sans explication ?</li>
+    <li>Un seul dé de classes pour les trois recrues (doublons possibles), ou un dé par recrue ?</li>
+    <li>Les objets : deux dés (QUOI + QUALITÉ) comme ici, ou un seul dé d'objets ?</li>
+    <li>Quelle idée de la liste ci-dessus voulez-vous voir en maquette ensuite ?</li>
+    <li>La classe de départ « archère » : on cherche un sprite (ici l'illusionniste fait le tireur à distance).</li>
+  </ul>
+</section>
+</div>
+<script>
+const IMG = /*IMAGES*/{};
+const CL = {guerriere:["GUERRIÈRE",0,"Mêlée"],mercenaire:["MERCENAIRE",2,"Mêlée"],illusionniste:["ILLUSIONNISTE",4,"Distance"],magicienne:["MAGICIENNE",6,"Magie"],pretresse:["PRÊTRESSE",8,"Soin"],barde:["BARDE",10,"Chant"]};
+const QU = {arme:["ARME",[5,1]],armure:["ARMURE",[7,5]],bijou:["BIJOU",[8,5]]};
+const RA = {commun:["COMMUN","#d8d0bc"],rare:["RARE","#4aa8ff"],epique:["ÉPIQUE","#c45cff"],legendaire:["LÉGENDAIRE","#ffb31f"]};
+const NOM = {arme:["Épée du déserteur","Hache du bourreau","Dague du voleur"],armure:["Cotte rapiécée","Plastron de la Muraille","Cape du banni"],bijou:["Anneau du parjure","Amulette de cendre","Chapelet du pénitent"]};
+const AFF = {arme:["+3 ATQ","+4 % CRIT","+4 % VOL DE VIE"],armure:["+2 DEF","+14 VIE","+6 % VITESSE"],bijou:["+3 ATQ","+14 VIE","+4 % CRIT"]};
+const NAFF = {commun:1,rare:2,epique:2,legendaire:3};
+const ICO = {classe:CL,quoi:QU,qual:RA};
+const NOMD = {classe:"CLASSES",quoi:"QUOI",qual:"QUALITÉ"};
+const start = () => ({classe:["guerriere","guerriere","guerriere","illusionniste","illusionniste","illusionniste"],quoi:["arme","arme","armure","armure","bijou","bijou"],qual:["commun","commun","commun","commun","rare","rare"]});
+const POOL = [["classe","mercenaire"],["classe","magicienne"],["classe","pretresse"],["classe","barde"],["qual","rare"],["qual","epique"],["quoi","arme"],["quoi","armure"],["quoi","bijou"]];
+const pick = a => a[Math.floor(Math.random()*a.length)];
+const $ = h => { const t = document.createElement("template"); t.innerHTML = h.trim(); return t.content.firstChild; };
+function sym(d, k, big){   // le symbole d'une face
+  if (d==="classe"){ const s = big?1.5:1; return `<div class="spr" style="width:${32*s}px;height:${32*s}px;background-image:url(${IMG.heros});background-size:${288*s}px ${2304*s}px;background-position:0 -${(CL[k][1]*192+32)*s}px"></div>`; }
+  if (d==="quoi"){ const s = big?1.5:1, rc = QU[k][1]; return `<div class="ico" style="width:${32*s}px;height:${32*s}px;background-image:url(${IMG.icones});background-size:${512*s}px ${867*s}px;background-position:-${rc[1]*32*s}px -${rc[0]*32*s}px"></div>`; }
+  return `<div class="gem" style="background:${RA[k][1]}"></div>`;
+}
+const lab = (d,k) => (ICO[d][k][0]);
+const face = (d,k,extra="",attr="") => `<button class="face ${extra}" ${attr}>${sym(d,k,true)}<span class="t">${lab(d,k)}</span></button>`;
+const petite = (d,k,extra="",attr="") => `<button class="face ${extra}" ${attr}>${sym(d,k,false)}<span class="t">${lab(d,k)}</span></button>`;
+const roule = el => { if(!el) return; el.classList.remove("roule"); void el.offsetWidth; el.classList.add("roule"); };
+function phone(skin, titre, texte){
+  const S = {o:"r", dice:start(), rec:null, relR:1, item:null, relB:1, offers:null, choix:null, msg:""};
+  const tireR = () => { S.rec = [0,1,2].map(()=>pick(S.dice.classe)); S.relR=1; };
+  const tireB = () => { S.item = {quoi:pick(S.dice.quoi), qual:pick(S.dice.qual), j:Math.floor(Math.random()*3)}; S.relB=1; };
+  const offres = () => { const p=[...POOL].sort(()=>Math.random()-.5).slice(0,3); S.offers=p; S.choix=null; };
+  tireR(); tireB(); offres();
+  const w = $(`<div class="dir"><h2>${titre}</h2><div class="onglets"><button data-o="r">RECRUES</button><button data-o="b">BUTIN</button><button data-o="a">ATELIER</button></div><div class="tel ${skin}"><div class="ecran"></div></div><p>${texte}</p></div>`);
+  const e = w.querySelector(".ecran");
+  const maj = (anim) => {
+    w.querySelectorAll(".onglets button").forEach(b => b.setAttribute("aria-pressed", b.dataset.o===S.o));
+    let h = "";
+    if (S.o==="r") h = `<h3>TIRE TES CONDAMNÉS</h3><p class="sub">Un dé de classes, trois lancers. Touche un dé pour le relancer (${S.relR} fois).</p>
+      <div class="rang r3">${S.rec.map((k,i)=>face("classe",k,"",`data-a="rr" data-i="${i}"`)).join("")}</div>
+      <div class="cadre"><span class="sub">Le dé des classes :</span><div class="rang r6" style="margin-top:1.4cqw">${S.dice.classe.map(k=>petite("classe",k,"use")).join("")}</div></div>
+      <div style="flex:1"></div><button class="btn" data-a="nr">NOUVEAU TIRAGE</button><button class="btn ok" data-a="go">A LA MURAILLE !</button>`;
+    else if (S.o==="b") { const I=S.item, R=RA[I.qual];
+      h = `<h3>BUTIN DE LA VAGUE</h3><p class="sub">Deux dés : QUOI et QUELLE QUALITÉ. Touche un dé pour le relancer (${S.relB} fois).</p>
+      <div class="rang r2">${face("quoi",I.quoi,"",'data-a="rq"')}${face("qual",I.qual,"",'data-a="rl"')}</div>
+      <div class="objet" style="border-color:${R[1]}">${sym("quoi",I.quoi,true)}<div><b style="color:${R[1]}">${NOM[I.quoi][I.j].toUpperCase()}</b><span class="sub">${QU[I.quoi][0]} · ${R[0]}</span><br><span class="sub">${AFF[I.quoi].slice(0,NAFF[I.qual]).join(" · ")}</span></div></div>
+      <div class="cadre"><span class="sub">Tes dés d'objets :</span><div class="rang r6" style="margin-top:1.4cqw">${S.dice.quoi.map(k=>petite("quoi",k,"use")).join("")}</div><div class="rang r6" style="margin-top:1.4cqw">${S.dice.qual.map(k=>petite("qual",k,"use")).join("")}</div></div>
+      <div style="flex:1"></div><button class="btn" data-a="nb">AUTRE BUTIN</button>`; }
+    else { const c = S.choix;
+      h = `<h3>L'ATELIER</h3><p class="sub">${S.msg || (c? "Touche la face à remplacer par "+lab(...c)+"." : "Choisis une amélioration : elle remplace une face.")}</p>
+      ${c?"":`<div class="rang r3">${S.offers.map((o,i)=>face(o[0],o[1],"",`data-a="of" data-i="${i}"`)).join("")}</div>`}
+      <div class="cadre">${["classe","quoi","qual"].map(d=>`<span class="sub">DÉ ${NOMD[d]}</span><div class="rang r6" style="margin:1cqw 0 2cqw">${S.dice[d].map((k,i)=>petite(d,k,c&&c[0]===d?"sel":"use",c&&c[0]===d?`data-a="gr" data-d="${d}" data-i="${i}"`:"")).join("")}</div>`).join("")}</div>
+      <div style="flex:1"></div><button class="btn" data-a="of2">AUTRES CHOIX</button>`; }
+    e.innerHTML = h;
+    if (anim) e.querySelectorAll(anim).forEach(roule);
+  };
+  e.addEventListener("click", ev => { const t = ev.target.closest("[data-a]"); if(!t) return; const a = t.dataset.a, i = +t.dataset.i;
+    if (a==="rr" && S.relR){ S.rec[i] = pick(S.dice.classe); S.relR=0; maj(); roule(e.querySelectorAll(".r3 .face")[i]); }
+    else if (a==="nr"||a==="go"){ tireR(); maj(".r3 .face"); }
+    else if (a==="rq" && S.relB){ S.item.quoi = pick(S.dice.quoi); S.relB=0; maj(); roule(e.querySelectorAll(".r2 .face")[0]); }
+    else if (a==="rl" && S.relB){ S.item.qual = pick(S.dice.qual); S.relB=0; maj(); roule(e.querySelectorAll(".r2 .face")[1]); }
+    else if (a==="nb"){ tireB(); maj(".r2 .face"); }
+    else if (a==="of"){ S.choix = S.offers[i]; S.msg=""; maj(); }
+    else if (a==="of2"){ offres(); S.msg=""; maj(); }
+    else if (a==="gr"){ const d=t.dataset.d; S.dice[d][i]=S.choix[1]; S.msg = lab(...S.choix)+" gravé sur le dé "+NOMD[d]+"."; S.choix=null; offres(); maj(); const f=e.querySelectorAll(".cadre .face"); }
+  });
+  w.querySelectorAll(".onglets button").forEach(b => b.onclick = () => { S.o = b.dataset.o; S.msg=""; maj(); });
+  maj(); document.getElementById("grille").append(w);
+}
+phone("A","A · DÉS DES CONDAMNÉS","Style Regalia. Départ : 3 guerrières + 3 illusionnistes. Dans l'atelier, une amélioration remplace une face (une magicienne, une face ÉPIQUE...).");
+phone("B","B · INTERFACE MODERNE","Mêmes règles, présentées plus sobrement (Outfit, fond uni). Pas de pixel art pour l'interface, seulement les sprites des héros.");
+</script>

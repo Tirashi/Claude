@@ -1,0 +1,206 @@
+<title>Les Bannis 5</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Jersey+10&family=Outfit:wght@400;600;800&family=Cinzel:wght@600;800&display=swap">
+<style>
+/* Maquette 5 « Les Bannis » (26/11) : après Slotbound, le dé sert plus tôt et plus simplement.
+   Trois directions jouables : A dés des condamnés (Regalia), B un seul dé (interface moderne), C cartes.
+   Mise en page : en-tête, trois téléphones cliquables, tableau de comparaison, questions. */
+:root{
+  --fond:#15111c; --texte:#f1e8d6; --doux:#b4a796; --or:#f2c14e; --ligne:#352c3e; --cadre:#050307;
+  --f-titre:"Press Start 2P", ui-monospace, monospace; --f-texte:"Jersey 10", system-ui, sans-serif;
+  color-scheme:dark;
+}
+html,body{background:var(--fond);color:var(--texte)}
+body{margin:0;font-family:var(--f-texte);font-size:18px;line-height:1.4;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px 48px}
+.page{max-width:1160px;margin:0 auto;display:flex;flex-direction:column;gap:28px}
+h1{font-family:var(--f-titre);font-size:clamp(16px,4vw,24px);line-height:1.4;color:var(--or);margin:0;text-shadow:3px 3px 0 #000}
+header p{margin:10px 0 0;color:var(--doux);max-width:76ch}
+b{color:var(--texte)}
+.grille{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:28px;justify-items:center}
+.dir{display:flex;flex-direction:column;align-items:center;gap:12px;min-width:0;width:100%;max-width:350px}
+.dir h2,section.q h2{font-family:var(--f-titre);font-size:12px;line-height:1.5;color:var(--or);margin:4px 0 0;text-align:center}
+.dir p{margin:0;color:var(--doux);text-align:center;min-height:5.6em}
+.onglets{display:flex;gap:8px}
+.onglets button{font:inherit;font-size:16px;padding:6px 14px;border-radius:999px;border:2px solid var(--ligne);background:transparent;color:var(--doux);cursor:pointer}
+.onglets button[aria-pressed=true]{background:var(--or);color:#201000;border-color:var(--or)}
+.tel{width:100%;aspect-ratio:360/760;border:9px solid var(--cadre);border-radius:28px;overflow:hidden;position:relative;box-shadow:0 18px 40px rgba(0,0,0,.6);background:#000;container-type:inline-size}
+.ecran{position:absolute;inset:0;display:flex;flex-direction:column;padding:6cqw;gap:3cqw;overflow:hidden}
+.spr{width:calc(32px*var(--k,3));height:calc(32px*var(--k,3));background-repeat:no-repeat;image-rendering:pixelated;flex:none}
+.ico{width:calc(32px*var(--k,1));height:calc(32px*var(--k,1));background-repeat:no-repeat;image-rendering:pixelated;flex:none}
+.de{--t:15cqw;width:var(--t);height:var(--t);display:grid;grid-template:repeat(3,1fr)/repeat(3,1fr);padding:calc(var(--t)*.14);gap:calc(var(--t)*.04);flex:none;border:0;cursor:pointer;position:relative}
+.de i{border-radius:50%;background:currentColor;opacity:0;margin:12%}
+.de i.on{opacity:1}
+.roule{animation:roule .5s ease-in-out}
+@keyframes roule{0%{transform:rotate(0) scale(1)}40%{transform:rotate(200deg) scale(1.25)}100%{transform:rotate(360deg) scale(1)}}
+@media (prefers-reduced-motion:reduce){.roule{animation:none}}
+button:focus-visible{outline:2px solid #fff;outline-offset:2px}
+/* A : Regalia */
+.A .ecran{background:linear-gradient(#2a1b3a,#120a1c 60%,#3b2433);font-family:var(--f-texte);font-size:5.2cqw;color:#fff}
+.A h3{font-family:var(--f-titre);font-size:4.6cqw;color:#ffd76a;margin:0;text-align:center;text-shadow:2px 2px 0 #000}
+.A .cadre{border:3px solid #e8a23a;background:#2c4f9e;border-radius:6px;box-shadow:inset 0 0 0 2px #17306a,0 3px 0 #000;padding:2.4cqw}
+.A .de{background:#f4ecd8;color:#2a1620;border-radius:12%;box-shadow:inset -3px -3px 0 #c9bd9e,0 3px 0 #000}
+.A .de.tenu{outline:3px solid #ffd76a;outline-offset:2px}
+.A .btn{font-family:var(--f-titre);font-size:3.6cqw;background:#e07a5a;color:#2a0f08;border:3px solid #000;border-radius:6px;padding:3cqw;box-shadow:0 4px 0 #8a3a22;cursor:pointer}
+.A .btn:disabled{background:#6b6b7a;box-shadow:none;color:#222;cursor:default}
+.A .ligne{display:flex;gap:2.4cqw;align-items:center}
+.A small{color:#ffe3a8;font-size:4.4cqw}
+/* B : un seul dé, interface moderne */
+.B .ecran{background:#0e1a22;font-family:Outfit,system-ui,sans-serif;font-size:4.2cqw;color:#e8f4f2;padding:7cqw;align-items:stretch}
+.B h3{font-weight:800;font-size:7cqw;margin:0;letter-spacing:-.01em}
+.B .sub{color:#8fb0ad;font-size:3.8cqw;margin:0}
+.B .de{--t:34cqw;background:#e8f4f2;color:#0e1a22;border-radius:22%;align-self:center;box-shadow:0 2cqw 6cqw rgba(60,220,190,.25)}
+.B .rang{display:grid;grid-template-columns:1fr 1fr 1fr;gap:2.6cqw}
+.B .carte{background:#16303a;border-radius:3cqw;padding:2.4cqw;display:flex;flex-direction:column;align-items:center;gap:1cqw;text-align:center;min-height:30cqw;border:2px solid transparent}
+.B .carte.vide{background:transparent;border:2px dashed #2b4a52;color:#4f7a80;justify-content:center}
+.B .carte.cur{border-color:#3ddcbe}
+.B .carte b{font-weight:600;font-size:3.6cqw;color:#e8f4f2}.B .carte span{font-size:3.2cqw;color:#8fb0ad}
+.B .btn{font:inherit;font-weight:800;background:#3ddcbe;color:#05211c;border:0;border-radius:3cqw;padding:3.4cqw;cursor:pointer;font-size:4.4cqw}
+.B .btn:disabled{background:#24444b;color:#6f9a9a;cursor:default}
+/* C : cartes */
+.C .ecran{background:radial-gradient(#1f5a45,#0c2a20);font-family:Cinzel,Georgia,serif;font-size:3.8cqw;color:#f6ecd0}
+.C h3{font-weight:800;font-size:5.4cqw;margin:0;text-align:center;letter-spacing:.04em;color:#f1d48a}
+.C .main{display:grid;grid-template-columns:repeat(3,1fr);gap:2.4cqw}
+.C .main.cinq{grid-template-columns:repeat(3,1fr)}
+.C .cart{background:#f6ecd0;color:#2a1c10;border-radius:2.6cqw;padding:1.8cqw;display:flex;flex-direction:column;align-items:center;gap:.8cqw;border:0;cursor:pointer;min-height:44cqw;font:inherit;font-weight:600;font-size:2.9cqw;overflow:hidden;min-width:0;box-shadow:0 1.4cqw 2.4cqw rgba(0,0,0,.5);text-align:center;transition:transform .15s}
+.C .cart.garde{transform:translateY(-3cqw);outline:.8cqw solid #f1d48a}
+.C .cart.dos{background:repeating-linear-gradient(45deg,#7c2d2d,#7c2d2d 1.6cqw,#5a1d1d 1.6cqw,#5a1d1d 3.2cqw);color:transparent;border:.8cqw solid #f6ecd0;justify-content:center}
+.C .cart .f{font-weight:600;font-size:2.4cqw;color:#6a5a40;line-height:1.3}
+.C .btn{font:inherit;font-weight:800;background:#f1d48a;color:#2a1c10;border:0;border-radius:2.6cqw;padding:3cqw;cursor:pointer;font-size:3.8cqw;letter-spacing:.04em}
+.C .btn:disabled{background:#4a6a5c;color:#1a2a22;cursor:default}
+.C .info{text-align:center;color:#c9d8c4;font-size:3.4cqw}
+section.q{border-top:1px solid var(--ligne);padding-top:20px;display:flex;flex-direction:column;gap:10px;min-width:0}
+section.q h2{text-align:left;margin:0 0 4px}
+section.q p,section.q li{color:var(--doux);max-width:78ch;margin:0}
+section.q li{margin:4px 0}
+.tabw{overflow-x:auto}
+table{border-collapse:collapse;min-width:640px;width:100%;font-size:16px}
+th,td{border:1px solid var(--ligne);padding:8px 10px;text-align:left;vertical-align:top;color:var(--doux)}
+th{color:var(--texte)}
+</style>
+<div class="page">
+<header>
+  <h1>LES BANNIS : LE DÉ D'ABORD</h1>
+  <p>Après <b>Slotbound</b> (26/11) : au lieu d'une liste de condamnés imposée, <b>le tirage fait l'équipe</b>, et le butin se tire aussi. Trois façons de le faire, <b>jouables</b> : touchez les dés et les cartes. Chaque téléphone a deux écrans : <b>RECRUES</b> (début de nuit) et <b>BUTIN</b> (après une vague). Une des trois directions est <b>hors rétro</b> (B, interface moderne), une autre sans pixel art (C, cartes).</p>
+</header>
+<div class="grille" id="grille"></div>
+<section class="q">
+  <h2>COMPARAISON</h2>
+  <div class="tabw"><table>
+    <tr><th></th><th>A · Dés des condamnés</th><th>B · Un seul dé</th><th>C · Cartes</th></tr>
+    <tr><th>Recrues</th><td>3 dés (une face = une classe), on garde ceux qu'on veut, une relance</td><td>un dé lancé trois fois de suite, pas de choix</td><td>5 cartes piochées, on en garde 3, une repioche</td></tr>
+    <tr><th>Butin</th><td>un dé par objet : sa valeur donne la rareté</td><td>un seul lancer : rareté de l'objet proposé</td><td>3 cartes face cachée, on en retourne une</td></tr>
+    <tr><th>Règles à retenir</th><td>faces = classes, garder, relancer, rareté par valeur</td><td>une seule règle : le dé décide</td><td>garder / défausser, piocher</td></tr>
+    <tr><th>Maîtrise du hasard</th><td>forte (garder, relancer, dés spéciaux plus tard)</td><td>faible au départ (objets, arbre ensuite)</td><td>moyenne (le choix parmi 5)</td></tr>
+    <tr><th>Risque</th><td>reste plus riche à expliquer</td><td>trop passif ?</td><td>on perd « dompter le dé »</td></tr>
+  </table></div>
+</section>
+<section class="q">
+  <h2>QUESTIONS</h2>
+  <ul>
+    <li>Le tirage des condamnés : <b>garder + relancer</b> (A), <b>subir</b> (B) ou <b>choisir parmi plus</b> (C) ?</li>
+    <li>Le butin tiré au dé vous plaît-il, ou on garde le choix dans une liste ?</li>
+    <li>Les dés de plus de 6 faces, les faces spéciales et les combos : <b>au départ</b> ou <b>débloqués plus tard</b> par l'arbre ?</li>
+    <li>On peut aussi mélanger : A pour les recrues, C pour le butin.</li>
+  </ul>
+</section>
+</div>
+<script>
+const IMG = /*IMAGES*/{};
+const CL = [
+ {n:"GUERRIÈRE",i:0,r:"Mêlée",pv:115,a:12},{n:"MERCENAIRE",i:2,r:"Mêlée",pv:100,a:14},
+ {n:"ILLUSIONNISTE",i:4,r:"Magie",pv:72,a:11},{n:"MAGICIENNE",i:6,r:"Magie",pv:66,a:13},
+ {n:"PRÊTRESSE",i:8,r:"Soin",pv:78,a:9},{n:"BARDE",i:10,r:"Chant",pv:84,a:8}];
+const RAR = [{n:"COMMUN",c:"#d8d0bc"},{n:"RARE",c:"#4aa8ff"},{n:"ÉPIQUE",c:"#c45cff"},{n:"LÉGENDAIRE",c:"#ffb31f"}];
+const OBJ = [{s:"ARME",n:["Épée du déserteur","Hache du bourreau","Bâton fêlé"],ic:[[5,1],[5,11],[6,7]]},
+ {s:"ARMURE",n:["Cotte rapiécée","Plastron de la Muraille","Cape du banni"],ic:[[7,5],[7,4],[7,14]]},
+ {s:"BIJOU",n:["Anneau du parjure","Amulette de cendre","Chapelet du pénitent"],ic:[[8,5],[8,6],[8,7]]}];
+const AFF = ["+3 ATQ","+2 DEF","+14 VIE","+4 % CRIT","+6 % VITESSE"];
+const d6 = () => 1 + Math.floor(Math.random()*6);
+const rarDe = v => v<=3?0:v<=5?1:v===6?2:3;   // 1-3 commun, 4-5 rare, 6 épique (légendaire : 20 naturel, plus tard)
+const $ = (h) => { const t = document.createElement("template"); t.innerHTML = h.trim(); return t.content.firstChild; };
+const spr = (i,k=3) => `<div class="spr" style="--k:${k};background-image:url(${IMG.heros});background-size:${288*k}px ${2304*k}px;background-position:0 -${(i*192+32)*k}px"></div>`;
+const ico = (rc,k=1.6) => `<div class="ico" style="--k:${k};background-image:url(${IMG.icones});background-size:${512*k}px ${867*k}px;background-position:-${rc[1]*32*k}px -${rc[0]*32*k}px"></div>`;
+const PIPS = {1:[4],2:[0,8],3:[0,4,8],4:[0,2,6,8],5:[0,2,4,6,8],6:[0,2,3,5,6,8]};
+const de = (v, cls="", id="") => `<button class="de ${cls}" ${id} aria-label="dé : ${v}">${[...Array(9)].map((_,k)=>`<i class="${(PIPS[v]||[]).includes(k)?"on":""}"></i>`).join("")}</button>`;
+const roule = el => { el.classList.remove("roule"); void el.offsetWidth; el.classList.add("roule"); };
+function phone(cls, titre, texte, rendre){
+  const w = $(`<div class="dir"><h2>${titre}</h2><div class="onglets"><button aria-pressed="true" data-o="r">RECRUES</button><button aria-pressed="false" data-o="b">BUTIN</button></div><div class="tel ${cls}"><div class="ecran"></div></div><p>${texte}</p></div>`);
+  const e = w.querySelector(".ecran"); const st = {o:"r"};
+  const maj = () => { e.innerHTML = rendre(st, maj); w.querySelectorAll(".onglets button").forEach(b => b.setAttribute("aria-pressed", b.dataset.o===st.o)); };
+  w.querySelectorAll(".onglets button").forEach(b => b.onclick = () => { st.o = b.dataset.o; maj(); });
+  maj(); document.getElementById("grille").append(w); return w;
+}
+/* ---- A : dés des condamnés ---- */
+(function(){
+  let S = {rec:null, tenus:[false,false,false], relance:1, b:null};
+  const tireR = () => { S.rec = [d6(),d6(),d6()]; S.tenus=[false,false,false]; S.relance=1; };
+  const tireB = () => { S.b = [d6(),d6(),d6()].map((v,k)=>({v, o:OBJ[k], j:Math.floor(Math.random()*3), r:rarDe(v)})); };
+  tireR(); tireB();
+  const w = phone("A","A · DÉS DES CONDAMNÉS","Trois dés d6 : <b>la face est la classe</b>. On touche un dé pour le garder, puis une relance pour les autres. Au butin, un dé par objet : sa valeur donne la rareté.",(st,maj)=>{
+    if (st.o==="r") return `<h3>TIRE TES CONDAMNÉS</h3>
+      <div class="cadre"><small>Touche un dé pour le garder. Une relance par nuit : ${S.relance}</small></div>
+      <div class="ligne" style="justify-content:space-around;margin:1cqw 0">${S.rec.map((v,k)=>de(v,S.tenus[k]?"tenu":"",`data-k="${k}" data-act="de"`)).join("")}</div>
+      ${S.rec.map(v=>{const c=CL[v-1];return `<div class="cadre ligne">${spr(c.i,2.6)}<div><b>${c.n}</b><br><small>${c.r} · VIE ${c.pv} · ATQ ${c.a}</small></div></div>`}).join("")}
+      <div style="flex:1"></div>
+      <button class="btn" data-act="rel" ${S.relance?"":"disabled"}>RELANCER</button>
+      <button class="btn" style="background:#6fbf5a;box-shadow:0 4px 0 #2f6a22" data-act="ok">A LA MURAILLE !</button>`;
+    return `<h3>BUTIN DE LA VAGUE</h3><div class="cadre"><small>Un dé par objet : 1-3 commun, 4-5 rare, 6 épique.</small></div>
+      ${S.b.map((x,k)=>{const R=RAR[x.r];return `<div class="cadre ligne" style="border-color:${R.c}">${de(x.v,"",`data-k="${k}" data-act="db"`).replace('class="de ','class="de " style="--t:12cqw" ')}${ico(x.o.ic[x.j],1.7)}<div><b style="color:${R.c}">${x.o.n[x.j].toUpperCase()}</b><br><small>${x.o.s} · ${R.n} · ${AFF[(x.v+k)%5]}</small></div></div>`}).join("")}
+      <div style="flex:1"></div><button class="btn" data-act="nb">NOUVEAU BUTIN</button>`;
+  });
+  w.querySelector(".tel").addEventListener("click", ev => { const t = ev.target.closest("[data-act]"); if(!t) return; const a = t.dataset.act, k = +t.dataset.k;
+    const e = w.querySelector(".ecran"); const maj = () => w.querySelector(".onglets button[aria-pressed=true]").click();
+    if (a==="de") { S.tenus[k] = !S.tenus[k]; maj(); }
+    else if (a==="rel" && S.relance) { S.rec = S.rec.map((v,i)=>S.tenus[i]?v:d6()); S.relance=0; maj(); e.querySelectorAll(".de").forEach((d,i)=>{ if(!S.tenus[i]) roule(d); }); }
+    else if (a==="ok") { tireR(); maj(); }
+    else if (a==="nb" || a==="db") { tireB(); maj(); e.querySelectorAll(".de").forEach(roule); } });
+})();
+/* ---- B : un seul dé ---- */
+(function(){
+  let S = {rec:[], b:null, rolling:false};
+  const w = phone("B","B · UN SEUL DÉ","Une seule règle : <b>le dé décide</b>. Il tombe trois fois pour former l'équipe, une fois pour le butin. Pas de choix, mais chaque lancer se voit et se comprend tout de suite.",(st)=>{
+    const last = S.rec.length ? S.rec[S.rec.length-1] : 0;
+    if (st.o==="r") return `<h3>Qui tient la Muraille ?</h3><p class="sub">Un dé, trois lancers. La face donne la classe.</p>
+      ${de(last||6,"",'data-act="roll"')}
+      <div class="rang">${[0,1,2].map(k=>{const v=S.rec[k];if(!v) return `<div class="carte vide ${k===S.rec.length?"cur":""}">${k+1}</div>`;const c=CL[v-1];return `<div class="carte">${spr(c.i,2.2)}<b>${c.n}</b><span>${c.r}<br>${c.pv} PV · ${c.a} ATQ</span></div>`}).join("")}</div>
+      <div style="flex:1"></div>
+      <button class="btn" data-act="roll" ${S.rec.length>=3?"disabled":""}>${S.rec.length>=3?"Équipe prête":"Lancer le dé ("+(S.rec.length+1)+"/3)"}</button>
+      <button class="btn" style="background:#24444b;color:#e8f4f2" data-act="raz">Recommencer</button>`;
+    const x = S.b; const R = x && RAR[x.r];
+    return `<h3>Butin</h3><p class="sub">Un lancer : la valeur donne la rareté.</p>
+      ${de(x?x.v:6,"",'data-act="rollb"')}
+      <div class="carte" style="flex-direction:row;gap:3cqw;padding:4cqw;text-align:left;${x?`border-color:${R.c}`:""}">${x?ico(x.o.ic[x.j],2.2):""}<div>${x?`<b style="font-size:4.4cqw;color:${R.c}">${x.o.n[x.j]}</b><br><span style="font-size:3.6cqw">${x.o.s} · ${R.n} · ${AFF[x.v%5]}</span>`:"<span>Lance le dé</span>"}</div></div>
+      <div style="flex:1"></div><button class="btn" data-act="rollb">Lancer le dé</button>`;
+  });
+  w.querySelector(".tel").addEventListener("click", ev => { const t = ev.target.closest("[data-act]"); if(!t) return; const a = t.dataset.act;
+    const maj = () => w.querySelector(".onglets button[aria-pressed=true]").click(); const e = w.querySelector(".ecran");
+    if (a==="roll" && S.rec.length<3 && !S.rolling) { S.rolling=true; const d=e.querySelector(".de"); roule(d); setTimeout(()=>{ S.rec.push(d6()); S.rolling=false; maj(); },480); }
+    else if (a==="raz") { S.rec=[]; maj(); }
+    else if (a==="rollb" && !S.rolling) { S.rolling=true; roule(e.querySelector(".de")); setTimeout(()=>{ const v=d6(); S.b={v,r:rarDe(v),o:OBJ[Math.floor(Math.random()*3)],j:Math.floor(Math.random()*3)}; S.rolling=false; maj(); },480); } });
+})();
+/* ---- C : cartes ---- */
+(function(){
+  const pioche = n => [...Array(n)].map(()=>Math.floor(Math.random()*6));
+  let S = {main:pioche(5), garde:[], repioche:1, b:{ouv:-1, c:null}};
+  const tireB = () => { S.b = {ouv:-1, c:[0,1,2].map(k=>({o:OBJ[k], j:Math.floor(Math.random()*3), r:rarDe(d6())}))}; };
+  tireB();
+  const w = phone("C","C · CARTES","Cinq cartes piochées, on <b>garde trois</b> (une repioche). Au butin, trois cartes face cachée : on en retourne une. Plus lisible, mais le dé n'y est plus.",(st)=>{
+    if (st.o==="r") return `<h3>LA MAIN DU BANNI</h3><p class="info">Garde 3 cartes. Gardées : ${S.garde.length}/3 · Repioche : ${S.repioche}</p>
+      <div class="main">${S.main.map((i,k)=>{const c=CL[i];return `<button class="cart ${S.garde.includes(k)?"garde":""}" data-act="c" data-k="${k}">${spr(c.i,1.8)}<span>${c.n}</span><span class="f">${c.r}<br>${c.pv} PV<br>${c.a} ATQ</span></button>`}).join("")}</div>
+      <div style="flex:1"></div>
+      <button class="btn" data-act="rep" ${S.repioche?"":"disabled"}>REPIOCHER LES AUTRES</button>
+      <button class="btn" data-act="ok" ${S.garde.length===3?"":"disabled"}>EN ÉQUIPE</button>`;
+    return `<h3>BUTIN</h3><p class="info">Retourne une carte.</p>
+      <div class="main">${S.b.c.map((x,k)=>{const R=RAR[x.r], ou=S.b.ouv===k;return ou?`<button class="cart" style="outline:.8cqw solid ${R.c}" data-act="o" data-k="${k}">${ico(x.o.ic[x.j],2)}<span>${x.o.n[x.j]}</span><span class="f">${x.o.s}<br>${R.n}<br>${AFF[(x.r+k)%5]}</span></button>`:`<button class="cart dos" data-act="o" data-k="${k}">?</button>`}).join("")}</div>
+      <div style="flex:1"></div><button class="btn" data-act="nb">NOUVEAU BUTIN</button>`;
+  });
+  w.querySelector(".tel").addEventListener("click", ev => { const t = ev.target.closest("[data-act]"); if(!t) return; const a = t.dataset.act, k = +t.dataset.k;
+    const maj = () => w.querySelector(".onglets button[aria-pressed=true]").click();
+    if (a==="c") { const p = S.garde.indexOf(k); if (p>=0) S.garde.splice(p,1); else if (S.garde.length<3) S.garde.push(k); maj(); }
+    else if (a==="rep" && S.repioche) { S.main = S.main.map((i,x)=>S.garde.includes(x)?i:pioche(1)[0]); S.repioche=0; maj(); }
+    else if (a==="ok") { S.main=pioche(5); S.garde=[]; S.repioche=1; maj(); }
+    else if (a==="o") { if (S.b.ouv<0) S.b.ouv=k; maj(); }
+    else if (a==="nb") { tireB(); maj(); } });
+})();
+</script>

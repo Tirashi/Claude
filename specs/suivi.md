@@ -180,3 +180,25 @@ Maquettes de la carte 2 à 4 (isométrique, puis papier à l'encre validée), é
 ## Pokédex : PC, équipe et quiz (25/11)
 Affichage PC élargi (1280 px, liste en colonnes, fiche en deux colonnes) ; onglets Équipe (choix du jeu, 6 cases, génération automatique, analyse) et Quiz (silhouettes, noms proposés), détails dans [`pokedex.md`](pokedex.md). Service worker v126. Testé avec Playwright sur les vraies données CSV de PokéAPI ; à essayer sur le téléphone.
 - **25/11 — Tank Arena, tanks hors de l'arène** (capture de l'utilisateur : son tank caché sous les rochers du bord) : la collision poussait un tank derrière les gros rochers qui débordent sur le damier ; contour de la zone jouable calculé au démarrage (`calculerLimite`, tous les 5° depuis le centre jusqu'au premier rocher du bord, marge selon la hauteur côté caméra) et `borner()` après chaque collision ; entrées et départs remis dedans.
+
+## Picross Dex : Johto complet, Hoenn et chromatiques (25-27/11)
+- **Johto** : les 45 dessins manquants (n° 201 à 242 et 246 à 248) faits d'après le Minidex (sprite 16×16 moins une rangée et une colonne, recoloré à la main), validés par l'utilisateur ; six dessins ambigus corrigés pour passer `logique.js` (une ou deux cases chacun).
+- **Hoenn** (27/11) : 135 dessins d'après le Minidex 3G (n° 252 à 386), 3e onglet ouvert par Celebi ; légendaires : Regirock / Regice / Registeel (10 captures), Latias et Latios rôdeurs (20), Kyogre et Groudon (30), Rayquaza (après les deux), Jirachi (100), Deoxys (tous les autres). `regionOf` gère trois régions.
+- **Chromatiques** : `picross/chroma.js`, 382 Pokémon, calculé pixel par pixel d'après les planches Or / Argent et Hoenn (décalage de teinte, saturation et clarté estimé sur les couleurs dominantes) ; teinte de remplacement quand le chromatique est quasi identique ; une rencontre sur dix (`SHINY_CHANCE`), étoile ★ dans le Dex, drapeau `s` dans le code de sauvegarde. Le Charme Chroma (picross d'objet, Boutique) augmentera le taux plus tard.
+- À venir : Boutique (picross d'objets), Arène (badges par génération), Pokédex old school ([`specs/picross.md`](picross.md)).
+## La Dernière Lanterne, acte 4 (26/11)
+Session 5a : rebondissement 3 (Clairfond éteinte, lettre d'Ysolde), Cimetière des cloches, Clocher englouti (4 salles, les trois outils), le Sonneur (niveau 12), fresque finale, Flamme blanche ; 5 cartes, 7 monstres, 6 objets d'équipement. Détails : `specs/rpg.md` § 17.3. Cache v129. À essayer sur le téléphone ; ensuite le final (5b).
+
+## La Dernière Lanterne, final (26/11)
+Session 5b : cachots de l'abbaye (levier, grille, Ysolde libérée), sommet, Aubrin puis la Grande Lanterne (deux combats), fin à Clairfond (Tiennot, Isée, lanternes de nuit). 2 cartes, 2 boss, cas d'équilibrage au niveau 13. Détails : `specs/rpg.md` § 17.4. Cache v130. Correction : la lettre d'Ysolde se lisait même avant la disparition (les objets ignorent `si`). Reste 5c : scène bonus et à-côtés.
+
+## La Dernière Lanterne, pages et scène bonus (27/11)
+Session 5c : 11 nouvelles pages du journal d'Aubrin dans 11 cartes (12 avec la page des mines), compte dans le Journal, scène bonus du printemps à Clairfond quand tout est trouvé après la fin. Cache v131. Reste 5d : quêtes des compagnons, donjon facultatif.
+
+## La Dernière Lanterne, quêtes et Catacombes (27/11)
+Session 5d : trois quêtes de compagnons (menu des lanternes après la fin), Catacombes des premiers veilleurs (2 salles, 5 équipements, Premier Veilleur niveau 15). Cache v132. Reste : essai sur le téléphone, sons, sortie de démo, `LUDO1-`.
+- **27/11 — Démineur, thème sombre** : maquette 4 (3 thèmes), A « Nuit d'été » choisie ; réglage Auto · Clair · Sombre dans le menu, couleurs en variables, tuiles de nuit, lune et lucioles, pas d'éclair blanc au chargement.
+- 26/11 — Les Bannis : comparaison avec Slotbound (cdc § 18) et maquette 5 « le dé d'abord » (A dés des condamnés, B un seul dé, C cartes), à choisir.
+- 27/11 — Les Bannis : maquette 6 « dés à symboles » (classe, équipement, rareté ; atelier qui remplace des faces), après le retour sur la maquette 5.
+- 27/11 — Les Bannis, session 3 : dés à symboles jouables (recrues par dés de case, objets QUOI + QUALITE, atelier, dé d'événement, tuto), direction B (cdc § 19).
+- 27/11 — Les Bannis, session 3b : interface moderne dans tout le jeu, dés qui roulent (rebond, faces qui défilent, ombre), fil d'étapes et consignes « A FAIRE » (cdc § 19).

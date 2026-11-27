@@ -1,0 +1,66 @@
+# Picross Dex — références graphiques
+
+Picross Dex est l'un des tout premiers jeux de la Ludothèque (avant les fiches, `specs/`, etc.) : il n'a pas de cahier des charges d'origine. Ce fichier garde les **images de référence** données par l'utilisateur (25/11) pour s'en inspirer.
+
+## Références (dans `specs/picross/`)
+- `reference-sprites-1.gif` (600×600) : planche de mini-sprites 1re/2e génération, palette réduite (orange, rouge, bleu, brun, noir sur fond vert pâle pointillé), plus les 28 formes de Zarbi en bas.
+- `reference-minidex-001-251.gif` (509×472) : « MINIDEX 001-251 », mêmes sprites numérotés de 001 à 251. Crédits indiqués sur l'image : Chamber, Solo0993, Blue Emerald, Lake, Neslug, Pikachu25.
+
+- `reference-gold-silver-sheet.png` (624×2048, ajoutée le 25/11) : planche des sprites Or / Argent en couleurs (normal, chromatique, gris), réduite : on y lit bien les **couleurs et la forme générale** de chaque Pokémon, pas les détails fins. Sert à choisir la palette et à retoucher les têtes.
+
+- `reference-gold-silver-sheet-grande.png` (1711×5609, 25/11) : la même planche **en pleine taille** : sprites de 56×56 nets, avec la version grise. C'est la référence à utiliser pour les formes ; la petite version ne sert plus.
+
+## Ce qu'on en retient
+- Sprites d'environ 16×16 en 4 ou 5 couleurs, silhouette lisible, contour noir.
+- Les dessins actuels (`picross/dessins.js`) font 10×10 : à comparer avant toute refonte des dessins.
+
+## À savoir
+- Ces images sont des **références seulement** : rien n'en est repris dans le jeu. Si on en reprend des sprites un jour, les citer dans `credits/index.html` (règle du 22/10) et vérifier la licence.
+- Refaire les graphismes d'un jeu = maquette d'abord, validée par l'utilisateur (règle du 16/10).
+
+## Finir le Pokédex de Johto (25/11)
+Il manque 45 dessins en 15×15 : n° 201 à 242 et 246 à 248. Maquette de comparaison des méthodes de conversion (Cizayox n° 212, 5 versions) : [`maquettes/picross-dessins.html`](../maquettes/picross-dessins.html), [artefact](https://claude.ai/artifact/6cySj6KeDC7Dvw2r1bR6rK). Le choix de l'utilisateur sera noté ici.
+
+## Méthode retrouvée (25/11)
+Les 46 Pokémon de Johto déjà faits sont le sprite du Minidex 16×16 **moins une rangée et une colonne**, puis recolorés à la main avec la palette du jeu (8 retouchés). Pour les 45 restants : retirer la rangée et la colonne qui abîment le moins le contour, recolorer d'après la vraie couleur du Pokémon (planche Or / Argent), retoucher à la main si illisible (ex. tête de Steelix refaite). Livraison par lots de 10, montrés en image avant d'être écrits dans `dessins.js`.
+
+## Avancement de Johto
+- **Lot 1 fait (25/11)** : n° 201 à 210 (Zarbi à Granbull) écrits dans `picross/dessins.js`, cache `ludotheque-v126`. Steelix : la version issue du Minidex (les versions redessinées de tête ou de profil ont été refusées).
+- **Lot 2 fait (25/11)** : n° 211 à 220 (Qwilfish à Marcacrin), cache `ludotheque-v127`.
+- **Lot 3 fait (25/11)** : n° 221 à 242 et 246 à 248 (25 Pokémon d'un coup), cache `ludotheque-v128`. **Le Pokédex de Johto est complet** (Togepi n° 175 reste dans Kanto jusqu'à l'ouverture de Johto).
+
+## Idées de la suite (27/11, de l'utilisateur) — à valider par maquette avant de programmer
+Planches de référence ajoutées dans `specs/picross/` :
+- `reference-minidex-3g.png` (171×477) : **Minidex de la 3e génération**, sprites d'environ 15×15 déjà au bon format, **2 images d'animation par Pokémon** (deux rangées successives), 10 par rangée. Utilisable tel quel (couleurs à reclasser : l'image est un peu bruitée). Origine à préciser pour les crédits.
+- `reference-menu-old-school.png` (500×500) : icônes de menu « à l'ancienne » en deux tons rouge / orange, pour une partie **Pokédex old school** disponible dès le début.
+- `reference-badges-1g.png`, `reference-badges-2g.png` : cartes de dresseur avec les **badges** de Kanto (8) et de Johto (8 + Kanto).
+- `reference-objets-emeraude.png` (496×416) : icônes d'objets de Pokémon Émeraude, pour des **picross d'objets** (section boutique, sans condition).
+
+Pistes :
+1. **Chromatiques** (rejouabilité) : taux généreux, palettes chromatiques de la planche Or / Argent (2e génération) ; un objet comme le **Charme Chroma** augmente le taux ; compteur de chromatiques dans le Pokédex.
+2. **3e génération** (n° 252 à 386, 135 Pokémon) avec le Minidex 3G, par lots comme Johto.
+3. **Pokédex old school** : menu simplifié, disponible dès le début.
+4. **Badges** de Kanto et de Johto comme petits picross à gagner.
+5. **Objets** (picross d'objets, boutique, Charme Chroma qui augmente les apparitions).
+
+## Décisions du 27/11
+- **Pas de monnaie dans le jeu.**
+- **Section Boutique** : les picross d'objets, accessibles sans condition.
+- **Section Arène** : les badges ; ceux d'une génération se font quand on a capturé un certain nombre de Pokémon de cette génération (seuil à fixer à la maquette).
+- **Chromatiques** : taux d'apparition généreux ; le Charme Chroma est un objet de la Boutique dont le picross, une fois fait, augmente le taux (pas d'achat).
+- **Sources à citer dans `credits/index.html` dès qu'on en reprend quelque chose** :
+  - Minidex 3G : lien donné par l'utilisateur, <https://www.deviantart.com/eeveeee1999/art/Gen-5-GBC-Party-Sprites-807196588> (auteur eeveeee1999). Le titre de la page parle de la 5e génération : à vérifier que la planche rangée est bien celle de la 3e.
+  - Badges, objets d'Émeraude, menu old school : The Spriters Resource (spriters-resource.com), page exacte de chaque planche à retrouver.
+- Ordre proposé : 3e génération (Minidex 3G), puis chromatiques, puis maquette Boutique et Arène, puis Pokédex old school.
+
+## 3e génération (Hoenn), 27/11
+- Source de forme : Minidex 3G (`reference-minidex-3g.png`, lien correct : <https://www.deviantart.com/eeveeee1999/art/Gen-3-GBC-Party-Sprites-830673924>) ; planches couleur Hoenn normal et chromatique (`reference-hoenn-*.png`, A. J. Nitro, The Spriters Resource, « give credit if used »).
+- **135 dessins faits** (n° 252 à 386), 15×15, tous résolubles sans deviner (11 retouchés d'une ou deux cases), rangés dans `specs/picross/hoenn-dessins.json`, **pas encore dans `dessins.js`** : le jeu range tout ce qui dépasse n° 151 dans Johto (`regionOf`), il faut d'abord un 3e onglet **Hoenn** (ouverture, légendaires : Regirock, Regice, Registeel, Latias, Latios, Kyogre, Groudon, Rayquaza, Jirachi, Deoxys).
+- Aperçu : <https://claude.ai/artifact/UJXCRa1LLv43BFDC6dZkCB>. Couleurs choisies à la main d'après les vrais Pokémon (la lecture automatique des couleurs de la planche était mal alignée).
+- Fichier pour reconstruire : `outils/` n'a pas de script ; la méthode est la même que Johto (sprite 16×16 moins une rangée et une colonne, recoloré).
+
+## Fait le 27/11 : onglet Hoenn et chromatiques
+- **Ordre des planches** : la planche couleur de Hoenn n'a pas Spinda dans sa grille (il est tout en bas) et a une case de plus pour Castform ; les vignettes de l'aperçu étaient décalées d'une case entre Spinda et Castform, pas les dessins (les dessins suivent le Minidex, dans l'ordre du Pokédex national).
+- **Onglet Hoenn** : ouvert par la capture de Celebi ; légendaires Regirock / Regice / Registeel (10 captures à Hoenn), Latias et Latios rôdeurs comme les chiens de Johto (20), Kyogre et Groudon (30), Rayquaza (après les deux), Jirachi (100), Deoxys (tous les autres).
+- **Chromatiques** : `picross/chroma.js` (id → lettres qui changent), `shinyChance()` = 0,1 ; un Pokémon chromatique se révèle avec ses couleurs spéciales, une étoile ★ marque sa case dans le Dex ; sauvegarde : drapeau `s` dans `c[id]`. Calcul : sprite normal contre sprite chromatique des planches (même forme, palette différente), décalage de teinte global puis lettre la plus proche ; teinte de remplacement (+0,45 de teinte) pour 34 Pokémon dont le chromatique est quasi identique et pour Spinda. Pas de chromatique pour Racaillou, Lamantine, Galeking et Galegon.
+- Reste : Boutique (picross d'objets, Charme Chroma), Arène (badges), Pokédex old school, chromatiques des légendaires (aucun pour l'instant).
