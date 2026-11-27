@@ -40,7 +40,7 @@ LANTERNE.persos = {
   // acte 4 : le Cimetière des cloches et le Clocher englouti
   fossoyeur: { nom: 'Anselme le fossoyeur', perso: 'ancien' }, sonneur: { nom: 'Le Sonneur', perso: 'sonneur' },
   // le final : l'abbaye de Saint-Cendre
-  aubrin: { nom: 'Aubrin', perso: 'vaast' }, tiennot: { nom: 'Tiennot', perso: 'enfant' }
+  premier: { nom: 'Le Premier Veilleur', perso: 'premier_veilleur' }, aubrin: { nom: 'Aubrin', perso: 'vaast' }, tiennot: { nom: 'Tiennot', perso: 'enfant' }
 };
 
 LANTERNE.statistiques = [
@@ -82,7 +82,7 @@ LANTERNE.aide = [
 LANTERNE.fin = ['vaast_vu', 'verene_rejoint', 'outil:lanterne', 'roi_vaincu', 'acte1_fini', 'mission_marais', 'maud_rejoint', 'outil:grappin', 'dame_vaincue', 'acte2_fini',
   'isee_avouee', 'echarpe_trouvee', 'isee_conseil', 'mission_roches', 'outil:masse', 'page_sceau', 'geant_vaincu', 'acte3_fini',
   'ysolde_partie', 'lettre_lue', 'mission_cimetiere', 'sonneur_vaincu', 'fresque_finale', 'acte4_fini',
-  'ysolde_libre', 'aubrin_vaincu', 'jeu_fini', 'bonus_vu'];
+  'ysolde_libre', 'aubrin_vaincu', 'jeu_fini', 'bonus_vu', 'premier_vaincu', 'quete_eloi_fin', 'quete_verene_fin', 'quete_maud_fin'];
 
 LANTERNE.depart = { carte: 'maison_ysolde', x: 2, y: 4, dir: 'bas', equipe: ['heros'], niveau: 1, ecus: 0, chapitre: 'Prologue' };
 

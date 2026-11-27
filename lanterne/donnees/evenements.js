@@ -48,7 +48,8 @@ LANTERNE.evenements = {
   lanterne: [
     { son: 'lanterne' }, { soigner: true },
     { dire: 'La chaleur de la flamme te réconforte. L\'équipe reprend des forces.' },
-    { choix: 'Sauvegarder la partie ?', options: ['Oui', 'Non'], suites: [[{ sauver: 'main' }], []] }
+    { choix: 'Sauvegarder la partie ?', options: ['Oui', 'Non'], suites: [[{ sauver: 'main' }], []] },
+    { si: 'jeu_fini', alors: [{ choix: 'Parler à un compagnon ?', options: ['Non', 'Eloi', 'Vérène', 'Maud'], suites: [[], [{ evenement: 'quete_eloi' }], [{ evenement: 'quete_verene' }], [{ evenement: 'quete_maud' }]] }] }
   ],
   lanterne_clairfond: [
     { si: 'ysolde_partie', alors: [{ dire: 'La lanterne du village est éteinte. Il reste un peu de cendre tiède, et une odeur de cire.' }, { stop: true }] },
@@ -1098,6 +1099,81 @@ LANTERNE.evenements = {
     { dire: ['Ce soir-là, les villageois de Clairfond allument leurs lanternes, cette fois pour la nuit seulement.', 'Mère Ysolde frotte l\'allumette. La flamme prend du premier coup.'] },
     { drapeau: 'jeu_fini' }, { chapitre: 'Fin — la dernière lanterne' }, { sauver: 'auto' },
     { dire: ['FIN', '(La scène bonus et les à-côtés — les 12 pages du journal, les quêtes des compagnons — arriveront dans une prochaine mise à jour. Tu peux continuer à te promener.)'] }
+  ],
+
+  // ---------- après la fin : les quêtes des compagnons et les Catacombes ----------
+  tiennot_place: [
+    { dire: ['Je dors dans la maison d\'Ysolde, sur le canapé. Elle dit que « c\'est pour un soir ». Ça fait trois semaines.', 'Maud me reprend mes chaussettes. Je crois que ça s\'appelle être de la famille.'], qui: 'tiennot' }
+  ],
+  quete_eloi: [
+    { si: 'quete_eloi_fin', alors: [{ dire: 'Eloi serre son chapelet de bronze. « J\'ai écrit à Père Vaast. Une lettre, comme je l\'aurais dû. Je ne sais pas si elle arrivera. »', qui: 'eloi' }, { stop: true }] },
+    { si: { objet: 'fragment_cloche' }, alors: [
+      { dire: ['C\'est… un éclat de la grande cloche. Merci. Vraiment.', 'Je voudrais en faire des grains. Un chapelet, pour prier pour ceux qu\'on n\'a pas pu sauver. Père Vaast m\'avait dit que prier ne servait à rien, si on n\'y croyait pas. Je crois, maintenant.'], qui: 'eloi' },
+      { prendre: 'fragment_cloche' }, { donner: 'chapelet_cloche' }, { drapeau: 'quete_eloi_fin' }, { son: 'niveau' },
+      { dire: 'Eloi te tend un chapelet de bronze. Il tinte doucement.' }
+    ], sinon: [
+      { si: 'quete_eloi_debut',
+        alors: [{ dire: 'Un éclat de la cloche du clocher, tout en haut, près de l\'endroit où se tenait le Sonneur. Il doit en rester.', qui: 'eloi' }],
+        sinon: [{ drapeau: 'quete_eloi_debut' },
+          { dire: ['J\'ai pensé à quelque chose. Pour le Sonneur, et pour tous ceux dont la cloche a sonné et qu\'on n\'a pas pleurés.', 'Si on pouvait rapporter un éclat de la grande cloche, au Clocher englouti, je ferais un chapelet.'], qui: 'eloi' }] }
+    ] }
+  ],
+  quete_verene: [
+    { si: 'quete_verene_fin', alors: [{ dire: 'Vérène écrit sans lever la tête. « J\'ai trois cents pages à recopier. Aubrin avait raison sur un point : on peut avoir peur de manquer de temps. »', qui: 'verene' }, { stop: true }] },
+    { si: { objet: 'carnet_verene' }, alors: [
+      { dire: ['Mon carnet ! Tu l\'as trouvé ! Je… j\'avais trois mois de notes dedans. Les formules de la lanterne, les sorts de brume, et surtout mes remarques sur Maud.', 'Tiens. Un écritoire, pour mettre tout ça en ordre. Il est plus beau que moi, mais ça ne dure pas.'], qui: 'verene' },
+      { prendre: 'carnet_verene' }, { donner: 'ecritoire' }, { drapeau: 'quete_verene_fin' }, { son: 'niveau' },
+      { dire: 'Vérène te confie son écritoire. Il sent la craie et le thé.' }
+    ], sinon: [
+      { si: 'quete_verene_debut',
+        alors: [{ dire: 'Il doit être dans la galerie des Mines de sel, sur le côté. Je l\'ai posé pour boire… et je suis partie sans lui.', qui: 'verene' }],
+        sinon: [{ drapeau: 'quete_verene_debut' },
+          { dire: ['Je… je n\'osais pas le dire. J\'ai perdu mon carnet dans les Mines de sel, avant le Géant.', 'Toutes mes notes sont dedans. Si tu retournes là-bas, regarde dans la grande galerie.'], qui: 'verene' }] }
+    ] }
+  ],
+  quete_maud: [
+    { si: 'quete_maud_fin', alors: [{ dire: 'Maud ajuste l\'écharpe verte autour de son cou. « Tiennot dit que je la porte mal. Je dis que c\'est lui qui l\'a tricotée trop longue. »', qui: 'maud' }, { stop: true }] },
+    { si: { objet: 'sifflet_tiennot' }, alors: [
+      { dire: ['Son sifflet ! Il l\'avait depuis qu\'il avait six ans. Je l\'entendais toujours avant de le voir.', 'Tiens. Tiennot me l\'a tricoté pendant l\'attente : c\'est l\'autre moitié de son écharpe. Garde-la, elle te portera chance.'], qui: 'maud' },
+      { prendre: 'sifflet_tiennot' }, { donner: 'ruban_tiennot' }, { drapeau: 'quete_maud_fin' }, { son: 'niveau' },
+      { dire: 'Maud te noue une écharpe verte autour du poignet.' }
+    ], sinon: [
+      { si: 'quete_maud_debut',
+        alors: [{ dire: 'Il l\'a perdu quelque part du côté du moulin, la dernière fois qu\'il m\'a cherchée. Un sifflet de roseau, très usé.', qui: 'maud' }],
+        sinon: [{ drapeau: 'quete_maud_debut' },
+          { dire: ['Tiennot a perdu son sifflet de roseau. Celui qu\'il avait dans la brume. Il n\'ose pas le demander.', 'Il l\'a dû laisser tomber au Moulin noyé, quand je cherchais son nom. Si on repasse là-bas…'], qui: 'maud' }] }
+    ] }
+  ],
+  catacombes_ferme: [
+    { dire: 'Une dalle de pierre, gravée de lanternes, ferme un escalier dans le mur du cimetière. Elle ne bouge pas.' },
+    { si: 'acte4_fini', alors: [{ dire: 'Le Prieur a scellé cet endroit. Il faudrait… que tout soit terminé, pour qu\'elle s\'ouvre.', qui: 'verene' }] }
+  ],
+  catacombes_arrivee: [
+    { si: 'catacombes_vues', sinon: [
+      { drapeau: 'catacombes_vues' }, { sauver: 'auto' },
+      { dire: ['La dalle a glissé toute seule, avec un soupir. Dessous, un escalier descend dans des catacombes que l\'abbaye avait oubliées.',
+        'Des sarcophages en rangs, des lanternes minuscules gravées dans la pierre, et pas un seul nom.'] },
+      { dire: 'Les premiers veilleurs. Avant la brume, avant Aubrin. On dirait qu\'ils attendent encore quelqu\'un.', qui: 'eloi' }
+    ] }
+  ],
+  catacombes_fond_arrivee: [
+    { si: 'premier_vaincu', sinon: [{ si: 'premier_vu', sinon: [
+      { drapeau: 'premier_vu' },
+      { dire: 'Au fond, un sarcophage ouvert, et devant lui une haute silhouette de cendre qui tient une lanterne vide à bout de bras.' }
+    ] }] }
+  ],
+  premier_parle: [{ dire: 'Quelqu\'un vient… Ils viennent toujours, et ils ne me relèvent jamais.', qui: 'premier' }],
+  premier_combat: [
+    { dire: ['J\'ai monté la garde avant la brume, avant les cloches, avant Aubrin. J\'ai gardé le village pendant des siècles.', 'Qui me dira que c\'est fini ?'], qui: 'premier' },
+    { dire: 'C\'est fini. La brume est douce, les Gardiens sont rentrés. Vous pouvez dormir.', qui: 'eloi' },
+    { dire: 'Je ne sais plus dormir. Prouvez-le-moi.', qui: 'premier' },
+    { combat: ['premier_veilleur'], boss: true },
+    { drapeau: 'premier_vaincu' },
+    { dire: 'Alors… c\'est vrai. La lanterne peut s\'éteindre. Merci. Prenez-la : elle n\'éclairera plus que ceux qui rentrent.', qui: 'premier' },
+    { pnj: 'premier', cacher: true },
+    { donner: 'lanterne_premiers' },
+    { dire: 'Le Premier Veilleur se couche dans son sarcophage, la lanterne dans les mains… puis il la tend vers toi, avant de fermer les yeux.' },
+    { sauver: 'auto' }
   ],
 
   porte_abbaye: [

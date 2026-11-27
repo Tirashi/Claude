@@ -189,3 +189,6 @@ Session 5b : cachots de l'abbaye (levier, grille, Ysolde libérée), sommet, Aub
 
 ## La Dernière Lanterne, pages et scène bonus (27/11)
 Session 5c : 11 nouvelles pages du journal d'Aubrin dans 11 cartes (12 avec la page des mines), compte dans le Journal, scène bonus du printemps à Clairfond quand tout est trouvé après la fin. Cache v131. Reste 5d : quêtes des compagnons, donjon facultatif.
+
+## La Dernière Lanterne, quêtes et Catacombes (27/11)
+Session 5d : trois quêtes de compagnons (menu des lanternes après la fin), Catacombes des premiers veilleurs (2 salles, 5 équipements, Premier Veilleur niveau 15). Cache v132. Reste : essai sur le téléphone, sons, sortie de démo, `LUDO1-`.

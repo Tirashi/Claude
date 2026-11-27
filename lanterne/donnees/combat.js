@@ -24,6 +24,9 @@ LANTERNE.objets = {
   flamme_or: { icone: 'flamme_or', nom: 'Flamme d\'or', description: 'Elle crépite comme du sel jeté au feu. Elle est chaude comme une main.' },
   cle_clocher: { icone: 'cle', nom: 'Clé du clocher', description: 'Une clé de bronze en forme de cloche, trouvée dans la crypte du clocher.' },
   flamme_blanche: { icone: 'flamme', nom: 'Flamme blanche', description: 'Elle ne chauffe pas, elle ne tremble pas. Elle sonne, très bas, comme une cloche qu\'on a étouffée.' },
+  fragment_cloche: { icone: 'o_amulette', nom: 'Éclat de la grande cloche', description: 'Un éclat de bronze qui tinte tout seul quand on le tient. Eloi dit qu\'il en a besoin.' },
+  carnet_verene: { icone: 'o_page', nom: 'Carnet de Vérène', description: 'Couvert de craie et de formules. Vérène l\'a perdu dans les mines, et elle n\'a pas osé le dire.' },
+  sifflet_tiennot: { icone: 'o_plume', nom: 'Sifflet de Tiennot', description: 'Un sifflet de roseau, très usé. Tiennot jure qu\'il le portait en entrant dans la brume.' },
   // armes
   epee_courte: { icone: 'o_epee_courte', nom: 'Épée courte', description: 'L\'épée d\'entraînement des apprentis veilleurs.', equip: { emplacement: 'arme', classes: ['LAME'], for: 3 } },
   epee_longue: { icone: 'o_epee_longue', nom: 'Épée longue', description: 'Une vraie lame, lourde et droite.', equip: { emplacement: 'arme', classes: ['LAME'], for: 7 } },
@@ -44,6 +47,13 @@ LANTERNE.objets = {
   masse_carillon: { icone: 'o_masse_argent', nom: 'Masse du carillon', description: 'Le battant d\'une petite cloche, au bout d\'un manche d\'os. Elle sonne juste.', equip: { emplacement: 'arme', classes: ['CLERC'], for: 12, mag: 3 } },
   baton_bronze: { icone: 'o_baton_cristal', nom: 'Bâton de bronze', description: 'Un bâton taillé dans une poutre du clocher, frappé d\'un cerclage de bronze.', equip: { emplacement: 'arme', classes: ['ARCANISTE'], for: 3, mag: 12 } },
   arc_veilleur: { icone: 'o_arc_cimes', nom: 'Arc du veilleur', description: 'Un arc de veilleur d\'avant la brume, encore tendu. Sa corde chante quand on la lâche.', equip: { emplacement: 'arme', classes: ['RODEUR'], for: 13, vit: 3 } },
+  // le donjon facultatif : les Catacombes des premiers veilleurs
+  epee_veilleurs: { icone: 'o_epee_runique', nom: 'Épée des premiers veilleurs', description: 'Elle n\'a jamais servi : elle est posée là pour qu\'on s\'en souvienne.', equip: { emplacement: 'arme', classes: ['LAME'], for: 25 } },
+  masse_veilleurs: { icone: 'o_masse_argent', nom: 'Masse des premiers veilleurs', description: 'Elle a béni plus de gens qu\'elle n\'en a frappés.', equip: { emplacement: 'arme', classes: ['CLERC'], for: 16, mag: 5 } },
+  baton_veilleurs: { icone: 'o_baton_cristal', nom: 'Bâton des premiers veilleurs', description: 'Un bâton blanc, qui grince quand on pense à un sort.', equip: { emplacement: 'arme', classes: ['ARCANISTE'], for: 4, mag: 16 } },
+  arc_veilleurs: { icone: 'o_arc_cimes', nom: 'Arc des premiers veilleurs', description: 'Un arc sans corde apparente : la flèche part quand on y croit.', equip: { emplacement: 'arme', classes: ['RODEUR'], for: 17, vit: 4 } },
+  plastron_veilleurs: { icone: 'o_plastron', nom: 'Cuirasse des premiers veilleurs', description: 'Du bronze pâle, gravé de lanternes minuscules.', equip: { emplacement: 'armure', def: 15, vit: 0 } },
+  lanterne_premiers: { icone: 'o_lanterne', nom: 'Lanterne des premiers', description: 'Une lanterne de poche, éteinte depuis des siècles, qui réchauffe quand même la main.', equip: { emplacement: 'accessoire', def: 5, mag: 5, vit: 3 } },
   // armures
   tunique: { icone: 'o_tunique', nom: 'Tunique de veilleur', description: 'Le gris des Veilleurs, un peu trop grand.', equip: { emplacement: 'armure', def: 2 } },
   robe_novice: { icone: 'o_robe', nom: 'Robe de novice', description: 'Blanche, avec les manches usées.', equip: { emplacement: 'armure', classes: ['CLERC', 'ARCANISTE'], def: 2, mag: 1 } },
@@ -58,6 +68,9 @@ LANTERNE.objets = {
   bottes: { icone: 'o_bottes', nom: 'Bottes de marais', description: 'Cuir graissé jusqu\'aux genoux. Ça sent, mais ça tient.', equip: { emplacement: 'accessoire', def: 3 } },
   cotte_bronze: { icone: 'o_plastron', nom: 'Cotte de bronze', description: 'Des plaques de cloche fêlée, martelées en écailles. Lourde, mais elle ne sonne plus.', equip: { emplacement: 'armure', classes: ['LAME', 'CLERC'], def: 12, vit: -1 } },
   medaille: { icone: 'o_amulette', nom: 'Médaille de veilleur', description: 'Une lanterne gravée sur du bronze. Elle date d\'avant l\'abbaye.', equip: { emplacement: 'accessoire', def: 3, mag: 2 } },
+  chapelet_cloche: { icone: 'o_amulette', nom: 'Chapelet de bronze', description: 'Offert à Eloi pour ses prières : chaque grain est un morceau de cloche.', equip: { emplacement: 'accessoire', def: 4, mag: 4 } },
+  ecritoire: { icone: 'o_page', nom: 'Écritoire de Vérène', description: 'Elle y note tout : les formules, les dettes, les blagues de Maud.', equip: { emplacement: 'accessoire', mag: 7, vit: 1 } },
+  ruban_tiennot: { icone: 'o_ruban', nom: 'Écharpe de Tiennot', description: 'Verte, trop longue, tricotée deux fois : une pour lui, une pour sa sœur.', equip: { emplacement: 'accessoire', def: 3, vit: 4 } },
   amulette: { icone: 'o_amulette', nom: 'Amulette de sel', description: 'Un cristal de sel monté sur cuivre. Les mineurs la portaient contre le mauvais œil.', equip: { emplacement: 'accessoire', def: 1, mag: 3 } }
 };
 
@@ -267,6 +280,15 @@ LANTERNE.monstres = {
       { type: 'charge', nom: 'Embrasement', mult: 1.6, zone: true, prepare: 'La Grande Lanterne enfle, blanche, brûlante… Elle va tout consumer.', poids: 1 }],
     cycle: [0, 1, 0, 3, 2],
     bestiaire: 'Une lanterne de pierre qui se nourrit de chagrin. À l\'intérieur, un homme qui n\'ose pas la lâcher.' },
+  // le donjon facultatif : le gardien des catacombes
+  premier_veilleur: { nom: 'Le Premier Veilleur', tuile: 'premier_veilleur', taille: 1.6, boss: true, pv: 1000, pm: 100, for: 43, def: 26, mag: 38, vit: 12, xp: 1500, ecus: 600,
+    elements: { lumiere: 1.5, feu: 1.5, glace: .5 }, butin: [{ objet: 'plume', chance: 1 }],
+    actions: [{ type: 'attaque', poids: 4 },
+      { type: 'sort', nom: 'Cendres du premier feu', puissance: 18, element: 'feu', zone: true, pm: 4, visuel: 'feu', poids: 2 },
+      { type: 'etat', nom: 'Dernière veillée', etat: 'sommeil', chance: .4, zone: true, poids: 1 },
+      { type: 'charge', nom: 'Relève de la garde', mult: 1.7, zone: true, prepare: 'Le Premier Veilleur lève sa lanterne vide… Tous les morts du cimetière se redressent.', poids: 1 }],
+    cycle: [0, 1, 0, 3, 2],
+    bestiaire: '« Je veille depuis avant les cloches. Qui me relèvera ? »' },
   // quatrième boss : le Gardien du Clocher englouti
   sonneur: { nom: 'Le Sonneur', tuile: 'sonneur', taille: 1.7, boss: true, pv: 900, pm: 60, for: 42, def: 22, mag: 30, vit: 10, xp: 820, ecus: 360,
     elements: { lumiere: 1.5, foudre: 1.5, glace: .5 }, butin: [{ objet: 'plume', chance: 1 }],

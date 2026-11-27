@@ -368,7 +368,7 @@ Tout est réglé (20/10, § 0). **Cahier des charges validé.** Prochaine étape
 | 5a | ✅ (26/11) **Rebondissement 3 et acte 4** (§ 17.3) | opusplan |
 | 5b | ✅ (26/11) **Final** (abbaye, Ysolde, Aubrin) et fin (§ 17.4) | opusplan |
 | 5c | ✅ (27/11) 12 pages du journal et scène bonus (§ 17.5) | opusplan |
-| 5d | Quêtes des compagnons, donjon facultatif | opusplan |
+| 5d | ✅ (27/11) Quêtes des compagnons, donjon facultatif (§ 17.6) | opusplan |
 | 6 | Équilibrage, sons et musique, accueil, `sw.js`, artefact | Sonnet |
 
 ### 17.1 Acte 2 (fait le 29/10)
@@ -414,6 +414,11 @@ Tout est réglé (20/10, § 0). **Cahier des charges validé.** Prochaine étape
 - **12 pages** du journal d'Aubrin : `page_sceau` (Mines de sel) et `page_j1` à `page_j11`, des coffres posés dans 11 cartes de Clairfond à la crypte du cachot (ids `pj1`…`pj11`, textes dans `PAGES_JOURNAL` à la fin d'`evenements.js`). Elles racontent la fièvre, la gratitude, le refus des Gardiens, le vol des flammes, la brume cachée et les regrets. Le Journal du menu en donne le compte.
 - **Scène bonus** (`bonus_vu`) : une fois `jeu_fini` et les 12 pages trouvées, en entrant à Clairfond : au printemps, une jeune fille aux yeux gris passe la porte, Mère Ysolde sourit ; dernière ligne sur un prochain RPG.
 - **Pas encore** (5d) : quêtes des compagnons, donjon facultatif ; `demo: true` encore sur l'accueil.
+
+### 17.6 Quêtes des compagnons et Catacombes (faites le 27/11)
+- **Quêtes** (après `jeu_fini`, à une lanterne : « Parler à un compagnon ? ») : **Eloi** veut un éclat de la grande cloche (coffre au haut du clocher, chapelet de bronze), **Vérène** son carnet (coffre de la galerie des Mines de sel, écritoire), **Maud** le sifflet de roseau de Tiennot (coffre du Moulin noyé, écharpe de Tiennot). Les objets se trouvent à tout moment ; le compagnon les réclame une fois le jeu fini (`quete_<nom>_debut` / `_fin`).
+- **Catacombes des premiers veilleurs** (donjon facultatif) : dalle à l'est du Cimetière des cloches (x = 19, y = 8, ouverte après `jeu_fini`), 2 salles : 5 coffres d'équipement (une arme par classe + cuirasse) et le **Premier Veilleur** (niveau 15 prévu : 100 %, 8,1 tours ; 1000 PV), qui donne la Lanterne des premiers. Tuile `lich` de Dungeon Crawl.
+- **Pas encore** : sons et musiques propres, sortie de démo, `LUDO1-`.
 
 ## Détails techniques (déplacés du mémo le 05/11)
 Texte de la ligne de ce jeu dans le tableau « Les jeux existants (détails) » de [`specs/ludotheque.md`](ludotheque.md), recopié tel quel lors du rangement du 05/11 ([`plan-rangement.md`](plan-rangement.md), phase 2). L'essentiel, tenu à jour, est dans le `CLAUDE.md` du dossier du jeu.

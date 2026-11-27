@@ -72,7 +72,7 @@ LANTERNE.cartes = {
       { id: 'garde', perso: 'garde', x: 10, y: 3, evenement: 'garde' },
       { id: 'garcon_vert', perso: 'garcon_vert', x: 20, y: 11, evenement: 'garcon_vert', erre: 2, anim: 'attaque' },
       { id: 'isee_aube', perso: 'isee', x: 12, y: 12, evenement: 'isee_route', cache: true },
-      { id: 'tiennot', perso: 'enfant', x: 9, y: 13, evenement: 'isee_route', cache: true }
+      { id: 'tiennot', perso: 'enfant', x: 9, y: 13, evenement: 'tiennot_place', cache: true }
     ],
     sorties: [
       { x: [11, 12], y: 0, vers: 'route_abbaye', a: [6, 28], dir: 'haut', si: 'mission', refus: 'pas_encore' },
@@ -594,6 +594,7 @@ LANTERNE.cartes = {
     ],
     ornements: [{ type: 'torche', x: 4, y: 0 }, { type: 'torche', x: 10, y: 0 }],
     objets: [
+      { type: 'coffre', id: 'sifflet', x: 1, y: 9, contenu: { objet: 'sifflet_tiennot', n: 1 } },
       { type: 'coffre', id: 'pj4', x: 13, y: 2, evenement: 'page_j4' },
       { type: 'porte_cle', id: 'moulin_porte', x: 7, y: 1, cle: 'cle_moulin' },
       { type: 'nappe', id: 'moulin_nappe', x: 1, y: 6, outil: 'lanterne' },
@@ -863,6 +864,7 @@ LANTERNE.cartes = {
     ],
     ornements: [{ type: 'torche', x: 4, y: 0 }, { type: 'torche', x: 10, y: 0 }],
     objets: [
+      { type: 'coffre', id: 'carnet', x: 1, y: 4, contenu: { objet: 'carnet_verene', n: 1 } },
       { type: 'porte_cle', id: 'galerie_porte', x: 7, y: 1, cle: 'cle_mines' },
       { type: 'coffre', id: 'galerie_baton', x: 12, y: 2, contenu: { objet: 'baton_cristal', n: 1 } }
     ],
@@ -993,7 +995,7 @@ LANTERNE.cartes = {
       'Y889898988889898988Y',
       'Y888888888888888888Y',
       'Y889788888888887988Y',
-      '8888888888888888888Y',
+      '88888888888888888888',
       '8888888888888888888Y',
       'Y889878888888878988Y',
       'Y888888888888888888Y',
@@ -1026,7 +1028,8 @@ LANTERNE.cartes = {
     ],
     sorties: [
       { x: 0, y: [8, 9], vers: 'route_abbaye', a: [12, 14], dir: 'gauche' },
-      { x: [9, 10], y: 0, vers: 'clocher_entree', a: [5, 7], dir: 'haut' }
+      { x: [9, 10], y: 0, vers: 'clocher_entree', a: [5, 7], dir: 'haut' },
+      { x: 19, y: 8, vers: 'catacombes_entree', a: [1, 5], dir: 'droite', si: 'jeu_fini', refus: 'catacombes_ferme' }
     ],
     declencheurs: [{ x: [9, 10], y: 5, evenement: 'isee_cimetiere', si: '!isee_cimetiere' }]
   },
@@ -1138,7 +1141,8 @@ LANTERNE.cartes = {
       'zzzzznzzzzz'
     ],
     ornements: [{ type: 'torche', x: 4, y: 0 }, { type: 'torche', x: 6, y: 0 }],
-    objets: [{ type: 'fresque', x: 5, y: 1, evenement: 'fresque_clocher' }],
+    objets: [
+      { type: 'coffre', id: 'eclat', x: 9, y: 5, contenu: { objet: 'fragment_cloche', n: 1 } },{ type: 'fresque', x: 5, y: 1, evenement: 'fresque_clocher' }],
     pnj: [{ id: 'sonneur', perso: 'sonneur', x: 5, y: 3, evenement: 'sonneur_parle', si: '!sonneur_vaincu' }],
     sorties: [{ x: 5, y: 10, vers: 'clocher_nef', a: [7, 2], dir: 'bas' }],
     declencheurs: [{ x: [1, 9], y: 6, evenement: 'sonneur_combat', si: '!sonneur_vaincu' }]
@@ -1201,5 +1205,61 @@ LANTERNE.cartes = {
     pnj: [{ id: 'aubrin', perso: 'vaast', x: 5, y: 4, evenement: 'aubrin_parle', si: '!aubrin_vaincu' }],
     sorties: [{ x: 5, y: 10, vers: 'donjon_cachots', a: [6, 1], dir: 'bas' }],
     declencheurs: [{ x: [1, 9], y: 7, evenement: 'aubrin_combat', si: '!aubrin_vaincu' }]
+  },
+  // ---------- donjon facultatif : les Catacombes des premiers veilleurs (après la fin) ----------
+  catacombes_entree: {
+    nom: 'Catacombes des premiers veilleurs', musique: 'foret', ciel: 0x08090c, sauvegardeAuto: true, entree: 'catacombes_arrivee',
+    combat: { sol: ['sol_crypte0', 'sol_crypte1'], decor: 'mur_crypte_haut', interieur: true },
+    plan: [
+      'CCCCCCnCCCCCC',
+      'ZnnnnnnnnnnnZ',
+      'ZnRnnnnnnnRnZ',
+      'ZnnnnQnQnnnnZ',
+      'ZnnnnnnnnnnnZ',
+      'nnnnnnnnnnnnZ',
+      'ZnnnnnnnnnnnZ',
+      'ZnnnnQnQnnnnZ',
+      'ZnRnnnnnnnRnZ',
+      'ZnnnnnnnnnnnZ',
+      'zzzzzzzzzzzzz'
+    ],
+    ornements: [{ type: 'torche', x: 4, y: 0 }, { type: 'torche', x: 8, y: 0 }],
+    objets: [
+      { type: 'lanterne', x: 3, y: 5 },
+      { type: 'coffre', id: 'cata_epee', x: 1, y: 1, contenu: { objet: 'epee_veilleurs', n: 1 } },
+      { type: 'coffre', id: 'cata_masse', x: 11, y: 1, contenu: { objet: 'masse_veilleurs', n: 1 } },
+      { type: 'coffre', id: 'cata_baton', x: 1, y: 9, contenu: { objet: 'baton_veilleurs', n: 1 } },
+      { type: 'coffre', id: 'cata_arc', x: 11, y: 9, contenu: { objet: 'arc_veilleurs', n: 1 } },
+      { type: 'coffre', id: 'cata_plastron', x: 6, y: 9, contenu: { objet: 'plastron_veilleurs', n: 1 } }
+    ],
+    monstres: [
+      { type: 'spectre', x: 4, y: 3, rayon: 1 }, { type: 'phantome', x: 8, y: 3, rayon: 1 },
+      { type: 'goule', x: 4, y: 7, rayon: 1 }, { type: 'squelette', x: 8, y: 7, rayon: 1 }
+    ],
+    sorties: [
+      { x: 0, y: 5, vers: 'cimetiere', a: [18, 8], dir: 'gauche' },
+      { x: 6, y: 0, vers: 'catacombes_fond', a: [5, 9], dir: 'haut' }
+    ]
+  },
+  catacombes_fond: {
+    nom: 'Veillée des premiers', musique: 'foret', ciel: 0x08090c, sauvegardeAuto: true, entree: 'catacombes_fond_arrivee',
+    combat: { sol: ['sol_crypte0', 'sol_crypte1'], decor: 'mur_crypte_haut', interieur: true },
+    plan: [
+      'CCCCCCCCCCC',
+      'ZQnnnRnnnQZ',
+      'ZnnnnnnnnnZ',
+      'ZnnnnnnnnnZ',
+      'ZnnnnnnnnnZ',
+      'ZnnnnnnnnnZ',
+      'ZnnnnnnnnnZ',
+      'ZnnnnnnnnnZ',
+      'ZQnnnnnnnQZ',
+      'ZnnnnnnnnnZ',
+      'zzzzznzzzzz'
+    ],
+    ornements: [{ type: 'torche', x: 3, y: 0 }, { type: 'torche', x: 7, y: 0 }],
+    pnj: [{ id: 'premier', perso: 'premier_veilleur', x: 5, y: 3, evenement: 'premier_parle', si: '!premier_vaincu' }],
+    sorties: [{ x: 5, y: 10, vers: 'catacombes_entree', a: [6, 1], dir: 'bas' }],
+    declencheurs: [{ x: [1, 9], y: 6, evenement: 'premier_combat', si: '!premier_vaincu' }]
   }
 };

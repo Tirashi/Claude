@@ -48,7 +48,10 @@ const CAS = [
   { nom: 'Final : l\'équipe de 4 niv. 13 contre deux Chevaliers de cendre', equipe: ['heros', 'eloi', 'verene', 'maud'], niveau: 13, monstres: ['chevalier', 'chevalier'], objets: { herbe: 3, fiole: 2 }, cible: { victoire: .9, tours: [3, 8] } },
   { nom: 'Final, boss : l\'équipe de 4 niv. 13 contre Aubrin', equipe: ['heros', 'eloi', 'verene', 'maud'], niveau: 13, monstres: ['aubrin'], objets: { herbe: 5, fiole: 3 }, cible: { victoire: .85, tours: [5, 11] } },
   { nom: 'Final, boss : l\'équipe de 4 niv. 13 contre la Grande Lanterne', equipe: ['heros', 'eloi', 'verene', 'maud'], niveau: 13, monstres: ['grande_lanterne'], objets: { herbe: 5, fiole: 3 }, cible: { victoire: .85, tours: [5, 12] } },
-  { nom: 'Final, boss : l\'équipe de 4 niv. 12 contre Aubrin (un niveau en dessous)', equipe: ['heros', 'eloi', 'verene', 'maud'], niveau: 12, monstres: ['aubrin'], objets: { herbe: 5, fiole: 3 }, cible: { victoire: .5, tours: [5, 16] } }
+  { nom: 'Final, boss : l\'équipe de 4 niv. 12 contre Aubrin (un niveau en dessous)', equipe: ['heros', 'eloi', 'verene', 'maud'], niveau: 12, monstres: ['aubrin'], objets: { herbe: 5, fiole: 3 }, cible: { victoire: .5, tours: [5, 16] } },
+  // le donjon facultatif (27/11) : prévu au niveau 15
+  { nom: 'Catacombes : l\'équipe de 4 niv. 14 contre un spectre et un phantôme', equipe: ['heros', 'eloi', 'verene', 'maud'], niveau: 14, monstres: ['spectre', 'phantome'], objets: { herbe: 3, fiole: 2 }, cible: { victoire: .9, tours: [2, 5] } },
+  { nom: 'Catacombes, boss : l\'équipe de 4 niv. 15 contre le Premier Veilleur', equipe: ['heros', 'eloi', 'verene', 'maud'], niveau: 15, monstres: ['premier_veilleur'], objets: { herbe: 5, fiole: 3 }, cible: { victoire: .85, tours: [6, 13] } }
 ];
 
 function jouerCas(M, J, cas, n, graine = 1) {
