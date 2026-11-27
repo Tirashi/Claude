@@ -1,4 +1,4 @@
-/* Flotte du bureau : contrôle des règles et de la simulation sous Node (lancé par verifications.js).
+/* Armateur des étoiles : contrôle des règles et de la simulation sous Node (lancé par verifications.js).
    node outils/flotte-simulateur.js            → contrôles (départ, revenu, achats, absence, sauvegarde, zones, parties reproductibles, pas de NaN)
    node outils/flotte-simulateur.js rythme     → revenu et flotte d'un joueur qui rachète au mieux, toutes les 5 minutes pendant une heure */
 const vm = require('vm'), fs = require('fs'), path = require('path');
@@ -141,4 +141,4 @@ const vh = S.creer({rng: rnd(24)}); vh.h.niv.veille = 4; vh.h.eclats = 5; if (!S
 H1.h.eclats = 7; H1.h.n = 2; Sv.enregistrer(H1); const hr = Sv.charger();
 if (!hr || hr.h.n !== 2 || hr.h.eclats !== 7 || JSON.stringify(hr.h.niv) !== JSON.stringify(H1.h.niv) || hr.veille !== H1.h.niv.veille || hr.ships.length !== H1.ships.length) non('sauvegarde de l\'Horizon');
 if (pb) { console.error(pb + ' échec(s)'); process.exit(1); }
-console.log('Flotte du bureau : tout est bon');
+console.log('Armateur des étoiles : tout est bon');

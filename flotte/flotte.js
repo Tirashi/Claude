@@ -1,4 +1,4 @@
-/* Flotte du bureau : la simulation (navires, gains, achats). Sans écran : tourne aussi sous Node (outils/flotte-simulateur.js).
+/* Armateur des étoiles : la simulation (navires, gains, achats). Sans écran : tourne aussi sous Node (outils/flotte-simulateur.js).
    Un navire alterne « attente » (il tourne autour d'un corps) et « vol » (trajet presque droit vers un corps qui bouge). */
 (function () {
 const F = window.Flotte = window.Flotte || {};

@@ -1,4 +1,4 @@
-# Flotte du bureau — cahier des charges (nom provisoire)
+# Armateur des étoiles — cahier des charges (ex-« Flotte du bureau », nom choisi le 27/11)
 
 Chantier ouvert le 25/11, **cahier des charges rédigé le 26/11** après la maquette 5 (style **Relief** choisi). Idée de l'utilisateur, inspirée de *Desk Space: Idle Spacefleet clicker* (Shotgun Anaconda, Steam, 2026) : on s'en inspire sans le suivre (analyse du jeu d'origine en annexe A, historique des maquettes en annexe B). Dossier prévu : `flotte/`.
 
@@ -131,7 +131,7 @@ Modèle : opusplan pour les sessions 1 à 3 et 5 ; Opus pour la session 4 (équi
 L'Horizon est jouable ([artefact](https://claude.ai/artifact/G8fypxapvG7eFT7PaSvrzU)) : fenêtre **Horizon** (progression, relance, améliorations permanentes, friction affichée), éclats, nouveau tour avec les bonus, veille alimentée par l'Horizon (elle n'est plus une amélioration de crédits), sauvegarde. Les questions restent ouvertes (nom, sons, plafond d'absence) ; le thème « Horizon » est celui du cahier des charges, sans retour de l'utilisateur.
 
 ## 16. Questions ouvertes
-1. **Nom du jeu** (« Flotte du bureau » est provisoire).
+1. ~~Nom du jeu~~ : **« Armateur des étoiles »**, choisi par l'utilisateur le 27/11 (parmi Sillages, Cabotage, Comptoir céleste, etc.).
 2. **Prestige** : thème et nom (« Horizon »), seuil, friction ajoutée à chaque relance.
 3. ~~Plafond d'absence~~ : 24 h validé le 27/11 ; part de veille 25 % à 75 % en attente d'essais.
 4. **Sons** : aucun, sobres, ou musique douce ?

@@ -1,6 +1,6 @@
 """Réduit et teinte les lignes d'angles produites par rendu.js, puis les écrit en PNG à 96 couleurs.
 Usage : python3 -I outils/sprites-kenney/teinte.py <dossier de rendu.js> <dossier de sortie>
-Rôles de Flotte du bureau : mineur (craft_miner, -14°), marchand (craft_cargoA, +128°), patrouille (craft_speederC, +165°), pirate (craft_speederD, -52°, plus sombre)."""
+Rôles de Armateur des étoiles : mineur (craft_miner, -14°), marchand (craft_cargoA, +128°), patrouille (craft_speederC, +165°), pirate (craft_speederD, -52°, plus sombre)."""
 import sys, colorsys, io
 from PIL import Image
 src, dst = sys.argv[1], sys.argv[2]

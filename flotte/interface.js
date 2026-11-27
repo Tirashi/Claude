@@ -1,4 +1,4 @@
-/* Flotte du bureau : les fenêtres (DOM) par-dessus la carte : Flotte, Options, Console, fiche d'un navire, carte « Retour ». */
+/* Armateur des étoiles : les fenêtres (DOM) par-dessus la carte : Flotte, Options, Console, fiche d'un navire, carte « Retour ». */
 (function () {
 const F = window.Flotte = window.Flotte || {};
 const R = F.R, S = F.Sim;

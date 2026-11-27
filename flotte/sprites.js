@@ -1,4 +1,4 @@
-/* Flotte du bureau : sprites Relief (copie de quatre sprites de mineur-de-l-espace/sprites.js, faits avec commun/vaisseaux.js).
+/* Armateur des étoiles : sprites Relief (copie de quatre sprites de mineur-de-l-espace/sprites.js, faits avec commun/vaisseaux.js).
    m mineur (d_mineur), t marchand (d_cargo), p patrouille (u_garde), x pirate (a_rodeur) ; moteurs = [x, y, rayon] dans le sprite. */
 (function () {
 const F = window.Flotte = window.Flotte || {};

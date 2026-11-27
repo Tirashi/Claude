@@ -1,4 +1,4 @@
-/* Flotte du bureau : la carte (rendu 2D, caméra, zoom). Le monde est en cercles (voir regles.js) ; la vue les aplatit (tilt).
+/* Armateur des étoiles : la carte (rendu 2D, caméra, zoom). Le monde est en cercles (voir regles.js) ; la vue les aplatit (tilt).
    Écran = centre + (position du monde − caméra) × échelle (en y : × tilt). Les vaisseaux sont de petits points, puis des sprites Relief au zoom. */
 (function () {
 const F = window.Flotte = window.Flotte || {};

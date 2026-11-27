@@ -1,4 +1,4 @@
-/* Flotte du bureau : sauvegarde (localStorage), reprise d'une partie et part des gains appli fermée. */
+/* Armateur des étoiles : sauvegarde (localStorage), reprise d'une partie et part des gains appli fermée. */
 (function () {
 const F = window.Flotte = window.Flotte || {};
 const R = F.R, S = F.Sim;

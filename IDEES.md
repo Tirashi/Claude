@@ -95,7 +95,7 @@ Demande : moins incrémental ou rogue-lite ; Anno sur Nintendo DS, mais **une se
 4. **Le Chalutier** (gestion / incrémental) — d'une barque à une flotte de chalutiers : mini-jeu de pêche au filet, vente au marché (prix variables), bateaux et marins qui pêchent même hors ligne, nouvelles zones (mer froide, récifs, grand large), aquarium à compléter.
 5. ✅ **Escadrille !** — détails (sessions, maquettes, décisions) déplacés dans [`specs/escadrille.md`](specs/escadrille.md).
 
-## 🟡 Flotte du bureau (idée de l'utilisateur du 25/11, nom provisoire, inspirée de *Desk Space: Idle Spacefleet clicker* sur Steam) : jeu en cours dans `flotte/` (session 1 faite le 26/11), cahier des charges [`specs/flotte-du-bureau.md`](specs/flotte-du-bureau.md)
+## 🟡 Armateur des étoiles (ex-« Flotte du bureau », idée de l'utilisateur du 25/11, nom choisi le 27/11, inspirée de *Desk Space: Idle Spacefleet clicker* sur Steam) : jeu en cours dans `flotte/` (session 1 faite le 26/11), cahier des charges [`specs/flotte-du-bureau.md`](specs/flotte-du-bureau.md)
 
 ## Idées de jeux dans l'espace (à choisir)
 1. ✅ **Lune-Rover** (réalisé le 16/10 avec 30 niveaux ; 30 de plus possibles plus tard) (puzzle de programmation) — programmer à l'avance un petit robot (avancer, tourner, sauter, ramasser) pour récolter des cristaux sur la Lune ; 60 niveaux, boucles et conditions progressives, 3 étoiles pour le programme le plus court. *Rapide à faire.*

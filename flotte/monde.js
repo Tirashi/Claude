@@ -1,4 +1,4 @@
-/* Flotte du bureau : le système (corps célestes, orbites, zones). Positions dans le monde (voir regles.js) ; le rendu les aplatit. */
+/* Armateur des étoiles : le système (corps célestes, orbites, zones). Positions dans le monde (voir regles.js) ; le rendu les aplatit. */
 (function () {
 const F = window.Flotte = window.Flotte || {};
 const R = F.R;

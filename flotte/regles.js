@@ -1,4 +1,4 @@
-/* Flotte du bureau : règles (données et formules, sans écran). Lu par le jeu et par outils/flotte-simulateur.js.
+/* Armateur des étoiles : règles (données et formules, sans écran). Lu par le jeu et par outils/flotte-simulateur.js.
    Unités du monde : 1 = le rayon de la zone 4 / 1,22 ; les orbites sont des cercles (la vue les aplatit). Temps en secondes. */
 (function () {
 const F = window.Flotte = window.Flotte || {};

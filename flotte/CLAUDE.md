@@ -1,4 +1,4 @@
-# Flotte du bureau — notes pour Claude
+# Armateur des étoiles — notes pour Claude
 Incrémental de flotte spatiale qu'on regarde (inspiré de *Desk Space*). Cahier des charges : [`specs/flotte-du-bureau.md`](../specs/flotte-du-bureau.md). Démo, sans classement.
 - Scripts classiques, `window.Flotte` : `regles.js` (`F.R` : tous les nombres), `monde.js`, `flotte.js` (`F.Sim`), `pirates.js`, `sauvegarde.js`, `sprites.js` (4 sprites Relief), `carte.js` (rendu, caméra), `interface.js` (fenêtres), `jeu.js` (boucle ; objet de test `F.Jeu`).
 - **Monde en cercles** (unité = rayon zone 4 ÷ 1,22), la vue aplatit (`V.tilt`) ; zoom ≥ 115 % : sprites Relief, sinon points.

@@ -1,4 +1,4 @@
-/* Flotte du bureau : le chef d'orchestre (boucle, entrées, sauvegarde, reprise). Objet de test : window.Flotte.Jeu. */
+/* Armateur des étoiles : le chef d'orchestre (boucle, entrées, sauvegarde, reprise). Objet de test : window.Flotte.Jeu. */
 (function () {
 const F = window.Flotte = window.Flotte || {};
 const R = F.R, S = F.Sim, C = F.Carte, UI = F.UI, Sv = F.Save;

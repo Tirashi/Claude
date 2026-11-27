@@ -180,7 +180,7 @@ const shots = process.argv[2];
       if (shots) await p.screenshot({ path: `${shots}/fumee-ecurie.png` });
     }
     if (url === 'flotte/index.html') {
-      // Flotte du bureau : la carte se dessine, un achat ajoute des navires, le zoom et le suivi d'un navire marchent, la sauvegarde se relit
+      // Armateur des étoiles : la carte se dessine, un achat ajoute des navires, le zoom et le suivi d'un navire marchent, la sauvegarde se relit
       const r = await p.evaluate(async () => {
         const wait = ms => new Promise(r => setTimeout(r, ms));
         const J = window.Flotte && window.Flotte.Jeu; if (!J) return 'pas de Flotte.Jeu';
@@ -200,7 +200,7 @@ const shots = process.argv[2];
         J.entrerCinema(); await wait(400); if (!document.body.classList.contains('cin')) return 'pas de mode cinéma';
         return 'ok';
       });
-      if (r !== 'ok') errs.push('Flotte du bureau : ' + r);
+      if (r !== 'ok') errs.push('Armateur des étoiles : ' + r);
       if (shots) await p.screenshot({ path: `${shots}/fumee-flotte.png` });
     }
     if (url === 'magasinier/index.html') {

@@ -1,4 +1,4 @@
-/* Flotte du bureau : pirates, patrouilles et primes (sans écran). Un pirate vise un navire chargé en vol, lui prend `butin` crédits (10 s de revenu)
+/* Armateur des étoiles : pirates, patrouilles et primes (sans écran). Un pirate vise un navire chargé en vol, lui prend `butin` crédits (10 s de revenu)
    et s'enfuit avec ; une patrouille qui le détruit rend le butin et touche une prime (10 s de revenu). Pas de pirates appli fermée. */
 (function () {
 const F = window.Flotte = window.Flotte || {};

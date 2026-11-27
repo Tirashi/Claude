@@ -483,7 +483,7 @@ Combat aérien en 3D low poly au-dessus d'un archipel, au crépuscule, au milieu
 - **Les classements** : meilleur score en vagues sans fin, et total des étoiles des missions.
 - Au téléphone : un joystick sous le pouce et des boutons ronds ; au PC : la souris dirige l'appareil, clic gauche pour le feu, clic droit pour les missiles. Explosions et réacteur enregistrés, musique synthétisée, secousses, épaves qui tombent en fumée, jauge d'énergie du boost. - **Les décors** : crépuscule, nuit étoilée, orage (pluie, éclairs), désert, neige ; chaque mission a le sien, et le temps change toutes les 5 vagues. La nuit et sous l'orage, les appareils allument leurs feux de position.
 
-## Flotte du bureau
+## Armateur des étoiles
 
 Une petite flotte de mineurs et de marchands travaille toute seule dans un système, autour d'un QG (première version, démo). On achète des vaisseaux et on les regarde voler.
 
