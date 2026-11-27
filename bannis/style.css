@@ -2,3 +2,10 @@
 html, body { margin: 0; height: 100%; background: #0c0814; overflow: hidden; }
 body { display: flex; align-items: center; justify-content: center; touch-action: manipulation; -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
 #cv { display: block; image-rendering: pixelated; touch-action: none; }
+/* paysage obligatoire (28/11) : sur un téléphone tenu en portrait, un message invite à le tourner */
+#tourne { display: none; position: fixed; inset: 0; z-index: 5; background: #0e1a22; color: #e8f4f2; font-family: "Titillium Web", system-ui, sans-serif; flex-direction: column; align-items: center; justify-content: center; gap: 14px; text-align: center; padding: 24px; }
+#tourne b { font-size: 24px; } #tourne span { color: #8fb0ad; font-size: 16px; }
+#tourne .tel { width: 84px; height: 48px; border: 5px solid #3ddcbe; border-radius: 10px; animation: tourne 2.6s ease-in-out infinite; }
+@keyframes tourne { 0%, 20% { transform: rotate(90deg); } 55%, 100% { transform: rotate(0); } }
+@media (prefers-reduced-motion: reduce) { #tourne .tel { animation: none; } }
+@media (orientation: portrait) and (max-width: 700px) { #tourne { display: flex; } #cv { display: none; } }

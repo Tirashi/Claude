@@ -1,10 +1,10 @@
 /* Les Bannis : affichage, écrans, toucher, effets et sons. Les règles sont dans regles.js (window.Bannis.R),
-   les données dans donnees.js (window.Bannis.D). Canvas logique de 360 x 760, agrandi sans lissage.
+   les données dans donnees.js (window.Bannis.D). Canvas logique de 760 x 360 (paysage), agrandi sans lissage.
    Sauvegardes : bannis.run (nuit en cours, écrite au début de chaque vague), bannis.stats, bannis.son. */
 (function(){
 "use strict";
 const {D, R} = window.Bannis;
-const W = 360, H = 760;
+const W = 760, H = 360;   // paysage (28/11)
 const cv = document.getElementById("cv"), ctx = cv.getContext("2d");
 let dpr = 1, echelle = 1;
 const reduit = matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -70,7 +70,7 @@ const SON = {
 /* ---------- état ---------- */
 const G = {ecran: "titre", run: null, C: null, sel: -1, fiche: null, pause: false, vitesse: lire("bannis.vitesse", 1), t: 0, txt: [], part: [], fx: [], sec: 0, gel: 0,
   evo: null, butin: null, recrues: null, choisies: [], fin: null, lancer: null, nuages: []};
-for (let i = 0; i < 40; i++) G.nuages.push({x: Math.random()*W, y: Math.random()*560, v: alea(8, 22), r: alea(.6, 1.8)});
+for (let i = 0; i < 40; i++) G.nuages.push({x: Math.random()*W, y: Math.random()*H, v: alea(8, 22), r: alea(.6, 1.8)});
 
 /* ---------- dessin : outils ---------- */
 function nine(cle, sx, sy, sw, sh, c, x, y, w, h){
@@ -114,14 +114,15 @@ function jauge(x, y, w, h, v, c){
 }
 let zones = [];
 function zone(x, y, w, h, f){ zones.push({x, y, w, h, f}); }
-function bouton(x, y, w, h, t, f, actif = true, pulse = false, couleur = 0){
+function bouton(x, y, w, h, t, f, actif = true, pulse = false, couleur = 0, sub){
   // couleurs de la planche Dragon Regalia : 0 rouge, 1 bleu ciel, 2 prune, 3 ardoise
   // couleur 0 ou 1 : bouton principal (teal) ; 2 ou 3 : bouton secondaire (carte à liseré)
   const prim = actif && couleur < 2;
   ctx.fillStyle = !actif ? "#1b3038" : prim ? MOD.accent : MOD.carte; rr(x, y, w, h, Math.min(12, h/2)); ctx.fill();
   if (!prim){ ctx.lineWidth = 2; ctx.strokeStyle = actif ? MOD.accent : MOD.bord; rr(x, y, w, h, Math.min(12, h/2)); ctx.stroke(); }
   if (pulse && actif){ ctx.save(); ctx.globalAlpha = .25 + .25*Math.sin(G.t*6); ctx.lineWidth = 4; ctx.strokeStyle = "#ffffff"; rr(x - 2, y - 2, w + 4, h + 4, Math.min(14, h/2 + 2)); ctx.stroke(); ctx.restore(); }
-  texte(t, x + w/2, y + h/2 + 7, 19, !actif ? "#6f9a9a" : prim ? "#05211c" : MOD.txt, "center", {max: w - 26, ombre: false});
+  texte(t, x + w/2, y + h/2 + (sub ? -1 : 7), sub ? 17 : 19, !actif ? "#6f9a9a" : prim ? "#05211c" : MOD.txt, "center", {max: w - 18, ombre: false});
+  if (sub) texte(sub, x + w/2, y + h/2 + 15, 12, !actif ? "#6f9a9a" : prim ? "#0b3a31" : MOD.doux, "center", {max: w - 18, ombre: false, gras: false});
   if (actif) zone(x, y, w, h, f);
 }
 function rr(x, y, w, h, r){ ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
@@ -210,51 +211,52 @@ function dessinerUnite(u){
 /* ---------- décor : crépuscule, volcan, Muraille ---------- */
 function fond(){
   const t = G.t;
-  let g = ctx.createLinearGradient(0, 0, 0, 560); g.addColorStop(0, "#1a1040"); g.addColorStop(.5, "#6a3a7a"); g.addColorStop(.75, "#e07a5a"); g.addColorStop(1, "#40243a");
+  let g = ctx.createLinearGradient(0, 0, 0, 230); g.addColorStop(0, "#1a1040"); g.addColorStop(.5, "#6a3a7a"); g.addColorStop(.8, "#e07a5a"); g.addColorStop(1, "#40243a");
   ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
-  ctx.fillStyle = "#fff"; for (let i = 0; i < 30; i++){ ctx.globalAlpha = .3 + .3*Math.sin(t*2 + i); ctx.fillRect((i*97) % W, (i*53) % 150, 2, 2); } ctx.globalAlpha = 1;
+  ctx.fillStyle = "#fff"; for (let i = 0; i < 46; i++){ ctx.globalAlpha = .3 + .3*Math.sin(t*2 + i); ctx.fillRect((i*97) % W, 36 + (i*53) % 60, 2, 2); } ctx.globalAlpha = 1;
   // la Gueule au loin
-  ctx.fillStyle = "#3a2050"; ctx.beginPath(); ctx.moveTo(0, 240); [[50, 170], [120, 205], [215, 118], [250, 118], [300, 160], [360, 190], [360, 240]].forEach(p => ctx.lineTo(...p)); ctx.fill();
-  const lg = .6 + Math.sin(t*2)*.2; ctx.fillStyle = `rgba(255,${110 + lg*60},40,${lg})`; ctx.fillRect(216, 114, 33, 7);
-  ctx.fillStyle = "rgba(90,50,70,.45)"; for (let i = 0; i < 4; i++){ const yy = 112 - ((t*12 + i*28) % 110); ctx.beginPath(); ctx.arc(232 + Math.sin(t + i)*12, yy, 10 + i*4, 0, 7); ctx.fill(); }
+  ctx.fillStyle = "#3a2050"; ctx.beginPath(); ctx.moveTo(250, 104); [[340, 84], [430, 70], [490, 40], [570, 40], [630, 66], [700, 84], [760, 92], [760, 104]].forEach(p => ctx.lineTo(...p)); ctx.fill();
+  const lg = .6 + Math.sin(t*2)*.2; ctx.fillStyle = `rgba(255,${110 + lg*60},40,${lg})`; ctx.fillRect(494, 37, 72, 6);
+  ctx.fillStyle = "rgba(90,50,70,.45)"; for (let i = 0; i < 4; i++){ const yy = 36 - ((t*10 + i*20) % 70); ctx.beginPath(); ctx.arc(530 + Math.sin(t + i)*14, yy, 10 + i*4, 0, 7); ctx.fill(); }
   // sol
-  ctx.fillStyle = "#2a1838"; ctx.fillRect(0, 236, W, 330);
-  for (let y = 236; y < 560; y += 4){ ctx.fillStyle = y % 8 ? "#33204a" : "#2a1838"; ctx.fillRect(0, y, W, 2); }
-  ctx.fillStyle = "rgba(0,0,0,.22)"; for (let x = 0; x < W; x += 8) for (let y = 240; y < 560; y += 8) if (((x + y)/8) % 2 === 0) ctx.fillRect(x, y, 4, 4);
+  ctx.fillStyle = "#2a1838"; ctx.fillRect(0, 100, W, H - 100);
+  for (let y = 100; y < H; y += 4){ ctx.fillStyle = y % 8 ? "#33204a" : "#2a1838"; ctx.fillRect(0, y, W, 2); }
+  ctx.fillStyle = "rgba(0,0,0,.22)"; for (let x = 0; x < W; x += 8) for (let y = 104; y < H; y += 8) if (((x + y)/8) % 2 === 0) ctx.fillRect(x, y, 4, 4);
   // cendres
-  ctx.fillStyle = "#ffae6a"; for (const c of G.nuages){ c.y -= c.v*.016; c.x += Math.sin(t + c.y*.05)*.2; if (c.y < 0){ c.y = 560; c.x = Math.random()*W; } ctx.globalAlpha = .4; ctx.fillRect(c.x, c.y, c.r, c.r); } ctx.globalAlpha = 1;
+  ctx.fillStyle = "#ffae6a"; for (const c of G.nuages){ c.y -= c.v*.016; c.x += Math.sin(t + c.y*.05)*.2; if (c.y < 0){ c.y = H; c.x = Math.random()*W; } ctx.globalAlpha = .4; ctx.fillRect(c.x, c.y, c.r, c.r); } ctx.globalAlpha = 1;
 }
 function muraille(){
-  const y0 = 200, y1 = 546, X = R.MUR_X;
+  const y0 = 72, y1 = 302, X = R.MUR_X;
   ctx.fillStyle = "#4a4458"; ctx.fillRect(0, y0, X, y1 - y0);
   ctx.fillStyle = "#3a3448"; for (let y = y0 + 8; y < y1; y += 14) for (let x = ((y/14) % 2)*12; x < X; x += 24) ctx.fillRect(x, y, 22, 1);
   ctx.fillStyle = "#2c2838"; ctx.fillRect(X - 4, y0, 4, y1 - y0);
   ctx.fillStyle = "#5c566c"; for (let x = 0; x < X; x += 16) ctx.fillRect(x, y0 - 12, 10, 12);
   ctx.fillStyle = "#6a6480"; ctx.fillRect(0, y0, X, 4);
   ctx.fillStyle = "rgba(255,190,90,.6)"; ctx.fillRect(14, y0 + 30, 6, 10); ctx.fillRect(28, y0 + 120, 6, 10);
-  if (G.run){ const v = G.run.mur/G.run.murMax; barre(20, y0 - 34, 96, 8, v, v > .35 ? "#e8dcc0" : "#e8402a"); texte("MURAILLE " + Math.ceil(G.run.mur), 134, y0 - 25, 13, "#fff"); }
+  if (G.run){ const v = G.run.mur/G.run.murMax; barre(74, 56, 90, 7, v, v > .35 ? "#e8dcc0" : "#e8402a"); texte("MURAILLE " + Math.ceil(G.run.mur), 172, 63, 12, "#fff"); }
 }
 
 /* ---------- écrans : titre ---------- */
 function ecranTitre(){
   fond(); muraille();
   const s = statsJoueur(), sauve = runSauvee();
-  ctx.save(); const k = 1 + Math.sin(G.t*1.5)*.02; ctx.translate(W/2, 112); ctx.scale(k, k);
-  texte("LES BANNIS", 0, 0, 28, "#ffd76a", "center", {titre: true, ombreC: "#3a0a20"}); ctx.restore();
-  texte("Tenir la Muraille jusqu'au matin", W/2, 146, 16, "#ffe9c8", "center");
+  ctx.save(); const k = 1 + Math.sin(G.t*1.5)*.02; ctx.translate(250, 90); ctx.scale(k, k);
+  texte("LES BANNIS", 0, 0, 34, "#ffd76a", "center", {titre: true, ombreC: "#3a0a20"}); ctx.restore();
+  texte("Tenir la Muraille jusqu'au matin", 250, 122, 16, "#ffe9c8", "center");
   // l'escouade de l'écran titre
-  [["glenys-3", 120, 470], ["ley-2", 92, 400], ["linail-2", 160, 410]].forEach(([spr, x, y], i) => dessinerHeros(spr, "repos", G.t + i, x, y, 1));
-  dessinerMonstre(19, false, 290, 440, -1, {e: 1.2}); dessinerMonstre(14, false, 320, 360, -1, {e: 1.5});
-  panneau(24, 504, W - 48, 244);
-  let y = 524;
-  if (sauve){ bouton(44, y, W - 88, 42, "CONTINUER  ·  VAGUE " + sauve.vague, () => { G.run = sauve; R.preparerVague(G.run); allerPlacement(); SON.clic(); }, true, true); y += 48; }
-  bouton(44, y, W - 88, 42, "NOUVELLE NUIT", () => { if (sauve) effacer("bannis.run"); nouvelleNuit(); SON.clic(); }, true, !sauve, sauve ? 2 : 0); y += 48;
-  bouton(44, y, W - 88, 42, "L'ARBRE DES DES  ·  " + s.eclats + " ECLATS", () => ouvrirArbre("titre"), true, false, 2); y += 48;
-  if (!window.ludoArtefact){ bouton(44, y, W - 88, 38, "◀ LUDOTHEQUE", () => { location.href = "../index.html"; }, true, false, 3); y += 44; }
+  [["glenys-3", 170, 290], ["ley-2", 130, 240], ["linail-2", 215, 235]].forEach(([spr, x, y], i) => dessinerHeros(spr, "repos", G.t + i, x, y, 1, {e: 1.8}));
+  dessinerMonstre(19, false, 400, 300, -1, {e: 1.2}); dessinerMonstre(14, false, 340, 220, -1, {e: 1.3});
+  // le menu à droite
+  panneau(500, 40, 252, 300);
+  let y = 54;
+  if (sauve){ bouton(514, y, 224, 44, "CONTINUER · VAGUE " + sauve.vague, () => { G.run = sauve; R.preparerVague(G.run); allerPlacement(); SON.clic(); }, true, true); y += 52; }
+  bouton(514, y, 224, 44, "NOUVELLE NUIT", () => { if (sauve) effacer("bannis.run"); nouvelleNuit(); SON.clic(); }, true, !sauve, sauve ? 2 : 0); y += 52;
+  bouton(514, y, 224, 44, "ARBRE DES DES · " + s.eclats, () => ouvrirArbre("titre"), true, false, 2); y += 52;
+  if (!window.ludoArtefact){ bouton(514, y, 224, 38, "◀ LUDOTHEQUE", () => { try { screen.orientation.unlock(); } catch (e){} location.href = "../index.html"; }, true, false, 3); y += 44; }
   const rec = s.nuits ? `Record : vague ${s.record}${s.gagnees ? "  ·  nuits tenues : " + s.gagnees : ""}` : "Le Mage banni et ses condamnés contre la Gueule.";
-  texte(rec, W/2, Math.min(y + 14, 738), 13, "#ffe3a8", "center", {gras: false, max: W - 70});
+  texte(rec, 626, Math.min(y + 14, 330), 12, "#ffe3a8", "center", {gras: false, max: 232});
   // son
-  petit(W - 58, 14, 44, 40); texte(sonOn ? "SON" : "MUET", W - 36, 40, 12, "#fff", "center"); zone(W - 58, 14, 44, 40, () => { sonOn = !sonOn; ecrire("bannis.son", sonOn); audio(); SON.clic(); });
+  petit(8, 36, 44, 30); texte(sonOn ? "SON" : "MUET", 30, 56, 12, "#fff", "center"); zone(8, 36, 44, 30, () => { sonOn = !sonOn; ecrire("bannis.son", sonOn); audio(); SON.clic(); });
 }
 
 /* ---------- dés à symboles : interface moderne (maquette 6, direction B, 27/11) ---------- */
@@ -327,16 +329,16 @@ const TUTO = [
 function ecranTuto(){
   const p = G.tuto.p, P = TUTO[p];
   zone(0, 0, W, H, () => {});
-  ctx.fillStyle = "rgba(5,12,16,.88)"; ctx.fillRect(0, 0, W, H);
-  carteM(20, 150, W - 40, 430, MOD.accent, MOD.fond);
-  texteM("COMMENT CA MARCHE  " + (p + 1) + "/" + TUTO.length, W/2, 190, 13, MOD.doux, "center");
-  texteM(P.t, W/2, 232, 26, MOD.txt, "center", {max: W - 80});
-  const n = P.f.length, s = 64, g = 12, x0 = (W - (n*s + (n - 1)*g))/2;
-  P.f.forEach(([ty, k], i) => tileFace(ty, k, x0 + i*(s + g), 258, s, {etiquette: true, ...aRoule(G.tuto.t0 + i*.12)}));
-  paragrapheM(P.d, 44, 376, W - 88, 17, MOD.txt, 1.3);
-  if (p) boutonM(36, 516, 90, 44, "RETOUR", () => { G.tuto.p--; G.tuto.t0 = G.t; SON.clic(); }, false);
-  boutonM(p ? 138 : 36, 516, p ? W - 174 : W - 72, 44, p === TUTO.length - 1 ? "COMPRIS !" : "SUIVANT", () => {
-    SON.clic(); if (p === TUTO.length - 1){ G.tuto = null; if (G.ecran !== "recrutement") return; ecrire("bannis.tuto", 1); if (G.ecran === "recrutement") lancerAnim(); } else { G.tuto.p++; G.tuto.t0 = G.t; } }, true);
+  ctx.fillStyle = "rgba(5,12,16,.9)"; ctx.fillRect(0, 0, W, H);
+  carteM(80, 16, 600, 328, MOD.accent, MOD.fond);
+  texteM("COMMENT CA MARCHE  " + (p + 1) + "/" + TUTO.length, W/2, 46, 13, MOD.doux, "center");
+  texteM(P.t, W/2, 82, 26, MOD.txt, "center", {max: 540});
+  const n = P.f.length, s = 66, g = 14, x0 = (W - (n*s + (n - 1)*g))/2;
+  P.f.forEach(([ty, k], i) => tileFace(ty, k, x0 + i*(s + g), 98, s, {etiquette: true, ...aRoule(G.tuto.t0 + i*.12)}));
+  paragrapheM(P.d, 120, 198, 520, 16, MOD.txt, 1.3);
+  if (p) boutonM(110, 288, 110, 42, "RETOUR", () => { G.tuto.p--; G.tuto.t0 = G.t; SON.clic(); }, false);
+  boutonM(p ? 232 : 110, 288, p ? 418 : 540, 42, p === TUTO.length - 1 ? "COMPRIS !" : "SUIVANT", () => {
+    SON.clic(); if (p === TUTO.length - 1){ G.tuto = null; if (G.ecran !== "recrutement") return; ecrire("bannis.tuto", 1); lancerAnim(); } else { G.tuto.p++; G.tuto.t0 = G.t; } }, true);
 }
 function ouvrirTuto(){ G.tuto = {p: 0, t0: G.t}; SON.clic(); }
 
@@ -348,17 +350,17 @@ function etapesButin(){
   return l;
 }
 function filEtapes(){
-  const l = etapesButin(), n = l.length, g = 4, w = Math.floor((W - 16 - (n - 1)*g)/n), cur = l.findIndex(e => e[1].includes(G.butin.etape));
-  l.forEach(([nom], i) => { const x = 8 + i*(w + g), y = 66, on = i === cur, pass = i < cur;
-    ctx.fillStyle = on ? MOD.accent : "rgba(14,26,34,.9)"; rr(x, y, w, 24, 12); ctx.fill();
-    if (!on){ ctx.lineWidth = 1.5; ctx.strokeStyle = pass ? MOD.bord : "#1c3a44"; rr(x, y, w, 24, 12); ctx.stroke(); }
-    texte((pass ? "OK  " : (i + 1) + ". ") + nom, x + w/2, y + 17, 12, on ? "#05211c" : pass ? MOD.doux : "#5f8a8a", "center", {ombre: false, max: w - 8}); });
+  const l = etapesButin(), n = l.length, g = 4, w = 92, cur = l.findIndex(e => e[1].includes(G.butin.etape));
+  l.forEach(([nom], i) => { const x = 8 + i*(w + g), y = 36, on = i === cur, pass = i < cur;
+    ctx.fillStyle = on ? MOD.accent : "rgba(14,26,34,.9)"; rr(x, y, w, 20, 10); ctx.fill();
+    if (!on){ ctx.lineWidth = 1.5; ctx.strokeStyle = pass ? MOD.bord : "#1c3a44"; rr(x, y, w, 20, 10); ctx.stroke(); }
+    texte((pass ? "OK  " : (i + 1) + ". ") + nom, x + w/2, y + 15, 11, on ? "#05211c" : pass ? MOD.doux : "#5f8a8a", "center", {ombre: false, max: w - 8}); });
 }
 // bandeau « A FAIRE » sous le fil d'étapes
 function consigne(t, sous){
-  ctx.fillStyle = "rgba(14,26,34,.95)"; rr(8, 96, W - 16, sous ? 52 : 38, 10); ctx.fill(); ctx.fillStyle = MOD.accent; rr(8, 96, 5, sous ? 52 : 38, 2); ctx.fill();
-  texte("A FAIRE : " + t, 22, 120, 15, MOD.or, "left", {ombre: false, max: W - 40});
-  if (sous) texte(sous, 22, 140, 13, MOD.doux, "left", {ombre: false, gras: false, max: W - 40});
+  ctx.fillStyle = "rgba(14,26,34,.95)"; rr(8, 60, W - 16, 26, 8); ctx.fill(); ctx.fillStyle = MOD.accent; rr(8, 60, 5, 26, 2); ctx.fill();
+  texte("A FAIRE : " + t, 22, 78, 14, MOD.or, "left", {ombre: false, max: sous ? 330 : W - 40});
+  if (sous) texte(sous, 22 + Math.min(330, 12 + (police(14), ctx.measureText("A FAIRE : " + t).width)), 78, 12, MOD.doux, "left", {ombre: false, gras: false, max: W - 60 - Math.min(330, 12 + (police(14), ctx.measureText("A FAIRE : " + t).width))});
 }
 
 /* ---------- l'arbre des dés : entre les nuits, les éclats de Gueule achètent des gravures ---------- */
@@ -375,56 +377,59 @@ function acheterArbre(b, cle){
 function ecranArbre(){
   const a = G.a, s = statsJoueur();
   ctx.fillStyle = MOD.fond; ctx.fillRect(0, 0, W, H);
-  texteM("L'ARBRE DES DES", 20, 44, 24, MOD.txt, "left", {max: 210});
-  texteM(s.eclats + " éclats", W - 20, 44, 18, MOD.or, "right", {max: 120});
-  paragrapheM("Les éclats de Gueule, gagnés à la fin d'une nuit, achètent des gravures. Tu les poses sur tes dés pour toutes les nuits suivantes.", 20, 68, W - 40, 13, MOD.doux, 1.25);
-  const ong = G.arbreOnglet, wt = (W - 48)/2;
-  boutonM(20, 106, wt, 36, "ARBRE (ACHETER)", () => { G.arbreOnglet = "arbre"; SON.clic(); }, ong === "arbre");
-  boutonM(28 + wt, 106, wt, 36, "FORGE (GRAVER)", () => { G.arbreOnglet = "forge"; SON.clic(); }, ong === "forge");
+  texteM("L'ARBRE DES DES", 14, 28, 22, MOD.txt, "left", {max: 230});
+  texteM(s.eclats + " éclats de Gueule", 14, 50, 14, MOD.or, "left", {max: 230});
+  const ong = G.arbreOnglet;
+  boutonM(270, 6, 160, 34, "ARBRE (ACHETER)", () => { G.arbreOnglet = "arbre"; SON.clic(); }, ong === "arbre");
+  boutonM(440, 6, 160, 34, "FORGE (GRAVER)", () => { G.arbreOnglet = "forge"; SON.clic(); }, ong === "forge");
+  boutonM(W - 130, 6, 120, 34, "RETOUR", () => { G.ecran = G.arbreRetour; SON.clic(); }, false);
   const msg = G.arbreMsg && G.t - G.arbreMsg.t0 < 3 ? G.arbreMsg.t : null;
-  if (msg) texteM(msg, W/2, 161, 13, MOD.or, "center", {max: W - 30});
+  if (msg) texteM(msg, 270, 58, 12, MOD.or, "left", {max: 480});
   if (ong === "arbre"){
-    let y = 176;
-    for (const b of ["classes", "qual", "quoi", "action"]){
-      const T = D.ARBRE[b], n = T.couts.length;
-      carteM(14, y, W - 28, 92); texteM(T.n, 28, y + 24, 17, MOD.txt, "left"); texteM(a.niv[b] + " / " + n, W - 28, y + 24, 14, MOD.accent, "right");
-      texteM(T.d, 28, y + 41, 11.5, MOD.doux, "left", {gras: false, max: W - 56});
-      for (let i = 0; i < n; i++){
-        const x = 28 + i*52, cy = y + 54, ach = i < a.niv[b], proch = i === a.niv[b], cout = T.couts[i], peut = proch && s.eclats >= cout;
-        ctx.fillStyle = ach ? MOD.accent : MOD.carte; rr(x, cy, 46, 32, 8); ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = ach ? MOD.accent : proch ? (peut ? MOD.accent : MOD.alerte) : MOD.bord; rr(x, cy, 46, 32, 8); ctx.stroke();
-        texteM(ach ? "OK" : String(cout), x + 23, cy + 22, 15, ach ? "#05211c" : proch ? (peut ? MOD.txt : MOD.alerte) : MOD.doux, "center", {ombre: false});
-        if (proch) zone(x, cy, 46, 32, () => acheterArbre(b));
+    const cartes = ["classes", "qual", "quoi", "action", "legendes"];
+    cartes.forEach((b, ci) => {
+      const x = 8 + (ci % 3)*252, y = 66 + Math.floor(ci/3)*148;
+      if (b === "legendes"){
+        const T = D.ARBRE.legendes; carteM(x, y, 244, 140); texteM(T.n, x + 14, y + 26, 17, MOD.txt, "left"); texteM(a.legendaires.length + " / 6", x + 230, y + 26, 14, MOD.accent, "right");
+        paragrapheM(T.d + " " + T.cout + " éclats chacune.", x + 14, y + 46, 216, 11.5, MOD.doux, 1.2);
+        Object.keys(D.CLASSES).forEach((k, i) => { const cx = x + 8 + (i % 6)*39, cy = y + 90, ach = a.legendaires.includes(k), peut = s.eclats >= T.cout;
+          ctx.fillStyle = ach ? "rgba(61,220,190,.25)" : MOD.carte; rr(cx, cy, 36, 40, 7); ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = ach ? MOD.accent : peut ? MOD.bord : "#1c3a44"; rr(cx, cy, 36, 40, 7); ctx.stroke();
+          ctx.save(); ctx.globalAlpha = ach || peut ? 1 : .45; dessinerHeros(D.CLASSES[k].leg.spr, "repos", G.t, cx + 18, cy + 38, 1, {e: 1}); ctx.restore();
+          if (!ach) zone(cx, cy, 36, 40, () => acheterArbre("legendes", k)); });
+        return;
       }
-      y += 98;
-    }
-    const T = D.ARBRE.legendes; carteM(14, y, W - 28, 92); texteM(T.n, 28, y + 24, 17, MOD.txt, "left"); texteM(a.legendaires.length + " / 6", W - 28, y + 24, 14, MOD.accent, "right");
-    texteM(T.d + " " + T.cout + " éclats chacune.", 28, y + 41, 11.5, MOD.doux, "left", {gras: false, max: W - 56});
-    Object.keys(D.CLASSES).forEach((k, i) => { const x = 28 + i*52, cy = y + 52, ach = a.legendaires.includes(k), peut = s.eclats >= T.cout;
-      ctx.fillStyle = ach ? "rgba(61,220,190,.25)" : MOD.carte; rr(x, cy, 46, 34, 8); ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = ach ? MOD.accent : peut ? MOD.bord : "#1c3a44"; rr(x, cy, 46, 34, 8); ctx.stroke();
-      ctx.save(); ctx.globalAlpha = ach || peut ? 1 : .45; dessinerHeros(D.CLASSES[k].leg.spr, "repos", G.t, x + 23, cy + 32, 1, {e: 1}); ctx.restore();
-      if (!ach) zone(x, cy, 46, 34, () => acheterArbre("legendes", k)); });
+      const T = D.ARBRE[b], n = T.couts.length;
+      carteM(x, y, 244, 140); texteM(T.n, x + 14, y + 26, 17, MOD.txt, "left"); texteM(a.niv[b] + " / " + n, x + 230, y + 26, 14, MOD.accent, "right");
+      paragrapheM(T.d, x + 14, y + 46, 216, 11.5, MOD.doux, 1.2);
+      for (let i = 0; i < n; i++){
+        const cx = x + 8 + i*39, cy = y + 94, ach = i < a.niv[b], proch = i === a.niv[b], cout = T.couts[i], peut = proch && s.eclats >= cout;
+        ctx.fillStyle = ach ? MOD.accent : MOD.carte; rr(cx, cy, 36, 34, 8); ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = ach ? MOD.accent : proch ? (peut ? MOD.accent : MOD.alerte) : MOD.bord; rr(cx, cy, 36, 34, 8); ctx.stroke();
+        texteM(ach ? "OK" : String(cout), cx + 18, cy + 23, 14, ach ? "#05211c" : proch ? (peut ? MOD.txt : MOD.alerte) : MOD.doux, "center", {ombre: false});
+        if (proch) zone(cx, cy, 36, 34, () => acheterArbre(b));
+      }
+    });
+    carteM(512, 214, 236, 136, MOD.bord, "rgba(14,26,34,.7)"); paragrapheM("Chaque palier acheté donne une gravure : va dans la FORGE pour la poser sur une face d'un dé de départ.", 526, 240, 208, 12.5, MOD.doux, 1.25);
+    boutonM(526, 300, 208, 40, "ALLER A LA FORGE", () => { G.arbreOnglet = "forge"; SON.clic(); }, false);
   } else {
     const br = G.forge.br, creds = b => R.creditsGravure(a, b);
-    texteM("1. CHOISIS UNE GRAVURE (tes crédits)", 20, 182, 13, MOD.accent, "left");
-    R.BRANCHES.forEach((b, i) => { const x = 20 + i*81, c = creds(b), sel = br === b;
-      ctx.fillStyle = sel ? MOD.accent : MOD.carte; rr(x, 190, 76, 46, 10); ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = c ? MOD.accent : MOD.bord; rr(x, 190, 76, 46, 10); ctx.stroke();
-      texteM(BR_NOM[b], x + 38, 210, 12, sel ? "#05211c" : c ? MOD.txt : MOD.doux, "center", {ombre: false}); texteM("x" + c, x + 38, 228, 16, sel ? "#05211c" : c ? MOD.or : MOD.doux, "center", {ombre: false});
-      if (c) zone(x, 190, 76, 46, () => { G.forge = {br: b, face: null}; SON.clic(); }); });
-    if (!br){ paragrapheM("Aucune gravure choisie. Un palier acheté dans l'ARBRE donne un crédit ici. Les dés ci-dessous sont ceux avec lesquels tu commenceras la prochaine nuit.", 20, 256, W - 40, 13, MOD.doux, 1.25); }
+    texteM("1. CHOISIS UNE GRAVURE (tes crédits)", 14, 76, 12, MOD.accent, "left");
+    R.BRANCHES.forEach((b, i) => { const x = 14 + (i % 2)*148, y = 84 + Math.floor(i/2)*46, c = creds(b), sel = br === b;
+      ctx.fillStyle = sel ? MOD.accent : MOD.carte; rr(x, y, 142, 40, 9); ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = c ? MOD.accent : MOD.bord; rr(x, y, 142, 40, 9); ctx.stroke();
+      texteM(BR_NOM[b] + "   x" + c, x + 71, y + 26, 15, sel ? "#05211c" : c ? MOD.txt : MOD.doux, "center", {ombre: false});
+      if (c) zone(x, y, 142, 40, () => { G.forge = {br: b, face: null}; SON.clic(); }); });
+    if (!br){ paragrapheM("Aucune gravure choisie. Un palier acheté dans l'ARBRE donne un crédit ici. À droite : les dés avec lesquels tu commenceras la prochaine nuit.", 14, 190, 288, 13, MOD.doux, 1.25); }
     else {
       const poss = R.facesGravables(a, br), ty = BR_TYPE[br];
-      texteM("2. CHOISIS LA FACE A GRAVER", 20, 256, 13, MOD.accent, "left");
-      poss.forEach((f, i) => { const x = 20 + i*52; tileFace(ty, f, x, 264, 46, {sel: G.forge.face === f}); zone(x, 264, 46, 46, () => { G.forge.face = f; SON.clic(); }); });
-      if (!poss.length) texteM("Achète le palier 1 de QUALITE dans l'arbre.", 20, 292, 13, MOD.alerte, "left");
-      if (G.forge.face !== null) texteM("3. TOUCHE LA FACE A REMPLACER : " + nomFace(ty, G.forge.face), 20, 334, 13, MOD.accent, "left", {max: W - 40});
+      texteM("2. CHOISIS LA FACE A GRAVER", 14, 186, 12, MOD.accent, "left");
+      poss.forEach((f, i) => { const x = 14 + i*48; tileFace(ty, f, x, 194, 44, {sel: G.forge.face === f}); zone(x, 194, 44, 44, () => { G.forge.face = f; SON.clic(); }); });
+      if (!poss.length) texteM("Achète le palier 1 de QUALITE dans l'arbre.", 14, 218, 12, MOD.alerte, "left");
+      if (G.forge.face !== null) paragrapheM("3. TOUCHE, A DROITE, LA FACE A REMPLACER PAR " + nomFace(ty, G.forge.face) + ".", 14, 264, 288, 13, MOD.accent, 1.2);
     }
     const src = R.facesDeDepart(a), face = G.forge.face;
-    rangeesDes(344, (ty) => br && face !== null && ty === BR_TYPE[br], (ty, d, i) => {
-      if (!R.graverArbre(a, br, face, i, d)) return; ecrire("bannis.arbre", a); SON.or(); SON.des(5); G.forge.face = null; if (!creds(br)) G.forge.br = null; msgArbre("Gravé pour de bon sur le dé."); }, null, src, 52, 38);
-    boutonM(20, 686, (W - 52)/2, 44, "TOUT REMETTRE A ZERO", () => { R.remettreAZero(a); ecrire("bannis.arbre", a); G.forge = {br: null, face: null}; msgArbre("Dés remis comme au départ : les gravures sont rendues."); SON.clic(); }, false);
+    rangeesDes(34, (ty) => br && face !== null && ty === BR_TYPE[br], (ty, d, i) => {
+      if (!R.graverArbre(a, br, face, i, d)) return; ecrire("bannis.arbre", a); SON.or(); SON.des(5); G.forge.face = null; if (!creds(br)) G.forge.br = null; msgArbre("Gravé pour de bon sur le dé."); }, null, src, 52, 34, 316);
+    boutonM(14, 304, 288, 40, "TOUT REMETTRE A ZERO", () => { R.remettreAZero(a); ecrire("bannis.arbre", a); G.forge = {br: null, face: null}; msgArbre("Dés remis comme au départ : les gravures sont rendues."); SON.clic(); }, false);
   }
-  boutonM(W/2 + 6, 686, (W - 52)/2, 44, "RETOUR", () => { G.ecran = G.arbreRetour; SON.clic(); }, true);
-  if (ong === "arbre") boutonM(20, 686, (W - 52)/2, 44, "VOIR LA FORGE", () => { G.arbreOnglet = "forge"; SON.clic(); }, false);
 }
 
 /* ---------- recrutement : un dé par case ---------- */
@@ -435,67 +440,67 @@ function nouvelleNuit(){
 }
 function ecranRecrutement(){
   ctx.fillStyle = MOD.fond; ctx.fillRect(0, 0, W, H);
-  texteM("ETAPE 1 : TES CONDAMNES", 24, 44, 22, MOD.txt, "left", {max: W - 100});
-  boutonM(W - 56, 20, 34, 34, "?", ouvrirTuto, false);
-  ctx.fillStyle = "rgba(61,220,190,.1)"; rr(14, 58, W - 28, 70, 10); ctx.fill(); ctx.fillStyle = MOD.accent; rr(14, 58, 5, 70, 2); ctx.fill();
-  texteM("A FAIRE", 28, 78, 13, MOD.or, "left");
-  paragrapheM("Les dés ont désigné tes 3 combattants. Relance UN dé en le touchant si tu veux, puis appuie sur A LA MURAILLE.", 28, 96, W - 56, 12.5, MOD.txt, 1.2);
+  texteM("ETAPE 1 : TES CONDAMNES", 16, 28, 21, MOD.txt, "left", {max: 400});
+  boutonM(W - 46, 6, 34, 28, "?", ouvrirTuto, false);
+  ctx.fillStyle = "rgba(61,220,190,.1)"; rr(10, 38, W - 20, 28, 8); ctx.fill(); ctx.fillStyle = MOD.accent; rr(10, 38, 5, 28, 2); ctx.fill();
+  texteM("A FAIRE : les dés ont désigné tes 3 combattants. Relance UN dé en le touchant si tu veux, puis appuie sur A LA MURAILLE.", 24, 57, 14, MOD.txt, "left", {max: W - 50, gras: false});
   const tousFinis = G.rolls.every(t => fini(t, .9));
   G.recrues.forEach((h, i) => {
-    const y = 136 + i*164, C = D.CLASSES[h.cls], s0 = R.stats(h), pret = fini(G.rolls[i], .9);
-    carteM(14, y, W - 28, 156);
-    tileFace("slot", h.cls, 28, y + 14, 80, {sel: G.relR > 0 && pret, etiquette: pret, t0: G.rolls[i], pool: G.run.faces.slots[i], dur: .9});
-    texteM("DE DE LA CASE " + (i + 1), 68, y + 114, 11, MOD.doux, "center");
-    if (G.relR > 0 && pret){ texteM("touche pour relancer", 68, y + 128, 11, MOD.accent, "center"); zone(28, y + 14, 80, 100, () => {
+    const x = 10 + i*250, y = 74, C = D.CLASSES[h.cls], s0 = R.stats(h), pret = fini(G.rolls[i], .9);
+    carteM(x, y, 240, 222);
+    tileFace("slot", h.cls, x + 12, y + 12, 80, {sel: G.relR > 0 && pret, etiquette: pret, t0: G.rolls[i], pool: G.run.faces.slots[i], dur: .9});
+    texteM("DE DE LA CASE " + (i + 1), x + 52, y + 108, 11, MOD.doux, "center");
+    if (G.relR > 0 && pret){ texteM("touche pour relancer", x + 52, y + 122, 11, MOD.accent, "center"); zone(x + 12, y + 12, 80, 112, () => {
       const pris = G.recrues.filter((_, j) => j !== i).map(v => v.nom);
       G.recrues[i] = R.recrueDeCase(G.run, i, pris); G.choisies = G.recrues.slice(); G.relR--; G.rolls[i] = G.t; SON.des(8); }); }
-    ctx.fillStyle = pret ? MOD.accent : MOD.bord; ctx.beginPath(); ctx.moveTo(116, y + 38); ctx.lineTo(116, y + 60); ctx.lineTo(128, y + 49); ctx.closePath(); ctx.fill();
-    if (!pret){ texteM("Le dé roule...", 142, y + 86, 18, MOD.doux, "left"); return; }
-    texteM(h.nom, 138, y + 34, 22, MOD.txt, "left", {max: W - 164});
-    texteM(C.n + " · " + D.ROLES[C.role], 138, y + 54, 14, MOD.accent, "left", {max: W - 164});
-    texteM(`VIE ${s0.pv}   ATQ ${s0.atq}   DEF ${s0.def}`, 138, y + 76, 14, MOD.txt, "left", {max: W - 164});
-    texteM("TRAIT : " + D.TRAITS[h.trait].n, 138, y + 96, 13, MOD.alerte, "left", {max: W - 164});
-    texteM("LES 6 FACES DE CE DE :", 138, y + 118, 11, MOD.doux, "left");
-    G.run.faces.slots[i].forEach((k, j) => tileFace("slot", k, 138 + j*30, y + 124, 26, {alpha: k === h.cls ? 1 : .75}));
+    ctx.fillStyle = pret ? MOD.accent : MOD.bord; ctx.beginPath(); ctx.moveTo(x + 98, y + 36); ctx.lineTo(x + 98, y + 58); ctx.lineTo(x + 110, y + 47); ctx.closePath(); ctx.fill();
+    if (!pret){ texteM("Le dé roule...", x + 120, y + 56, 17, MOD.doux, "left"); return; }
+    texteM(h.nom, x + 116, y + 32, 21, MOD.txt, "left", {max: 116});
+    texteM(C.n + " · " + D.ROLES[C.role], x + 116, y + 52, 12, MOD.accent, "left", {max: 118});
+    texteM(`VIE ${s0.pv}  ATQ ${s0.atq}  DEF ${s0.def}`, x + 116, y + 74, 12, MOD.txt, "left", {max: 118});
+    texteM("TRAIT : " + D.TRAITS[h.trait].n, x + 116, y + 94, 12, MOD.alerte, "left", {max: 118});
+    paragrapheM(D.TRAITS[h.trait].d, x + 12, y + 148, 216, 11, MOD.doux, 1.2);
+    texteM("LES 6 FACES DE CE DE :", x + 12, y + 190, 11, MOD.doux, "left");
+    G.run.faces.slots[i].forEach((k, j) => tileFace("slot", k, x + 12 + j*36, y + 194, 28, {alpha: k === h.cls ? 1 : .75}));
   });
-  texteM(!tousFinis ? "Les dés roulent..." : G.relR > 0 ? "Relance disponible : 1" : "Relance utilisée", W/2, 650, 14, G.relR > 0 && tousFinis ? MOD.accent : MOD.doux, "center");
-  boutonM(24, 662, W - 48, 58, "A LA MURAILLE !", () => {
+  texteM(!tousFinis ? "Les dés roulent..." : G.relR > 0 ? "Relance disponible : 1" : "Relance utilisée", 16, 330, 14, G.relR > 0 && tousFinis ? MOD.accent : MOD.doux, "left");
+  boutonM(300, 304, 450, 46, "A LA MURAILLE !", () => {
     G.run.heros = G.recrues.slice(); R.placerParDefaut(G.run); R.preparerVague(G.run); allerPlacement(); SON.pose(); }, true, tousFinis);
   if (G.tuto) ecranTuto();
 }
 
 /* ---------- butin : atelier et événement ---------- */
-function rangeesDes(y0, ok, onTap, gravee, src, pas = 62, ts = 44){
+function rangeesDes(y0, ok, onTap, gravee, src, pas = 62, ts = 44, xd = 20){
   src = src || G.run.faces;
   const lignes = [["slot", 0, "CASE 1 · COMBATTANTS"], ["slot", 1, "CASE 2 · COMBATTANTS"], ["slot", 2, "CASE 3 · COMBATTANTS"], ["quoi", 0, "DE QUOI (ARME, ARMURE, BIJOU)"], ["qual", 0, "DE QUALITE (RARETE DE L'OBJET)"], ["act", 0, "DE D'ACTION (CE QU'UN LANCER RAPPORTE)"]];
   lignes.forEach(([ty, d, nom], r) => {
     const y = y0 + r*pas, f = ty === "slot" ? src.slots[d] : ty === "act" ? src.action : src[ty], actif = ok(ty, d);
-    texteM(nom, 20, y + 11, 11, actif ? MOD.accent : MOD.doux, "left");
-    f.forEach((k, i) => { const x = 20 + i*52, g = gravee && gravee.ty === ty && gravee.d === d && gravee.i === i;
+    texteM(nom, xd, y + 11, 11, actif ? MOD.accent : MOD.doux, "left");
+    f.forEach((k, i) => { const x = xd + i*(ts + 8), g = gravee && gravee.ty === ty && gravee.d === d && gravee.i === i;
       tileFace(ty, k, x, y + 14, ts, {sel: actif || g, alpha: actif || g || gravee ? 1 : .35, ...(g ? {t0: gravee.t0, pool: gravee.pool, dur: .7} : {})});
       if (actif && onTap) zone(x, y + 14, ts, ts, () => onTap(ty, d, i)); });
   });
 }
 function ecranEvenement(){
   const B = G.butin, e = B.ev, E = e.k ? D.EVENEMENTS[e.k] : null, DUR = 1.4;
-  carteM(8, 162, W - 16, 552, MOD.bord, "rgba(14,26,34,.97)");
+  carteM(8, 92, W - 16, 260, MOD.bord, "rgba(14,26,34,.97)");
   const fin = e.t0 !== null && fini(e.t0, DUR + .3);
   consigne(e.t0 === null ? "lance le dé d'événement" : fin ? "lis ce qui arrive" : "le dé roule...", e.t0 === null ? "Il tombe après les vagues 3, 6 et 9." : "");
-  if (!e.k) tileFace("event", "calme", W/2 - 56, 176, 112, {t0: 1e9});
-  else tileFace("event", e.k, W/2 - 56, 176, 112, {etiquette: fin, sel: fin, t0: e.t0, pool: G.run.faces.event, dur: DUR});
+  if (!e.k){ carteM(46, 130, 120, 120, MOD.accent); texteM("?", 106, 218, 72, MOD.accent, "center"); }
+  else tileFace("event", e.k, 46, 130, 120, {etiquette: fin, sel: fin, t0: e.t0, pool: G.run.faces.event, dur: DUR});
   if (e.t0 === null){
-    texteM("LES 6 FACES DE CE DE :", 24, 316, 12, MOD.accent, "left");
-    G.run.faces.event.forEach((k, i) => { const y = 326 + i*50, Ev = D.EVENEMENTS[k];
-      tileFace("event", k, 24, y + 2, 38, {});
-      texteM(Ev.n, 74, y + 20, 14, MOD.txt, "left", {max: W - 100}); texteM(Ev.d, 74, y + 38, 11, MOD.doux, "left", {gras: false, max: W - 100}); });
-    boutonM(24, 646, W - 48, 56, "LANCER LE DE", () => { e.t0 = G.t; e.k = R.lancerEvenement(G.run); e.res = R.appliquerEvenement(G.run, e.k); SON.des(14); });
+    texteM("LES 6 FACES DE CE DE :", 200, 114, 12, MOD.accent, "left");
+    G.run.faces.event.forEach((k, i) => { const x = 200 + (i % 2)*280, y = 122 + Math.floor(i/2)*54, Ev = D.EVENEMENTS[k];
+      tileFace("event", k, x, y, 40, {});
+      texteM(Ev.n, x + 50, y + 18, 14, MOD.txt, "left", {max: 224}); texteM(Ev.d, x + 50, y + 34, 11, MOD.doux, "left", {gras: false, max: 224}); });
+    boutonM(200, 296, 548, 46, "LANCER LE DE", () => { e.t0 = G.t; e.k = R.lancerEvenement(G.run); e.res = R.appliquerEvenement(G.run, e.k); SON.des(14); });
     return;
   }
   if (!fin) return;
-  texteM(E.n, W/2, 336, 22, MOD.accent, "center", {max: W - 50});
-  const h1 = paragrapheM(E.d, 30, 364, W - 60, 16, MOD.txt, 1.25);
-  if (e.res.texte) paragrapheM(e.res.texte, 30, 364 + h1 + 14, W - 60, 16, MOD.or, 1.25);
-  boutonM(24, 646, W - 48, 56, "CONTINUER", () => {
+  texteM(E.n, 210, 150, 24, MOD.accent, "left", {max: 520});
+  const h1 = paragrapheM(E.d, 210, 184, 520, 16, MOD.txt, 1.25);
+  if (e.res.texte) paragrapheM(e.res.texte, 210, 184 + h1 + 12, 520, 16, MOD.or, 1.25);
+  boutonM(200, 296, 548, 46, "CONTINUER", () => {
     SON.clic();
     if (e.k === "coffre"){ B.objets = [R.genererObjet(G.run.vague, true, G.run)]; B.pris = null; B.tObj = undefined; }
     suiteButin(); });
@@ -512,78 +517,69 @@ function lancerCombat(){
   G.C = R.debutCombat(G.run); G.ecran = "combat"; G.lancer = null; G.sel = -1; SON.pose();
 }
 function hud(){
-  panneau(8, 8, W - 16, 50);
-  texte("VAGUE " + G.run.vague + "/" + D.NB_VAGUES, 24, 40, 18, "#fff");
-  icone([12, 7], 142, 18, 28); texte(String(G.run.or), 172, 40, 18, "#ffe14a");
+  panneau(4, 3, W - 8, 28);
+  texte("VAGUE " + G.run.vague + "/" + D.NB_VAGUES, 16, 23, 16, "#fff");
+  icone([12, 7], 128, 6, 22); texte(String(G.run.or), 156, 23, 16, "#ffe14a");
   if (G.ecran === "combat"){
-    petit(W - 112, 14, 46, 38); texte("x" + G.vitesse, W - 89, 40, 16, "#fff", "center");
-    zone(W - 112, 14, 46, 38, () => { G.vitesse = G.vitesse === 1 ? 2 : 1; ecrire("bannis.vitesse", G.vitesse); SON.clic(); });
+    petit(W - 108, 5, 44, 24); texte("x" + G.vitesse, W - 86, 23, 14, "#fff", "center");
+    zone(W - 108, 5, 44, 24, () => { G.vitesse = G.vitesse === 1 ? 2 : 1; ecrire("bannis.vitesse", G.vitesse); SON.clic(); });
   }
-  petit(W - 60, 14, 46, 38); ctx.fillStyle = "#fff"; ctx.fillRect(W - 44, 23, 5, 20); ctx.fillRect(W - 34, 23, 5, 20);
-  zone(W - 60, 14, 46, 38, () => { G.pause = true; SON.clic(); });
+  petit(W - 56, 5, 44, 24); ctx.fillStyle = "#fff"; ctx.fillRect(W - 40, 10, 5, 14); ctx.fillRect(W - 30, 10, 5, 14);
+  zone(W - 56, 5, 44, 24, () => { G.pause = true; SON.clic(); });
 }
 function bandeau(){
   if (G.ecran === "place"){
-    panneau(8, 62, W - 16, 86);
-    texte("VAGUE ANNONCEE", 22, 86, 14, "#ffe3a8");
-    texte(G.run.revele ? "VAGUE REVELEE" : "", W - 22, 86, 13, "#ffe14a", "right");
+    panneau(262, 38, 282, 56);
+    texte("VAGUE ANNONCEE", 274, 56, 12, "#ffe3a8");
+    texte(G.run.revele ? "VAGUE REVELEE" : "", 532, 56, 12, "#ffe14a", "right");
     const ap = R.apercu(G.run);
     ap.slice(0, 6).forEach((m, i) => {
-      // case de 46 x 42 dans le cadre ; le monstre (case de 96 px, jusqu'à 89 px de haut) réduit à 0,44 pour tenir en entier
-      const x = 22 + i*53, y = 93; ctx.fillStyle = "rgba(0,0,0,.3)"; ctx.fillRect(x, y, 46, 42);
-      if (m.cache){ texte("?", x + 23, y + 31, 22, "#ffe14a", "center"); return; }
-      ctx.save(); ctx.beginPath(); ctx.rect(x, y, 46, 42); ctx.clip(); dessinerMonstre(D.MONSTRES[m.k].i, false, x + 23, y + 41, -1, {e: .44}); ctx.restore();
-      texte(m.boss ? "BOSS" : "x" + m.n, x + 44, y + 40, 12, m.boss ? "#ff7a5a" : "#fff", "right");
+      const x = 272 + i*42, y = 60; ctx.fillStyle = "rgba(0,0,0,.3)"; ctx.fillRect(x, y, 38, 30);
+      if (m.cache){ texte("?", x + 19, y + 24, 20, "#ffe14a", "center"); return; }
+      ctx.save(); ctx.beginPath(); ctx.rect(x, y, 38, 30); ctx.clip(); dessinerMonstre(D.MONSTRES[m.k].i, false, x + 19, y + 29, -1, {e: .34}); ctx.restore();
+      texte(m.boss ? "BOSS" : "x" + m.n, x + 37, y + 28, 11, m.boss ? "#ff7a5a" : "#fff", "right");
     });
   } else if (G.ecran === "combat"){
-    panneau(8, 62, W - 16, 50);
     const C = G.C, reste = C.file.length + R.vivants(C, "m").length, tot = C.total || 1;
-    texte("monstres : " + reste, W - 22, 86, 14, "#fff", "right", {gras: false});
-    texte("lancers d'urgence : " + G.run.urgence, 22, 86, 14, G.run.urgence ? MOD.or : MOD.doux, "left", {ombre: false});
-    barre(36, 96, W - 72, 7, 1 - reste/tot, MOD.accent);
+    texte("lancers d'urgence : " + G.run.urgence, 205, 23, 13, G.run.urgence ? MOD.or : MOD.doux, "left", {ombre: false});
+    barre(380, 13, 140, 7, 1 - reste/tot, MOD.accent);
+    texte("monstres : " + reste, 540, 23, 13, "#fff", "left", {gras: false});
   }
 }
 function cartes(){
-  const hs = G.run.heros, n = hs.length, grille = n > 3, w = grille ? Math.floor((W - 22)/2) : Math.floor((W - 16 - (n - 1)*6)/n);
+  const hs = G.run.heros, n = hs.length, wd = Math.min(160, Math.floor(496/n) - 4);
   hs.forEach((h, i) => {
-    const x = grille ? 8 + (i % 2)*(w + 6) : 8 + i*(w + 6), y = grille ? 500 + Math.floor(i/2)*70 : 552, hh = grille ? 64 : 88, s = R.stats(h), cl = R.classeDe(h);
+    const x = 8 + i*(wd + 4), y = 302, hh = 52, s = R.stats(h), cl = R.classeDe(h);
     const u = G.C ? G.C.unites.find(v => v.h === h) : null, pv = u ? u.pv : h.pv, pvMax = u ? u.pvMax : s.pv, mort = pv <= 0;
-    panneau(x, y, w, hh);
+    panneau(x, y, wd, hh);
     ctx.save(); if (mort) ctx.globalAlpha = .5;
-    texte(h.nom, x + 10, y + 24, 17, "#fff", "left", {max: w - 48});
-    ctx.fillStyle = MOD.accent; ctx.beginPath(); ctx.arc(x + w - 17, y + 19, 10, 0, 7); ctx.fill(); texte(String(h.niv), x + w - 17, y + 24, 13, "#05211c", "center", {ombre: false});
-    if (grille){
-      texte(cl.n, x + 10, y + 42, 13, h.leg ? "#ffd76a" : "#d8e4ff", "left", {max: 84, gras: !!h.leg});
-      barre(x + 98, y + 34, w - 112, 8, pv/pvMax, pv/pvMax > .35 ? "#4ad05a" : "#e8402a");
-      const xp0 = D.XP_NIVEAUX[h.niv - 1] || 0, xp1 = R.nivSuivant(h);
-      ctx.fillStyle = "rgba(0,0,0,.35)"; ctx.fillRect(x + 10, y + 52, w - 20, 4); ctx.fillStyle = "#9ad8ff"; ctx.fillRect(x + 10, y + 52, (w - 20)*Math.min(1, (h.xp - xp0)/Math.max(1, xp1 - xp0)), 4);
-    } else {
-      texte(cl.n, x + 10, y + 46, 13, h.leg ? "#ffd76a" : "#d8e4ff", "left", {max: w - 20, gras: !!h.leg});
-      barre(x + 22, y + 56, w - 44, 8, pv/pvMax, pv/pvMax > .35 ? "#4ad05a" : "#e8402a");
-      const xp0 = D.XP_NIVEAUX[h.niv - 1] || 0, xp1 = R.nivSuivant(h);
-      ctx.fillStyle = "rgba(0,0,0,.35)"; ctx.fillRect(x + 12, y + 72, w - 24, 3); ctx.fillStyle = "#9ad8ff"; ctx.fillRect(x + 12, y + 72, (w - 24)*Math.min(1, (h.xp - xp0)/Math.max(1, xp1 - xp0)), 3);
-    }
+    texte(h.nom, x + 10, y + 20, 16, "#fff", "left", {max: wd - 44});
+    ctx.fillStyle = MOD.accent; ctx.beginPath(); ctx.arc(x + wd - 15, y + 15, 10, 0, 7); ctx.fill(); texte(String(h.niv), x + wd - 15, y + 20, 13, "#05211c", "center", {ombre: false});
+    texte(cl.n, x + 10, y + 35, 11, h.leg ? "#ffd76a" : "#d8e4ff", "left", {max: wd - 20, gras: !!h.leg});
+    barre(x + 10, y + 40, wd - 20, 6, pv/pvMax, pv/pvMax > .35 ? "#4ad05a" : "#e8402a");
+    const xp0 = D.XP_NIVEAUX[h.niv - 1] || 0, xp1 = R.nivSuivant(h);
+    ctx.fillStyle = "rgba(0,0,0,.35)"; ctx.fillRect(x + 10, y + 48, wd - 20, 2); ctx.fillStyle = "#9ad8ff"; ctx.fillRect(x + 10, y + 48, (wd - 20)*Math.min(1, (h.xp - xp0)/Math.max(1, xp1 - xp0)), 2);
     ctx.restore();
-    if (G.sel === i){ ctx.strokeStyle = "#ffe14a"; ctx.lineWidth = 3; rr(x + 3, y + 3, w - 6, hh - 6, 6); ctx.stroke(); }
-    zone(x, y, w, hh, () => { G.fiche = h; SON.clic(); });
+    if (G.sel === i){ ctx.strokeStyle = "#ffe14a"; ctx.lineWidth = 3; rr(x + 2, y + 2, wd - 4, hh - 4, 8); ctx.stroke(); }
+    zone(x, y, wd, hh, () => { G.fiche = h; SON.clic(); });
   });
 }
 function objets(){
   const st = G.run.stock, liste = [["potion", [9, 0]], ["parchemin", [21, 1]], ["vue", [10, 7]]];
   liste.forEach(([k, ic], i) => {
-    const x = 8 + i*62, y = 648, n = st[k] || 0;
+    const x = 512 + i*38, y = 304, n = st[k] || 0;
     const utile = n > 0 && ((k === "potion" && G.ecran === "combat") || (k === "parchemin" && G.ecran === "combat") || (k === "vue" && G.ecran === "place" && !G.run.revele));
-    panneau(x, y, 56, 58); ctx.save(); ctx.globalAlpha = utile ? 1 : .4; icone(ic, x + 12, y + 9, 32); ctx.restore();
-    texte("x" + n, x + 50, y + 53, 13, "#fff", "right");
-    zone(x, y, 56, 58, () => {
+    panneau(x, y, 34, 34); ctx.save(); ctx.globalAlpha = utile ? 1 : .4; icone(ic, x + 4, y + 2, 26); ctx.restore();
+    texte("x" + n, x + 32, y + 46, 11, "#fff", "right");
+    zone(x, y, 34, 34, () => {
       if (!utile){ SON.clic(); return; }
       if (k === "vue"){ st.vue--; G.run.revele = true; SON.butin(); sauverRun(); }
       else if (R.utiliserObjet(G.C, k)){ if (k === "potion") SON.soin(); }
     });
   });
-  const bx = 196, bw = W - 204;
-  if (G.ecran === "place") bouton(bx, 648, bw, 58, "COMBATTRE", lancerCombat, true, true);
-  else if (G.ecran === "combat"){ const ok = R.peutLancer(G.run, "combat"); bouton(bx, 648, bw, 58, G.run.urgence ? (ok ? "LANCER LE DE : " + G.run.prix + " OR" : "PAS ASSEZ D'OR (" + G.run.prix + ")") : "PLUS DE LANCER", () => lancerDe("combat"), ok, ok); }
+  const bx = 628, bw = 124;
+  if (G.ecran === "place") bouton(bx, 304, bw, 48, "COMBATTRE", lancerCombat, true, true);
+  else if (G.ecran === "combat"){ const ok = R.peutLancer(G.run, "combat"); bouton(bx, 304, bw, 48, G.run.urgence ? (ok ? "LANCER" : "PAS D'OR") : "PLUS DE LANCER", () => lancerDe("combat"), ok, ok, 0, G.run.urgence ? "urgence : " + G.run.prix + " or" : ""); }
 }
 function champPlacement(){
   // cases de départ devant la Muraille
@@ -595,8 +591,8 @@ function champPlacement(){
       const h = G.run.heros[G.sel]; if (occ >= 0 && occ !== G.sel) G.run.heros[occ].slot = h.slot; h.slot = s; G.sel = -1; SON.pose();
       for (const u of G.unitesPlace){ const cc = R.CASES[u.h.slot]; u.tx = cc[0]; u.ty = cc[1]; } sauverRun(); });
   }
-  texte("ARRIERE", 92, 500, 12, "#ffe3a8", "center"); texte("AVANT", 162, 500, 12, "#ffe3a8", "center");
-  if (G.sel < 0) texte("Touche un héros, puis une case", 108, 196, 13, "#fff", "center", {max: 176});
+  texte("ARRIERE", 150, 300, 11, "#ffe3a8", "center"); texte("AVANT", 230, 300, 11, "#ffe3a8", "center");
+  if (G.sel < 0) texte("Touche un héros, puis une case", 390, 118, 13, "#fff", "center", {max: 260});
   panneauDe();
   for (const u of G.unitesPlace){ if (u.tx !== undefined){ u.x += (u.tx - u.x)*.25; u.y += (u.ty - u.y)*.25; }
     if (u.h.leg) aura(u.x, u.y, G.t);
@@ -665,18 +661,17 @@ function sortAuto(k){
 }
 // panneau du dé d'action pendant le placement
 function panneauDe(){
-  const run = G.run, x = 200, y = 156, w = 156, ok = R.peutLancer(run, "prep"), sec = G.refus !== undefined && G.t - G.refus < .4 ? Math.sin(G.t*60)*3 : 0;
+  const run = G.run, x = 560, y = 40, w = 192, ok = R.peutLancer(run, "prep"), sec = G.refus !== undefined && G.t - G.refus < .4 ? Math.sin(G.t*60)*3 : 0;
   ctx.save(); ctx.translate(sec, 0);
-  carteM(x, y, w, 330, MOD.bord, "rgba(14,26,34,.95)");
-  texteM("DE D'ACTION", x + 12, y + 28, 17, MOD.accent, "left", {max: w - 56});
-  boutonM(x + w - 38, y + 8, 30, 30, "?", () => { G.tuto = {p: TUTO.length - 1, t0: G.t, seul: true}; SON.clic(); }, false);
-  tileFace("act", G.derniereFace || "recrue", x + w/2 - 40, y + 46, 80, {etiquette: true, t0: G.derniereT0, pool: run.faces.action, dur: .9});
-  texteM(run.lancers + " lancer" + (run.lancers > 1 ? "s" : "") + " avant le combat", x + w/2, y + 154, 15, run.lancers ? MOD.txt : MOD.doux, "center", {max: w - 12});
-  texteM("Prochain : " + run.prix + " or", x + w/2, y + 176, 16, MOD.or, "center", {max: w - 12});
-  boutonM(x + 8, y + 188, w - 16, 62, run.lancers ? (ok ? "LANCER" : "PAS ASSEZ D'OR") : "PLUS DE LANCER", () => lancerDe("prep"), true, ok);
-  texteM("Tu as " + run.or + " or", x + w/2, y + 274, 15, run.or >= run.prix ? MOD.txt : MOD.alerte, "center", {max: w - 12});
-  texteM("Urgence en combat : " + run.urgence, x + w/2, y + 298, 14, MOD.or, "center", {max: w - 12, gras: false});
-  texteM("(touche ? pour comprendre)", x + w/2, y + 318, 11, MOD.doux, "center", {gras: false, max: w - 12});
+  carteM(x, y, w, 252, MOD.bord, "rgba(14,26,34,.95)");
+  texteM("DE D'ACTION", x + 12, y + 24, 16, MOD.accent, "left", {max: w - 56});
+  boutonM(x + w - 38, y + 6, 30, 26, "?", () => { G.tuto = {p: TUTO.length - 1, t0: G.t, seul: true}; SON.clic(); }, false);
+  tileFace("act", G.derniereFace || "recrue", x + w/2 - 34, y + 36, 68, {etiquette: true, t0: G.derniereT0, pool: run.faces.action, dur: .9});
+  texteM(run.lancers + " lancer" + (run.lancers > 1 ? "s" : "") + " avant le combat", x + w/2, y + 128, 14, run.lancers ? MOD.txt : MOD.doux, "center", {max: w - 12});
+  texteM("Prochain : " + run.prix + " or  ·  tu as " + run.or, x + w/2, y + 148, 13, run.or >= run.prix ? MOD.or : MOD.alerte, "center", {max: w - 12});
+  boutonM(x + 10, y + 158, w - 20, 44, run.lancers ? (ok ? "LANCER" : "PAS ASSEZ D'OR") : "PLUS DE LANCER", () => lancerDe("prep"), true, ok);
+  texteM("Urgence en combat : " + run.urgence, x + w/2, y + 224, 13, MOD.or, "center", {max: w - 12, gras: false});
+  texteM("(touche ? pour comprendre)", x + w/2, y + 242, 11, MOD.doux, "center", {gras: false, max: w - 12});
   ctx.restore();
 }
 function ecranLancer(dt){
@@ -684,82 +679,81 @@ function ecranLancer(dt){
   zone(0, 0, W, H, () => {});
   ctx.fillStyle = `rgba(5,12,16,${Math.min(.78, a*2)})`; ctx.fillRect(0, 0, W, H);
   // pièces qui partent du compteur d'or
-  for (const c of L.pieces){ const u = Math.min(1, Math.max(0, (a - c.d)/.5)); if (u <= 0 || u >= 1) continue; ctx.save(); ctx.globalAlpha = 1 - u*.4; icone([12, 7], c.x + (W/2 - 16 - c.x)*u, c.y + (330 - c.y)*u - Math.sin(u*Math.PI)*50, 22); ctx.restore(); }
-  texteM("- " + res.cout + " OR", 172, 74 + Math.min(1, a*2)*0, 15, MOD.or, "left", {ombre: false});
+  for (const c of L.pieces){ const u = Math.min(1, Math.max(0, (a - c.d)/.5)); if (u <= 0 || u >= 1) continue; ctx.save(); ctx.globalAlpha = 1 - u*.4; icone([12, 7], 150 + c.x%20 + (W/2 - 160 - c.x%20)*u, 6 + (170 - 6)*u - Math.sin(u*Math.PI)*40, 22); ctx.restore(); }
+  texteM("- " + res.cout + " OR", 190, 24, 14, MOD.or, "left", {ombre: false});
   if (a < 1.5){   // le dé roule
-    texteM("LE DE D'ACTION ROULE...", W/2, 176, 20, MOD.txt, "center");
-    tileFace("act", k, W/2 - 62, 240, 124, {etiquette: a > 1.15, sel: a > 1.15, t0: L.t0 + .1, pool: G.run.faces.action, dur: 1.1});
+    texteM("LE DE D'ACTION ROULE...", W/2, 76, 20, MOD.txt, "center");
+    tileFace("act", k, W/2 - 60, 110, 120, {etiquette: a > 1.15, sel: a > 1.15, t0: L.t0 + .1, pool: G.run.faces.action, dur: 1.1});
     return;
   }
   if (L.etat === "roule"){ L.etat = "montre"; L.t1 = G.t; G.derniereFace = k; G.derniereT0 = G.t - 5;
-    SON.niveau(); for (let i = 0; i < 46; i++){ const an = Math.random()*7, v = alea(60, 260); L.p.push({x: W/2, y: 330, vx: Math.cos(an)*v, vy: Math.sin(an)*v - 80, t: 0, d: alea(.6, 1.3), c: coul}); } }
+    SON.niveau(); for (let i = 0; i < 46; i++){ const an = Math.random()*7, v = alea(60, 260); L.p.push({x: 230, y: 190, vx: Math.cos(an)*v, vy: Math.sin(an)*v - 80, t: 0, d: alea(.6, 1.3), c: coul}); } }
   const b = G.t - L.t1, pop = Math.min(1, b*4), sc = 1.7 - .7*pop*pop;
   // carte du résultat
-  carteM(20, 130, W - 40, 470, coul, "rgba(14,26,34,.97)");
-  ctx.save(); ctx.translate(W/2, 176); ctx.scale(sc, sc); ctx.globalAlpha = pop;
+  carteM(100, 30, 560, 300, coul, "rgba(14,26,34,.97)");
+  ctx.save(); ctx.translate(380, 70); ctx.scale(sc, sc); ctx.globalAlpha = pop;
   const titre = k === "recrue" ? (res.mode === "absorbe" ? "ABSORPTION !" : res.mode === "plein" ? "ESCOUADE PLEINE" : "NOUVELLE RECRUE") : k === "objet" ? "OBJET" : k === "progres" ? "PROGRES" : k === "soin" ? "SOIN" : k === "sort" ? "SORT" : "RELIQUE";
-  texteM(titre, 0, 0, 28, coul, "center", {max: W - 80, ombre: false}); ctx.restore();
-  const cx = W/2, cy = 330;
-  // dessin au centre
+  texteM(titre, 0, 0, 28, coul, "center", {max: 500, ombre: false}); ctx.restore();
+  const cx = 225, cy = 190, tx = 350;
   ctx.save(); ctx.globalAlpha = pop;
   if (k === "recrue"){
     const h = res.h, cl = R.classeDe(h), tombe = Math.max(0, 1 - b*3), rebond = b < .5 ? 0 : Math.abs(Math.sin((b - .5)*7))*Math.max(0, 1 - (b - .5)*1.6)*14;
-    if (res.mode === "absorbe" || res.mode === "plein"){ const g = ctx.createLinearGradient(cx - 50, 0, cx + 50, 0); g.addColorStop(0, "rgba(255,220,120,0)"); g.addColorStop(.5, `rgba(255,230,150,${.55*Math.min(1, b*2)})`); g.addColorStop(1, "rgba(255,220,120,0)"); ctx.fillStyle = g; ctx.fillRect(cx - 50, 190, 100, 160); aura(cx, cy + 40, G.t, 1.6); }
-    dessinerHeros(cl.spr, "victoire", G.t, cx, cy + 50 - tombe*160 - rebond, 1, {e: 4});
-    texteM(h.nom + " · " + cl.n, cx, cy + 86, 20, MOD.txt, "center", {max: W - 70});
-    if (res.mode !== "nouvelle"){ ctx.save(); ctx.translate(cx, cy + 118); const z = 1 + Math.max(0, .5 - (b - .3))*1.2; ctx.scale(z, z); texteM("NIVEAU " + h.niv, 0, 0, 26, MOD.or, "center", {ombre: false}); ctx.restore();
+    if (res.mode === "absorbe" || res.mode === "plein"){ const g = ctx.createLinearGradient(cx - 50, 0, cx + 50, 0); g.addColorStop(0, "rgba(255,220,120,0)"); g.addColorStop(.5, `rgba(255,230,150,${.55*Math.min(1, b*2)})`); g.addColorStop(1, "rgba(255,220,120,0)"); ctx.fillStyle = g; ctx.fillRect(cx - 50, 90, 100, 190); aura(cx, cy + 60, G.t, 1.6); }
+    dessinerHeros(cl.spr, "victoire", G.t, cx, cy + 70 - tombe*160 - rebond, 1, {e: 4});
+    texteM(h.nom + " · " + cl.n, tx, 130, 20, MOD.txt, "left", {max: 290});
+    if (res.mode !== "nouvelle"){ ctx.save(); ctx.translate(tx, 166); const z = 1 + Math.max(0, .5 - (b - .3))*1.2; ctx.scale(z, z); texteM("NIVEAU " + h.niv, 0, 0, 26, MOD.or, "left", {ombre: false}); ctx.restore();
       const g = res.gains || {}, l = []; if (g.pv) l.push("VIE +" + g.pv); if (g.atq) l.push("ATQ +" + g.atq); if (g.def) l.push("DEF +" + g.def); if (g.crit) l.push("CRIT +" + g.crit);
-      texteM(l.join("   "), cx, cy + 142, 16, "#d8ffd8", "center", {ombre: false}); }
-    else texteM("Case " + (h.slot + 1) + " · " + (D.ROLES[D.CLASSES[h.cls].role]), cx, cy + 112, 15, MOD.doux, "center", {gras: false});
+      texteM(l.join("   "), tx, 190, 15, "#d8ffd8", "left", {ombre: false}); }
+    else texteM("Case " + (h.slot + 1) + " · " + (D.ROLES[D.CLASSES[h.cls].role]), tx, 156, 15, MOD.doux, "left", {gras: false});
   } else if (k === "objet"){
-    const o = res.o, R0 = D.RARETES[o.rar]; tileFace("quoi", o.slot, cx - 96, 214, 80, {etiquette: true, t0: L.t1, pool: G.run.faces.quoi, dur: .7}); tileFace("qual", o.rar, cx + 16, 214, 80, {etiquette: true, t0: L.t1 + .15, pool: G.run.faces.qual, dur: .7});
-    const rot = G.t*.8; ctx.save(); ctx.translate(cx, 372); ctx.globalCompositeOperation = "lighter"; for (let i = 0; i < 10; i++){ ctx.rotate(Math.PI/5); ctx.fillStyle = R0.c + "33"; ctx.fillRect(-4, -4, 8, 60); } ctx.restore();
-    icone(o.ic, cx - 36, 336, 72);
-    texteM(o.n, cx, 436, 20, R0.c, "center", {max: W - 70}); texteM(D.SLOTS[o.slot].n + " · " + R0.n + " · " + R.texteBonus(o), cx, 458, 14, MOD.txt, "center", {max: W - 60, gras: false});
+    const o = res.o, R0 = D.RARETES[o.rar]; tileFace("quoi", o.slot, 132, 96, 64, {etiquette: true, t0: L.t1, pool: G.run.faces.quoi, dur: .7}); tileFace("qual", o.rar, 254, 96, 64, {etiquette: true, t0: L.t1 + .15, pool: G.run.faces.qual, dur: .7});
+    ctx.save(); ctx.translate(cx, 240); ctx.globalCompositeOperation = "lighter"; for (let i = 0; i < 10; i++){ ctx.rotate(Math.PI/5); ctx.fillStyle = R0.c + "33"; ctx.fillRect(-3, -3, 6, 44); } ctx.restore();
+    icone(o.ic, cx - 28, 212, 56);
+    texteM(o.n, tx, 130, 20, R0.c, "left", {max: 290}); texteM(D.SLOTS[o.slot].n + " · " + R0.n, tx, 152, 14, MOD.txt, "left", {gras: false}); texteM(R.texteBonus(o), tx, 174, 15, "#d8ffd8", "left", {max: 290, gras: false});
   } else if (k === "progres"){
-    const h = res.h; dessinerHeros(R.classeDe(h).spr, "victoire", G.t, cx, 390, 1, {e: 4}); aura(cx, 390, G.t, 1.2);
-    texteM(h.nom + " · " + R.classeDe(h).n, cx, 440, 18, MOD.txt, "center", {max: W - 70}); texteM(res.b.n, cx, 468, 22, coul, "center", {max: W - 60});
+    const h = res.h; dessinerHeros(R.classeDe(h).spr, "victoire", G.t, cx, 260, 1, {e: 4}); aura(cx, 260, G.t, 1.2);
+    texteM(h.nom + " · " + R.classeDe(h).n, tx, 130, 19, MOD.txt, "left", {max: 290}); texteM(res.b.n, tx, 162, 22, coul, "left", {max: 290});
   } else if (k === "soin"){
-    for (let i = 0; i < 8; i++){ const t = (G.t*.7 + i/8) % 1; ctx.fillStyle = `rgba(109,255,138,${1 - t})`; ctx.fillRect(70 + i*28, 460 - t*180, 8, 20); ctx.fillRect(66 + i*28, 466 - t*180, 16, 8); }
-    icone(A.ic, cx - 36, 340, 72); texteM("TOUS LES HEROS SONT SOIGNES", cx, 450, 17, MOD.txt, "center", {max: W - 60});
+    for (let i = 0; i < 8; i++){ const t = (G.t*.7 + i/8) % 1; ctx.fillStyle = `rgba(109,255,138,${1 - t})`; ctx.fillRect(120 + i*26, 290 - t*160, 8, 20); ctx.fillRect(116 + i*26, 296 - t*160, 16, 8); }
+    icone(A.ic, cx - 36, 170, 72); texteM("TOUS LES HEROS SONT SOIGNES", tx, 140, 18, MOD.txt, "left", {max: 290});
   } else if (k === "sort"){
-    const S = D.SORTS[res.sort]; icone(S.ic, cx - 40, 320, 80); texteM(S.n, cx, 436, 24, S.c, "center", {max: W - 60});
+    const S = D.SORTS[res.sort]; icone(S.ic, cx - 40, 150, 80); texteM(S.n, tx, 140, 24, S.c, "left", {max: 290});
   } else if (k === "relique"){
-    texteM("Une seule relique pour toute la nuit :", cx, 220, 15, MOD.doux, "center", {gras: false});
+    icone(A.ic, cx - 40, 150, 80);
   }
   ctx.restore();
-  // explication
   const dess = {
     recrue: () => res.mode === "absorbe" ? "Le dé de la case " + (res.slot + 1) + " a donné " + D.CLASSES[res.cls].n + ", déjà dans l'escouade : elles fusionnent et le héros gagne un niveau." : res.mode === "plein" ? "L'escouade a déjà 4 héros : la recrue est absorbée par un héros au hasard." : "Le dé de la case " + (res.slot + 1) + " a donné " + D.CLASSES[res.cls].n + " : elle rejoint l'escouade.",
     objet: () => res.h ? "Deux dés ont décidé : QUOI et QUALITE. Équipé sur " + res.h.nom + (res.ancien ? " (l'ancien objet est revendu " + Math.round(res.ancien.prix/2) + " or)." : ".") : "Personne ne peut le porter : revendu " + res.vendu + " or.",
     progres: () => "Un bonus de statistique, sans attendre la prochaine vague.", soin: () => "La Muraille gagne aussi 10 points.",
-    sort: () => L.phase === "combat" ? "Le sort part tout de suite sur les monstres." : "Mis en réserve : il partira au premier gros groupe de monstres du combat.", relique: () => ""};
-  paragrapheM(dess[k](), 36, k === "relique" ? 238 : 484, W - 72, 14, MOD.doux, 1.25, "left");
+    sort: () => L.phase === "combat" ? "Le sort part tout de suite sur les monstres." : "Mis en réserve : il partira au premier gros groupe de monstres du combat.", relique: () => "Une seule relique pour toute la nuit :"};
+  if (!(k === "relique" && !res.pris)) paragrapheM(dess[k](), tx, 214, 290, 14, MOD.doux, 1.25, "left");
   // particules
   for (const q of L.p){ q.t += dt; q.x += q.vx*dt; q.y += q.vy*dt; q.vy += 300*dt; ctx.globalAlpha = Math.max(0, 1 - q.t/q.d); ctx.fillStyle = q.c; ctx.fillRect(q.x - 3, q.y - 3, 6, 6); } ctx.globalAlpha = 1; L.p = L.p.filter(q => q.t < q.d);
   if (k === "relique" && !res.pris){
-    res.choix.forEach((r, i) => { const y = 280 + i*98; boutonM(34, y, W - 68, 88, "", () => { R.appliquerRelique(G.run, r.k); res.pris = r; SON.niveau(); if (G.run) sauverRun(); }, false, true);
-      texteM(r.n, 50, y + 32, 18, MOD.txt, "left", {max: W - 100}); paragrapheM(r.d, 50, y + 54, W - 100, 13, MOD.doux, 1.2); });
+    texteM("Une seule relique pour toute la nuit :", tx, 104, 14, MOD.doux, "left", {gras: false});
+    res.choix.forEach((r, i) => { const y = 114 + i*66; boutonM(tx, y, 290, 58, "", () => { R.appliquerRelique(G.run, r.k); res.pris = r; SON.niveau(); if (G.run) sauverRun(); }, false, true);
+      texteM(r.n, tx + 12, y + 22, 16, MOD.txt, "left", {max: 266}); paragrapheM(r.d, tx + 12, y + 40, 268, 11, MOD.doux, 1.15); });
     return;
   }
-  if (k === "relique" && res.pris){ texteM(res.pris.n, W/2, 330, 24, coul, "center", {max: W - 60}); paragrapheM(res.pris.d, 36, 360, W - 72, 16, MOD.txt, 1.25, "left"); }
-  boutonM(34, 530, W - 68, 58, "SUPER !", () => { SON.clic(); fermerLancer(); });
+  if (k === "relique" && res.pris){ texteM(res.pris.n, tx, 130, 20, coul, "left", {max: 290}); paragrapheM(res.pris.d, tx, 156, 290, 15, MOD.txt, 1.25, "left"); }
+  boutonM(tx, 276, 290, 44, "SUPER !", () => { SON.clic(); fermerLancer(); });
 }
 
 function effets(dt){
   for (const f of G.fx){ f.t += dt;
-    if (f.k === "feu"){ const k = f.t/.9; for (let i = 0; i < 5; i++){ const x = 220 + i*28 - k*60, y = -40 + k*520 - i*30; ctx.fillStyle = "#ff6a1f"; ctx.beginPath(); ctx.arc(x, y, 16, 0, 7); ctx.fill(); ctx.fillStyle = "#ffe08a"; ctx.beginPath(); ctx.arc(x, y, 8, 0, 7); ctx.fill(); }
+    if (f.k === "feu"){ const k = f.t/.9; for (let i = 0; i < 5; i++){ const x = 480 + i*34 - k*220, y = -40 + k*(H + 60) - i*30; ctx.fillStyle = "#ff6a1f"; ctx.beginPath(); ctx.arc(x, y, 16, 0, 7); ctx.fill(); ctx.fillStyle = "#ffe08a"; ctx.beginPath(); ctx.arc(x, y, 8, 0, 7); ctx.fill(); }
       if (f.t > .45 && f.t < .8){ ctx.fillStyle = `rgba(255,140,40,${.5 - (f.t - .45)})`; ctx.fillRect(0, 0, W, H); } if (f.t > .9) f.fini = true; }
     else if (f.k === "soin"){ ctx.fillStyle = `rgba(110,255,140,${Math.max(0, .3 - f.t*.3)})`; ctx.fillRect(0, 0, W, H); if (f.t > 1.2) f.fini = true; }
     else if (f.k === "foudre"){ ctx.strokeStyle = `rgba(200,240,255,${1 - f.t*3})`; ctx.lineWidth = 4; ctx.beginPath(); let x = f.x, y = 0; ctx.moveTo(x, y);
-      while (y < 520){ y += 30; x = f.x + alea(-14, 14); ctx.lineTo(x, y); } ctx.stroke(); if (f.t > .33) f.fini = true; }
+      while (y < H - 60){ y += 24; x = f.x + alea(-14, 14); ctx.lineTo(x, y); } ctx.stroke(); if (f.t > .33) f.fini = true; }
     else if (f.k === "teinte"){ ctx.fillStyle = `rgba(${f.c},${Math.max(0, .35 - f.t*.35)})`; ctx.fillRect(0, 0, W, H); if (f.t > 1) f.fini = true; }
     else if (f.k === "vent"){ ctx.strokeStyle = `rgba(200,235,255,${Math.max(0, .8 - f.t*.6)})`; ctx.lineWidth = 2;
-      for (let i = 0; i < 14; i++){ const y = 250 + (i*37) % 280, x = W - ((f.t*520 + i*61) % (W + 120)); ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + 40, y + 4); ctx.stroke(); } if (f.t > 1.3) f.fini = true; }
-    else if (f.k === "rempart"){ for (let i = 0; i < 8; i++){ const k = Math.min(1, f.t*1.8 - i*.08); if (k <= 0) continue; const x = 200 - k*170 + i*6, y = 140 + i*45 - Math.sin(k*Math.PI)*60;
+      for (let i = 0; i < 14; i++){ const y = 110 + (i*37) % 180, x = W - ((f.t*900 + i*61) % (W + 120)); ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + 40, y + 4); ctx.stroke(); } if (f.t > 1.3) f.fini = true; }
+    else if (f.k === "rempart"){ for (let i = 0; i < 8; i++){ const k = Math.min(1, f.t*1.8 - i*.08); if (k <= 0) continue; const x = 260 - k*200 + i*6, y = 110 + i*22 - Math.sin(k*Math.PI)*40;
         ctx.fillStyle = "#8a8498"; ctx.fillRect(x - 6, y - 5, 12, 10); ctx.fillStyle = "#5c566c"; ctx.fillRect(x - 6, y + 3, 12, 2); }
-      if (f.t > .55 && f.t < .9){ ctx.fillStyle = `rgba(255,240,200,${.4 - (f.t - .55)})`; ctx.fillRect(0, 196, R.MUR_X, 350); } if (f.t > 1) f.fini = true; }
-    else if (f.k === "meteores"){ const k = f.t/.5; for (let i = 0; i < 3; i++){ const x = 120 + i*90 - k*40, y = -60 + k*(330 + i*40); ctx.fillStyle = "rgba(255,120,30,.5)"; ctx.beginPath(); ctx.arc(x + 10, y - 14, 14, 0, 7); ctx.fill();
+      if (f.t > .55 && f.t < .9){ ctx.fillStyle = `rgba(255,240,200,${.4 - (f.t - .55)})`; ctx.fillRect(0, 72, R.MUR_X, 230); } if (f.t > 1) f.fini = true; }
+    else if (f.k === "meteores"){ const k = f.t/.5; for (let i = 0; i < 3; i++){ const x = 300 + i*150 - k*60, y = -60 + k*(250 + i*30); ctx.fillStyle = "rgba(255,120,30,.5)"; ctx.beginPath(); ctx.arc(x + 10, y - 14, 14, 0, 7); ctx.fill();
         ctx.fillStyle = "#ffb040"; ctx.beginPath(); ctx.arc(x, y, 12, 0, 7); ctx.fill(); ctx.fillStyle = "#fff0b0"; ctx.beginPath(); ctx.arc(x, y, 5, 0, 7); ctx.fill(); } if (f.t > .5) f.fini = true; }
     else if (f.k === "impact"){ ctx.strokeStyle = `rgba(255,190,90,${Math.max(0, 1 - f.t*2)})`; ctx.lineWidth = 4; ctx.beginPath(); ctx.ellipse(f.x, f.y, 10 + f.t*90, 4 + f.t*30, 0, 0, 7); ctx.stroke(); if (f.t > .5) f.fini = true; }
     else if (f.k === "poule"){ f.x += dt*190; const sx = f.x, sy = f.y - Math.abs(Math.sin(f.t*12))*10;
@@ -799,92 +793,85 @@ function ecranButin(dt){
   hud();
   if (B.etape !== "evolution"){ filEtapes(); }
   if (B.etape === "bilan"){
-    consigne("regarde les progrès de tes héros", "Chaque héros debout gagne de l'expérience : ses stats montent.");
-    grand(20, 150, W - 40, 300 + B.gains.length*22);
-    texte("VAGUE TENUE !", W/2, 206, 18, "#ffe14a", "center", {titre: true});
-    texte("+" + B.xp + " d'expérience pour chaque héros debout", W/2, 246, 15, "#fff", "center", {max: W - 80});
-    texte("(la moitié pour les héros tombés)", W/2, 268, 13, "#ffe3a8", "center", {gras: false});
-    texte("Or : " + G.run.or + "   ·   Muraille : " + Math.ceil(G.run.mur) + " / " + G.run.murMax, W/2, 304, 15, "#fff", "center");
-    texte("Monstres abattus cette nuit : " + G.run.kills, W/2, 330, 15, "#fff", "center");
-    // niveaux gagnés : les stats montent toutes seules
+    consigne("regarde les progrès de tes héros", "Chaque héros debout gagne de l'expérience.");
+    grand(300, 94, 452, 258);
+    texte("VAGUE TENUE !", 526, 126, 22, "#ffe14a", "center", {titre: true});
+    texte("+" + B.xp + " d'expérience pour chaque héros debout", 526, 150, 14, "#fff", "center", {max: 420});
+    texte("(la moitié pour les héros tombés)", 526, 168, 12, "#ffe3a8", "center", {gras: false});
+    texte("Or : " + G.run.or + "   ·   Muraille : " + Math.ceil(G.run.mur) + " / " + G.run.murMax + "   ·   Monstres abattus : " + G.run.kills, 526, 192, 13, "#fff", "center", {max: 430});
     B.gains.forEach((g, i) => { const t = g.t, l = [];
       if (t.pv) l.push("VIE +" + t.pv); if (t.atq) l.push("ATQ +" + t.atq); if (t.def) l.push("DEF +" + t.def); if (t.crit) l.push("CRIT +" + t.crit); if (t.vit) l.push("VIT +" + t.vit.toFixed(2));
-      texte(g.h.nom + " NIVEAU " + g.niv + " : " + l.join("  "), W/2, 362 + i*22, 14, "#ffe14a", "center", {max: W - 70}); });
+      texte(g.h.nom + " NIVEAU " + g.niv + " : " + l.join("  "), 526, 216 + i*18, 13, "#ffe14a", "center", {max: 430}); });
     if (B.gains.length && !B.sonNiv){ B.sonNiv = true; SON.niveau(); }
-    bouton(70, 370 + B.gains.length*22 + 10, W - 140, 50, "CONTINUER", () => { suiteButin(); SON.clic(); }, true, true);
+    bouton(380, 300, 292, 40, "CONTINUER", () => { suiteButin(); SON.clic(); }, true, true);
   } else if (B.etape === "niveau"){
     consigne("choisis un bonus pour ce héros");
     const h = B.h, cl = R.classeDe(h);
-    grand(20, 130, W - 40, 380);
-    texte("NIVEAU " + h.niv + " !", W/2, 186, 18, "#ffe14a", "center", {titre: true});
-    dessinerHeros(cl.spr, "victoire", G.t, W/2, 286, 1, {e: 3});
-    texte(h.nom + " · " + cl.n, W/2, 316, 16, "#fff", "center", {max: W - 80});
-    texte("Choisis un bonus :", W/2, 346, 15, "#ffe3a8", "center");
-    B.choix.forEach((b, i) => bouton(44, 362 + i*58, W - 88, 50, b.n, () => { R.appliquerBonus(h, b); SON.pose(); suiteButin(); }, true, false, i ? 2 : 1));
+    grand(300, 94, 452, 258);
+    texte("NIVEAU " + h.niv + " !", 526, 126, 20, "#ffe14a", "center", {titre: true});
+    dessinerHeros(cl.spr, "victoire", G.t, 360, 260, 1, {e: 3});
+    texte(h.nom + " · " + cl.n, 560, 160, 15, "#fff", "center", {max: 280});
+    texte("Choisis un bonus :", 560, 186, 14, "#ffe3a8", "center");
+    B.choix.forEach((b, i) => bouton(430, 202 + i*54, 300, 46, b.n, () => { R.appliquerBonus(h, b); SON.pose(); suiteButin(); }, true, false, i ? 2 : 1));
   } else if (B.etape === "evenement"){
     ecranEvenement();
   } else if (B.etape === "evolution"){
     evolution(dt);
   } else if (B.etape === "objet"){
-    consigne("touche l'objet que tu veux garder", "Les dés QUOI et QUELLE QUALITE ont décidé de ces objets.");
+    consigne("touche l'objet que tu veux garder", "Les dés QUOI et QUELLE QUALITE les ont décidés.");
     if (B.tObj === undefined) B.tObj = G.t;
-    grand(8, 162, W - 16, 478);
+    const n = B.objets.length, wd = n > 2 ? 244 : 300, x0 = (W - (n*wd + (n - 1)*8))/2;
     B.objets.forEach((o, i) => {
-      const y = 172 + i*112, t0 = B.tObj + .2 + i*.3, vu = fini(t0, .8);
-      const R0 = D.RARETES[o.rar];
-      if (!vu){ petit(30, y, W - 60, 104); tileFace("quoi", o.slot, 74, y + 16, 72, {t0, pool: G.run.faces.quoi, dur: .8}); tileFace("qual", o.rar, 214, y + 16, 72, {t0: t0 + .1, pool: G.run.faces.qual, dur: .8});
-        texte("QUOI", 110, y + 98, 11, MOD.doux, "center", {ombre: false}); texte("QUELLE QUALITE", 250, y + 98, 11, MOD.doux, "center", {ombre: false}); return; }
-      petit(30, y, W - 60, 104); ctx.strokeStyle = R0.c; ctx.lineWidth = 2; rr(32, y + 2, W - 64, 100, 8); ctx.stroke();
-      icone(o.ic, 42, y + 26, 48);
-      texte(o.n, 102, y + 28, 15, "#fff", "left", {max: W - 146});
-      texte(D.SLOTS[o.slot].n + " · " + R0.n, 102, y + 48, 13, R0.c, "left", {max: W - 176}); gemme(W - 52, y + 28, 14, R0.c);
-      texte(R.texteBonus(o), 102, y + 69, 14, "#d8ffd8", "left", {max: W - 146});
-      if (o.pour) texte(o.pour === "cac" ? "pour le corps à corps" : "pour les mages, soins et soutien", 102, y + 90, 12, "#ffe3a8", "left", {max: W - 146});
-      zone(30, y, W - 60, 104, () => { B.pris = o; B.etape = "equiper"; SON.clic(); });
+      const x = x0 + i*(wd + 8), y = 94, t0 = B.tObj + .2 + i*.3, vu = fini(t0, .8), R0 = D.RARETES[o.rar];
+      if (!vu){ petit(x, y, wd, 190); tileFace("quoi", o.slot, x + wd/2 - 76, y + 50, 64, {t0, pool: G.run.faces.quoi, dur: .8}); tileFace("qual", o.rar, x + wd/2 + 12, y + 50, 64, {t0: t0 + .1, pool: G.run.faces.qual, dur: .8});
+        texte("QUOI", x + wd/2 - 44, y + 134, 11, MOD.doux, "center", {ombre: false}); texte("QUALITE", x + wd/2 + 44, y + 134, 11, MOD.doux, "center", {ombre: false}); return; }
+      petit(x, y, wd, 190); ctx.strokeStyle = R0.c; ctx.lineWidth = 2; rr(x + 2, y + 2, wd - 4, 186, 10); ctx.stroke();
+      icone(o.ic, x + wd/2 - 28, y + 14, 56); gemme(x + wd - 22, y + 22, 12, R0.c);
+      texte(o.n, x + wd/2, y + 98, 16, "#fff", "center", {max: wd - 20});
+      texte(D.SLOTS[o.slot].n + " · " + R0.n, x + wd/2, y + 120, 13, R0.c, "center", {max: wd - 20});
+      texte(R.texteBonus(o), x + wd/2, y + 144, 14, "#d8ffd8", "center", {max: wd - 20});
+      if (o.pour) texte(o.pour === "cac" ? "pour le corps à corps" : "pour mages, soins et soutien", x + wd/2, y + 170, 12, "#ffe3a8", "center", {max: wd - 20});
+      zone(x, y, wd, 190, () => { B.pris = o; B.etape = "equiper"; SON.clic(); });
     });
-    bouton(30, 652, W - 60, 50, "NE RIEN PRENDRE : 12 PIECES D'OR", () => { G.run.or += 12; B.pris = {or: true}; SON.or(); suiteButin(); }, true, false, 3);
+    bouton(180, 300, 400, 44, "NE RIEN PRENDRE : 12 PIECES D'OR", () => { G.run.or += 12; B.pris = {or: true}; SON.or(); suiteButin(); }, true, false, 3);
   } else if (B.etape === "equiper"){
     const o = B.pris, R0 = D.RARETES[o.rar];
-    consigne("touche le héros qui portera l'objet", "Les stats en vert montent, celles en rouge baissent.");
-    grand(8, 162, W - 16, 540);
-    icone(o.ic, 24, 170, 40); texte(o.n, 74, 188, 15, R0.c, "left", {max: W - 100}); texte(R.texteBonus(o), 74, 208, 14, "#d8ffd8", "left", {gras: false, max: W - 100});
+    consigne("touche le héros qui portera l'objet", "Stats en vert : elles montent.");
+    grand(8, 94, 236, 256);
+    icone(o.ic, 126 - 30, 104, 60); texte(o.n, 126, 190, 16, R0.c, "center", {max: 220}); texte(D.SLOTS[o.slot].n + " · " + R0.n, 126, 210, 13, "#fff", "center", {gras: false}); texte(R.texteBonus(o), 126, 232, 14, "#d8ffd8", "center", {gras: false, max: 220});
+    texte("L'objet remplacé est revendu.", 126, 262, 12, "#ffe3a8", "center", {gras: false});
+    bouton(18, 292, 216, 44, "VENDRE : " + Math.round(o.prix/2) + " OR", () => { G.run.or += Math.round(o.prix/2); SON.or(); suiteButin(); }, true, false, 3);
     const hs = G.run.heros.slice().sort((a, b) => (R.peutPorter(b, o) ? 1 : 0) - (R.peutPorter(a, o) ? 1 : 0));
-    const n4 = hs.length > 3;
     hs.forEach((h, i) => {
-      const pas = n4 ? 104 : 118, hl = n4 ? 98 : 112, y = 216 + i*pas, ok = R.peutPorter(h, o), ac = h.equip[o.slot], s0 = R.stats(h), s1 = R.statsAvec(h, o);
-      petit(20, y, W - 40, hl); ctx.save(); if (!ok) ctx.globalAlpha = .45;
-      dessinerHeros(R.classeDe(h).spr, "repos", G.t + i, 52, y + (n4 ? 62 : 68), 1, {e: 1.7});
-      texte(h.nom + " · " + R.classeDe(h).n, 88, y + (n4 ? 20 : 24), 15, "#fff", "left", {max: W - 124});
-      texte(ok ? (ac ? "porte : " + ac.n : D.SLOTS[o.slot].n + " : rien") : "ne peut pas porter cet objet", 88, y + (n4 ? 38 : 44), 12, ok ? (ac ? D.RARETES[ac.rar].c : "#c8e8c8") : "#ffb0a0", "left", {gras: !ac, max: W - 124});
-      // stats actuelles et changement
+      const x = 252 + (i % 2)*252, y = 94 + Math.floor(i/2)*130, ok = R.peutPorter(h, o), ac = h.equip[o.slot], s0 = R.stats(h), s1 = R.statsAvec(h, o);
+      petit(x, y, 246, 124); ctx.save(); if (!ok) ctx.globalAlpha = .45;
+      dessinerHeros(R.classeDe(h).spr, "repos", G.t + i, x + 34, y + 86, 1, {e: 1.9});
+      texte(h.nom + " · " + R.classeDe(h).n, x + 66, y + 24, 14, "#fff", "left", {max: 172});
+      texte(ok ? (ac ? "porte : " + ac.n : D.SLOTS[o.slot].n + " : rien") : "ne peut pas le porter", x + 66, y + 42, 12, ok ? (ac ? D.RARETES[ac.rar].c : "#c8e8c8") : "#ffb0a0", "left", {gras: !ac, max: 172});
       const L = [["VIE", s0.pv, s1.pv], ["ATQ", s0.atq, s1.atq], ["DEF", s0.def, s1.def], ["CRIT", s0.crit, s1.crit], ["VIT", s0.vit, s1.vit, 2], ["VOL", Math.round(s0.vol*100), Math.round(s1.vol*100)]];
-      // deux colonnes ; le changement suit la valeur
-      L.forEach(([n, a, b, dec], j) => { const x = 88 + (j % 2)*((W - 120)/2), yy = y + (n4 ? 56 : 66) + Math.floor(j/2)*(n4 ? 17 : 20), d = Math.round((b - a)*100)/100;
-        const t = n + " " + (dec ? a.toFixed(dec) : a); texte(t, x, yy, 13, "#e8f0ff", "left"); police(13); const lw = ctx.measureText(t).width;
-        if (ok && d) texte((d > 0 ? "+" : "") + (dec ? d.toFixed(dec) : d), x + lw + 6, yy, 13, d > 0 ? "#6dff8a" : "#ff7a6a", "left"); });
+      L.forEach(([n, a, b, dec], j) => { const xx = x + 66 + (j % 2)*88, yy = y + 66 + Math.floor(j/2)*18, d = Math.round((b - a)*100)/100;
+        const t = n + " " + (dec ? a.toFixed(dec) : a); texte(t, xx, yy, 12, "#e8f0ff", "left"); police(12); const lw = ctx.measureText(t).width;
+        if (ok && d) texte((d > 0 ? "+" : "") + (dec ? d.toFixed(dec) : d), xx + lw + 4, yy, 12, d > 0 ? "#6dff8a" : "#ff7a6a", "left"); });
       ctx.restore();
-      if (ok) zone(20, y, W - 40, hl, () => { const ancien = R.equiper(h, o); if (ancien) G.run.or += Math.round(ancien.prix/2); SON.pose(); suiteButin(); });
+      if (ok) zone(x, y, 246, 124, () => { const ancien = R.equiper(h, o); if (ancien) G.run.or += Math.round(ancien.prix/2); SON.pose(); suiteButin(); });
     });
-    texte("L'objet remplacé est revendu automatiquement.", W/2, n4 ? 646 : 590, 12, "#ffe3a8", "center", {gras: false});
-    bouton(40, n4 ? 656 : 640, W - 80, 44, "NE PAS L'EQUIPER : VENDRE (" + Math.round(o.prix/2) + " OR)", () => { G.run.or += Math.round(o.prix/2); SON.or(); suiteButin(); }, true, false, 3);
   } else if (B.etape === "marchand"){
-    consigne("dépense ton or, puis lance la vague suivante", "Tu as " + G.run.or + " pièces d'or. Touche un article pour l'acheter.");
-    grand(8, 162, W - 16, 548);
+    consigne("dépense ton or, puis lance la vague suivante", "Tu as " + G.run.or + " or.");
     D.MARCHAND.filter(m => m.k !== "de" && m.k !== "graver").forEach((m, i) => {
       const plein = (m.k === "mur" && G.run.mur >= G.run.murMax);
-      const y = 172 + i*66, ok = G.run.or >= m.prix && !plein;
-      petit(24, y, W - 48, 62); ctx.save(); if (!ok) ctx.globalAlpha = .5;
-      icone(m.ic, 40, y + 13, 38);
-      texte(m.n, 88, y + 24, 15, "#fff", "left", {max: W - 184});
-      paragraphe(m.d, 88, y + 42, W - 180, 12, "#ffe3a8", 1.0);
-      texte(m.prix + " OR", W - 44, y + 24, 15, "#ffe14a", "right");
-      if (G.run.stock[m.k] !== undefined) texte("x" + (G.run.stock[m.k] || 0), W - 44, y + 52, 13, "#fff", "right");
+      const x = 8 + (i % 2)*380, y = 96 + Math.floor(i/2)*84, ok = G.run.or >= m.prix && !plein;
+      petit(x, y, 372, 78); ctx.save(); if (!ok) ctx.globalAlpha = .5;
+      icone(m.ic, x + 12, y + 20, 38);
+      texte(m.n, x + 62, y + 28, 16, "#fff", "left", {max: 230});
+      paragraphe(m.d, x + 62, y + 48, 230, 12, "#ffe3a8", 1.1);
+      texte(m.prix + " OR", x + 360, y + 28, 16, "#ffe14a", "right");
+      if (G.run.stock[m.k] !== undefined) texte("x" + (G.run.stock[m.k] || 0), x + 360, y + 62, 14, "#fff", "right");
       ctx.restore();
-      if (ok) zone(24, y, W - 48, 62, () => { G.run.or -= m.prix;
+      if (ok) zone(x, y, 372, 78, () => { G.run.or -= m.prix;
         if (m.k === "mur") G.run.mur = Math.min(G.run.murMax, G.run.mur + 30);
         else G.run.stock[m.k] = (G.run.stock[m.k] || 0) + 1; SON.or(); });
     });
-    bouton(24, 648, W - 48, 56, "LANCER LA VAGUE SUIVANTE", () => { G.run.vague++; R.preparerVague(G.run); allerPlacement(); SON.pose(); }, true, true);
+    bouton(180, 280, 400, 56, "LANCER LA VAGUE SUIVANTE", () => { G.run.vague++; R.preparerVague(G.run); allerPlacement(); SON.pose(); }, true, true);
     for (const t of G.txt) texte(t.v, t.x, t.y - t.t*20, 14, t.c, "center");
   }
 }
@@ -898,9 +885,9 @@ function evolution(dt){
   ctx.fillStyle = g; ctx.fillRect(c[0] - 30, 0, 60, c[1] + 6); ctx.restore();
   if (h.leg) aura(c[0], c[1], G.t);
   dessinerHeros(R.classeDe(h).spr, "victoire", G.t, c[0], c[1], 1, {blanc});
-  if (E.t > 1.1){ const k = Math.min(1, (E.t - 1.1)*4); ctx.save(); ctx.translate(W/2, 170); ctx.scale(2 - k, 2 - k); ctx.globalAlpha = k; texte("EVOLUTION !", 0, 0, 20, "#ffe14a", "center", {titre: true}); ctx.restore();
-    texte(E.avant + "  >  " + R.classeDe(h).n, W/2, 206, 16, "#fff", "center", {max: W - 30});
-    paragraphe(D.CLASSES[h.cls].leg.d, 200, 260, W - 220, 14, "#ffe3a8"); }
+  if (E.t > 1.1){ const k = Math.min(1, (E.t - 1.1)*4); ctx.save(); ctx.translate(W/2, 70); ctx.scale(2 - k, 2 - k); ctx.globalAlpha = k; texte("EVOLUTION !", 0, 0, 20, "#ffe14a", "center", {titre: true}); ctx.restore();
+    texte(E.avant + "  >  " + R.classeDe(h).n, W/2, 100, 16, "#fff", "center", {max: W - 30});
+    paragraphe(D.CLASSES[h.cls].leg.d, 380, 150, 340, 14, "#ffe3a8"); }
   if (E.t > 2.8){ G.evo = null; suiteButin(); }
 }
 
@@ -916,56 +903,60 @@ function ecranFin(){
   fond(); muraille();
   const F = G.fin;
   ctx.fillStyle = F.gagne ? "rgba(40,20,0,.35)" : "rgba(30,0,0,.55)"; ctx.fillRect(0, 0, W, H);
-  grand(20, 140, W - 40, 560);
-  texte(F.gagne ? "LE JOUR SE LEVE" : "LA MURAILLE", W/2, 200, 16, F.gagne ? "#ffe14a" : "#ff6a4a", "center", {titre: true});
-  texte(F.gagne ? "LA NUIT EST TENUE" : "EST TOMBEE", W/2, 228, 16, F.gagne ? "#ffe14a" : "#ff6a4a", "center", {titre: true});
+  grand(60, 20, W - 120, 320);
+  texte(F.gagne ? "LE JOUR SE LEVE" : "LA MURAILLE EST TOMBEE", W/2, 66, 20, F.gagne ? "#ffe14a" : "#ff6a4a", "center", {titre: true, max: 560});
+  if (F.gagne) texte("LA NUIT EST TENUE", W/2, 94, 16, "#ffe14a", "center", {titre: true});
   const l = [["Vague atteinte", F.vague + " / " + D.NB_VAGUES], ["Monstres abattus", F.kills], ["Boss abattus", F.boss], ["Éclats de Gueule gagnés", "+" + F.eclats], ["Éclats en réserve", F.total], ["Record", "vague " + F.record]];
-  l.forEach(([a, b], i) => { texte(a, 50, 280 + i*34, 16, "#fff"); texte(String(b), W - 50, 280 + i*34, 16, "#ffe14a", "right"); });
-  paragraphe("Les éclats achètent des gravures et des légendes dans l'arbre des dés.", 50, 470, W - 100, 13, "#ffe3a8");
-  bouton(50, 520, W - 100, 46, "NOUVELLE NUIT", () => { nouvelleNuit(); SON.clic(); }, true, true);
-  bouton(50, 574, W - 100, 44, "L'ARBRE DES DES", () => ouvrirArbre("fin"), true, false, 2);
-  bouton(80, 628, W - 160, 40, "TITRE", () => { G.ecran = "titre"; SON.clic(); }, true, false, 3);
+  l.forEach(([a, b], i) => { texte(a, 90, 126 + i*30, 15, "#fff"); texte(String(b), 400, 126 + i*30, 15, "#ffe14a", "right"); });
+  paragraphe("Les éclats achètent des gravures et des légendes dans l'arbre des dés.", 90, 318, 330, 12, "#ffe3a8");
+  bouton(450, 110, 260, 48, "NOUVELLE NUIT", () => { nouvelleNuit(); SON.clic(); }, true, true);
+  bouton(450, 170, 260, 44, "L'ARBRE DES DES", () => ouvrirArbre("fin"), true, false, 2);
+  bouton(450, 224, 260, 40, "TITRE", () => { G.ecran = "titre"; SON.clic(); }, true, false, 3);
 }
 
 /* ---------- fiche d'un héros ---------- */
 function ficheHeros(){
   const h = G.fiche, s = R.stats(h), cl = R.classeDe(h), C = D.CLASSES[h.cls];
   ctx.fillStyle = "rgba(0,0,0,.6)"; ctx.fillRect(0, 0, W, H); zone(0, 0, W, H, () => {});
-  grand(10, 40, W - 20, 690);
-  if (h.leg) aura(70, 196, G.t);
-  dessinerHeros(cl.spr, "repos", G.t, 70, 196, 1, {e: 3});
-  texte(h.nom, 130, 104, 22, "#fff");
-  texte(cl.n, 130, 130, 15, h.leg ? "#ffd76a" : "#d8e4ff", "left", {max: W - 160});
-  texte("NIVEAU " + h.niv + (C.sexe === "F" ? " · FEMME" : C.sexe === "H" ? " · HOMME" : ""), 130, 154, 13, "#ffe14a");
+  grand(10, 8, W - 20, 344);
+  // colonne gauche : le héros
+  if (h.leg) aura(80, 150, G.t);
+  dessinerHeros(cl.spr, "repos", G.t, 80, 150, 1, {e: 3});
+  texte(h.nom, 140, 52, 22, "#fff", "left", {max: 200});
+  texte(cl.n, 140, 74, 14, h.leg ? "#ffd76a" : "#d8e4ff", "left", {max: 200});
+  texte("NIVEAU " + h.niv + (C.sexe === "F" ? " · FEMME" : C.sexe === "H" ? " · HOMME" : ""), 140, 94, 12, "#ffe14a");
   const xp0 = D.XP_NIVEAUX[h.niv - 1] || 0, xp1 = R.nivSuivant(h);
-  barre(142, 166, W - 196, 6, (h.xp - xp0)/Math.max(1, xp1 - xp0), "#9ad8ff");
-  texte(h.xp + " / " + (isFinite(xp1) ? xp1 : "max") + " xp", 130, 192, 12, "#d8f0ff", "left", {gras: false});
-  texte(D.ROLES[C.role], 34, 222, 14, "#9ad8ff");
-  paragraphe(cl.d, 34, 242, W - 68, 13, "#ffe3a8");
+  barre(142, 104, 180, 6, (h.xp - xp0)/Math.max(1, xp1 - xp0), "#9ad8ff");
+  texte(h.xp + " / " + (isFinite(xp1) ? xp1 : "max") + " xp", 140, 128, 11, "#d8f0ff", "left", {gras: false});
+  texte(D.ROLES[C.role], 26, 190, 13, "#9ad8ff");
+  paragraphe(cl.d, 26, 208, 300, 12, "#ffe3a8", 1.2);
+  texte("TRAIT : " + D.TRAITS[h.trait].n, 26, 278, 13, "#ffb08a", "left", {max: 300});
+  paragraphe(D.TRAITS[h.trait].d, 26, 296, 300, 12, "#ffd8c8", 1.2);
+  // colonne centrale : les stats
   const pvAct = G.C ? (G.C.unites.find(u => u.h === h) || {pv: h.pv}).pv : h.pv;
   const lignes = [["VIE", Math.ceil(pvAct) + " / " + s.pv], ["ATTAQUE", s.atq], ["DEFENSE", s.def], ["VITESSE", s.vit.toFixed(2)], ["CRITIQUES", s.crit + " %"], ["VOL DE VIE", Math.round(s.vol*100) + " %"]];
-  lignes.forEach(([a, b], i) => { const x = 34 + (i % 2)*((W - 68)/2), y = 290 + Math.floor(i/2)*26; texte(a, x, y, 14, "#d8e4ff", "left", {gras: false}); texte(String(b), x + (W - 68)/2 - 12, y, 14, "#fff", "right"); });
-  texte("TRAIT DE CARACTERE : " + D.TRAITS[h.trait].n, 34, 384, 14, "#ffb08a", "left", {max: W - 68});
-  paragraphe(D.TRAITS[h.trait].d, 34, 404, W - 68, 13, "#ffd8c8");
-  texte("EQUIPEMENT", 34, 452, 15, "#ffe14a");
+  texte("STATISTIQUES", 350, 36, 14, "#ffe14a");
+  lignes.forEach(([a, b], i) => { const y = 62 + i*30; texte(a, 350, y, 14, "#d8e4ff", "left", {gras: false}); texte(String(b), 480, y, 15, "#fff", "right"); });
+  // colonne droite : l'équipement
+  texte("EQUIPEMENT", 510, 36, 14, "#ffe14a");
   ["arme", "armure", "bijou"].forEach((sl, i) => {
-    const o = h.equip[sl], y = 462 + i*56; petit(30, y, W - 60, 50);
-    if (o){ icone(o.ic, 40, y + 9, 32); texte(o.n, 82, y + 22, 14, D.RARETES[o.rar].c, "left", {max: W - 124}); texte(R.texteBonus(o), 82, y + 40, 12, "#d8ffd8", "left", {gras: false, max: W - 124}); }
-    else texte(D.SLOTS[sl].n + " : rien", 46, y + 31, 14, "#a8a0b8", "left", {gras: false});
+    const o = h.equip[sl], y = 46 + i*62; petit(504, y, 240, 56);
+    if (o){ icone(o.ic, 512, y + 12, 32); texte(o.n, 552, y + 24, 14, D.RARETES[o.rar].c, "left", {max: 184}); texte(R.texteBonus(o), 552, y + 44, 12, "#d8ffd8", "left", {gras: false, max: 184}); }
+    else texte(D.SLOTS[sl].n + " : rien", 520, y + 34, 14, "#a8a0b8", "left", {gras: false});
   });
-  if (!h.leg) texte(legendaires().includes(h.cls) ? "Au niveau " + D.NIV_LEGENDAIRE + " : " + C.leg.n : "Légendaire : " + C.leg.n + " (à débloquer dans l'arbre)", W/2, 650, 13, "#ffd76a", "center", {max: W - 60});
-  bouton(90, 664, W - 180, 46, "FERMER", () => { G.fiche = null; SON.clic(); }, true, false, 3);
+  if (!h.leg) texte(legendaires().includes(h.cls) ? "Au niveau " + D.NIV_LEGENDAIRE + " : " + C.leg.n : "Légendaire : " + C.leg.n + " (à débloquer dans l'arbre)", 510, 252, 12, "#ffd76a", "left", {max: 240});
+  bouton(540, 296, 180, 42, "FERMER", () => { G.fiche = null; SON.clic(); }, true, false, 3);
 }
 
 function ecranPause(){
   ctx.fillStyle = "rgba(0,0,0,.6)"; ctx.fillRect(0, 0, W, H); zone(0, 0, W, H, () => {});
-  grand(30, 170, W - 60, 420);
-  texte("PAUSE", W/2, 228, 20, "#ffe14a", "center", {titre: true});
-  bouton(60, 256, W - 120, 48, "REPRENDRE", () => { G.pause = false; SON.clic(); }, true, true);
-  bouton(60, 314, W - 120, 48, sonOn ? "SON : OUI" : "SON : NON", () => { sonOn = !sonOn; ecrire("bannis.son", sonOn); SON.clic(); }, true, false, 2);
-  bouton(60, 372, W - 120, 48, "ABANDONNER LA NUIT", () => { G.pause = false; finDeNuit(false); }, true, false, 2);
-  let y = 430; if (!window.ludoArtefact){ bouton(60, y, W - 120, 44, "◀ LUDOTHEQUE", () => { location.href = "../index.html"; }, true, false, 3); y += 52; }
-  paragraphe("La nuit est sauvegardée au début de chaque vague : tu peux quitter et reprendre plus tard.", 60, y + 16, W - 120, 12, "#ffe3a8");
+  grand(190, 20, 380, 320);
+  texte("PAUSE", W/2, 58, 20, "#ffe14a", "center", {titre: true});
+  bouton(220, 76, 320, 44, "REPRENDRE", () => { G.pause = false; SON.clic(); }, true, true);
+  bouton(220, 126, 154, 44, sonOn ? "SON : OUI" : "SON : NON", () => { sonOn = !sonOn; ecrire("bannis.son", sonOn); SON.clic(); }, true, false, 2);
+  bouton(386, 126, 154, 44, "ABANDONNER", () => { G.pause = false; finDeNuit(false); }, true, false, 2);
+  let y = 178; if (!window.ludoArtefact){ bouton(220, y, 320, 40, "◀ LUDOTHEQUE", () => { try { screen.orientation.unlock(); } catch (e){} location.href = "../index.html"; }, true, false, 3); y += 48; }
+  paragraphe("La nuit est sauvegardée au début de chaque vague : tu peux quitter et reprendre plus tard.", 220, y + 14, 320, 12, "#ffe3a8");
 }
 
 /* ---------- boucle ---------- */
@@ -1021,14 +1012,21 @@ function boucle(now){
 
 /* ---------- toucher et taille ---------- */
 function coords(e){ const r = cv.getBoundingClientRect(); return [(e.clientX - r.left)*W/r.width, (e.clientY - r.top)*H/r.height]; }
+let orientationEssayee = false;
+// paysage : on essaie de verrouiller l'écran au premier toucher (accepté en appli installée ou en plein écran), sinon le message « tourne ton téléphone » suffit
+function essayerPaysage(){
+  if (orientationEssayee || window.ludoArtefact || !window.matchMedia("(pointer: coarse)").matches) return; orientationEssayee = true;
+  try { const o = screen.orientation; if (o && o.lock) o.lock("landscape").catch(() => { const el = document.documentElement; if (el.requestFullscreen) el.requestFullscreen().then(() => o.lock("landscape")).catch(() => {}); }); } catch (e){}
+}
 cv.addEventListener("pointerdown", e => {
-  audio();
+  audio(); essayerPaysage();
   const r = cv.getBoundingClientRect(), x = (e.clientX - r.left)*W/r.width, y = (e.clientY - r.top)*H/r.height;
   for (let i = zones.length - 1; i >= 0; i--){ const z = zones[i]; if (x >= z.x && x <= z.x + z.w && y >= z.y && y <= z.y + z.h){ z.f(); return; } }
   if (G.ecran === "place") G.sel = -1;
 });
 document.addEventListener("keydown", e => { if (e.key === "Escape" && (G.ecran === "combat" || G.ecran === "place")){ if (G.fiche) G.fiche = null; else G.pause = !G.pause; } });
 function taille(){
+  if (window.innerHeight > window.innerWidth && window.innerWidth < 700 && G.ecran === "combat") G.pause = true;   // en portrait, le jeu attend
   dpr = Math.min(3, window.devicePixelRatio || 1);
   echelle = Math.min(window.innerWidth/W, window.innerHeight/H);
   cv.style.width = Math.floor(W*echelle) + "px"; cv.style.height = Math.floor(H*echelle) + "px";

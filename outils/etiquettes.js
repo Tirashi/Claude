@@ -14,7 +14,7 @@ const JEUX = {
   amiral: {a: [["xy", [195, 454]], ["attente", 1500], ["xy", [293, 688]], ["attente", 2500]], e: [10, 120, 370, 259], j: [40, 100, 300, 395]},
   asteroids: {a: [["touche", "Space"], ["attente", 2500]], e: [0, 330, 390, 273], j: [60, 250, 270, 356]},
   bannieres: {a: [["xy", [195, 290]], ["attente", 1500], ["xy", [195, 386]], ["attente", 4000], ["js", "fermer()"], ["attente", 1200]], e: [0, 140, 390, 273], j: [40, 110, 310, 409]},
-  bannis: {a: [["attente", 800], ["js", "const J = Bannis.J, G = Bannis.G, R = Bannis.R; J.nouvelleNuit(); G.run.heros = G.recrues.slice(); R.placerParDefaut(G.run); G.run.vague = 5; R.preparerVague(G.run); J.allerPlacement(); J.lancerCombat()"], ["attente", 7000]], net: true, e: [50, 275, 320, 224], j: [80, 255, 230, 303]},
+  bannis: {vue: [760, 360], a: [["attente", 800], ["js", "localStorage.setItem('bannis.tuto', '1'); localStorage.setItem('bannis.tuto2', '1'); const J = Bannis.J, G = Bannis.G, R = Bannis.R; J.nouvelleNuit(); G.tuto = null; G.run.heros = G.recrues.slice(); R.placerParDefaut(G.run); G.run.vague = 5; R.preparerVague(G.run); J.allerPlacement(); G.tuto = null; J.lancerCombat()"], ["attente", 8000]], net: true, e: [380, 42, 360, 252], j: [430, 42, 190, 250]},
   bastion: {a: [["xy", [195, 382]], ["attente", 2000], ["xy", [293, 652]], ["attente", 4000]], e: [0, 300, 390, 273], j: [60, 230, 270, 356]},
   boutique: {a: [], e: [10, 140, 370, 259], j: [60, 110, 270, 356]},
   'capitaine-du-port': {a: [["xy", [84, 362]], ["attente", 3000]], e: [0, 200, 390, 273], j: [60, 150, 270, 356]},

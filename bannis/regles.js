@@ -5,10 +5,12 @@
 "use strict";
 const B = window.Bannis = window.Bannis || {};
 const D = B.D;
-const W = 360;
-const ZONE = {x0: 64, x1: 350, y0: 262, y1: 528};
-const MUR_X = 50;
-const CASES = [[92,290],[92,385],[92,480],[162,290],[162,385],[162,480]];
+// paysage (28/11) : terrain de 760 x 360, la Muraille à gauche ; K : les vitesses sont multipliées pour garder le rythme du portrait
+const W = 760;
+const ZONE = {x0: 74, x1: 740, y0: 130, y1: 292};
+const MUR_X = 60;
+const CASES = [[150,150],[150,215],[150,280],[230,150],[230,215],[230,280]];
+const K = 2.1, KM = 2.1, FM = 1.5, FA = 1.4;   // FM, FA : force des monstres (réglée au simulateur)
 const VERSION_RUN = 3;
 
 let alea = Math.random;
@@ -160,9 +162,9 @@ function uniteHeros(h){
 function uniteMonstre(e, vague){
   // vie +15 % et attaque +9 % par vague ; le début (paliers 1) est déjà disputé
   const M = D.MONSTRES[e.k], f = 1.15 + (vague-1)*0.15, fa = 1.1 + (vague-1)*0.09, el = e.elite ? 1 : 0;
-  const pv = Math.round(M.pv * f * (el ? 1.8 : 1) * r(0.9, 1.1));
+  const pv = Math.round(M.pv * f * FM * (el ? 1.8 : 1) * r(0.9, 1.1));
   return {camp: "m", k: e.k, nom: (el ? "ELITE " : "") + M.n, role: M.role, i: M.i, elite: !!el, boss: !!M.boss, t: M.t*(el ? 1.1 : 1),
-    pv, pvMax: pv, atq: Math.round(M.atq*fa*(el ? 1.3 : 1)), def: M.def, vit: M.vit*r(0.92, 1.08), crit: 6, critMul: 1.6, vol: 0, rate: 0, soinRecu: 1, vitDep: 1,
+    pv, pvMax: pv, atq: Math.round(M.atq*fa*FA*(el ? 1.3 : 1)), def: M.def, vit: M.vit*r(0.92, 1.08), crit: 6, critMul: 1.6, vol: 0, rate: 0, soinRecu: 1, vitDep: 1,
     x: W + 30, y: r(ZONE.y0 + 10, ZONE.y1 - 10), kx: 0, ky: 0, dir: -1, cd: r(0.4, 1), act: "marche", ta: r(0, 1), cib: null, lunge: 0, flash: 0, mort: 0, ralenti: 0, entre: false, frappe: null};
 }
 function debutCombat(run){
@@ -257,7 +259,7 @@ function etape(C, dt){
     for (const o of tous) if (o !== u && o.pv > 0){ const ox = u.x - o.x, oy = (u.y - o.y)*1.4, od = Math.hypot(ox, oy), rr = (u.boss || o.boss) ? 52 : 36;
       if (od < rr && od > 0.01){ const k = (rr - od)/rr*2.4; vx += ox/od*k; vy += oy/od*k*0.7; } }
     if (occupe){ vx *= 0.2; vy *= 0.2; }
-    const sp = u.vit*(u.camp === "h" ? 70 : 46)*(u.vitDep || 1)*(u.hate > 0 ? 1.15 : 1)*(u.ralenti > 0 ? 0.55 : 1);
+    const sp = u.vit*(u.camp === "h" ? 70*K : 46*KM)*(u.vitDep || 1)*(u.hate > 0 ? 1.15 : 1)*(u.ralenti > 0 ? 0.55 : 1);
     u.x += vx*sp*dt + u.kx*dt; u.y += vy*sp*dt*0.85 + u.ky*dt;
     u.kx *= Math.pow(0.02, dt); u.ky *= Math.pow(0.02, dt);
     u.y = Math.max(ZONE.y0, Math.min(ZONE.y1, u.y));
