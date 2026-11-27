@@ -41,12 +41,23 @@ const SFX = {
 };
 
 /* ---------- sprites ---------- */
-function drawArt(canvas, p, size){
-  const H = p.art.length, W = p.art[0].length;
+const chromaCache = {};
+function shinyMap(p){   // lettres qui changent de couleur chez le Pokémon chromatique (données : chroma.js)
+  if (!(p.id in chromaCache)){
+    const s = typeof CHROMA !== "undefined" ? CHROMA[p.id] : null;
+    chromaCache[p.id] = s ? Object.fromEntries(s.split(",").map(x => [x[0], x[1]])) : null;
+  }
+  return chromaCache[p.id];
+}
+const canShiny = p => !!shinyMap(p) && !p.legend && p.no !== "OBJ";
+const SHINY_CHANCE = 0.1;                    // une rencontre sur dix ; un objet de la Boutique (Charme Chroma) pourra l'augmenter
+const shinyChance = () => SHINY_CHANCE;
+function drawArt(canvas, p, size, shiny){
+  const H = p.art.length, W = p.art[0].length, sm = shiny ? shinyMap(p) : null;
   canvas.width = W; canvas.height = H;
   if (size){ canvas.style.width = size+"px"; canvas.style.height = size*H/W+"px"; }
   const x = canvas.getContext("2d"); x.clearRect(0,0,W,H);
-  p.art.forEach((row,r) => [...row].forEach((ch,c) => { if (PAL[ch]){ x.fillStyle = PAL[ch]; x.fillRect(c,r,1,1); } }));
+  p.art.forEach((row,r) => [...row].forEach((ch,c) => { const k = sm && sm[ch] || ch; if (PAL[k]){ x.fillStyle = PAL[k]; x.fillRect(c,r,1,1); } }));
 }
 
 /* ---------- state ---------- */
@@ -56,12 +67,14 @@ let history = [], tool = "fill", startT = 0, elapsed = 0, timer = null, solved =
 let progress = store.get("progress", {});   // unfinished grids, per puzzle id
 let testMode = store.get("testmode", false);   // 5 taps on the title: every grid of the Dex can be opened
 let encounters = store.get("encounters", {}); // current wild encounter per grid size, e.g. {"15x15": "pikachu"}
+let encShiny = store.get("encShiny", {});     // wild Pokémon met in their shiny colours, e.g. {"pikachu": true}
+let shinyRun = false;                         // the grid being played is a shiny encounter
 
 /* ---------- save transfer between browsers (e.g. Facebook's in-app browser -> Chrome) ---------- */
 const SAVE_PREFIX = "PICROSSDEX1-";
 function exportCode(){
   const c = {}, p = {};
-  for (const [id, v] of Object.entries(captured)) c[id] = {t: v.time, h: v.hints || 0};
+  for (const [id, v] of Object.entries(captured)) c[id] = Object.assign({t: v.time, h: v.hints || 0}, v.shiny ? {s: 1} : {});
   for (const [id, v] of Object.entries(progress)) if (v && v.cells) p[id] = {c: v.cells.join(""), e: Math.round(v.elapsed || 0), h: v.hints || 0};
   return SAVE_PREFIX + btoa(unescape(encodeURIComponent(JSON.stringify({c, p}))));
 }
@@ -78,9 +91,10 @@ function importCode(text){
   for (const [id, v] of Object.entries(data.c || {})){
     if (!byId[id] || !(v.t > 0)) continue;
     const mine = captured[id];
-    const mk = () => Object.assign({time: Math.round(v.t), hints: v.h || 0}, v.x ? {test: true} : {});
+    const mk = () => Object.assign({time: Math.round(v.t), hints: v.h || 0}, v.x ? {test: true} : {}, v.s ? {shiny: true} : {});
     if (!mine){ captured[id] = mk(); added++; }
-    else if (v.t + HINT_MS * (v.h || 0) < mine.time + HINT_MS * (mine.hints || 0)){ captured[id] = mk(); faster++; }
+    else if (v.t + HINT_MS * (v.h || 0) < mine.time + HINT_MS * (mine.hints || 0)){ captured[id] = mk(); if (mine.shiny) captured[id].shiny = true; faster++; }
+    if (v.s && captured[id] && !captured[id].shiny) captured[id].shiny = true;   // un chromatique n'est jamais perdu
   }
   for (const [id, v] of Object.entries(data.p || {})){
     const q = byId[id];
@@ -156,18 +170,18 @@ const JOHTO_LEGENDS = ["dog", "lugia", "hooh", "celebi"];
 const isJohtoLegend = p => JOHTO_LEGENDS.includes(p.legend);
 const DOGS_AT = 10, LUGIA_AT = 30, DOG_CHANCE = 0.1, DOG_PITY = 15;
 const DOGS = PUZZLES.filter(p => p.legend === "dog");
-const isDog = p => p.legend === "dog";
+const isDog = p => p.legend === "dog" || p.legend === "lati";   // « rôdeur » : chiens de Johto, Latias et Latios de Hoenn
 const johtoCount = () => PUZZLES.filter(p => !p.legend && captured[p.id] && regionOf(p) === "johto").length;
 const dogsAwake = () => johtoUnlocked() && johtoCount() >= DOGS_AT;
 const dogsDone = () => DOGS.filter(p => captured[p.id]).length;
 const hoohOpen = () => dogsDone() === DOGS.length;
 // capped to the Johto Pokémon that exist so far, so Lugia stays reachable while the Dex grows
-const lugiaAt = () => Math.min(LUGIA_AT, PUZZLES.filter(p => !p.legend && p.no !== "OBJ" && dexNum(p) > 151).length);
+const lugiaAt = () => Math.min(LUGIA_AT, PUZZLES.filter(p => !p.legend && regionOf(p) === "johto").length);
 const lugiaOpen = () => johtoUnlocked() && johtoCount() >= lugiaAt();
 const celebiOpen = () => PUZZLES.filter(p => p.legend === "lugia" || p.legend === "hooh").every(p => captured[p.id]);
 const johtoLegendOpen = p => isDog(p) ? Object.values(encounters).includes(p.id)
   : p.legend === "hooh" ? hoohOpen() : p.legend === "lugia" ? lugiaOpen() : celebiOpen();
-const isLocked = p => !captured[p.id] && (isJohtoLegend(p) ? !johtoLegendOpen(p) : p.legend === "mew" ? !mewOpen() : p.legend === "mewtwo" ? !mewtwoOpen() : (!!p.legend && !legendsOpen()));
+const isLocked = p => !captured[p.id] && (isHoennLegend(p) ? !hoennLegendOpen(p) : isJohtoLegend(p) ? !johtoLegendOpen(p) : p.legend === "mew" ? !mewOpen() : p.legend === "mewtwo" ? !mewtwoOpen() : (!!p.legend && !legendsOpen()));
 function legendMsg(){
   const left = UNLOCK_AT - solvedCount();
   if (left > 0) return `Termine encore <b>${left}</b> picross pour réveiller les trois oiseaux légendaires.`;
@@ -176,6 +190,27 @@ function legendMsg(){
   if (!captured[MEWTWO.id]) return `<b>Mewtwo</b> est apparu dans le Dex (n° 150) !`;
   return PUZZLES.some(p => p.legend === "mew" && !captured[p.id]) ? `Un Pokémon fabuleux se montre enfin : <b>Mew</b> (n° 151) !` : "";
 }
+/* Hoenn legendaries (opens once Celebi is captured)
+   - Regirock, Regice and Registeel appear after 10 Hoenn captures
+   - Latias and Latios wake up after 20 Hoenn captures and roam the Hoenn grass like the Johto dogs
+   - Kyogre and Groudon after 30, Rayquaza once both are caught, Jirachi after 100, Deoxys once every other legend is caught */
+const HOENN_LEGENDS = ["regi", "lati", "kyogre", "groudon", "rayquaza", "jirachi", "deoxys"];
+const isHoennLegend = p => HOENN_LEGENDS.includes(p.legend);
+const REGI_AT = 10, LATI_AT = 20, KG_AT = 30, JIRACHI_AT = 100;
+const LATIS = PUZZLES.filter(p => p.legend === "lati");
+const hoennCount = () => PUZZLES.filter(p => !p.legend && captured[p.id] && regionOf(p) === "hoenn").length;
+const hoennAt = n => Math.min(n, PUZZLES.filter(p => !p.legend && regionOf(p) === "hoenn").length);   // capped to what exists
+const legendDone = l => PUZZLES.filter(p => p.legend === l).every(p => captured[p.id]);
+const regiOpen = () => hoennUnlocked() && hoennCount() >= hoennAt(REGI_AT);
+const latisAwake = () => hoennUnlocked() && hoennCount() >= hoennAt(LATI_AT);
+const latisDone = () => LATIS.filter(p => captured[p.id]).length;
+const kgOpen = () => hoennUnlocked() && hoennCount() >= hoennAt(KG_AT);
+const rayquazaOpen = () => legendDone("kyogre") && legendDone("groudon");
+const jirachiOpen = () => hoennUnlocked() && hoennCount() >= hoennAt(JIRACHI_AT);
+const deoxysOpen = () => PUZZLES.filter(p => isHoennLegend(p) && p.legend !== "deoxys").every(p => captured[p.id]);
+const hoennLegendOpen = p => p.legend === "lati" ? Object.values(encounters).includes(p.id)
+  : p.legend === "regi" ? regiOpen() : p.legend === "kyogre" || p.legend === "groudon" ? kgOpen()
+  : p.legend === "rayquaza" ? rayquazaOpen() : p.legend === "jirachi" ? jirachiOpen() : deoxysOpen();
 const dexNum = p => p.no === "OBJ" ? 0 : parseInt(p.no, 10);
 const DEX_ORDER = PUZZLES.map((_, i) => i).sort((a, b) => dexNum(PUZZLES[a]) - dexNum(PUZZLES[b]));
 
@@ -183,10 +218,30 @@ const DEX_ORDER = PUZZLES.map((_, i) => i).sort((a, b) => dexNum(PUZZLES[a]) - d
 const johtoUnlocked = () => !!captured[MEWTWO.id];
 const johtoVisible = () => johtoUnlocked() || testMode;
 // Togepi (#175) waits in the Kanto Dex and moves to Johto when it opens
-const regionOf = p => p.no !== "OBJ" && dexNum(p) > 151 && (p.id !== "togepi" || johtoUnlocked()) ? "johto" : "kanto";
+const regionOf = p => { if (p.no === "OBJ") return "kanto"; const n = dexNum(p); return n > 251 ? "hoenn" : n > 151 && (p.id !== "togepi" || johtoUnlocked()) ? "johto" : "kanto"; };
+// Hoenn (n° 252 à 386) opens once Celebi, the last Pokémon of Johto, is captured
+const CELEBI = PUZZLES.find(p => p.legend === "celebi");
+const hoennUnlocked = () => !!captured[CELEBI.id];
+const hoennVisible = () => hoennUnlocked() || testMode;
 let region = store.get("region", "kanto");
-const curRegion = () => region === "johto" && johtoVisible() ? "johto" : "kanto";
-function setRegion(r){ region = r; store.set("region", r); if (r === "johto") store.set("johtoSeen", true); renderList(); }
+const curRegion = () => region === "hoenn" && hoennVisible() ? "hoenn" : region === "johto" && johtoVisible() ? "johto" : "kanto";
+function setRegion(r){ region = r; store.set("region", r); if (r === "johto") store.set("johtoSeen", true); if (r === "hoenn") store.set("hoennSeen", true); renderList(); }
+
+function hoennMsg(){
+  const n = hoennCount(), out = [];
+  const pick = l => PUZZLES.find(p => p.legend === l);
+  if (!n) out.push("Bienvenue à <b>Hoenn</b> ! Une nouvelle région, de nouveaux Pokémon dans les hautes herbes.");
+  if (!regiOpen() && n) out.push(`Capture encore <b>${hoennAt(REGI_AT) - n}</b> Pokémon à Hoenn : des ruines scellées cachent trois golems…`);
+  if (regiOpen() && !legendDone("regi")) out.push(`<b>Regirock, Regice et Registeel</b> sont apparus dans le Dex (n° 377 à 379) !`);
+  if (regiOpen() && !latisAwake()) out.push(`Plus que <b>${hoennAt(LATI_AT) - n}</b> capture${hoennAt(LATI_AT) - n > 1 ? "s" : ""} à Hoenn pour que deux Pokémon rapides traversent les herbes…`);
+  if (latisAwake() && latisDone() < LATIS.length) out.push(`<b>Latias et Latios</b> rôdent dans les <b>hautes herbes</b> de Hoenn (${latisDone()}/${LATIS.length} capturés).`);
+  if (latisAwake() && !kgOpen()) out.push(`Plus que <b>${hoennAt(KG_AT) - n}</b> capture${hoennAt(KG_AT) - n > 1 ? "s" : ""} à Hoenn pour réveiller <b>Kyogre</b> et <b>Groudon</b>.`);
+  if (kgOpen() && !(legendDone("kyogre") && legendDone("groudon"))) out.push(`<b>Kyogre</b> et <b>Groudon</b> sont apparus dans le Dex (n° 382 et 383) !`);
+  if (rayquazaOpen() && !captured[pick("rayquaza").id]) out.push(`Un cri résonne dans le ciel : <b>Rayquaza</b> descend (n° 384) !`);
+  if (jirachiOpen() && !captured[pick("jirachi").id]) out.push(`Une étoile filante : <b>Jirachi</b> est apparu (n° 385) !`);
+  if (deoxysOpen() && !captured[pick("deoxys").id]) out.push(`Un météore tombe sur Hoenn… <b>Deoxys</b> t'attend (n° 386) !`);
+  return out.join("<br>");
+}
 
 function johtoMsg(){
   const n = johtoCount(), out = [];
@@ -230,11 +285,13 @@ function encounter(size){
     p = pick[Math.floor(Math.random()*pick.length)];
     if (!pool.length) p = dogs[Math.floor(Math.random()*dogs.length)];   // grass emptied: only the dogs are left
     else if (dogs.length){
-      const miss = store.get("dogMiss", 0);
-      if (miss + 1 >= DOG_PITY || Math.random() < DOG_CHANCE){ p = dogs[Math.floor(Math.random()*dogs.length)]; store.set("dogMiss", 0); }
-      else store.set("dogMiss", miss + 1);
+      const mk = curRegion() === "hoenn" ? "latiMiss" : "dogMiss", miss = store.get(mk, 0);
+      if (miss + 1 >= DOG_PITY || Math.random() < DOG_CHANCE){ p = dogs[Math.floor(Math.random()*dogs.length)]; store.set(mk, 0); }
+      else store.set(mk, miss + 1);
     }
     encounters[encKey(size)] = p.id; store.set("encounters", encounters);
+    if (canShiny(p) && Math.random() < shinyChance()) encShiny[p.id] = true; else delete encShiny[p.id];
+    store.set("encShiny", encShiny);
   }
   open(PUZZLES.indexOf(p));
 }
@@ -242,6 +299,7 @@ function flee(){
   if (!P || solved || !(isWild(P) || isDog(P) && !captured[P.id])) return;
   const dog = isDog(P) ? P.name : "";
   delete progress[P.id]; store.set("progress", progress);
+  delete encShiny[P.id]; store.set("encShiny", encShiny);
   for (const k of Object.keys(encounters)) if (encounters[k] === P.id) delete encounters[k];
   store.set("encounters", encounters);
   P = null; clearInterval(timer); document.body.classList.remove("zoom"); $("barPrev").hidden = true;
@@ -250,7 +308,8 @@ function flee(){
   $("dexMsg").hidden = false; $("dexMsg").innerHTML = dog ? `<b>${dog}</b> s'est enfui ! Il rôde toujours dans les hautes herbes…` : "Tu as pris la fuite ! Le Pokémon est retourné dans les <b>hautes herbes</b>.";
 }
 // dogs still to catch, roaming the Johto grass of that size
-const roamingDogs = (size, r = curRegion()) => r === "johto" && dogsAwake() ? DOGS.filter(d => !captured[d.id] && sizeOf(d) === size) : [];
+const roamingDogs = (size, r = curRegion()) => r === "johto" && dogsAwake() ? DOGS.filter(d => !captured[d.id] && sizeOf(d) === size)
+  : r === "hoenn" && latisAwake() ? LATIS.filter(d => !captured[d.id] && sizeOf(d) === size) : [];
 function renderSizes(){
   const box = $("sizes"); box.innerHTML = "";
   for (const size of sizesOf(curRegion())){
@@ -291,9 +350,11 @@ function renderList(){
   list.innerHTML = "";
   const r = curRegion(), shown = DEX_ORDER.filter(idx => regionOf(PUZZLES[idx]) === r);
   $("tabs").hidden = !johtoVisible();
-  $("tabKanto").setAttribute("aria-selected", r === "kanto"); $("tabJohto").setAttribute("aria-selected", r === "johto");
+  $("tabHoenn").hidden = !hoennVisible();
+  $("tabKanto").setAttribute("aria-selected", r === "kanto"); $("tabJohto").setAttribute("aria-selected", r === "johto"); $("tabHoenn").setAttribute("aria-selected", r === "hoenn");
   $("tabJohto").classList.toggle("new", !store.get("johtoSeen", false) && r !== "johto");
-  $("dexView").classList.toggle("johto", r === "johto");
+  $("tabHoenn").classList.toggle("new", !store.get("hoennSeen", false) && r !== "hoenn");
+  $("dexView").classList.toggle("johto", r === "johto"); $("dexView").classList.toggle("hoenn", r === "hoenn");
   shown.forEach(idx => { const p = PUZZLES[idx];
     const got = captured[p.id];
     const b = document.createElement("button");
@@ -302,8 +363,12 @@ function renderList(){
     if (isLocked(p) && !testMode){
       b.classList.add("locked");
       const cv = document.createElement("canvas"); drawArt(cv, LOCK, 60); b.appendChild(cv);
-      const mew = p.legend === "mewtwo", fab = p.legend === "mew" || p.legend === "celebi", jl = isJohtoLegend(p);
-      const jmeta = !jl ? "" : isDog(p) ? (dogsAwake() ? "rôde à Johto" : "mystère…")
+      const mew = p.legend === "mewtwo", hl = isHoennLegend(p), fab = p.legend === "mew" || p.legend === "celebi" || p.legend === "jirachi" || p.legend === "deoxys", jl = isJohtoLegend(p) || hl;
+      const hc = (n) => `${Math.min(hoennCount(), hoennAt(n))}/${hoennAt(n)} à Hoenn`;
+      const jmeta = !jl ? "" : hl ? (p.legend === "regi" ? hc(REGI_AT) : p.legend === "lati" ? (latisAwake() ? "rôde à Hoenn" : hc(LATI_AT))
+          : p.legend === "kyogre" || p.legend === "groudon" ? hc(KG_AT) : p.legend === "rayquaza" ? "après Kyogre et Groudon"
+          : p.legend === "jirachi" ? hc(JIRACHI_AT) : "après les autres légendaires")
+        : isDog(p) ? (dogsAwake() ? "rôde à Johto" : "mystère…")
         : p.legend === "hooh" ? `chiens ${dogsDone()}/${DOGS.length}`
         : p.legend === "lugia" ? `${Math.min(johtoCount(), lugiaAt())}/${lugiaAt()} à Johto` : "après Lugia et Ho-Oh";
       b.insertAdjacentHTML("beforeend", jl
@@ -313,12 +378,14 @@ function renderList(){
         : mew
         ? `<span class="nm">LÉGENDAIRE</span><span class="meta">${Math.min(allDone(), MEWTWO_AT)}/${MEWTWO_AT} · oiseaux ${birdsDone()}/${BIRDS.length}</span>`
         : `<span class="nm">LÉGENDAIRE</span><span class="meta">${Math.min(solvedCount(), UNLOCK_AT)}/${UNLOCK_AT} picross</span>`);
-      b.setAttribute("aria-label", jl ? "Pokémon légendaire de Johto, pas encore apparu"
+      b.setAttribute("aria-label", jl ? `Pokémon légendaire de ${hl ? "Hoenn" : "Johto"}, pas encore apparu`
                                  : fab ? "Pokémon fabuleux verrouillé : capture Mewtwo pour le faire apparaître"
                                  : mew ? `Pokémon légendaire verrouillé : capture les trois oiseaux et termine ${MEWTWO_AT} picross`
                                        : `Pokémon légendaire verrouillé : termine ${UNLOCK_AT} picross pour le débloquer`);
       b.onclick = () => { blip([196, 147], "square", .08, .05); $("dexMsg").hidden = false;
-        $("dexMsg").innerHTML = !jl ? legendMsg() : isDog(p) && dogsAwake() ? `Ce Pokémon légendaire rôde dans les <b>hautes herbes</b> de Johto : il peut surgir à chaque rencontre.`
+        $("dexMsg").innerHTML = !jl ? legendMsg()
+          : hl ? (p.legend === "lati" && latisAwake() ? `Ce Pokémon légendaire rôde dans les <b>hautes herbes</b> de Hoenn : il peut surgir à chaque rencontre.` : hoennMsg() || "Ce Pokémon légendaire ne s'est pas encore montré à <b>Hoenn</b>…")
+          : isDog(p) && dogsAwake() ? `Ce Pokémon légendaire rôde dans les <b>hautes herbes</b> de Johto : il peut surgir à chaque rencontre.`
           : johtoMsg() || "Ce Pokémon légendaire ne s'est pas encore montré à <b>Johto</b>…"; };
       list.appendChild(b);
       return;
@@ -331,7 +398,7 @@ function renderList(){
       list.appendChild(b);
       return;
     }
-    if (got){ const cv = document.createElement("canvas"); drawArt(cv, p, 60); b.appendChild(cv); }
+    if (got){ const cv = document.createElement("canvas"); drawArt(cv, p, 60, got.shiny); b.appendChild(cv); if (got.shiny) b.classList.add("shiny"); }
     else { const u = document.createElement("div"); u.className = "unk"; u.textContent = "?"; b.appendChild(u); }
     b.insertAdjacentHTML("beforeend", `<span class="nm">${got ? p.name : "???"}</span><span class="meta">${p.art[0].length}×${p.art.length}${got ? " · "+fmt(got.time) : progress[p.id] ? " · en cours" : ""}</span>`);
     b.setAttribute("aria-label", got ? `${p.name}, capturé en ${fmt(got.time)}` : isWild(p) ? `Pokémon sauvage en cours, grille ${p.art[0].length} par ${p.art.length}` : `N° ${p.no}, grille ${p.art[0].length} par ${p.art.length}, pas encore capturé`);
@@ -342,9 +409,10 @@ function renderList(){
   });
   markCrowns();
   const n = shown.filter(idx => captured[PUZZLES[idx].id]).length;
-  $("capCount").textContent = `${n}/${shown.length}`;
+  const shinies = shown.filter(idx => captured[PUZZLES[idx].id] && captured[PUZZLES[idx].id].shiny).length;
+  $("capCount").textContent = `${n}/${shown.length}` + (shinies ? ` · ★${shinies}` : "");
   $("capBar").style.width = (100*n/shown.length)+"%";
-  const msg = r === "kanto" ? legendMsg() : johtoMsg();
+  const msg = r === "kanto" ? legendMsg() : r === "johto" ? johtoMsg() : hoennMsg();
   $("dexMsg").innerHTML = msg; $("dexMsg").hidden = !msg;
   renderSizes();
   $("testNote").hidden = !testMode;
@@ -365,6 +433,7 @@ function open(idx, saved){
   fleeArm = false;
   if (regionOf(PUZZLES[idx]) !== curRegion()){ region = regionOf(PUZZLES[idx]); store.set("region", region); }
   P = PUZZLES[idx]; P.idx = idx; H = P.art.length; W = P.art[0].length;
+  shinyRun = isWild(P) && !!encShiny[P.id];
   sol = P.art.flatMap(r => [...r].map(ch => filled(ch) ? 1 : 0));
   rowClues = [...Array(H).keys()].map(r => clueOf(sol.slice(r*W, r*W+W)));
   colClues = [...Array(W).keys()].map(c => clueOf([...Array(H).keys()].map(r => sol[r*W+c])));
@@ -386,7 +455,7 @@ function open(idx, saved){
     setTimeout(() => blip([131, 196, 262, 196, 262, 330, 392, 523], "sawtooth", .09, .05), 150);
   }
   setMsg(roaming ? `<span class="hl">${P.name}</span> surgit des hautes herbes ! Termine la grille sans la quitter, sinon il s'enfuit.` : captured[P.id] ? `Déjà capturé. Rejoue pour battre <span class="hl">${fmt(captured[P.id].time)}</span>.`
-    : isWild(P) ? (cells.some(v => v) ? `Le Pokémon sauvage t'attend toujours…` : `Un Pokémon sauvage apparaît ! Qui se cache dans cette grille ?`)
+    : isWild(P) ? (shinyRun ? `<span class="hl">★ Quelque chose brille dans les hautes herbes !</span> ` : "") + (cells.some(v => v) ? `Le Pokémon sauvage t'attend toujours…` : `Un Pokémon sauvage apparaît ! Qui se cache dans cette grille ?`)
     : `Qui se cache dans cette grille ?`);
   startT = performance.now() - elapsed; clearInterval(timer); timer = setInterval(tick, 250); tick();
 }
@@ -501,6 +570,7 @@ let winToken = 0;
 function win(){
   const myWin = ++winToken;
   const wasJohto = johtoUnlocked(), wasDogs = dogsAwake(), wasHooh = hoohOpen(), wasLugia = lugiaOpen(), wasCelebi = celebiOpen();
+  const wasHoenn = hoennUnlocked(), wasRegi = regiOpen(), wasLatis = latisAwake(), wasKG = kgOpen(), wasRay = rayquazaOpen(), wasJir = jirachiOpen(), wasDeo = deoxysOpen();
   const wasOpen = legendsOpen(), wasMew = mewtwoOpen(), wasFab = mewOpen() || !!captured[PUZZLES.find(q => q.legend === "mew").id];
   solved = true; clearInterval(timer); elapsed = performance.now() - startT; $("pTime").textContent = fmt(elapsed);
   delete progress[P.id]; store.set("progress", progress);
@@ -510,11 +580,15 @@ function win(){
   const before = captured[P.id], score = (t, n) => t + HINT_MS * (n || 0);
   // un record se juge sur le temps pénalisé par les indices, comme au classement familial
   const record = !before || score(elapsed, hints) < score(before.time, before.hints) || (before.test && !testMode);
-  if (record) captured[P.id] = Object.assign({time: Math.round(elapsed), hints}, testMode ? {test: true} : {});
+  const wonShiny = shinyRun;
+  if (record) captured[P.id] = Object.assign({time: Math.round(elapsed), hints}, testMode ? {test: true} : {}, wonShiny || (before && before.shiny) ? {shiny: true} : {});
+  else if (wonShiny && before) before.shiny = true;
+  delete encShiny[P.id]; store.set("encShiny", encShiny);
   store.set("captured", captured);
   setHot(-1);
   const b = $("board"); b.classList.add("revealed");
-  cellEls.forEach((e,i) => { const ch = P.art[Math.floor(i/W)][i%W]; e.className = "cell"; e.style.background = PAL[ch] || "var(--screen)"; });
+  const sm = wonShiny ? shinyMap(P) : null;
+  cellEls.forEach((e,i) => { const ch = P.art[Math.floor(i/W)][i%W]; e.className = "cell"; e.style.background = PAL[sm && sm[ch] || ch] || "var(--screen)"; });
   rcEls.concat(ccEls).forEach(e => e.classList.add("done"));
   $("pName").textContent = P.name;
   SFX.win();
@@ -523,7 +597,8 @@ function win(){
     : P.legend === "mew" || P.legend === "celebi" ? `<span class="hl">${P.name}</span>, Pokémon fabuleux, rejoint ton Dex !`
     : P.legend ? `<span class="hl">${P.name}</span>, Pokémon légendaire, rejoint ton Dex !`
     : `<span class="hl">${P.name}</span> a été enregistré dans le Dex !`;
-  $("winStats").innerHTML = `TEMPS ${fmt(elapsed)} · INDICES ${hints}` + (before ? (record ? `<br>NOUVEAU RECORD !` : `<br>RECORD ${fmt(before.time)}`) : "");
+  $("winStats").innerHTML = `TEMPS ${fmt(elapsed)} · INDICES ${hints}` + (before ? (record ? `<br>NOUVEAU RECORD !` : `<br>RECORD ${fmt(before.time)}`) : "")
+    + (wonShiny ? `<br><span class="hl">★ POKÉMON CHROMATIQUE !</span>` : "");
   // classement familial : temps + 30 s par indice, et taille du Pokédex
   const L = window.LudoScores;
   if (L && !testMode){
@@ -555,6 +630,13 @@ function win(){
     $("winStats").innerHTML += `<br><span class="hl">UN NOUVEAU POKÉDEX S'OUVRE… JOHTO !</span>`;
     setTimeout(() => blip([392, 523, 659, 784, 659, 784, 1047, 1319, 1047, 1568], "triangle", .11, .06), 2600);
   }
+  if (!wasHoenn && hoennUnlocked()) announce("UN NOUVEAU POKÉDEX S'OUVRE… HOENN !", [392, 523, 659, 784, 659, 784, 1047, 1319, 1047, 1568], "triangle", 3100);
+  if (!wasRegi && regiOpen()) announce("DES RUINES SE DESCELLENT… REGIROCK, REGICE ET REGISTEEL !", [131, 165, 196, 262, 196, 262, 330, 392], "square", 900);
+  if (!wasLatis && latisAwake()) announce("DEUX POKÉMON RAPIDES SE SONT ENVOLÉS À TRAVERS HOENN !", [262, 330, 392, 330, 262, 196, 262, 392, 523], "sawtooth", 1300);
+  if (!wasKG && kgOpen()) announce("LA TERRE ET LA MER GRONDENT… GROUDON ET KYOGRE !", [98, 131, 98, 165, 131, 196, 147, 262], "sawtooth", 1700);
+  if (!wasRay && rayquazaOpen()) announce("UN CRI DANS LE CIEL… RAYQUAZA DESCEND !", [523, 659, 784, 1047, 1319, 1568, 2093], "triangle", 1300);
+  if (!wasJir && jirachiOpen()) announce("UNE ÉTOILE FILANTE… JIRACHI EST APPARU !", [1047, 1319, 1568, 2093, 1568, 2093, 2637], "triangle", 1700);
+  if (!wasDeo && deoxysOpen()) announce("UN MÉTÉORE TOMBE SUR HOENN… DEOXYS !", [220, 233, 247, 262, 523, 494, 466, 440, 880, 1760], "square", 1700);
   if (!wasMew && mewtwoOpen()){
     $("winStats").innerHTML += `<br><span class="hl">UN POKÉMON MYSTÉRIEUX EST APPARU… MEWTWO !</span>`;
     setTimeout(() => blip([220, 233, 247, 262, 523, 494, 466, 440, 880, 1760], "square", .14, .05), 1300);
@@ -697,6 +779,7 @@ $("fleeBtn").onclick = () => {
 let titleTaps = 0, titleT = null;
 $("tabKanto").onclick = () => { if (curRegion() !== "kanto"){ SFX.nav(); setRegion("kanto"); } };
 $("tabJohto").onclick = () => { if (curRegion() !== "johto"){ SFX.nav(); setRegion("johto"); } };
+$("tabHoenn").onclick = () => { if (curRegion() !== "hoenn"){ SFX.nav(); setRegion("hoenn"); } };
 $("title").addEventListener("click", () => {
   titleTaps++; clearTimeout(titleT); titleT = setTimeout(() => { titleTaps = 0; }, 1500);
   if (titleTaps < 5) return;
