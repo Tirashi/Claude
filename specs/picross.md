@@ -42,3 +42,13 @@ Pistes :
 3. **Pokédex old school** : menu simplifié, disponible dès le début.
 4. **Badges** de Kanto et de Johto comme petits picross à gagner.
 5. **Objets** (picross d'objets, boutique, Charme Chroma qui augmente les apparitions).
+
+## Décisions du 27/11
+- **Pas de monnaie dans le jeu.**
+- **Section Boutique** : les picross d'objets, accessibles sans condition.
+- **Section Arène** : les badges ; ceux d'une génération se font quand on a capturé un certain nombre de Pokémon de cette génération (seuil à fixer à la maquette).
+- **Chromatiques** : taux d'apparition généreux ; le Charme Chroma est un objet de la Boutique dont le picross, une fois fait, augmente le taux (pas d'achat).
+- **Sources à citer dans `credits/index.html` dès qu'on en reprend quelque chose** :
+  - Minidex 3G : lien donné par l'utilisateur, <https://www.deviantart.com/eeveeee1999/art/Gen-5-GBC-Party-Sprites-807196588> (auteur eeveeee1999). Le titre de la page parle de la 5e génération : à vérifier que la planche rangée est bien celle de la 3e.
+  - Badges, objets d'Émeraude, menu old school : The Spriters Resource (spriters-resource.com), page exacte de chaque planche à retrouver.
+- Ordre proposé : 3e génération (Minidex 3G), puis chromatiques, puis maquette Boutique et Arène, puis Pokédex old school.
