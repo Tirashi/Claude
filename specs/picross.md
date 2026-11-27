@@ -74,3 +74,7 @@ Pistes :
 - 41 objets (`shop: true`, `no: "OBJ"`), région `boutique` (toujours ouverte, onglet BOUTIQUE) ; pas d'herbes, pas de fuite, noms visibles avant résolution ; Charme Chroma (`charmechroma`, dessiné à la main) : `shinyChance()` ×2 une fois capturé.
 - Reste de la planche d'objets (environ 200 icônes non identifiées : potions, baies, pierres, CT…) : à ajouter par lots, nom à vérifier à l'œil.
 - Prochaine étape : Arène (badges par génération, seuil de captures à fixer), Pokédex old school.
+
+## 4e génération : source retenue (27/11)
+- Pas de Minidex 4G. Sprites Platinum 80×80 réduits à 15×15 : formes en bouillie. **Icônes de menu de la 7e génération** (`.../versions/generation-vii/icons/<n°>.png`, 40×30, pour les n° 1 à 721, joignables depuis l'environnement) : bien plus lisibles, déjà simplifiées comme un Minidex. Deux conversions comparées : A (détaillée, 15×15 par moyenne de blocs) et B (contour noir, 4 couleurs) ; choix de l'utilisateur à noter ici. Même méthode possible pour les 5e et 6e générations.
+- `reference-hoenn-petits-sprites.webp` : planche Rubis / Saphir (Hoenn, normal et chromatique, avec petites icônes) « ripped by Peter Coulta » (Spriters Resource), reçue le 27/11 ; sert à vérifier les couleurs de Hoenn, pas à la 4e génération.
