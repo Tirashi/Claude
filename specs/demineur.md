@@ -7,6 +7,8 @@ Idée de l'utilisateur du 22/11 : un démineur classique avec des tailles de gri
 - [Maquette 2](https://claude.ai/artifact/RGEQnhG3WApRMUesryCgm4) (`maquettes/demineur-2.html`) : 2D moderne + touches 32 bits (Arcade de poche, **Prairie**, Grotte de cristal), Donjon v2. Retours : police pixel des chiffres illisible (règle : plus de Pixelify Sans), Donjon pas rigolo (sommes de niveaux, règles pas claires) : le mode funky doit garder la règle pure.
 - [Maquette 3](https://claude.ai/artifact/6pBZ9xyFPewRYzjy64FwWE) (`maquettes/demineur-3.html`) : Prairie, chiffres au choix, **Grande prairie** : **validée** le 22/11 (police **Outfit** pour les chiffres).
 
+- [Maquette 4, thème sombre](https://claude.ai/artifact/Fmrz4vWzh4xzhDTzBKDJuR) (`maquettes/demineur-4.html`, 27/11) : A Nuit d'été (lune, lucioles), B Crépuscule, C Ardoise ; tuiles assombries vers une teinte de nuit, chiffres éclaircis ; en attente du choix.
+
 ## Le jeu (`demineur/`, 22/11)
 - **Style Prairie** : interface claire et moderne (Sora), tuiles d'herbe et de terre en pixel art 16×16 dessinées par le code (aucune image), chiffres en Outfit 800.
 - **Classique** : Facile 8×10 (10 mines), Moyen 12×18 (35), Difficile 16×26 (80), en portrait ; sur un écran en paysage (PC), la grille est tournée. Première case toujours sûre (mines tirées à la première touche). Tape = creuser, appui long / clic droit / bouton Drapeau (touche F) = drapeau, tape sur un chiffre entouré de ses drapeaux = dégager autour. Record = meilleur temps par taille.
