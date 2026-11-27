@@ -180,7 +180,7 @@ function vueEquipe() {
   const tete = `<div class="tete"><h1><small>Choisis ton équipe</small>Équipe</h1><a class="reglage ludo-retour" href="../index.html">‹ Ludothèque</a>${boutonTheme()}</div>`;
   if (!LISTE) return tete + `<div class="attente">${"<i></i>".repeat(3)}</div>`;
   if (!ESP || !DEX) return tete + (S.erreurJeux ? `<div class="vide">Il faut internet la première fois pour savoir quel Pokémon est dans quel jeu.<br><button class="reglage" data-rejeux>Réessayer</button></div>` : `<div class="attente">${"<i></i>".repeat(3)}</div>`);
-  const e = S.eq, plein = e.m.filter(Boolean), gens = [...new Set(D.JEUX.map(j => j.gen))].filter(Boolean);
+  const e = S.eq, plein = e.m.filter(Boolean), gens = [...new Set(D.JEUX.map(j => j.gen))].filter(Boolean).sort((x, y) => x - y);
   const options = `<option value="nat" ${e.jeu === "nat" ? "selected" : ""}>${D.JEUX[0].nom}</option>` + gens.map(g => `<optgroup label="Génération ${g}">${D.JEUX.filter(j => j.gen === g).map(j => `<option value="${j.id}" ${e.jeu === j.id ? "selected" : ""}>${esc(j.nom)}</option>`).join("")}</optgroup>`).join("");
   const nb = candidats(e.jeu, e.leg).length;
   const cases = e.m.map((n, i) => {
