@@ -125,6 +125,10 @@ body.index .scroller{flex:1 1 0; min-height:200px}
 #dexView.hoenn .grass{box-shadow:0 0 0 3px #2f8f9f, 3px 3px 0 3px var(--ink-soft)}
 #dexView.hoenn .entry{border-color:#1f5f6a}
 #dexView.hoenn .meter span{background:#2f8f9f}
+.tabs .btn.sinnoh[aria-selected="true"]{background:#7a5cb8; color:var(--paper)}
+#dexView.sinnoh .grass{box-shadow:0 0 0 3px #7a5cb8, 3px 3px 0 3px var(--ink-soft)}
+#dexView.sinnoh .entry{border-color:#4a3578}
+#dexView.sinnoh .meter span{background:#7a5cb8}
 .tabs .btn.boutique[aria-selected="true"]{background:#5a9a4a; color:var(--ink)}
 #dexView.boutique .grass{display:none}
 #dexView.boutique .entry{border-color:#3a6a30}

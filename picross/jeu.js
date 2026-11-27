@@ -181,7 +181,7 @@ const lugiaOpen = () => johtoUnlocked() && johtoCount() >= lugiaAt();
 const celebiOpen = () => PUZZLES.filter(p => p.legend === "lugia" || p.legend === "hooh").every(p => captured[p.id]);
 const johtoLegendOpen = p => isDog(p) ? Object.values(encounters).includes(p.id)
   : p.legend === "hooh" ? hoohOpen() : p.legend === "lugia" ? lugiaOpen() : celebiOpen();
-const isLocked = p => !captured[p.id] && (isHoennLegend(p) ? !hoennLegendOpen(p) : isJohtoLegend(p) ? !johtoLegendOpen(p) : p.legend === "mew" ? !mewOpen() : p.legend === "mewtwo" ? !mewtwoOpen() : (!!p.legend && !legendsOpen()));
+const isLocked = p => !captured[p.id] && (isSinnohLegend(p) ? !sinnohLegendOpen(p) : isHoennLegend(p) ? !hoennLegendOpen(p) : isJohtoLegend(p) ? !johtoLegendOpen(p) : p.legend === "mew" ? !mewOpen() : p.legend === "mewtwo" ? !mewtwoOpen() : (!!p.legend && !legendsOpen()));
 function legendMsg(){
   const left = UNLOCK_AT - solvedCount();
   if (left > 0) return `Termine encore <b>${left}</b> picross pour réveiller les trois oiseaux légendaires.`;
@@ -211,6 +211,26 @@ const deoxysOpen = () => PUZZLES.filter(p => isHoennLegend(p) && p.legend !== "d
 const hoennLegendOpen = p => p.legend === "lati" ? Object.values(encounters).includes(p.id)
   : p.legend === "regi" ? regiOpen() : p.legend === "kyogre" || p.legend === "groudon" ? kgOpen()
   : p.legend === "rayquaza" ? rayquazaOpen() : p.legend === "jirachi" ? jirachiOpen() : deoxysOpen();
+/* Sinnoh legendaries (opens once Deoxys, the last Pokémon of Hoenn, is captured)
+   - Uxie, Mesprit and Azelf after 10 Sinnoh captures; Dialga and Palkia once the three lake guardians are caught
+   - Heatran after 30, Regigigas after 50, Giratina once Dialga and Palkia are caught
+   - Cresselia after 60, Darkrai once Cresselia is caught, Phione and Manaphy after 70, Shaymin after 85
+   - Arceus once every other legend of Sinnoh is caught */
+const SINNOH_LEGENDS = ["lake", "dp", "heatran", "regigigas", "giratina", "cresselia", "darkrai", "manaphy", "shaymin", "arceus"];
+const isSinnohLegend = p => SINNOH_LEGENDS.includes(p.legend);
+const sinnohCount = () => PUZZLES.filter(p => !p.legend && captured[p.id] && regionOf(p) === "sinnoh").length;
+const sinnohAt = n => Math.min(n, PUZZLES.filter(p => !p.legend && regionOf(p) === "sinnoh").length);   // capped to what exists
+const sinnohAtLeast = n => sinnohUnlocked() && sinnohCount() >= sinnohAt(n);
+const arceusOpen = () => PUZZLES.filter(p => isSinnohLegend(p) && p.legend !== "arceus").every(p => captured[p.id]);
+const SINNOH_RULES = {lake: () => sinnohAtLeast(10), dp: () => legendDone("lake"), heatran: () => sinnohAtLeast(30), regigigas: () => sinnohAtLeast(50),
+  giratina: () => legendDone("dp"), cresselia: () => sinnohAtLeast(60), darkrai: () => legendDone("cresselia"), manaphy: () => sinnohAtLeast(70),
+  shaymin: () => sinnohAtLeast(85), arceus: arceusOpen};
+const sinnohLegendOpen = p => SINNOH_RULES[p.legend]();
+function sinnohMeta(p){
+  const c = n => `${Math.min(sinnohCount(), sinnohAt(n))}/${sinnohAt(n)} à Sinnoh`;
+  return {lake: () => c(10), dp: () => "après les trois lacs", heatran: () => c(30), regigigas: () => c(50), giratina: () => "après Dialga et Palkia",
+    cresselia: () => c(60), darkrai: () => "après Cresselia", manaphy: () => c(70), shaymin: () => c(85), arceus: () => "après les autres légendaires"}[p.legend]();
+}
 const dexNum = p => p.no === "OBJ" ? 0 : parseInt(p.no, 10);
 const DEX_ORDER = PUZZLES.map((_, i) => i).sort((a, b) => dexNum(PUZZLES[a]) - dexNum(PUZZLES[b]));
 
@@ -218,14 +238,30 @@ const DEX_ORDER = PUZZLES.map((_, i) => i).sort((a, b) => dexNum(PUZZLES[a]) - d
 const johtoUnlocked = () => !!captured[MEWTWO.id];
 const johtoVisible = () => johtoUnlocked() || testMode;
 // Togepi (#175) waits in the Kanto Dex and moves to Johto when it opens
-const regionOf = p => { if (p.shop) return "boutique"; if (p.no === "OBJ") return "kanto"; const n = dexNum(p); return n > 251 ? "hoenn" : n > 151 && (p.id !== "togepi" || johtoUnlocked()) ? "johto" : "kanto"; };
+const regionOf = p => { if (p.shop) return "boutique"; if (p.no === "OBJ") return "kanto"; const n = dexNum(p); return n > 386 ? "sinnoh" : n > 251 ? "hoenn" : n > 151 && (p.id !== "togepi" || johtoUnlocked()) ? "johto" : "kanto"; };
 // Hoenn (n° 252 à 386) opens once Celebi, the last Pokémon of Johto, is captured
 const CELEBI = PUZZLES.find(p => p.legend === "celebi");
 const hoennUnlocked = () => !!captured[CELEBI.id];
 const hoennVisible = () => hoennUnlocked() || testMode;
+// Sinnoh (n° 387 à 493) opens once Deoxys, the last Pokémon of Hoenn, is captured
+const DEOXYS = PUZZLES.find(p => p.legend === "deoxys");
+const sinnohUnlocked = () => !!captured[DEOXYS.id];
+const sinnohVisible = () => sinnohUnlocked() || testMode;
 let region = store.get("region", "kanto");
-const curRegion = () => region === "boutique" ? "boutique" : region === "hoenn" && hoennVisible() ? "hoenn" : region === "johto" && johtoVisible() ? "johto" : "kanto";
-function setRegion(r){ region = r; store.set("region", r); if (r === "johto") store.set("johtoSeen", true); if (r === "hoenn") store.set("hoennSeen", true); if (r === "boutique") store.set("boutiqueSeen", true); renderList(); }
+const curRegion = () => region === "boutique" ? "boutique" : region === "sinnoh" && sinnohVisible() ? "sinnoh" : region === "hoenn" && hoennVisible() ? "hoenn" : region === "johto" && johtoVisible() ? "johto" : "kanto";
+function setRegion(r){ region = r; store.set("region", r); if (r === "johto") store.set("johtoSeen", true); if (r === "hoenn") store.set("hoennSeen", true); if (r === "sinnoh") store.set("sinnohSeen", true); if (r === "boutique") store.set("boutiqueSeen", true); renderList(); }
+
+function sinnohMsg(){
+  const n = sinnohCount(), out = [], pick = l => PUZZLES.filter(p => p.legend === l);
+  if (!n) out.push("Bienvenue à <b>Sinnoh</b> ! Une nouvelle région, de nouveaux Pokémon dans les hautes herbes.");
+  const stages = [[10, "les trois gardiens des lacs"], [30, "<b>Heatran</b>"], [50, "<b>Regigigas</b>"], [60, "<b>Cresselia</b>"], [70, "<b>Phione</b> et <b>Manaphy</b>"], [85, "<b>Shaymin</b>"]];
+  const next = stages.find(([at]) => !sinnohAtLeast(at));
+  if (next) out.push(`Capture encore <b>${sinnohAt(next[0]) - n}</b> Pokémon à Sinnoh pour faire apparaître ${next[1]}.`);
+  const seen = [["lake", "Uxie, Mesprit et Azelf", "480 à 482"], ["dp", "Dialga et Palkia", "483 et 484"], ["heatran", "Heatran", "485"], ["regigigas", "Regigigas", "486"],
+    ["giratina", "Giratina", "487"], ["cresselia", "Cresselia", "488"], ["darkrai", "Darkrai", "491"], ["manaphy", "Phione et Manaphy", "489 et 490"], ["shaymin", "Shaymin", "492"], ["arceus", "Arceus", "493"]];
+  for (const [l, nm, no] of seen) if (SINNOH_RULES[l]() && !pick(l).every(p => captured[p.id])) out.push(`<b>${nm}</b> ${pick(l).length > 1 ? "sont apparus" : "est apparu"} dans le Dex (n° ${no}) !`);
+  return out.join("<br>");
+}
 
 function boutiqueMsg(){
   const got = PUZZLES.filter(p => p.shop && captured[p.id]).length, all = PUZZLES.filter(p => p.shop).length;
@@ -357,7 +393,9 @@ function renderList(){
   if (!$("dexView").hidden) dexMode(true);
   list.innerHTML = "";
   const r = curRegion(), shown = DEX_ORDER.filter(idx => regionOf(PUZZLES[idx]) === r);
-  $("tabs").hidden = false; $("tabJohto").hidden = !johtoVisible(); $("tabHoenn").hidden = !hoennVisible();
+  $("tabs").hidden = false; $("tabJohto").hidden = !johtoVisible(); $("tabHoenn").hidden = !hoennVisible(); $("tabSinnoh").hidden = !sinnohVisible();
+  $("tabSinnoh").setAttribute("aria-selected", r === "sinnoh"); $("tabSinnoh").classList.toggle("new", !store.get("sinnohSeen", false) && r !== "sinnoh");
+  $("dexView").classList.toggle("sinnoh", r === "sinnoh");
   document.querySelector(".grass").hidden = r === "boutique";
   $("tabBoutique").setAttribute("aria-selected", r === "boutique"); $("tabBoutique").classList.toggle("new", !store.get("boutiqueSeen", false) && r !== "boutique");
   $("dexView").classList.toggle("boutique", r === "boutique");
@@ -373,9 +411,9 @@ function renderList(){
     if (isLocked(p) && !testMode){
       b.classList.add("locked");
       const cv = document.createElement("canvas"); drawArt(cv, LOCK, 60); b.appendChild(cv);
-      const mew = p.legend === "mewtwo", hl = isHoennLegend(p), fab = p.legend === "mew" || p.legend === "celebi" || p.legend === "jirachi" || p.legend === "deoxys", jl = isJohtoLegend(p) || hl;
+      const mew = p.legend === "mewtwo", hl = isHoennLegend(p), sl = isSinnohLegend(p), fab = p.legend === "mew" || p.legend === "celebi" || p.legend === "jirachi" || p.legend === "deoxys" || p.legend === "manaphy" || p.legend === "darkrai" || p.legend === "shaymin" || p.legend === "arceus", jl = isJohtoLegend(p) || hl || sl;
       const hc = (n) => `${Math.min(hoennCount(), hoennAt(n))}/${hoennAt(n)} à Hoenn`;
-      const jmeta = !jl ? "" : hl ? (p.legend === "regi" ? hc(REGI_AT) : p.legend === "lati" ? (latisAwake() ? "rôde à Hoenn" : hc(LATI_AT))
+      const jmeta = !jl ? "" : sl ? sinnohMeta(p) : hl ? (p.legend === "regi" ? hc(REGI_AT) : p.legend === "lati" ? (latisAwake() ? "rôde à Hoenn" : hc(LATI_AT))
           : p.legend === "kyogre" || p.legend === "groudon" ? hc(KG_AT) : p.legend === "rayquaza" ? "après Kyogre et Groudon"
           : p.legend === "jirachi" ? hc(JIRACHI_AT) : "après les autres légendaires")
         : isDog(p) ? (dogsAwake() ? "rôde à Johto" : "mystère…")
@@ -388,12 +426,13 @@ function renderList(){
         : mew
         ? `<span class="nm">LÉGENDAIRE</span><span class="meta">${Math.min(allDone(), MEWTWO_AT)}/${MEWTWO_AT} · oiseaux ${birdsDone()}/${BIRDS.length}</span>`
         : `<span class="nm">LÉGENDAIRE</span><span class="meta">${Math.min(solvedCount(), UNLOCK_AT)}/${UNLOCK_AT} picross</span>`);
-      b.setAttribute("aria-label", jl ? `Pokémon légendaire de ${hl ? "Hoenn" : "Johto"}, pas encore apparu`
+      b.setAttribute("aria-label", jl ? `Pokémon légendaire de ${sl ? "Sinnoh" : hl ? "Hoenn" : "Johto"}, pas encore apparu`
                                  : fab ? "Pokémon fabuleux verrouillé : capture Mewtwo pour le faire apparaître"
                                  : mew ? `Pokémon légendaire verrouillé : capture les trois oiseaux et termine ${MEWTWO_AT} picross`
                                        : `Pokémon légendaire verrouillé : termine ${UNLOCK_AT} picross pour le débloquer`);
       b.onclick = () => { blip([196, 147], "square", .08, .05); $("dexMsg").hidden = false;
         $("dexMsg").innerHTML = !jl ? legendMsg()
+          : sl ? (sinnohMsg() || "Ce Pokémon légendaire ne s'est pas encore montré à <b>Sinnoh</b>…")
           : hl ? (p.legend === "lati" && latisAwake() ? `Ce Pokémon légendaire rôde dans les <b>hautes herbes</b> de Hoenn : il peut surgir à chaque rencontre.` : hoennMsg() || "Ce Pokémon légendaire ne s'est pas encore montré à <b>Hoenn</b>…")
           : isDog(p) && dogsAwake() ? `Ce Pokémon légendaire rôde dans les <b>hautes herbes</b> de Johto : il peut surgir à chaque rencontre.`
           : johtoMsg() || "Ce Pokémon légendaire ne s'est pas encore montré à <b>Johto</b>…"; };
@@ -422,7 +461,7 @@ function renderList(){
   const shinies = shown.filter(idx => captured[PUZZLES[idx].id] && captured[PUZZLES[idx].id].shiny).length;
   $("capCount").textContent = `${n}/${shown.length}` + (shinies ? ` · ★${shinies}` : "");
   $("capBar").style.width = (100*n/shown.length)+"%";
-  const msg = r === "kanto" ? legendMsg() : r === "johto" ? johtoMsg() : r === "hoenn" ? hoennMsg() : boutiqueMsg();
+  const msg = r === "kanto" ? legendMsg() : r === "johto" ? johtoMsg() : r === "hoenn" ? hoennMsg() : r === "sinnoh" ? sinnohMsg() : boutiqueMsg();
   $("dexMsg").innerHTML = msg; $("dexMsg").hidden = !msg;
   renderSizes();
   $("testNote").hidden = !testMode;
@@ -581,6 +620,7 @@ let winToken = 0;
 function win(){
   const myWin = ++winToken;
   const wasJohto = johtoUnlocked(), wasDogs = dogsAwake(), wasHooh = hoohOpen(), wasLugia = lugiaOpen(), wasCelebi = celebiOpen();
+  const wasSinnoh = sinnohUnlocked(), wasS = Object.fromEntries(SINNOH_LEGENDS.map(l => [l, SINNOH_RULES[l]()]));
   const wasHoenn = hoennUnlocked(), wasRegi = regiOpen(), wasLatis = latisAwake(), wasKG = kgOpen(), wasRay = rayquazaOpen(), wasJir = jirachiOpen(), wasDeo = deoxysOpen();
   const wasOpen = legendsOpen(), wasMew = mewtwoOpen(), wasFab = mewOpen() || !!captured[PUZZLES.find(q => q.legend === "mew").id];
   solved = true; clearInterval(timer); elapsed = performance.now() - startT; $("pTime").textContent = fmt(elapsed);
@@ -650,6 +690,19 @@ function win(){
   if (!wasRay && rayquazaOpen()) announce("UN CRI DANS LE CIEL… RAYQUAZA DESCEND !", [523, 659, 784, 1047, 1319, 1568, 2093], "triangle", 1300);
   if (!wasJir && jirachiOpen()) announce("UNE ÉTOILE FILANTE… JIRACHI EST APPARU !", [1047, 1319, 1568, 2093, 1568, 2093, 2637], "triangle", 1700);
   if (!wasDeo && deoxysOpen()) announce("UN MÉTÉORE TOMBE SUR HOENN… DEOXYS !", [220, 233, 247, 262, 523, 494, 466, 440, 880, 1760], "square", 1700);
+  if (!wasSinnoh && sinnohUnlocked()) announce("UN NOUVEAU POKÉDEX S'OUVRE… SINNOH !", [392, 523, 659, 784, 659, 784, 1047, 1319, 1047, 1568], "triangle", 3500);
+  const sAnn = {lake: ["TROIS LACS S'ÉVEILLENT… UXIE, MESPRIT ET AZELF !", [523, 659, 784, 1047, 784, 1047, 1319], "triangle"],
+    dp: ["LE TEMPS ET L'ESPACE SE TORDENT… DIALGA ET PALKIA !", [196, 247, 294, 392, 494, 587, 784], "sawtooth"],
+    heatran: ["UN VOLCAN GRONDE… HEATRAN EST APPARU !", [131, 165, 196, 262, 196, 262, 330, 392], "square"],
+    regigigas: ["UN GÉANT SE RÉVEILLE… REGIGIGAS !", [98, 131, 98, 165, 131, 196, 147, 262], "sawtooth"],
+    giratina: ["UN MONDE À L'ENVERS S'OUVRE… GIRATINA !", [220, 233, 247, 262, 523, 494, 466, 440, 880, 1760], "square"],
+    cresselia: ["UN CROISSANT DE LUNE… CRESSELIA EST APPARU !", [1047, 1319, 1568, 2093, 1568, 2093, 2637], "triangle"],
+    darkrai: ["UNE OMBRE S'ALLONGE… DARKRAI !", [220, 208, 196, 185, 175, 165, 156], "sawtooth"],
+    manaphy: ["LA MER SOUFFLE… PHIONE ET MANAPHY !", [523, 659, 784, 1047, 1319, 1568, 2093], "triangle"],
+    shaymin: ["UN PARFUM DE FLEURS… SHAYMIN EST APPARU !", [1047, 1319, 1568, 2093, 1568, 2093, 2637], "triangle"],
+    arceus: ["TOUT S'ARRÊTE… ARCEUS, LE CRÉATEUR, EST APPARU !", [523, 659, 784, 1047, 1319, 1568, 2093, 2637], "triangle"]};
+  let sAt = 1500;
+  for (const l of SINNOH_LEGENDS) if (!wasS[l] && SINNOH_RULES[l]()){ const [txt, notes, wave] = sAnn[l]; announce(txt, notes, wave, sAt); sAt += 400; }
   if (!wasMew && mewtwoOpen()){
     $("winStats").innerHTML += `<br><span class="hl">UN POKÉMON MYSTÉRIEUX EST APPARU… MEWTWO !</span>`;
     setTimeout(() => blip([220, 233, 247, 262, 523, 494, 466, 440, 880, 1760], "square", .14, .05), 1300);
@@ -793,6 +846,7 @@ let titleTaps = 0, titleT = null;
 $("tabKanto").onclick = () => { if (curRegion() !== "kanto"){ SFX.nav(); setRegion("kanto"); } };
 $("tabJohto").onclick = () => { if (curRegion() !== "johto"){ SFX.nav(); setRegion("johto"); } };
 $("tabBoutique").onclick = () => { if (curRegion() !== "boutique"){ SFX.nav(); setRegion("boutique"); } };
+$("tabSinnoh").onclick = () => { if (curRegion() !== "sinnoh"){ SFX.nav(); setRegion("sinnoh"); } };
 $("tabHoenn").onclick = () => { if (curRegion() !== "hoenn"){ SFX.nav(); setRegion("hoenn"); } };
 $("title").addEventListener("click", () => {
   titleTaps++; clearTimeout(titleT); titleT = setTimeout(() => { titleTaps = 0; }, 1500);
