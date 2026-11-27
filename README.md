@@ -491,6 +491,7 @@ Une petite flotte de mineurs et de marchands travaille toute seule dans un syst�
 - **Les gains** : les mineurs ramènent du minerai, les marchands vendent au marché Prime ; l'argent achète d'autres vaisseaux (×1, ×10, ×100 ou au maximum).
 - **Pirates** : de temps en temps un pirate pille un navire chargé ; achète des patrouilles pour garder tes avant-postes : elles le détruisent, te rendent le butin et touchent une prime.
 - **Ingénierie** : la portée du signal ouvre quatre zones (fer, glace, cristal, iridium) avec un avant-poste chacune ; les moteurs accélèrent les navires et la soute augmente les gains.
+- **Horizon** : quand les quatre zones sont ouvertes et 2 millions de crédits gagnés, tu peux relancer le système contre des éclats, qui achètent des bonus permanents (rendement, moteurs, flotte et portée de départ, veille) ; chaque relance rend la portée un peu plus chère et les pirates un peu plus fréquents.
 - **Appli fermée** : une part des gains continue quand tu pars (25 % de base, jusqu'à 24 h) ; si la fenêtre est seulement cachée, la flotte rattrape tout.
 - **Ordinateur et téléphone** : fenêtres Flotte, Options et Console repliables, trois ambiances (nuit bleue, violette, phosphore), mode cinéma automatique après deux minutes.
 

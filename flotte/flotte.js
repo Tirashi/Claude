@@ -10,16 +10,24 @@ const choisir = (E, l) => l[Math.floor(E.rng() * l.length)];
 
 function log(E, msg) { E.logs.push({ t: E.t, h: Date.now(), msg }); if (E.logs.length > 40) E.logs.shift(); }
 
+// Multiplicateurs : améliorations de crédits (Ingénierie) × améliorations permanentes (Horizon)
+const multGain = E => R.multGain(E.up.soute) * R.multGainH(E.h.niv.gains);
+const multVitesse = E => R.multVitesse(E.up.mot) * R.multVitesseH(E.h.niv.moteurs);
+
 function creer(opts) {
   opts = opts || {};
   const M = Mo.creer(); Mo.placer(M, 0);
-  const E = { M, t: 0, credits: R.DEPART.credits, total: 0, buys: { m: 0, t: 0, p: 0 }, lv: 0, veille: 0, up: { mot: 0, soute: 0 }, ships: [], inc: [], id: 0, rng: opts.rng || Math.random, evt: [], logs: [] };
+  const h = opts.h ? JSON.parse(JSON.stringify(opts.h)) : R.horizonDepart();
+  const E = { M, h, t: 0, credits: R.DEPART.credits, total: 0, buys: { m: 0, t: 0, p: 0 }, lv: 0, veille: 0, up: { mot: 0, soute: 0 }, ships: [], inc: [], id: 0, rng: opts.rng || Math.random, evt: [], logs: [] };
+  E.veille = h.niv.veille; E.lv = Math.min(R.ZONES.length - 1, h.niv.portee);
+  for (const b of M.tous) b.t0 = -99;
   F.Pirates.init(E);
   if (!opts.vide) {
-    for (let i = 0; i < R.DEPART.m; i++) ajouter(E, "m");
-    for (let i = 0; i < R.DEPART.t; i++) ajouter(E, "t");
-    log(E, "Système SOL-1 en ligne.");
-    log(E, "Flotte initiale : " + R.DEPART.m + " mineurs, " + R.DEPART.t + " marchands.");
+    const nm = R.DEPART.m + 6 * h.niv.flotte, nt = R.DEPART.t + 4 * h.niv.flotte;
+    for (let i = 0; i < nm; i++) ajouter(E, "m");
+    for (let i = 0; i < nt; i++) ajouter(E, "t");
+    log(E, h.n ? "Horizon " + h.n + " : le système repart." : "Système SOL-1 en ligne.");
+    log(E, "Flotte initiale : " + nm + " mineurs, " + nt + " marchands.");
   }
   return E;
 }
@@ -57,9 +65,9 @@ function arriver(E, sh) {
   const dest = sh.vers, relais = Mo.relaisOuverts(E.M, E.lv);
   if (sh.type === "m") {
     if (dest.mine) { sh.ore = dest.ore; sh.a = dest; sh.vers = Mo.plusProche(relais, dest.x, dest.y); sh.attente = R.FORAGE; }
-    else { gagner(E, sh, R.gainMineur(sh.ore, R.multGain(E.up.soute)), dest, R.ORE[sh.ore].c); sh.a = dest; sh.vers = choisir(E, Mo.mines(E.M, E.lv)); sh.attente = R.QUAI_MINEUR; }
+    else { gagner(E, sh, R.gainMineur(sh.ore, multGain(E)), dest, R.ORE[sh.ore].c); sh.a = dest; sh.vers = choisir(E, Mo.mines(E.M, E.lv)); sh.attente = R.QUAI_MINEUR; }
   } else if (dest === E.M.prime) {
-    gagner(E, sh, R.gainMarchand(E.lv, R.multGain(E.up.soute)), dest, "#e8fff6"); sh.a = dest; sh.vers = choisir(E, relais); sh.attente = R.QUAI_PRIME;
+    gagner(E, sh, R.gainMarchand(E.lv, multGain(E)), dest, "#e8fff6"); sh.a = dest; sh.vers = choisir(E, relais); sh.attente = R.QUAI_PRIME;
   } else { sh.a = dest; sh.vers = E.M.prime; sh.attente = R.QUAI_RELAIS; }
   sh.etat = "attente";
 }
@@ -76,7 +84,7 @@ function maj(E, dt) {
         sh.bow = Math.hypot(sh.vers.x - sh.x, sh.vers.y - sh.y) * R.ARC * (sh.id % 2 ? 1 : -1);
       }
     } else {
-      const d0 = trajet(sh, sh.p)[2], v = R.VITESSE * R.multVitesse(E.up.mot) * (sh.type === "t" ? R.X_MARCHAND : 1);
+      const d0 = trajet(sh, sh.p)[2], v = R.VITESSE * multVitesse(E) * (sh.type === "t" ? R.X_MARCHAND : 1);
       sh.p = Math.min(1, sh.p + v * dt / Math.max(d0, .1));
       const a = trajet(sh, sh.p), b = trajet(sh, Math.min(1, sh.p + .02));
       sh.x = a[0]; sh.y = a[1];
@@ -123,11 +131,31 @@ function ameliorer(E, k) {
 // Portée du signal : ouvre la zone suivante, pose son avant-poste et fait dézoomer la carte
 function ouvrirZone(E) {
   if (E.lv >= R.ZONES.length - 1) return false;
-  const cout = R.ZONES[E.lv + 1].cout;
+  const cout = R.coutZone(E.lv + 1, E.h.n);
   if (E.credits < cout) return false;
   E.credits -= cout; E.lv++;
   for (const b of E.M.tous) if (b.lv === E.lv) b.t0 = E.t;
   log(E, "Portée du signal niveau " + (E.lv + 1) + " : " + R.ZONES[E.lv].n + ".");
+  return true;
+}
+
+// Horizon : relance le système (renvoie la nouvelle partie, ou null si ce n'est pas encore possible)
+function horizon(E) {
+  if (!R.peutHorizon(E.lv, E.total)) return null;
+  const gain = R.eclatsPour(E.total), h = JSON.parse(JSON.stringify(E.h));
+  h.n++; h.eclats += gain; h.gagnes += gain; h.vie += E.total;
+  const N = creer({ rng: E.rng, h });
+  log(N, "+" + gain + " éclats (" + h.eclats + " à dépenser).");
+  return N;
+}
+
+// Achète un niveau d'amélioration permanente avec des éclats
+function acheterHorizon(E, k) {
+  const a = R.HORIZON.AMELIO[k]; if (!a) return false;
+  const n = E.h.niv[k]; if (n >= a.max) return false;
+  const c = a.cout(n); if (E.h.eclats < c) return false;
+  E.h.eclats -= c; E.h.niv[k]++; if (k === "veille") E.veille = E.h.niv.veille;
+  log(E, a.n + " niveau " + E.h.niv[k] + " (éclats).");
   return true;
 }
 
@@ -138,5 +166,5 @@ function rattraper(E, dt) {
   E.evt.length = 0;
 }
 
-F.Sim = { creer, ajouter, maj, revenu, nombre, acheter, ameliorer, ouvrirZone, rattraper, log, trajet, survol };
+F.Sim = { creer, ajouter, maj, revenu, nombre, acheter, ameliorer, ouvrirZone, horizon, acheterHorizon, multGain, multVitesse, rattraper, log, trajet, survol };
 })();

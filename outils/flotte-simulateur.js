@@ -17,7 +17,7 @@ const sain = E => E.ships.every(s => Number.isFinite(s.x) && Number.isFinite(s.y
 // en économisant pour la zone quand elle est à moins de trois minutes de revenu
 function racheter(E) {
   for (let g = 0; g < 60; g++) {
-    const rev = S.revenu(E, 60), par = rev / (E.ships.length || 1), zc = E.lv < 3 ? R.ZONES[E.lv + 1].cout : Infinity;
+    const rev = S.revenu(E, 60), par = rev / (E.ships.length || 1), zc = E.lv < 3 ? R.coutZone(E.lv + 1, E.h.n) : Infinity;
     if (E.credits >= zc) { S.ouvrirZone(E); continue; }
     const o = [['m', R.cout('m', E.buys.m), par], ['t', R.cout('t', E.buys.t), par]];
     if (E.up.soute < 10) o.push(['soute', R.coutAmelio('soute', E.up.soute), rev * .1 / (1 + .1 * E.up.soute)]);
@@ -31,20 +31,24 @@ function racheter(E) {
     if (k === 'm' || k === 't' || k === 'p') S.acheter(E, k, 1); else S.ameliorer(E, k);
   }
 }
-// Joue une partie et note à quelle minute chaque zone s'ouvre
-function partie(graine, minutes, affiche) {
-  const E = S.creer({rng: rnd(graine)}), ouv = {};
+// Dépense les éclats : rendement d'abord, puis moteurs, flotte, veille et portée de départ
+function depenser(E, ordre) { let fait = true; while (fait) { fait = false; for (const k of ordre) if (S.acheterHorizon(E, k)) { fait = true; break; } } }
+// Joue une partie ; avec horizon, relance dès que c'est possible. Note la minute d'ouverture de chaque zone (premier Horizon seulement) et la durée de chaque Horizon.
+function partie(graine, minutes, affiche, horizon, ordre) {
+  let E = S.creer({rng: rnd(graine)}); const ouv = {}, durees = []; let debut = 0;
+  ordre = ordre || ['gains', 'moteurs', 'flotte', 'veille', 'portee'];
   for (let s = 0; s < minutes * 60; s += 2) {
     S.rattraper(E, 2); if (s % 10 === 0) racheter(E);
-    for (let z = 1; z <= 3; z++) if (E.lv >= z && !ouv[z]) ouv[z] = s / 60;
+    if (E.h.n === 0) for (let z = 1; z <= 3; z++) if (E.lv >= z && !ouv[z]) ouv[z] = s / 60;
+    if (horizon && s % 10 === 0 && R.peutHorizon(E.lv, E.total)) { durees.push((s - debut) / 60); debut = s; E = S.horizon(E); depenser(E, ordre); if (affiche) console.log(`Horizon ${E.h.n} après ${Math.round(durees[durees.length - 1])} min, éclats ${E.h.gagnes}, niveaux ${JSON.stringify(E.h.niv)}`); }
     if (affiche && s % 900 === 0 && s > 0) console.log(`${String(Math.round(s / 60)).padStart(3)} min : zone ${E.lv + 1}, ${E.ships.length} navires, revenu ${S.revenu(E, 60).toFixed(1)} cr/s, moteurs ${E.up.mot}, soute ${E.up.soute}`);
   }
-  return {E, ouv};
+  return {E, ouv, durees};
 }
 
 if (process.argv[2] === 'rythme') {
-  const r = partie(11, 240, true);
-  console.log('ouvertures (min) : ' + [1, 2, 3].map(z => 'zone ' + (z + 1) + ' à ' + (r.ouv[z] == null ? '—' : Math.round(r.ouv[z]))).join(', '));
+  const r = partie(11, +process.argv[3] || 240, true, process.argv[4] === 'horizons');
+  console.log('ouvertures (min) : ' + [1, 2, 3].map(z => 'zone ' + (z + 1) + ' à ' + (r.ouv[z] == null ? '—' : Math.round(r.ouv[z]))).join(', ') + (r.durees.length ? ' ; Horizons après ' + r.durees.map(Math.round).join(', ') + ' min' : ''));
   process.exit(0);
 }
 
@@ -107,10 +111,34 @@ if (Z.lv !== 3 || S.ouvrirZone(Z)) non('quatre zones au plus');
 jouer(Z, 600); if (!sain(Z)) non('NaN après l\'ouverture des zones');
 if (!Z.ships.some(s => s.ore === 'iridium' && s.trips > 0) && !Z.ships.some(s => s.ore !== 'fer')) non('les mineurs ne vont pas dans les zones lointaines');
 // 7. rythme : un joueur raisonnable ouvre la zone 2 en 5 à 15 min, la 3 en 25 à 60, la 4 en 70 à 140 ; pas de NaN
-const H = partie(9, 150);
-if (!sain(H.E)) non('NaN après 2 h 30');
+const H = partie(9, 215, false, true);
+if (!sain(H.E)) non('NaN après 3 h 35');
 const borne = [[1, 5, 15], [2, 25, 60], [3, 70, 140]];
 for (const [z, mini, maxi] of borne) { const t = H.ouv[z]; if (t == null || t < mini || t > maxi) non('la zone ' + (z + 1) + ' s\'ouvre à ' + (t == null ? 'jamais' : Math.round(t)) + ' min (visé : ' + mini + ' à ' + maxi + ')'); }
-if (!(S.revenu(H.E, 60) > rev * 20)) non('le revenu ne croît pas assez : ' + S.revenu(H.E, 60).toFixed(1));
+// Horizon : le premier arrive vers 2 h, le deuxième est plus rapide (au moins 10 %) mais pas trivial
+if (H.durees.length < 2) non('moins de deux Horizons en 3 h 35 : ' + H.durees.map(Math.round).join(', '));
+else { const [d1, d2] = H.durees; if (d1 < 90 || d1 > 150) non('premier Horizon à ' + Math.round(d1) + ' min (visé : 90 à 150)'); if (!(d2 < d1 * .9) || !(d2 > d1 * .4)) non('deuxième Horizon à ' + Math.round(d2) + ' min contre ' + Math.round(d1) + ' pour le premier'); }
+// 8. Horizon : seuil, éclats, remise à zéro, améliorations permanentes, friction, sauvegarde
+const HZ = S.creer({rng: rnd(21)});
+if (S.horizon(HZ) !== null) non('Horizon possible dès le départ');
+HZ.lv = 3; HZ.total = R.HORIZON.seuil - 1; if (S.horizon(HZ) !== null) non('Horizon sous le seuil');
+HZ.total = R.HORIZON.seuil; HZ.credits = 1234; HZ.up.mot = 5; HZ.buys.m = 40;
+const H1 = S.horizon(HZ);
+if (!H1 || H1.h.n !== 1 || H1.h.eclats !== 3 || H1.h.gagnes !== 3 || H1.credits !== 400 || H1.total !== 0 || H1.lv !== 0 || H1.ships.length !== 8 || H1.up.mot !== 0 || H1.buys.m !== 0) non('remise à zéro de l\'Horizon');
+if (R.eclatsPour(R.HORIZON.seuil * 4) !== 6 || R.eclatsPour(0) !== 0) non('formule des éclats');
+H1.h.eclats = 1000; let totalCout = 0, nb = 0;
+for (const k of Object.keys(R.HORIZON.AMELIO)) { const a = R.HORIZON.AMELIO[k]; for (let i = 0; i < a.max + 2; i++) { const av = H1.h.eclats; if (S.acheterHorizon(H1, k)) { totalCout += av - H1.h.eclats; nb++; } } if (H1.h.niv[k] !== a.max) non('plafond de ' + k); }
+if (nb !== 10 + 10 + 5 + 5 + 3) non('nombre de niveaux achetés : ' + nb); if (1000 - H1.h.eclats !== totalCout || H1.h.eclats < 0) non('coût des niveaux d\'Horizon');
+H1.h.eclats = 0; if (S.acheterHorizon(H1, 'veille')) non('achat sans éclats');
+const gain = (niv, n) => { const h = R.horizonDepart(); Object.assign(h.niv, niv); h.n = n || 0; const E = S.creer({rng: rnd(22), h}); jouer(E, 600); return E; };
+const g0 = gain({}), g10 = gain({gains: 10});
+if (!(g10.total > g0.total * 2) || !(g10.total < g0.total * 3.5)) non('le rendement ne multiplie pas les gains : ' + Math.round(g10.total) + ' contre ' + Math.round(g0.total));
+const fl = gain({flotte: 2}); if (fl.ships.length !== 8 + 12 + 8) non('flotte de départ : ' + fl.ships.length);
+const po = gain({portee: 2}); if (po.lv !== 2 || !sain(po) || !po.ships.some(s => s.ore !== 'fer')) non('portée de départ');
+if (R.coutZone(1, 2) !== Math.round(3000 * 1.2) || R.coutZone(1, 0) !== 3000 || !(R.frequencePirates(3) > 1.1)) non('friction');
+const fr = S.creer({rng: rnd(23)}); fr.h.n = 2; fr.credits = R.coutZone(1, 2) - 1; if (S.ouvrirZone(fr)) non('la portée ne coûte pas plus cher après un Horizon'); fr.credits++; if (!S.ouvrirZone(fr)) non('portée impossible au prix de la friction');
+const vh = S.creer({rng: rnd(24)}); vh.h.niv.veille = 4; vh.h.eclats = 5; if (!S.acheterHorizon(vh, 'veille') || vh.veille !== 5 || R.partVeille(vh.veille) !== .5) non('la veille ne monte pas');
+H1.h.eclats = 7; H1.h.n = 2; Sv.enregistrer(H1); const hr = Sv.charger();
+if (!hr || hr.h.n !== 2 || hr.h.eclats !== 7 || JSON.stringify(hr.h.niv) !== JSON.stringify(H1.h.niv) || hr.veille !== H1.h.niv.veille || hr.ships.length !== H1.ships.length) non('sauvegarde de l\'Horizon');
 if (pb) { console.error(pb + ' échec(s)'); process.exit(1); }
 console.log('Flotte du bureau : tout est bon');

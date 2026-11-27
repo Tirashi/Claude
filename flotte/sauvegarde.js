@@ -9,16 +9,21 @@ const ecrire = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } c
 const nb = (v, d) => (Number.isFinite(Number(v)) ? Number(v) : d);
 
 function exporter(E) {
-  return { v: 1, quand: Date.now(), t: E.t, credits: E.credits, total: E.total, buys: E.buys, lv: E.lv, veille: E.veille, up: E.up, stats: E.stats,
+  return { v: 1, quand: Date.now(), t: E.t, credits: E.credits, total: E.total, buys: E.buys, lv: E.lv, up: E.up, stats: E.stats, h: E.h,
     revenu: S.revenu(E, 60), navires: E.ships.map(s => ({ type: s.type, nom: s.nom, trips: s.trips, earn: s.earn })) };
 }
 
 // Refait une partie depuis une sauvegarde ; null si elle est absente ou illisible
 function importer(d) {
   if (!d || d.v !== 1 || !Array.isArray(d.navires)) return null;
-  const E = S.creer({ vide: true });
+  const h = R.horizonDepart();
+  if (d.h && typeof d.h === "object") {
+    h.n = Math.max(0, Math.floor(nb(d.h.n, 0))); h.eclats = Math.max(0, Math.floor(nb(d.h.eclats, 0))); h.gagnes = Math.max(0, Math.floor(nb(d.h.gagnes, 0))); h.vie = Math.max(0, nb(d.h.vie, 0));
+    for (const k of Object.keys(h.niv)) h.niv[k] = Math.max(0, Math.min(R.HORIZON.AMELIO[k].max, Math.floor(nb(d.h.niv && d.h.niv[k], 0))));
+  }
+  const E = S.creer({ vide: true, h });
   E.t = Math.max(0, nb(d.t, 0)); E.credits = Math.max(0, nb(d.credits, R.DEPART.credits)); E.total = Math.max(0, nb(d.total, 0));
-  E.lv = Math.max(0, Math.min(R.ZONES.length - 1, Math.floor(nb(d.lv, 0)))); E.veille = Math.max(0, Math.min(10, Math.floor(nb(d.veille, 0))));
+  E.lv = Math.max(0, Math.min(R.ZONES.length - 1, Math.floor(nb(d.lv, 0))));
   for (const k of ["mot", "soute"]) E.up[k] = Math.max(0, Math.min(R.AMELIO[k].max, Math.floor(nb(d.up && d.up[k], 0))));
   for (const k of ["m", "t", "p"]) E.buys[k] = Math.max(0, Math.floor(nb(d.buys && d.buys[k], 0)));
   for (const k of ["detruits", "perdu", "primes"]) E.stats[k] = Math.max(0, nb(d.stats && d.stats[k], 0));

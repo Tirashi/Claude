@@ -64,16 +64,22 @@ Départ : 400 crédits, 5 mineurs, 3 marchands, zone 1.
 - Le simulateur contrôle : pillages sans patrouille, destructions et primes avec trois patrouilles, moins de pertes avec elles, pas de pirate pendant la veille, patrouilles gardées à la sauvegarde.
 - **À améliorer plus tard** : épaves à récupérer, tableau de primes, pirates plus forts après le prestige (friction de l'Horizon).
 
-## 8. Prestige (proposition, à valider)
-- **Nom provisoire : « Horizon »**. Disponible quand les quatre zones sont ouvertes et que la fortune cumulée dépasse un seuil (à régler).
-- **Remet à zéro** : crédits, flotte, améliorations de crédits, zones. **Garde** : améliorations de prestige.
-- **Donne des éclats** : ⌊√(fortune totale ÷ seuil)⌋, par exemple.
-- **Améliorations de prestige** (achetées avec les éclats, permanentes) :
-  - **Veille** : part des gains appli fermée, **25 % de base, +5 points par niveau, 75 % au maximum** (10 niveaux) ;
-  - **Portée de départ** : repartir avec 1 zone de plus ouverte ;
-  - **Gains** (+x % par niveau), **Moteurs de départ**, **Flotte de départ**.
-- **Friction** (comme le jeu d'origine, qui en ajoutait à chaque prestige) : à décider ; piste simple : chaque Horizon augmente la fréquence des pirates et le coût de la portée.
-- Le prestige ne doit pas être caché : à la première possibilité, une carte explique (leçon du jeu d'origine : les joueurs s'arrêtaient avant).
+## 8. Prestige : l'Horizon (fait le 27/11, session 4 ; thème et nom repris de la proposition, à valider)
+- **Quand** : les quatre zones sont ouvertes **et** 2 000 000 crédits gagnés pendant le tour (≈ 2 h pour un joueur simulé). Une fenêtre **Horizon** montre la progression, annonce « Horizon disponible » et relance en deux touchers (« Tout repart du début ? Touche encore »).
+- **Remet à zéro** : crédits (400), flotte (5 mineurs, 3 marchands), améliorations de crédits, zones, pirates, patrouilles. **Garde** : éclats et améliorations permanentes. Le prochain tour commence à zéro crédit gagné.
+- **Éclats** : ⌊3 × √(gagné ÷ 2 000 000)⌋ (3 au seuil, 6 à quatre fois le seuil).
+- **Améliorations permanentes** (en éclats ; coût = 1 + niveau, sauf la portée : 2 + niveau) :
+  | Amélioration | Niveaux | Effet |
+  |---|---|---|
+  | Veille | 10 | part des gains appli fermée : 25 % + 5 points par niveau (75 % max) |
+  | Rendement | 10 | gains +15 % par niveau (multiplie la soute) |
+  | Moteurs de série | 5 | vitesse +6 % par niveau |
+  | Flotte de départ | 5 | +6 mineurs et +4 marchands au départ par niveau |
+  | Portée de départ | 3 | commence avec une zone de plus ouverte |
+- **Friction** : par Horizon passé, la portée coûte **10 % de plus** et les pirates viennent **5 % plus souvent** ; un pirate gagne 1 PV tous les deux Horizons. Choisie faible : à 25 % / 10 % un deuxième tour était plus lent que le premier.
+- **Rythme simulé** (`node outils/flotte-simulateur.js rythme 330 horizons`, éclats dépensés en rendement puis moteurs, flotte, veille, portée) : Horizons après **116, 90 puis 82 minutes**. Le rendement et les moteurs rendent le tour plus court ; la flotte et la portée de départ accélèrent surtout le **début** du tour (zone 3 vers 25 min au lieu de 36) mais pas le plateau de revenu, qui décide du seuil : ils comptent pour le confort, pas pour le chiffre.
+- Le simulateur contrôle : refus avant le seuil, remise à zéro, formule des éclats, plafonds et coûts de chaque amélioration, effets (rendement ×2 à 10 niveaux, flotte, portée), friction, sauvegarde, et qu'un deuxième Horizon est au moins 10 % plus rapide que le premier.
+- **À régler plus tard** : valeur du seuil et des éclats après des essais à la main, deuxième voie (plusieurs systèmes ?), mode infini (le jeu d'origine en a un), sons et succès.
 
 ## 9. Appli fermée et fenêtre cachée
 - **Appli fermée ou onglet longtemps absent** : au retour, gain = revenu moyen des 60 dernières secondes × durée × **part de veille**, **plafonné** (proposition : 24 h) ; une carte « Retour » le résume ; pas de pirates ni de pertes hors ligne.
@@ -113,13 +119,16 @@ Voir la liste de contrôle de `specs/ludotheque.md` (skill `ajouter-un-jeu`) : d
 1. **Socle (fait le 26/11)** : carte et orbites, zone 1, mineurs et marchands, gains, achats par lot, fenêtre Flotte, sauvegarde, veille fixe à 25 %, zoom, ambiances, PC et téléphone, sprites Relief ; démo sur l'accueil.
 2. **Zones (fait le 26/11)** : portée du signal, avant-postes, Ingénierie (moteurs, soute), console, fiche d'un navire et suivi de caméra, cinéma.
 3. **Pirates (fait le 26/11)** : patrouilles, primes, alertes.
-4. **Prestige** : Horizon, éclats, améliorations permanentes dont la Veille, simulateur et équilibrage.
+4. **Prestige (fait le 27/11)** : Horizon, éclats, améliorations permanentes dont la Veille, simulateur et équilibrage.
 5. **Finitions** : sons, performances (super-navire si besoin), variété des coques, étiquette, jaquette, transfert, artefact.
 Modèle : opusplan pour les sessions 1 à 3 et 5 ; Opus pour la session 4 (équilibrage).
 
 ## 15 bis. État après les sessions 1 et 2 (26/11)
 `flotte/` est jouable en démo ([artefact](https://claude.ai/artifact/G8fypxapvG7eFT7PaSvrzU)). **Session 1** : tout ce qui est listé plus le mode cinéma, la fiche d'un navire avec suivi de caméra et le zoom au pincement. **Session 2** : fenêtre **Ingénierie** (portée du signal, moteurs, soute), quatre zones avec avant-postes et carte qui dézoome, annonce à l'ouverture d'une zone, ligne « Zone » dans la fenêtre Flotte, raccourcis clavier (M, T, P, C), fenêtres réorganisées (PC : Flotte à gauche, Ingénierie à droite, Options au-dessus du zoom ; téléphone : repliées, une seule ouverte).
 **Rythme recalé** (`node outils/flotte-simulateur.js rythme`, joueur qui ouvre la zone dès qu'il peut puis rachète le meilleur rapport gain / coût) : portée **3 000, 40 000 et 100 000** crédits ; zones 2, 3 et 4 ouvertes à ~8, 36 et 93 minutes, moteurs et soute au maximum vers 45 à 60 minutes, revenu d'environ 400 à 500 cr/s en fin de zone 4. Le contrôle du simulateur exige 5 à 15, 25 à 60 et 70 à 140 minutes. Reste à vérifier à la main que ce rythme est agréable (la cible du prestige est de 2 à 3 h de jeu actif : il manquera sans doute un but après la zone 4, c'est le rôle de l'Horizon).
+
+## 15 ter. État après la session 4 (27/11)
+L'Horizon est jouable ([artefact](https://claude.ai/artifact/G8fypxapvG7eFT7PaSvrzU)) : fenêtre **Horizon** (progression, relance, améliorations permanentes, friction affichée), éclats, nouveau tour avec les bonus, veille alimentée par l'Horizon (elle n'est plus une amélioration de crédits), sauvegarde. Les questions restent ouvertes (nom, sons, plafond d'absence) ; le thème « Horizon » est celui du cahier des charges, sans retour de l'utilisateur.
 
 ## 16. Questions ouvertes
 1. **Nom du jeu** (« Flotte du bureau » est provisoire).

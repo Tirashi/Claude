@@ -7,7 +7,7 @@ const fmt = n => Math.floor(n).toLocaleString("fr-FR");
 const hm = ms => { const d = new Date(ms); return String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0"); };
 const duree = s => { const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60); return h ? h + " h " + String(m).padStart(2, "0") : Math.max(1, m) + " min"; };
 
-let app = null, derniereCle = "";
+let app = null, derniereCle = "", annoncee = false, attenteH = 0;
 const panneaux = () => [...document.querySelectorAll(".pan")].filter(p => p.id !== "pFiche" && p.id !== "pRetour");
 
 function init(a) {
@@ -26,6 +26,14 @@ function init(a) {
   // Ingénierie : portée du signal, moteurs, soute
   $("ameliorations").innerHTML = ["por", "mot", "soute"].map(k => '<div class="upg" data-u="' + k + '"><h4>' + (k === "por" ? "Portée du signal" : R.AMELIO[k].n) + '<span class="ul"></span></h4><p class="ud"></p><button class="btn ub" type="button"></button></div>').join("");
   $("ameliorations").addEventListener("click", e => { const b = e.target.closest(".ub"); if (!b) return; const k = b.closest(".upg").dataset.u; if (k === "por") app.portee(); else app.ameliorer(k); maj(); });
+  // Horizon : améliorations permanentes (éclats) et relance
+  $("hAmelios").innerHTML = Object.keys(R.HORIZON.AMELIO).map(k => '<div class="upg" data-h="' + k + '"><h4>' + R.HORIZON.AMELIO[k].n + '<span class="ul"></span></h4><p class="ud">' + R.HORIZON.AMELIO[k].d + '</p><button class="btn ub" type="button"></button></div>').join("");
+  $("hAmelios").addEventListener("click", e => { const b = e.target.closest(".ub"); if (!b) return; app.acheterHorizon(b.closest(".upg").dataset.h); maj(); });
+  $("bHorizon").addEventListener("click", () => {
+    const E = app.E(); if (!R.peutHorizon(E.lv, E.total)) return;
+    if (!attenteH) { $("bHorizon").textContent = "Tout repart du début ? Touche encore"; attenteH = setTimeout(() => { attenteH = 0; maj(); }, 4000); }
+    else { clearTimeout(attenteH); attenteH = 0; app.horizon(); maj(); }
+  });
   // quantité d'achat
   $("lots").innerHTML = R.lots.map(l => '<button type="button" data-l="' + l + '" aria-pressed="false">' + (l === "max" ? "max" : "×" + l) + "</button>").join("");
   $("lots").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; app.setLot(b.dataset.l); maj(); });
@@ -78,6 +86,20 @@ function maj(E, V) {
       b.textContent = fin ? "maximum" : fmt(c) + " cr"; b.disabled = fin || E.credits < c;
     }
   }
+  const hz = E.h, pret = R.peutHorizon(E.lv, E.total), part = Math.min(1, E.total / R.HORIZON.seuil);
+  $("hN").textContent = hz.n; $("hE").textContent = hz.eclats; $("hT").textContent = fmt(E.total) + " / " + fmt(R.HORIZON.seuil);
+  $("hBarre").style.width = Math.round(part * 100) + "%"; $("hHor").textContent = pret ? "PRÊT" : Math.round(part * 100) + " %";
+  $("pHorizon").classList.toggle("pret", pret);
+  $("hInfo").textContent = pret ? "Relancer le système rapporte " + R.eclatsPour(E.total) + " éclats. Crédits, flotte, zones et améliorations repartent de zéro ; les améliorations permanentes restent."
+    : "Disponible quand les " + R.ZONES.length + " zones sont ouvertes (zone " + (E.lv + 1) + " / " + R.ZONES.length + ") et que " + fmt(R.HORIZON.seuil) + " crédits ont été gagnés.";
+  const bh = $("bHorizon"); if (!attenteH) { bh.textContent = pret ? "Relancer le système (+" + R.eclatsPour(E.total) + " éclats)" : "Pas encore"; } bh.disabled = !pret; bh.classList.toggle("pret", pret);
+  $("hFriction").textContent = "À chaque Horizon : la portée coûte " + Math.round(R.HORIZON.friction.portee * 100) + " % de plus et les pirates viennent " + Math.round(R.HORIZON.friction.pirates * 100) + " % plus souvent (actuellement +" + Math.round(R.HORIZON.friction.portee * hz.n * 100) + " % et +" + Math.round(R.HORIZON.friction.pirates * hz.n * 100) + " %).";
+  document.querySelectorAll("#hAmelios .upg").forEach(box => {
+    const k = box.dataset.h, a = R.HORIZON.AMELIO[k], n = hz.niv[k], fin = n >= a.max, c = a.cout(n);
+    box.querySelector(".ul").textContent = "niv. " + n + " / " + a.max;
+    box.querySelector(".ub").textContent = fin ? "maximum" : c + " éclat" + (c > 1 ? "s" : ""); box.querySelector(".ub").disabled = fin || hz.eclats < c;
+  });
+  if (pret && !annoncee) { annoncee = true; toast("Horizon disponible", "Ouvre la fenêtre Horizon : relancer le système rapporte des éclats permanents."); } else if (!pret) annoncee = false;
   $("zPct").textContent = Math.round(V.z * 100) + "%";
   const a = V.sel && E.ships.includes(V.sel) ? V.sel : null;
   $("pFiche").hidden = !a;
@@ -104,7 +126,14 @@ function toast(titre, sous) {
   clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove("on"), 4500);
 }
 
+// Ouvre une fenêtre (sur téléphone, les autres se replient)
+function ouvrir(id) {
+  const p = $(id); if (!p) return;
+  if (document.body.classList.contains("tel")) for (const o of panneaux()) if (o !== p) o.classList.add("shut");
+  p.classList.remove("shut");
+}
+
 function cine(on) { document.body.classList.toggle("cin", !!on); }
 
-F.UI = { init, maj, retour, cine, toast };
+F.UI = { init, maj, retour, cine, toast, ouvrir };
 })();

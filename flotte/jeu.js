@@ -34,6 +34,12 @@ const app = {
     if (!S.ouvrirZone(E)) return false;
     const z = R.ZONES[E.lv]; UI.toast("Portée " + (E.lv + 1) + " : " + z.n, "nouvelle ressource (" + z.ore + "), nouvel avant-poste"); Sv.enregistrer(E); return true;
   },
+  acheterHorizon(k) { if (S.acheterHorizon(E, k)) Sv.enregistrer(E); },
+  horizon() {
+    const gain = R.eclatsPour(E.total), N = S.horizon(E); if (!N) return false;
+    E = N; V.sel = null; V.z = 1; V.px = V.py = 0; V.cam = R.ZONES[E.lv].cam; V.pops = []; V.booms = [];
+    UI.toast("Horizon " + E.h.n, "+" + gain + " éclats : dépense-les dans la fenêtre Horizon"); UI.ouvrir("pHorizon"); Sv.enregistrer(E); UI.maj(E, V); return true;
+  },
   theme(n) { prefs.theme = n; Sv.enregistrerPrefs(prefs); C.theme(V, n); },
   nouvelle() { Sv.effacer(); E = S.creer(); V.sel = null; V.z = 1; V.px = V.py = 0; V.cam = R.ZONES[0].cam; V.pops = []; Sv.enregistrer(E); UI.maj(E, V); },
   cineSuivi: () => !!prefs.cineSuivi, setCineSuivi(v) { prefs.cineSuivi = !!v; Sv.enregistrerPrefs(prefs); },

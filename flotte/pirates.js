@@ -24,14 +24,14 @@ function ajouterPatrouille(E) {
 
 function apparaitre(E, cibles) {
   const a = rnd(E, 0, Math.PI * 2), c = cibles[Math.floor(E.rng() * cibles.length)];
-  E.pirates.push({ x: Math.cos(a) * rayon(E), y: Math.sin(a) * rayon(E), pv: R.PIRATE.pv + E.lv, etat: "chasse", cible: c, loot: 0, hit: 0, ang: 0 });
+  E.pirates.push({ x: Math.cos(a) * rayon(E), y: Math.sin(a) * rayon(E), pv: R.PIRATE.pv + E.lv + Math.floor(E.h.n / 2), etat: "chasse", cible: c, loot: 0, hit: 0, ang: 0 });
   F.Sim.log(E, "Alerte : pirate détecté.");
 }
 
 function maj(E, dt) {
   const P = R.PIRATE, Pa = R.PATROUILLE, rev = F.Sim.revenu(E);
   if (E.t >= E.proch) {
-    if (E.pirates.length < R.maxPirates(E.lv)) { const c = porteurs(E); if (c.length) { apparaitre(E, c); E.proch = E.t + rnd(E, P.mini, P.maxi); } else E.proch = E.t + 5; }
+    if (E.pirates.length < R.maxPirates(E.lv)) { const c = porteurs(E); if (c.length) { apparaitre(E, c); E.proch = E.t + rnd(E, P.mini, P.maxi) / R.frequencePirates(E.h.n); } else E.proch = E.t + 5; }
     else E.proch = E.t + 10;
   }
   const relais = Mo.relaisOuverts(E.M, E.lv);

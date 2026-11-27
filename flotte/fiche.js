@@ -5,7 +5,7 @@ Ludo.fiche({
     d: "Une petite flotte de mineurs et de marchands travaille toute seule dans un système, autour d'un QG. Achète des vaisseaux et regarde-les voler : orbites lentes, routes pointillées, sprites en relief quand tu zoomes. Une part des gains continue quand l'appli est fermée.", tags: ["INCREMENTAL", "ESPACE", "PC + TEL."]},
   meta: {added: "2026-11-26", genres: ["GESTION"]},
   enCours: () => { const p = rk("flotte.partie", null); return p && p.navires && p.navires.length ? p.navires.length + " NAVIRES" : null; },
-  records: () => { const p = rk("flotte.partie", null) || {}; return [["Navires", num(p.navires && p.navires.length, "")], ["Crédits gagnés", num(p.total, "")], ["Pirates détruits", num(p.stats && p.stats.detruits, "")], ["Zone", p.lv >= 0 && p.navires ? String((p.lv || 0) + 1) + " / 4" : null]]; },
+  records: () => { const p = rk("flotte.partie", null) || {}; return [["Navires", num(p.navires && p.navires.length, "")], ["Crédits gagnés", num(p.total, "")], ["Horizons", num(p.h && p.h.n, "")], ["Pirates détruits", num(p.stats && p.stats.detruits, "")], ["Zone", p.lv >= 0 && p.navires ? String((p.lv || 0) + 1) + " / 4" : null]]; },
   nom: "Flotte du bureau",
   transfert: {cles: ["flotte"],
     collecter(g){ const p = readKey("flotte.partie", null); if (p) g.flotte = {p}; },

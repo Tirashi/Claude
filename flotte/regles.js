@@ -45,6 +45,25 @@ const butin = (revenu, credits) => Math.max(0, Math.min(credits, Math.max(PIRATE
 const prime = revenu => Math.max(PIRATE.primeMin, Math.round(revenu * PIRATE.primeSec));
 const maxPirates = lv => 1 + Math.floor((lv || 0) / 2);
 
+// Horizon (prestige) : quand les quatre zones sont ouvertes et que `seuil` crédits ont été gagnés, on relance le système contre des éclats,
+// qui achètent des améliorations permanentes. Chaque Horizon rend la portée plus chère et les pirates plus fréquents (friction).
+const HORIZON = {
+  seuil: 2000000, facteur: 3, friction: { portee: .10, pirates: .05 },
+  AMELIO: {
+    veille:  { n: "Veille",           max: 10, cout: n => 1 + n,     d: "Part des gains appli fermée : 25 % de base, +5 points par niveau (75 % au maximum)." },
+    gains:   { n: "Rendement",        max: 10, cout: n => 1 + n,     d: "Gains de chaque livraison +15 % par niveau, pour toujours." },
+    moteurs: { n: "Moteurs de série", max: 5,  cout: n => 1 + n,     d: "Vitesse des navires +6 % par niveau, pour toujours." },
+    flotte:  { n: "Flotte de départ", max: 5,  cout: n => 1 + n,     d: "Au départ de chaque Horizon : +6 mineurs et +4 marchands par niveau." },
+    portee:  { n: "Portée de départ", max: 3,  cout: n => 2 + n, d: "Chaque Horizon commence avec une zone de plus déjà ouverte." }
+  }
+};
+const eclatsPour = total => Math.floor(HORIZON.facteur * Math.sqrt(Math.max(0, total) / HORIZON.seuil));
+const peutHorizon = (lv, total) => lv >= ZONES.length - 1 && total >= HORIZON.seuil;
+const horizonDepart = () => ({ n: 0, eclats: 0, gagnes: 0, vie: 0, niv: { veille: 0, gains: 0, moteurs: 0, flotte: 0, portee: 0 } });
+const multGainH = n => 1 + .15 * (n || 0), multVitesseH = n => 1 + .06 * (n || 0);
+const coutZone = (i, nHorizons) => Math.round(ZONES[i].cout * (1 + HORIZON.friction.portee * (nHorizons || 0)));
+const frequencePirates = nHorizons => 1 + HORIZON.friction.pirates * (nHorizons || 0);
+
 const lots = ["1", "10", "100", "max"];
 
 function cout(k, n) { return Math.round(PRIX[k][0] * Math.pow(PRIX[k][1], n)); }
@@ -64,6 +83,6 @@ function absence(revenu, dt, niveauVeille) {
   return { mode: "veille", dt, duree: d, part, gain: Math.floor(Math.max(0, revenu) * d * part) };
 }
 
-F.R = { PIRATE, PATROUILLE, butin, prime, maxPirates, AMELIO, coutAmelio, multVitesse, multGain, ORE, ZONES, PRIX, ROLE, DEPART, VITESSE, X_MARCHAND, FORAGE, QUAI_MINEUR, QUAI_PRIME, QUAI_RELAIS, ARC, VEILLE, ABSENCE_MAX, RATTRAPAGE_MAX, FENETRE_REVENU,
+F.R = { HORIZON, eclatsPour, peutHorizon, horizonDepart, multGainH, multVitesseH, coutZone, frequencePirates, PIRATE, PATROUILLE, butin, prime, maxPirates, AMELIO, coutAmelio, multVitesse, multGain, ORE, ZONES, PRIX, ROLE, DEPART, VITESSE, X_MARCHAND, FORAGE, QUAI_MINEUR, QUAI_PRIME, QUAI_RELAIS, ARC, VEILLE, ABSENCE_MAX, RATTRAPAGE_MAX, FENETRE_REVENU,
   lots, cout, coutLot, lotMax, gainMineur, gainMarchand, partVeille, absence };
 })();

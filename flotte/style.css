@@ -6,6 +6,7 @@ body { font-family: var(--mono); color: var(--pf); -webkit-user-select: none; us
 #cv { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: crosshair; }
 #ui { position: fixed; inset: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px); pointer-events: none; }
 #ui > * { pointer-events: auto; }
+#ui > .toast { pointer-events: none; }
 .pan { position: absolute; background: rgba(7,12,22,.84); border: 1px solid var(--pb); border-top: 2px solid var(--ac); color: var(--pf); font: 11px/1.35 var(--mono); transition: opacity .5s; z-index: 2; }
 .pan[hidden] { display: none; }
 .pan header { display: flex; justify-content: space-between; align-items: center; gap: 6px; padding: 7px 9px; text-transform: uppercase; letter-spacing: .06em; font-size: 11px; cursor: pointer; }
@@ -53,6 +54,13 @@ body.cin .pan:not(.retour), body.cin .zoom, body.cin .cinb { opacity: 0; pointer
 .upg h4 span { color: var(--ac); }
 .upg p { margin: 0; font-size: 10px; color: var(--pd); }
 .upg .btn { justify-self: start; }
+.hor { right: 270px; top: 10px; width: 250px; max-height: calc(100% - 20px); overflow: auto; }
+.hor.pret header b { color: var(--ac); }
+.hor.pret { box-shadow: 0 0 14px color-mix(in srgb, var(--ac) 45%, transparent); }
+.prog { height: 6px; background: rgba(255,255,255,.1); }
+.prog i { display: block; height: 100%; width: 0; background: var(--ac); transition: width .4s; }
+.hor .ud { margin: 0; font-size: 10px; color: var(--pd); }
+.hor .btn.pret { border-color: var(--ac); color: var(--ac); }
 .toast { position: absolute; left: 50%; top: 18%; transform: translateX(-50%); text-align: center; font: 600 15px/1.3 var(--texte); color: #ffe9a8; text-shadow: 0 1px 10px #000; opacity: 0; transition: opacity .8s; pointer-events: none; width: min(420px, 86%); z-index: 6; }
 .toast small { display: block; font-weight: 400; font-size: 12px; color: #dff; opacity: .85; }
 .toast.on { opacity: 1; }
@@ -60,6 +68,8 @@ body.cin .pan:not(.retour), body.cin .zoom, body.cin .cinb { opacity: 0; pointer
 /* téléphone : fenêtres repliées, une seule ouverte à la fois */
 body.tel .pan header { font-size: 10px; padding: 7px 7px; letter-spacing: .04em; }
 body.tel .fleet { left: 8px; top: 8px; width: 150px; }
+body.tel .hor { left: 8px; right: auto; top: 48px; width: 150px; max-height: none; }
+body.tel .hor:not(.shut) { left: 8px; right: 8px; top: 8px; width: auto; z-index: 4; max-height: calc(100% - 60px); overflow: auto; }
 body.tel .eng { right: 8px; top: 8px; width: 128px; max-height: none; }
 body.tel .fleet:not(.shut), body.tel .eng:not(.shut) { left: 8px; right: 8px; width: auto; z-index: 4; max-height: calc(100% - 60px); overflow: auto; }
 body.tel .con { left: 8px; bottom: 8px; width: 104px; }
