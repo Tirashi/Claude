@@ -209,3 +209,4 @@ Session 5d : trois quêtes de compagnons (menu des lanternes après la fin), Cat
 - 28/11 — Les Bannis, session 5 : le jeu en paysage (canvas 760 x 360, disposition A, monstres rééquilibrés, message « Tourne ton téléphone », étiquette refaite), cdc § 24.
 - 28/11 — Les Bannis : maquette 9 « le décor » (A pixel riche, B illustration douce, C nuit bleutée), cdc § 25.
 - 28/11 — Les Bannis : maquette 9 (décor de profil) refusée, maquette 10 (décor vu de dessus, Muraille avec chemin de ronde et tours, route pavée, coulées de lave), cdc § 26.
+- 28/11 — Les Bannis : retours sur la maquette 10 (style A retenu, lave déconnectée du sol, Muraille et torches trop simples, assets à chercher) et idée des cercles de fortifications (cdc § 27).
