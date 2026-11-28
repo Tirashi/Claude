@@ -1,0 +1,365 @@
+<title>Quatre maquettes de jeux</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&family=Cinzel:wght@600;700&family=Press+Start+2P&display=swap">
+<style>
+/* Plan : une page, quatre onglets (un jeu chacun), trois directions graphiques commutables.
+   A = Atelier clair (moderne), B = Arcade nuit (pixel), C = Bois et pierre (taverne).
+   Chaque direction est un choix assumé d'un seul look : tokens posés sur :root, redéfinis par data-dir. */
+:root{
+  --bg:#e9edf2;--panel:#fff;--ink:#17202b;--mute:#5d6b7a;--accent:#2563eb;--onaccent:#fff;--line:#cfd7e1;--r:12px;
+  --cellA:#fff;--cellB:#eef2f7;--sea:#1e3a5f;--land:#fff4c2;--f1:#2563eb;--f2:#dc2626;--f3:#d97706;--neutral:#c7d0db;
+  --g1:#ef4444;--g2:#f59e0b;--g3:#22c55e;--g4:#3b82f6;--g5:#a855f7;--g6:#14b8a6;--err:#dc2626;--ok:#16a34a;
+  --title:'Outfit',system-ui,sans-serif;--body:'Outfit',system-ui,sans-serif;--tt:none;--ls:0;
+}
+:root[data-dir="B"]{
+  --bg:#0f1020;--panel:#1a1b36;--ink:#f2f2ff;--mute:#9a9cd2;--accent:#ffd23f;--onaccent:#14142b;--line:#3a3c78;--r:0px;
+  --cellA:#23244a;--cellB:#1b1c3d;--sea:#000;--land:#3b3d7a;--f1:#41e0ff;--f2:#ff4f6d;--f3:#ffd23f;--neutral:#4a4c8c;
+  --g1:#ff4f6d;--g2:#ffd23f;--g3:#5cff8a;--g4:#41e0ff;--g5:#c77dff;--g6:#ff9a3c;--err:#ff4f6d;--ok:#5cff8a;
+  --title:'Press Start 2P',monospace;--tt:uppercase;--ls:.04em;color-scheme:dark;
+}
+:root[data-dir="C"]{
+  --bg:#241b13;--panel:#35291d;--ink:#f1e6d0;--mute:#b8a688;--accent:#d6a94a;--onaccent:#2a1d0e;--line:#5a4631;--r:8px;
+  --cellA:#8a6a43;--cellB:#7a5c3a;--sea:#2b3a3f;--land:#d9c9a0;--f1:#6aa0d6;--f2:#c0504d;--f3:#d6a94a;--neutral:#6d5a43;
+  --g1:#c0504d;--g2:#d6a94a;--g3:#6b9a52;--g4:#6aa0d6;--g5:#9a6ab5;--g6:#d9c9a0;--err:#e0675f;--ok:#8fc06a;
+  --title:'Cinzel',Georgia,serif;color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{height:auto}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);margin:0;padding-block:12px 40px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+main{max-width:460px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+h1,h2,h3{font-family:var(--title);text-transform:var(--tt);letter-spacing:var(--ls);margin:0;font-weight:700;text-wrap:balance}
+h1{font-size:1.25rem}
+[data-dir="B"] h1{font-size:.8rem;line-height:1.5}
+[data-dir="B"] h2{font-size:.7rem;line-height:1.6}
+h2{font-size:1.05rem}h3{font-size:.9rem}
+.lead{color:var(--mute);margin:0;font-size:.9rem;line-height:1.4}
+.bar{display:flex;gap:6px;flex-wrap:wrap}
+button{font:inherit;color:inherit;cursor:pointer}
+.seg{display:flex;gap:4px;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:4px}
+.seg button{flex:1;border:0;background:transparent;padding:8px 6px;border-radius:calc(var(--r) - 4px);font-weight:600;font-size:.82rem;min-width:0}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--onaccent)}
+[data-dir="B"] .seg button{font-family:var(--title);font-size:.5rem;line-height:1.6;text-transform:uppercase;padding:10px 4px}
+.tabs button span{display:block;font-weight:400;font-size:.68rem;opacity:.8}
+[data-dir="B"] .tabs button span{display:none}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:12px}
+[data-dir="B"] .card{border-width:2px}
+.btn{border:1px solid var(--line);background:var(--panel);padding:9px 12px;border-radius:calc(var(--r) - 2px);font-weight:600;font-size:.85rem}
+.btn.main{background:var(--accent);color:var(--onaccent);border-color:var(--accent)}
+.btn:disabled{opacity:.4;cursor:default}
+[data-dir="B"] .btn{font-family:var(--title);font-size:.5rem;text-transform:uppercase;padding:11px 10px;border-width:2px}
+.msg{min-height:1.4em;font-size:.9rem;font-weight:600}
+.msg.ok{color:var(--ok)}.msg.err{color:var(--err)}
+details{border:1px solid var(--line);border-radius:var(--r);padding:10px 12px;background:var(--panel)}
+summary{font-weight:700;cursor:pointer}
+details p,details li{font-size:.88rem;line-height:1.45;margin:.5em 0}
+details ul{margin:.3em 0;padding-left:1.1em}
+.pend{font-size:.85rem;color:var(--mute);line-height:1.45}
+.pend b{color:var(--ink)}
+[hidden]{display:none!important}
+/* Nurikabe */
+#nk{display:grid;grid-template-columns:repeat(5,1fr);gap:3px;width:100%;max-width:340px;margin:0 auto}
+.nc{aspect-ratio:1;border:0;background:var(--land);border-radius:calc(var(--r) / 3);font-weight:700;font-size:1.5rem;color:var(--ink);position:relative;font-family:var(--title);padding:0}
+[data-dir="B"] .nc{font-size:1rem}
+.nc.sea{background:var(--sea)}
+.nc.dot::after{content:"";position:absolute;inset:38%;border-radius:50%;background:var(--mute);opacity:.7}
+.nc.clue{cursor:default}
+.nc.err{outline:3px solid var(--err);outline-offset:-3px;z-index:1}
+.nc.sea.clue{color:#fff}
+/* Code secret */
+#cs{display:flex;flex-direction:column;gap:6px}
+.crow{display:flex;align-items:center;gap:10px;padding:5px 8px;border-radius:calc(var(--r) - 2px)}
+.crow.cur{background:color-mix(in srgb,var(--accent) 16%,transparent)}
+.slots{display:flex;gap:8px;flex:1}
+.slot{width:38px;height:38px;border-radius:50%;border:2px dashed var(--line);background:transparent;padding:0}
+[data-dir="B"] .slot{border-radius:0}
+.slot.f{border-style:solid;border-color:rgba(0,0,0,.25)}
+.pegs{display:grid;grid-template-columns:repeat(2,12px);gap:3px}
+.pegs i{width:12px;height:12px;border-radius:50%;border:2px solid var(--mute);display:block}
+.pegs i.x{background:var(--ink);border-color:var(--ink)}
+.pegs i.w{background:transparent}
+.pegs i.n{border-color:var(--line);opacity:.4}
+.rn{width:1.2em;font-size:.75rem;color:var(--mute);text-align:right}
+.pal{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.pal button{width:44px;height:44px;border-radius:50%;border:2px solid rgba(0,0,0,.25);padding:0}
+[data-dir="B"] .slot,[data-dir="B"] .pal button{border-radius:0}
+[data-dir="C"] .slot.f,[data-dir="C"] .pal button{box-shadow:inset -3px -4px 6px rgba(0,0,0,.35),inset 3px 3px 5px rgba(255,255,255,.25)}
+[data-dir="A"] .slot.f,[data-dir="A"] .pal button{box-shadow:inset -2px -3px 5px rgba(0,0,0,.2),inset 2px 2px 4px rgba(255,255,255,.4)}
+/* Hnefatafl */
+#hn{display:grid;grid-template-columns:repeat(7,1fr);width:100%;max-width:380px;margin:0 auto;border:3px solid var(--line);border-radius:calc(var(--r) / 2);overflow:hidden}
+.hc{aspect-ratio:1;border:0;padding:0;background:var(--cellA);position:relative;display:flex;align-items:center;justify-content:center;border-radius:0}
+.hc:nth-child(even){background:var(--cellB)}
+.hc.sp{background:repeating-linear-gradient(45deg,var(--cellB) 0 5px,var(--line) 5px 8px)}
+.hc.sel{outline:3px solid var(--accent);outline-offset:-3px;z-index:1}
+.hc.hint::after{content:"";width:28%;height:28%;border-radius:50%;background:var(--accent);opacity:.75}
+.hc.last{box-shadow:inset 0 0 0 3px color-mix(in srgb,var(--accent) 55%,transparent)}
+.pc{width:76%;height:76%;border-radius:50%;display:block;position:relative}
+.pc.A{background:var(--f2)}
+.pc.D{background:var(--f1)}
+.pc.K{background:var(--f3)}
+.pc.K::after{content:"";position:absolute;inset:26%;border-radius:2px;background:var(--onaccent);clip-path:polygon(0 100%,0 30%,25% 55%,50% 0,75% 55%,100% 30%,100% 100%)}
+[data-dir="B"] .pc{border-radius:0}
+[data-dir="B"] .pc.A{clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)}
+[data-dir="C"] .pc{box-shadow:inset -3px -4px 6px rgba(0,0,0,.4),inset 3px 3px 5px rgba(255,255,255,.3),0 2px 3px rgba(0,0,0,.4)}
+[data-dir="A"] .pc{box-shadow:0 1px 3px rgba(0,0,0,.3)}
+/* Hex */
+#hx{width:100%;max-width:420px;margin:0 auto;display:block;touch-action:manipulation}
+.hexp{stroke:var(--bg);stroke-width:2.5;cursor:pointer}
+.hexp.t0{fill:var(--neutral)}.hexp.t1{fill:var(--f1)}.hexp.t2{fill:var(--f2)}.hexp.t3{fill:var(--f3)}
+.hexp.mt{fill:var(--sea);cursor:default}
+.hexp.sel{stroke:var(--ink);stroke-width:4}
+.hexp.tgt{stroke:var(--accent);stroke-width:4;stroke-dasharray:5 3}
+.hxn{font-family:var(--title);font-weight:700;font-size:15px;fill:#fff;text-anchor:middle;dominant-baseline:central;pointer-events:none;paint-order:stroke;stroke:rgba(0,0,0,.45);stroke-width:3px}
+[data-dir="B"] .hxn{font-size:11px}
+.hxc{fill:none;stroke:#fff;stroke-width:2;pointer-events:none}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:.8rem;color:var(--mute);align-items:center}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:4px;vertical-align:-1px}
+.stat{display:flex;justify-content:space-between;gap:8px;font-size:.85rem;font-weight:600;flex-wrap:wrap}
+</style>
+
+<main>
+  <h1>Quatre maquettes de jeux</h1>
+  <p class="lead">Nurikabe, Code secret, Hnefatafl et Conquête hexagonale. Chaque onglet a les règles et une mini-démo jouable. Le sélecteur change la direction graphique de tout.</p>
+
+  <div class="seg" id="dirs" role="group" aria-label="Direction graphique">
+    <button data-d="A" aria-pressed="true">A · Atelier clair</button>
+    <button data-d="B" aria-pressed="false">B · Arcade nuit</button>
+    <button data-d="C" aria-pressed="false">C · Bois et pierre</button>
+  </div>
+  <div class="seg tabs" id="tabs" role="tablist">
+    <button data-t="nk" aria-pressed="true">Nurikabe</button>
+    <button data-t="cs" aria-pressed="false">Code</button>
+    <button data-t="hn" aria-pressed="false">Tafl</button>
+    <button data-t="hx" aria-pressed="false">Conquête</button>
+  </div>
+
+  <!-- NURIKABE -->
+  <section id="p-nk" class="card">
+    <h2>Nurikabe</h2>
+    <p class="lead">Bâtis la mer : les chiffres sont des îles, le reste est de l'eau. Touche une case : eau, puis point (terre sûre), puis vide.</p>
+    <div id="nk"></div>
+    <div class="stat"><span id="nk-c">Eau posée : 0 / 14</span><span id="nk-t"></span></div>
+    <div class="msg" id="nk-m"></div>
+    <div class="bar"><button class="btn main" id="nk-v">Vérifier</button><button class="btn" id="nk-r">Recommencer</button><button class="btn" id="nk-h">Indice</button></div>
+    <details open><summary>Règles</summary><ul>
+      <li>Un chiffre est une <b>île</b> : il donne le nombre de cases de terre reliées (par un côté) qui forment cette île.</li>
+      <li>Chaque île contient <b>un seul chiffre</b>. Deux îles ne se touchent jamais par un côté.</li>
+      <li>Toutes les cases d'eau forment <b>une seule mer</b> reliée par les côtés.</li>
+      <li>Aucun carré de <b>2 × 2 cases d'eau</b> (les cases fautives sont cerclées de rouge).</li>
+      <li>Toute case sans chiffre est soit de l'eau, soit de la terre rattachée à une île.</li>
+    </ul>
+    <p><b>Dans la Ludothèque :</b> grilles de 5 × 5 à 9 × 9 générées à solution unique (comme Pont stellaire), trois niveaux, grille du jour, temps + 30 s par indice, classement par taille. Raccourci de logique : une case entre deux chiffres est toujours de l'eau.</p></details>
+  </section>
+
+  <!-- CODE SECRET -->
+  <section id="p-cs" class="card" hidden>
+    <h2>Code secret</h2>
+    <p class="lead">Devine la suite de 4 gemmes en 8 essais. Touche une gemme pour la poser, touche une case pour la retirer.</p>
+    <div id="cs"></div>
+    <div class="pal" id="cs-p"></div>
+    <div class="msg" id="cs-m"></div>
+    <div class="bar"><button class="btn main" id="cs-v" disabled>Valider</button><button class="btn" id="cs-n">Nouvelle partie</button></div>
+    <details open><summary>Règles</summary><ul>
+      <li>L'ordinateur cache <b>4 gemmes</b> choisies parmi 6 couleurs. Une couleur peut apparaître plusieurs fois.</li>
+      <li>À chaque essai, il répond avec des pastilles : <b>pleine</b> = bonne couleur au bon endroit ; <b>creuse</b> = bonne couleur au mauvais endroit. Les pastilles ne disent pas quelle gemme est concernée.</li>
+      <li>On a <b>8 essais</b>. Le score est le nombre d'essais utilisés.</li>
+    </ul>
+    <p><b>Dans la Ludothèque :</b> code du jour (même code pour toute la famille, une tentative classée), modes Facile (4 gemmes sans doublon), Normal (4 avec doublons) et Expert (5 gemmes, 8 couleurs), indice qui élimine une couleur, solveur sous Node pour vérifier que 8 essais suffisent toujours.</p></details>
+  </section>
+
+  <!-- HNEFATAFL -->
+  <section id="p-hn" class="card" hidden>
+    <h2>Hnefatafl (Brandubh 7 × 7)</h2>
+    <p class="lead">Tu joues le roi et ses défenseurs : amène le roi sur un coin. L'ordinateur joue les attaquants, qui doivent le capturer.</p>
+    <div id="hn"></div>
+    <div class="stat"><span id="hn-s">À toi de jouer</span><span id="hn-k"></span></div>
+    <div class="msg" id="hn-m"></div>
+    <div class="bar"><button class="btn main" id="hn-n">Nouvelle partie</button><button class="btn" id="hn-sw">Jouer l'autre camp</button></div>
+    <details open><summary>Règles</summary><ul>
+      <li><b>Plateau</b> 7 × 7. Le roi est au centre (le trône), entouré de 4 défenseurs ; 8 attaquants occupent le milieu de chaque bord.</li>
+      <li><b>Déplacement</b> : comme une tour aux échecs, en ligne droite, sans sauter ni capturer en arrivant.</li>
+      <li><b>Cases spéciales</b> : les 4 coins et le trône. Seul le roi peut s'y arrêter. Les autres pièces peuvent traverser le trône vide.</li>
+      <li><b>Capture</b> : une pièce est prise quand elle est coincée entre deux pièces ennemies (le coup qui ferme le piège doit être joué par le camp qui capture). Un coin ou un trône vide compte comme ennemi pour tout le monde. Le roi aide à capturer.</li>
+      <li><b>Le roi</b> est pris comme les autres pièces, mais sur le trône il faut les 4 attaquants autour.</li>
+      <li><b>Victoire</b> : défenseurs, le roi atteint un coin. Attaquants, le roi est capturé.</li>
+    </ul>
+    <p><b>Dans la Ludothèque :</b> Brandubh 7 × 7 pour apprendre, puis Tablut 9 × 9 (roi pris par 4 attaquants, victoire au bord) ; 3 niveaux d'IA (coups simples, 2 coups d'avance, 3 coups d'avance) ; parties à deux sur le même téléphone ; lien possible avec Le Thé des Jarls (même univers viking). Règle à trancher : roi capturé par 2 (rapide) ou par 4 (équilibré).</p></details>
+  </section>
+
+  <!-- CONQUETE -->
+  <section id="p-hx" class="card" hidden>
+    <h2>Conquête hexagonale</h2>
+    <p class="lead">Tu es le bleu, contre le rouge et l'or. Place tes renforts, puis envoie des troupes sur les cases voisines.</p>
+    <svg id="hx" viewBox="-165 -150 330 300" role="img" aria-label="Carte hexagonale"></svg>
+    <div class="legend"><span><i style="background:var(--f1)"></i>Toi</span><span><i style="background:var(--f2)"></i>Rouge</span><span><i style="background:var(--f3)"></i>Or</span><span><i style="background:var(--neutral)"></i>Neutre</span><span>◯ ville</span></div>
+    <div class="stat"><span id="hx-r">Renforts : 0</span><span id="hx-t">Tour 1</span></div>
+    <div class="msg" id="hx-m"></div>
+    <div class="bar"><button class="btn main" id="hx-e">Finir mon tour</button><button class="btn" id="hx-n">Nouvelle partie</button></div>
+    <details open><summary>Règles</summary><ul>
+      <li><b>Carte</b> : 37 cases hexagonales. Trois camps de départ aux coins, des cases neutres à prendre, des <b>montagnes</b> infranchissables, des <b>villes</b> (anneau blanc).</li>
+      <li><b>Début de tour</b> : tu reçois des renforts = 2 + 1 par tranche de 3 cases tenues + 1 par ville. Touche une de tes cases pour y poser 1 troupe.</li>
+      <li><b>Mouvement</b> : touche une de tes cases avec au moins 2 troupes, puis une case voisine. Toutes les troupes sauf une partent. Vers une case à toi : renfort. Vers une autre : attaque.</li>
+      <li><b>Combat</b> : à chaque manche, chaque camp lance un dé ; le plus fort retire 1 troupe à l'autre, égalité pour le défenseur (+1 sur une ville). On enchaîne jusqu'à ce qu'un camp n'ait plus de troupes. Si l'attaquant gagne, il s'installe.</li>
+      <li>Une case qui vient d'agir ou de recevoir des troupes ne peut plus partir ce tour.</li>
+      <li><b>Victoire</b> : éliminer les deux autres camps.</li>
+    </ul>
+    <p><b>Dans la Ludothèque :</b> parties de 10 minutes sur 3 tailles de carte ; chefs avec un pouvoir chacun ; terrains (forêt : défense +1, plaine : mouvement de 2 cases) ; sauvegarde de la partie ; carte du jour. À trancher : dés (Risk) ou résultat sans hasard (Advance Wars).</p></details>
+  </section>
+
+  <p class="pend"><b>Pour décider :</b> quelle direction (A, B ou C) pour chaque jeu, et si les règles de la maquette te conviennent. Les démos sont volontairement rudimentaires (IA simple, une seule grille de Nurikabe, une seule carte).</p>
+</main>
+
+<script>
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+function el(t,c,p){const e=document.createElement(t);if(c)e.className=c;if(p)p.appendChild(e);return e}
+/* ---------- onglets et directions ---------- */
+$$('#dirs button').forEach(b=>b.onclick=()=>{document.documentElement.dataset.dir=b.dataset.d;$$('#dirs button').forEach(x=>x.setAttribute('aria-pressed',x===b))});
+document.documentElement.dataset.dir='A';
+$$('#tabs button').forEach(b=>b.onclick=()=>{$$('#tabs button').forEach(x=>x.setAttribute('aria-pressed',x===b));
+  ['nk','cs','hn','hx'].forEach(k=>$('#p-'+k).hidden=k!==b.dataset.t)});
+
+/* ---------- NURIKABE ---------- */
+const NK={n:5,clues:{4:3,7:2,17:2,19:2,20:2},sol:'1110010010111110101001010'};
+let nkS=[],nkT0=0;
+function nkInit(){nkS=Array(25).fill(0);for(const k in NK.clues)nkS[k]=2;nkT0=Date.now();nkDraw();$('#nk-m').textContent='';$('#nk-m').className='msg'}
+function nkErr(){const e=new Set,n=NK.n;for(let r=0;r<n-1;r++)for(let c=0;c<n-1;c++){const i=r*n+c;if([i,i+1,i+n,i+n+1].every(k=>nkS[k]===1))[i,i+1,i+n,i+n+1].forEach(k=>e.add(k))}return e}
+function nkDraw(){const g=$('#nk');g.innerHTML='';const er=nkErr();let sea=0;
+  nkS.forEach((v,i)=>{const b=el('button','nc'+(v===1?' sea':'')+(v===2&&!(i in NK.clues)?' dot':'')+(i in NK.clues?' clue':'')+(er.has(i)?' err':''),g);
+    if(i in NK.clues)b.textContent=NK.clues[i];if(v===1)sea++;
+    b.setAttribute('aria-label','case '+(i+1));
+    b.onclick=()=>{if(i in NK.clues)return;nkS[i]=(nkS[i]+1)%3;nkDraw()}});
+  $('#nk-c').textContent='Eau posée : '+sea+' / 14'}
+function nkOK(){return nkS.every((v,i)=>(v===1)===(NK.sol[i]==='1'))}
+$('#nk-v').onclick=()=>{const m=$('#nk-m');if(nkOK()){const s=Math.round((Date.now()-nkT0)/1000);m.textContent='Bravo, la mer est complète ! ('+s+' s)';m.className='msg ok'}
+  else{m.textContent=nkErr().size?'Un carré de 2 × 2 d\'eau est interdit.':'Pas encore : il manque de l\'eau ou une île est mal formée.';m.className='msg err'}};
+$('#nk-r').onclick=nkInit;
+$('#nk-h').onclick=()=>{const w=[];nkS.forEach((v,i)=>{if(!(i in NK.clues)&&(v===1)!==(NK.sol[i]==='1'))w.push(i)});
+  if(!w.length)return;const i=w[Math.random()*w.length|0];nkS[i]=NK.sol[i]==='1'?1:2;nkDraw();$('#nk-m').textContent='Indice : une case corrigée (+30 s au classement).';$('#nk-m').className='msg'};
+nkInit();
+
+/* ---------- CODE SECRET ---------- */
+let csSecret,csRows,csCur,csOver;
+const gem=i=>'var(--g'+(i+1)+')';
+function csNew(){csSecret=[0,0,0,0].map(()=>Math.random()*6|0);csRows=[];csCur=[null,null,null,null];csOver=false;$('#cs-m').textContent='';$('#cs-m').className='msg';csDraw()}
+function csFb(g,s){let x=0,w=0;const a=[],b=[];g.forEach((v,i)=>{if(v===s[i])x++;else{a.push(v);b.push(s[i])}});a.forEach(v=>{const j=b.indexOf(v);if(j>=0){w++;b.splice(j,1)}});return[x,w]}
+function csDraw(){const c=$('#cs');c.innerHTML='';
+  for(let r=0;r<8;r++){const row=el('div','crow'+(r===csRows.length&&!csOver?' cur':''),c);el('span','rn',row).textContent=r+1;
+    const sl=el('div','slots',row);const g=csRows[r]?csRows[r].g:(r===csRows.length&&!csOver?csCur:[null,null,null,null]);
+    g.forEach((v,i)=>{const s=el('button','slot'+(v!==null?' f':''),sl);s.setAttribute('aria-label','emplacement '+(i+1));if(v!==null)s.style.background=gem(v);
+      if(!csRows[r]&&r===csRows.length&&!csOver)s.onclick=()=>{csCur[i]=null;csDraw()}});
+    const p=el('div','pegs',row);const fb=csRows[r]?csRows[r].f:null;for(let k=0;k<4;k++){const i=el('i',fb?(k<fb[0]?'x':k<fb[0]+fb[1]?'w':'n'):'n',p)}}
+  $('#cs-v').disabled=csOver||csCur.includes(null)}
+const pal=$('#cs-p');for(let i=0;i<6;i++){const b=el('button','',pal);b.style.background=gem(i);b.setAttribute('aria-label','gemme '+(i+1));
+  b.onclick=()=>{if(csOver)return;const j=csCur.indexOf(null);if(j>=0){csCur[j]=i;csDraw()}}}
+$('#cs-v').onclick=()=>{if(csOver||csCur.includes(null))return;const f=csFb(csCur,csSecret);csRows.push({g:csCur.slice(),f});csCur=[null,null,null,null];const m=$('#cs-m');
+  if(f[0]===4){csOver=true;m.textContent='Code trouvé en '+csRows.length+' essai'+(csRows.length>1?'s':'')+' !';m.className='msg ok'}
+  else if(csRows.length===8){csOver=true;m.textContent='Perdu. Le code était : '+csSecret.map(v=>['rouge','orange','vert','bleu','violet','turquoise'][v]).join(', ')+'.';m.className='msg err'}
+  csDraw()};
+$('#cs-n').onclick=csNew;csNew();
+
+/* ---------- HNEFATAFL ---------- */
+const HN=7,HC=[[0,0],[0,6],[6,0],[6,6]];
+const isCorner=(r,c)=>(r===0||r===6)&&(c===0||c===6), isThrone=(r,c)=>r===3&&c===3, special=(r,c)=>isCorner(r,c)||isThrone(r,c);
+const hStart=()=>{const b=Array.from({length:7},()=>Array(7).fill(0));b[3][3]='K';[[2,3],[4,3],[3,2],[3,4]].forEach(([r,c])=>b[r][c]='D');
+  [[0,3],[1,3],[5,3],[6,3],[3,0],[3,1],[3,5],[3,6]].forEach(([r,c])=>b[r][c]='A');return b};
+const side=p=>p==='A'?'A':'D'; // K compte comme défenseur
+let hB,hTurn,hHuman,hSel,hOver,hLast;
+function moves(b,r,c){const p=b[r][c],out=[];for(const[dr,dc]of[[1,0],[-1,0],[0,1],[0,-1]]){let y=r+dr,x=c+dc;
+  while(y>=0&&y<7&&x>=0&&x<7&&b[y][x]===0){if(p==='K'||!special(y,x))out.push([y,x]);else if(isCorner(y,x))break;y+=dr;x+=dc}}return out}
+function apply(b,fr,fc,tr,tc){const n=b.map(r=>r.slice()),p=n[fr][fc];n[fr][fc]=0;n[tr][tc]=p;const me=side(p);let cap=0,kingTaken=false;
+  const hostile=(y,x,vs)=>{if(y<0||y>6||x<0||x>6)return false;const q=n[y][x];if(q)return side(q)===me;return special(y,x)&&(isCorner(y,x)||isThrone(y,x))};
+  for(const[dr,dc]of[[1,0],[-1,0],[0,1],[0,-1]]){const y=tr+dr,x=tc+dc;if(y<0||y>6||x<0||x>6)continue;const q=n[y][x];if(!q||side(q)===me)continue;
+    if(q==='K'&&isThrone(y,x)){if([[1,0],[-1,0],[0,1],[0,-1]].every(([a,d])=>n[y+a][x+d]==='A')){n[y][x]=0;kingTaken=true}continue}
+    if(hostile(y+dr,x+dc)){n[y][x]=0;cap++;if(q==='K')kingTaken=true}}
+  return{b:n,cap,kingTaken,win:p==='K'&&isCorner(tr,tc)}}
+function allMoves(b,s){const o=[];for(let r=0;r<7;r++)for(let c=0;c<7;c++){const p=b[r][c];if(p&&side(p)===s)for(const[y,x]of moves(b,r,c))o.push([r,c,y,x])}return o}
+function kingPos(b){for(let r=0;r<7;r++)for(let c=0;c<7;c++)if(b[r][c]==='K')return[r,c];return null}
+function evalB(b){const k=kingPos(b);if(!k)return 1e5;let a=0,d=0;b.forEach(r=>r.forEach(p=>{if(p==='A')a++;else if(p==='D')d++}));
+  let s=12*a-16*d;let open=0;for(const[cr,cc]of HC){const[kr,kc]=k;if(kr===cr||kc===cc){let ok=true;const dr=Math.sign(cr-kr),dc=Math.sign(cc-kc);let y=kr+dr,x=kc+dc;while(!(y===cr&&x===cc)){if(b[y][x]){ok=false;break}y+=dr;x+=dc}if(ok)open++}}
+  s-=open*(open>1?900:120);s+=Math.min(...HC.map(([r,c])=>Math.abs(r-k[0])+Math.abs(c-k[1])))*4;
+  s-=moves(b,k[0],k[1]).length*2;return s}
+function aiMove(b,s){let best=null,bv=s==='A'?-Infinity:Infinity;const better=v=>s==='A'?v>bv:v<bv;
+  for(const m of allMoves(b,s)){const r=apply(b,...m);let v;
+    if(s==='A'&&r.kingTaken)v=1e6;else if(s==='D'&&r.win)v=-1e6;
+    else{const o=s==='A'?'D':'A';let w=s==='A'?Infinity:-Infinity;const rep=allMoves(r.b,o);
+      if(!rep.length)w=s==='A'?1e5:-1e5;
+      for(const q of rep){const r2=apply(r.b,...q);let u;if(o==='D'&&r2.win)u=-1e6;else if(o==='A'&&r2.kingTaken)u=1e6;else u=evalB(r2.b);
+        if(s==='A'?u<w:u>w)w=u}
+      v=w}
+    v+=Math.random()*3;if(better(v)){bv=v;best=m}}
+  return best}
+function hNew(){hB=hStart();hTurn='D';hSel=null;hOver=false;hLast=null;$('#hn-m').textContent='';$('#hn-m').className='msg';hDraw();if(hHuman==='A')setTimeout(hAI,350)}
+function hDraw(){const g=$('#hn');g.innerHTML='';const mv=hSel?moves(hB,...hSel):[];
+  for(let r=0;r<7;r++)for(let c=0;c<7;c++){const p=hB[r][c];
+    const b=el('button','hc'+(special(r,c)?' sp':'')+(hSel&&hSel[0]===r&&hSel[1]===c?' sel':'')+(mv.some(([y,x])=>y===r&&x===c)?' hint':'')+(hLast&&hLast.some(([y,x])=>y===r&&x===c)?' last':''),g);
+    b.setAttribute('aria-label','case '+(r+1)+','+(c+1));if(p)el('i','pc '+p,b);b.onclick=()=>hClick(r,c)}
+  const n=k=>hB.flat().filter(p=>p===k).length;$('#hn-k').textContent='Attaquants '+n('A')+' · Défenseurs '+n('D');
+  $('#hn-s').textContent=hOver?'Partie finie':(hTurn===hHuman?'À toi de jouer':'L\'ordinateur réfléchit…')}
+function hEnd(r,s){if(r.kingTaken||r.win){hOver=true;const m=$('#hn-m');const humanWon=(r.win&&hHuman==='D')||(r.kingTaken&&hHuman==='A');
+  m.textContent=r.win?'Le roi a atteint un coin : victoire des défenseurs !':'Le roi est capturé : victoire des attaquants !';m.className='msg '+(humanWon?'ok':'err');return true}return false}
+function hClick(r,c){if(hOver||hTurn!==hHuman)return;const p=hB[r][c];
+  if(p&&side(p)===hHuman){hSel=[r,c];hDraw();return}
+  if(hSel&&moves(hB,...hSel).some(([y,x])=>y===r&&x===c)){const res=apply(hB,hSel[0],hSel[1],r,c);hLast=[hSel,[r,c]];hB=res.b;hSel=null;hTurn=hHuman==='A'?'D':'A';hDraw();if(hEnd(res)){hDraw();return}
+    setTimeout(hAI,350)}}
+function hAI(){if(hOver)return;const s=hHuman==='A'?'D':'A';const m=aiMove(hB,s);if(!m){hOver=true;$('#hn-m').textContent='L\'ordinateur ne peut plus bouger : tu gagnes.';$('#hn-m').className='msg ok';hDraw();return}
+  const res=apply(hB,...m);hLast=[[m[0],m[1]],[m[2],m[3]]];hB=res.b;hTurn=hHuman;hDraw();hEnd(res);hDraw()}
+hHuman='D';
+$('#hn-n').onclick=hNew;
+$('#hn-sw').onclick=()=>{hHuman=hHuman==='D'?'A':'D';$('#hn-sw').textContent=hHuman==='D'?'Jouer l\'autre camp':'Jouer le roi';
+  $('#p-hn .lead').textContent=hHuman==='D'?'Tu joues le roi et ses défenseurs : amène le roi sur un coin. L\'ordinateur joue les attaquants, qui doivent le capturer.':'Tu joues les attaquants : capture le roi avant qu\'il atteigne un coin. L\'ordinateur joue le roi et les défenseurs.';hNew()};
+hNew();
+
+/* ---------- CONQUETE HEXAGONALE ---------- */
+const S=26,SQ=Math.sqrt(3);
+let H,hxRes,hxTurn,hxSel,hxMoved,hxOver,hxBusy;
+const key=(q,r)=>q+','+r, DIRS=[[1,0],[1,-1],[0,-1],[-1,0],[-1,1],[0,1]];
+const rot=(q,r)=>[-q-r,q];
+function hxNew(){H={};for(let q=-3;q<=3;q++)for(let r=-3;r<=3;r++)if(Math.abs(q+r)<=3)H[key(q,r)]={q,r,o:0,n:1+((q*7+r*13+20)%3===0?1:0),mt:false,city:false};
+  const orb=(q,r,f)=>{let a=[q,r];for(let i=0;i<3;i++){f(a[0],a[1]);a=rot(a[0],a[1])}};
+  H['0,0'].mt=true;orb(1,0,(q,r)=>H[key(q,r)].mt=true);
+  orb(1,-2,(q,r)=>{const h=H[key(q,r)];h.city=true;h.n=3});
+  const start=(q,r,o)=>{const cap=H[key(q,r)];cap.o=o;cap.n=4;cap.city=true;const nb=DIRS.map(([a,b])=>H[key(q+a,r+b)]).filter(h=>h&&!h.mt&&h.o===0&&!h.city).slice(0,2);nb.forEach(h=>{h.o=o;h.n=2})};
+  start(0,3,1);start(-3,0,2);start(3,-3,3);
+  hxTurn=1;hxSel=null;hxOver=false;hxBusy=false;hxStartTurn();$('#hx-m').textContent='';$('#hx-m').className='msg'}
+const nbs=h=>DIRS.map(([a,b])=>H[key(h.q+a,h.r+b)]).filter(Boolean);
+const owned=o=>Object.values(H).filter(h=>h.o===o);
+function reinf(o){const m=owned(o);return m.length?2+Math.floor(m.length/3)+m.filter(h=>h.city).length:0}
+let hxTour=1;
+function hxStartTurn(){hxRes=reinf(1);hxMoved=new Set();hxSel=null;hxDraw()}
+function hxDraw(){const sv=$('#hx');sv.innerHTML='';const tg=hxSel?new Set(nbs(H[hxSel]).filter(h=>!h.mt).map(h=>key(h.q,h.r))):new Set();
+  for(const h of Object.values(H)){const x=S*SQ*(h.q+h.r/2),y=S*1.5*h.r;const pts=[...Array(6)].map((_,i)=>{const a=Math.PI/180*(60*i-30);return(x+(S-1.5)*Math.cos(a)).toFixed(1)+','+(y+(S-1.5)*Math.sin(a)).toFixed(1)}).join(' ');
+    const p=document.createElementNS('http://www.w3.org/2000/svg','polygon');p.setAttribute('points',pts);
+    p.setAttribute('class','hexp '+(h.mt?'mt':'t'+h.o)+(hxSel===key(h.q,h.r)?' sel':'')+(tg.has(key(h.q,h.r))?' tgt':''));p.onclick=()=>hxClick(h);sv.appendChild(p);
+    if(h.mt){const m=document.createElementNS('http://www.w3.org/2000/svg','path');m.setAttribute('d','M'+(x-11)+','+(y+8)+' L'+x+','+(y-10)+' L'+(x+11)+','+(y+8)+'Z');m.setAttribute('fill','var(--mute)');m.setAttribute('pointer-events','none');sv.appendChild(m);continue}
+    if(h.city){const c=document.createElementNS('http://www.w3.org/2000/svg','circle');c.setAttribute('cx',x);c.setAttribute('cy',y);c.setAttribute('r',S-7);c.setAttribute('class','hxc');sv.appendChild(c)}
+    const t=document.createElementNS('http://www.w3.org/2000/svg','text');t.setAttribute('x',x);t.setAttribute('y',y);t.setAttribute('class','hxn');t.textContent=h.n;sv.appendChild(t)}
+  $('#hx-r').textContent='Renforts : '+hxRes;$('#hx-t').textContent='Tour '+hxTour+' · '+owned(1).length+' cases';$('#hx-e').disabled=hxOver||hxBusy}
+function fight(a,d,city){let at=a,df=d;while(at>0&&df>0){const x=1+Math.random()*6|0,y=(1+Math.random()*6|0)+(city?1:0);if(x>y)df--;else at--}return[at,df]}
+function hxClick(h){if(hxOver||hxBusy||hxTurn!==1||h.mt)return;const k=key(h.q,h.r),m=$('#hx-m');m.className='msg';
+  if(hxRes>0&&h.o===1&&!hxSel){h.n++;hxRes--;m.textContent='';hxDraw();return}
+  if(hxSel&&hxSel!==k&&nbs(H[hxSel]).includes(h)){const f=H[hxSel];const send=f.n-1;
+    if(h.o===1){h.n+=send;f.n=1;hxMoved.add(k);hxMoved.add(hxSel);m.textContent='Renfort de '+send+' troupes.'}
+    else{const[at,df]=fight(send,h.n,h.city);f.n=1;hxMoved.add(hxSel);
+      if(df===0){const prev=h.o;h.o=1;h.n=at;hxMoved.add(k);m.textContent='Victoire ! Il te reste '+at+' troupe'+(at>1?'s':'')+(prev?'':' (case neutre prise)')+'.';m.className='msg ok'}
+      else{h.n=df;m.textContent='Attaque repoussée : l\'adversaire garde '+df+'.';m.className='msg err'}}
+    hxSel=null;hxCheck();hxDraw();return}
+  if(h.o===1&&h.n>=2&&!hxMoved.has(k)){hxSel=hxSel===k?null:k;hxDraw();return}
+  if(h.o===1&&hxRes===0&&h.n<2){m.textContent='Il faut au moins 2 troupes pour partir.'}
+  hxSel=null;hxDraw()}
+function hxCheck(){const a=owned(1).length,b=owned(2).length,c=owned(3).length,m=$('#hx-m');
+  if(!a){hxOver=true;m.textContent='Tu as perdu toutes tes cases.';m.className='msg err'}
+  else if(!b&&!c){hxOver=true;m.textContent='Victoire : les deux camps sont éliminés !';m.className='msg ok'}}
+function aiTurn(o){let res=reinf(o);const front=()=>owned(o).filter(h=>nbs(h).some(n=>!n.mt&&n.o!==o));
+  while(res>0){const f=front();if(!f.length)break;f.sort((a,b)=>b.n-a.n);(f[Math.random()*Math.min(2,f.length)|0]).n++;res--}
+  const done=new Set();let n=0;
+  for(let it=0;it<10&&n<7;it++){const c=owned(o).filter(h=>h.n>=3&&!done.has(key(h.q,h.r))).sort((a,b)=>b.n-a.n);let acted=false;
+    for(const h of c){const t=nbs(h).filter(x=>!x.mt&&x.o!==o).sort((a,b)=>(a.n-(a.city?-1:0))-(b.n-(b.city?-1:0)))[0];
+      if(t&&h.n-1>=t.n+(t.o?1:0)){const[at,df]=fight(h.n-1,t.n,t.city);h.n=1;if(df===0){t.o=o;t.n=at}else t.n=df;done.add(key(h.q,h.r));done.add(key(t.q,t.r));acted=true;n++;break}}
+    if(!acted)break}}
+$('#hx-e').onclick=()=>{if(hxOver||hxBusy)return;hxBusy=true;hxSel=null;$('#hx-m').textContent='Les autres camps jouent…';$('#hx-m').className='msg';
+  Object.values(H).forEach(h=>{if(h.o===1&&!h.mt)h.n+=0});
+  [2,3].forEach((o,i)=>setTimeout(()=>{if(owned(o).length)aiTurn(o);hxDraw()},500*(i+1)));
+  setTimeout(()=>{hxBusy=false;hxTour++;hxCheck();if(!hxOver){hxStartTurn();$('#hx-m').textContent='À toi : pose tes renforts puis attaque.'}else hxDraw()},1300)};
+$('#hx-n').onclick=()=>{hxTour=1;hxNew()};
+hxNew();
+</script>
