@@ -1,8 +1,8 @@
 <title>Mini Motorways, maquette</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=Space+Grotesk:wght@500;700&family=Nunito:wght@600;800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&display=swap">
 <style>
-/* Trois téléphones côte à côte : même partie, trois directions épurées. */
+/* Trois ambiances d'un même style : blocs, ombres longues, routes blanches arrondies. */
 :root{--bg:#1b1e24;--fg:#eef0f3;--mut:#9aa3ae}
 body{background:var(--bg);color:var(--fg);font:15px/1.5 Outfit,system-ui,sans-serif;margin:0;
  padding-block:24px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
@@ -14,159 +14,106 @@ h1{font:700 26px Outfit,sans-serif;margin:0 0 4px}
 .col h2{font:700 19px Outfit;margin:0 0 10px}
 .phone{position:relative;width:100%;aspect-ratio:360/600;border-radius:30px;overflow:hidden;border:6px solid #0b0d10;box-shadow:0 10px 30px #0008}
 .phone>svg{position:absolute;inset:0;width:100%;height:100%;display:block}
-.hud{position:absolute;left:0;right:0}
+.hud{position:absolute;left:0;right:0;color:var(--ink)}
 .note{color:var(--mut);font-size:14px;margin:12px 0 0}
 .note b{color:var(--fg)}
-svg.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-.top{top:0;padding:14px 16px 0;display:flex;justify-content:space-between;align-items:flex-start}
-.bot{bottom:0;padding:0 14px 14px}
-.hint{text-align:center;font-size:12px;margin-bottom:10px}
-.tools{display:flex;gap:8px;justify-content:space-between}
-.tool{position:relative;flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;padding:9px 0 7px}
-.badge{position:absolute;top:3px;right:8px;font-size:10px;font-weight:700;min-width:16px;height:16px;line-height:16px;text-align:center;border-radius:8px}
-
-/* A : Nuit */
-.A{background:#0e1320;color:#e8edf8}
-.A .score{font:300 46px/1 Outfit;letter-spacing:-.02em}
-.A .day{font:600 11px Outfit;letter-spacing:.14em;text-transform:uppercase;color:#7d8aa8;margin-top:6px}
-.A .week{margin-top:8px;width:92px;height:3px;border-radius:2px;background:#1e2740;overflow:hidden}
-.A .week i{display:block;width:46%;height:100%;background:#e8edf8}
-.A .round{width:42px;height:42px;border-radius:50%;background:#ffffff14;border:1px solid #ffffff1f;display:grid;place-items:center;backdrop-filter:blur(8px)}
-.A .hint{color:#8d9ab8}
-.A .tools{background:#ffffff12;border:1px solid #ffffff1c;border-radius:26px;padding:6px;backdrop-filter:blur(14px)}
-.A .tool{color:#8d9ab8;border-radius:20px}
-.A .tool.on{background:#e8edf8;color:#0e1320}
-.A .badge{background:#ff6b6b;color:#0e1320}
-
-/* B : Suisse */
-.B{background:#f5f5f2;color:#111}
-.B .score{font:800 64px/.9 'Space Grotesk';letter-spacing:-.04em}
-.B .day{font:700 12px 'Space Grotesk';letter-spacing:.06em;text-transform:uppercase;margin-top:6px}
-.B .week{display:flex;gap:3px;margin-top:6px}
-.B .week i{width:12px;height:6px;background:#111}.B .week i.o{background:#d8d8d2}
-.B .round{width:40px;height:40px;background:#111;color:#fff;display:grid;place-items:center}
-.B .hint{color:#111;font:700 12px 'Space Grotesk';text-transform:uppercase;letter-spacing:.04em}
-.B .tools{gap:0;border:2px solid #111;background:#f5f5f2}
-.B .tool{color:#111;font:700 11px 'Space Grotesk';text-transform:uppercase;border-right:2px solid #111}
-.B .tool:last-child{border-right:0}
-.B .tool.on{background:#111;color:#f5f5f2}
-.B .badge{background:#ff3b30;color:#fff;border-radius:0}
-
-/* C : Iso doux */
-.C{background:linear-gradient(#e7edf9,#f7f2ec);color:#2c3550}
-.C .card{background:#fff;border-radius:18px;box-shadow:0 4px 14px #2c35501a}
-.C .score{font:800 34px/1 Nunito;padding:10px 16px}
-.C .score small{display:block;font:600 11px Nunito;color:#8a93ad;letter-spacing:.04em;margin-top:2px}
-.C .round{width:44px;height:44px;border-radius:50%;display:grid;place-items:center}
-.C .next{display:flex;align-items:center;gap:10px;padding:9px 14px;font:700 12px Nunito;margin-bottom:10px;justify-content:space-between}
-.C .next b{display:inline-block;width:14px;height:14px;border-radius:4px;background:#4d8ff0;vertical-align:-2px;margin-right:6px}
-.C .tools{background:#fff;border-radius:24px;box-shadow:0 6px 20px #2c35502a;padding:6px}
-.C .tool{color:#8a93ad;font:700 11px Nunito;border-radius:18px}
-.C .tool.on{background:#2c3550;color:#fff}
-.C .badge{background:#ff6b57;color:#fff}
+.top{top:0;padding:14px 14px 0;display:flex;justify-content:space-between;align-items:center}
+.right{display:flex;align-items:center;gap:10px;font:800 18px Outfit}
+.right .day{font-size:17px}
+.clock{width:40px;height:40px;border-radius:50%;background:var(--btn);color:var(--btnfg);display:grid;place-items:center}
+svg.i{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.back{width:32px;height:32px}
+.bot{bottom:0;padding:0 18px 16px;display:flex;justify-content:space-around;align-items:flex-end}
+.t{display:flex;flex-direction:column;align-items:center;gap:14px;font:700 10px Outfit;letter-spacing:.06em;text-transform:uppercase;width:66px}
+.d{position:relative;width:44px;height:44px;border-radius:13px;background:var(--btn);color:var(--btnfg);transform:rotate(45deg);margin-top:8px;box-shadow:-5px 5px 0 var(--btn2)}
+.d>svg{position:absolute;inset:0;margin:auto;transform:rotate(-45deg)}
+.d.off{opacity:.55}
+.bd{position:absolute;right:-12px;top:-12px;transform:rotate(-45deg);min-width:24px;height:24px;border-radius:12px;background:var(--bd);color:var(--bdfg);border:2px solid var(--ink);font:800 12px/20px Outfit;text-align:center}
+.A{--ink:#4a3b36;--btn:#4a3b36;--btn2:#4a3b3633;--btnfg:#fff;--bd:#fff;--bdfg:#4a3b36;background:#f6f5f2}
+.B{--ink:#5a3d2b;--btn:#5a3d2b;--btn2:#5a3d2b33;--btnfg:#fff4e0;--bd:#fff4e0;--bdfg:#5a3d2b;background:#f3dcb0}
+.C{--ink:#e9eefb;--btn:#e9eefb;--btn2:#00000044;--btnfg:#232a3d;--bd:#232a3d;--bdfg:#e9eefb;background:#232a3d}
 </style>
 
 <h1>Mini Motorways, pour elle</h1>
-<p class="lead">Même partie dans les trois cas : trois maisons déjà reliées, une maison rouge qui s'impatiente et qu'on est en train de relier du doigt (trait pointillé), un lac. Chaque direction a sa propre interface : score, semaine, pause, outils.</p>
+<p class="lead">Trois ambiances du même style, d'après tes captures : blocs en relief avec ombres longues, routes blanches aux coins arrondis, rivière avec pont. Même partie partout : une maison rouge isolée qu'on relie du doigt, de l'autre côté de la rivière (trait pointillé).</p>
 <div class="row" id="row"></div>
 
 <script>
-const C=40;
+const C=40,OY=66;
 const P=(x,y)=>[(x+.5)*C,(y+.5)*C];
-const pts=p=>p.map(q=>P(...q).join(',')).join(' ');
-const cellsOf=roads=>{const s=new Set();Object.values(roads).forEach(p=>{for(let i=0;i<p.length-1;i++){let[a,b]=p[i],[c,d]=p[i+1];while(a!==c||b!==d){s.add(a+','+b);a+=Math.sign(c-a);b+=Math.sign(d-b)}s.add(c+','+d)}});return[...s].map(k=>k.split(',').map(Number))};
-const polys=(roads,w,col,extra='')=>Object.values(roads).map(p=>`<polyline points="${pts(p)}" fill="none" stroke="${col}" stroke-width="${w}" ${extra}/>`).join('');
-const ring=(x,y,col,f,r,w,track)=>{const L=2*Math.PI*r;return `<circle cx="${x}" cy="${y}" r="${r}" fill="none" stroke="${track}" stroke-width="${w}"/><circle cx="${x}" cy="${y}" r="${r}" fill="none" stroke="${col}" stroke-width="${w}" stroke-linecap="butt" stroke-dasharray="${L*f} ${L}" transform="rotate(-90 ${x} ${y})"/>`};
+const roads={red:[[1,2],[4,2]],blue:[[7,1],[7,3],[2,3],[2,6]],yellow:[[1,9],[4,9]]};
+const ghost=[[7,7],[4,7],[4,2]], finger=[5.5,7];
+const houses=[['red',1,2],['blue',7,1],['yellow',1,9],['red',7,7,.7]];
+const dests=[['red',4,2,2],['blue',2,6,1],['yellow',4,9,0]];
+const cars=[['red',2.5,2,'h'],['blue',7,2,'v'],['blue',4.5,3,'h'],['blue',2,4.6,'v'],['yellow',2.6,9,'h']];
+const river=[[270,-20],[252,100],[218,200],[216,300],[246,400],[236,560]];
 
-/* Scène A et B : 9 colonnes, 13 rangées */
-const roads={red:[[1,2],[1,5],[5,5]],blue:[[7,2],[7,4],[3,4],[3,8]],yellow:[[1,9],[7,9]]};
-const houses=[['red',1,2],['blue',7,2],['yellow',1,9],['red',7,6,.7]];
-const dests=[['red',5,5],['blue',3,8],['yellow',7,9]];
-const cars=[['red',1,3.5,'v'],['red',3.2,5,'h'],['blue',7,3,'v'],['blue',5.3,4,'h'],['yellow',2.5,9,'h'],['yellow',5.5,9,'h']];
-const lake={x:0,y:6,w:3,h:2};
-const ghost=[[7,6],[7,5],[5,5]], finger=[6.3,5];
-const svg=(inner,defs='')=>`<svg viewBox="0 0 360 600" preserveAspectRatio="xMidYMid slice"><defs>${defs}</defs>${inner}</svg>`;
-const OY=64;
+function smooth(p,r=16){const q=p.map(a=>P(...a));let d=`M${q[0]}`;
+ for(let i=1;i<q.length-1;i++){const a=q[i-1],b=q[i],c=q[i+1];
+  const l1=Math.hypot(a[0]-b[0],a[1]-b[1]),l2=Math.hypot(c[0]-b[0],c[1]-b[1]),rr=Math.min(r,l1/2,l2/2);
+  const p1=[b[0]+(a[0]-b[0])/l1*rr,b[1]+(a[1]-b[1])/l1*rr],p2=[b[0]+(c[0]-b[0])/l2*rr,b[1]+(c[1]-b[1])/l2*rr];
+  d+=` L${p1} Q${b} ${p2}`}
+ return d+` L${q[q.length-1]}`}
+const riverD='M'+river.map(a=>a.join(',')).join(' L');
+const smoothRiver=(()=>{let d=`M${river[0]}`;for(let i=1;i<river.length-1;i++){const m=[(river[i][0]+river[i+1][0])/2,(river[i][1]+river[i+1][1])/2];d+=` Q${river[i]} ${m}`}return d+` L${river[river.length-1]}`})();
 
-function A(){
- const col={red:'#ff6b6b',blue:'#4dabf7',yellow:'#ffd43b'};
- const defs=`<filter id="g" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="4"/></filter><linearGradient id="bgA" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0e1320"/><stop offset="1" stop-color="#151d33"/></linearGradient>`;
- let s=`<rect width="360" height="600" fill="url(#bgA)"/><g transform="translate(0,${OY})">`;
- s+=`<rect x="0" y="${lake.y*C+4}" width="${lake.w*C-4}" height="${lake.h*C-8}" rx="24" fill="#18233f"/>`;
- s+=`<g filter="url(#g)" opacity=".55">${polys(roads,8,'#7fa2ff','stroke-linecap="round" stroke-linejoin="round"')}</g>`;
- s+=polys(roads,5,'#dfe7fb','stroke-linecap="round" stroke-linejoin="round"');
- s+=polys({g:ghost},5,'#ffffff80','stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1 11"');
- dests.forEach(([c,x,y])=>{const[p,q]=P(x,y);s+=`<rect x="${p-20}" y="${q-20}" width="40" height="40" rx="11" fill="${col[c]}" opacity=".18" filter="url(#g)"/><rect x="${p-17}" y="${q-17}" width="34" height="34" rx="10" fill="#0e1320" stroke="${col[c]}" stroke-width="3.5"/><circle cx="${p}" cy="${q}" r="5" fill="${col[c]}"/>`});
- houses.forEach(([c,x,y,f])=>{const[p,q]=P(x,y);s+=`<circle cx="${p}" cy="${q}" r="14" fill="${col[c]}" opacity=".5" filter="url(#g)"/><circle cx="${p}" cy="${q}" r="10" fill="${col[c]}"/>`;if(f)s+=ring(p,q,'#fff',f,17,3,'#ffffff26')});
- cars.forEach(([c,x,y,d])=>{const[p,q]=P(x,y);s+=`<rect x="${p-(d==='v'?3:5)}" y="${q-(d==='v'?5:3)}" width="${d==='v'?6:10}" height="${d==='v'?10:6}" rx="3" fill="${col[c]}"/>`});
- const[fx,fy]=P(...finger);s+=`<circle cx="${fx}" cy="${fy}" r="20" fill="#fff" opacity=".14"/><circle cx="${fx}" cy="${fy}" r="9" fill="#fff" opacity=".5"/>`;
- return svg(s+'</g>',defs)}
+const pinSvg=(x,y,ink)=>`<path d="M${x} ${y+9} C${x-9} ${y-1} ${x-6} ${y-8} ${x} ${y-8} C${x+6} ${y-8} ${x+9} ${y-1} ${x} ${y+9}Z" fill="${ink}"/><circle cx="${x}" cy="${y-2}" r="2.4" fill="#fff"/>`;
+const ringSvg=(x,y,f,ink,track)=>{const r=8,L=2*Math.PI*r;return `<circle cx="${x}" cy="${y}" r="11" fill="${track}"/><circle cx="${x}" cy="${y}" r="${r}" fill="none" stroke="${ink}" stroke-width="5" stroke-dasharray="${L*f} ${L}" transform="rotate(-90 ${x} ${y})"/>`};
 
-function B(){
- const col={red:'#ff3b30',blue:'#1f6bff',yellow:'#ffc800'};
- let s=`<rect width="360" height="600" fill="#f5f5f2"/><g transform="translate(0,${OY})">`;
- s+=`<rect x="0" y="${lake.y*C}" width="${lake.w*C}" height="${lake.h*C}" fill="#d6e4f7"/>`;
- s+=polys(roads,11,'#111','stroke-linejoin="miter" stroke-linecap="square"');
- s+=polys({g:ghost},4,'#11111199','stroke-dasharray="3 8" stroke-linejoin="miter"');
- dests.forEach(([c,x,y])=>{const[p,q]=P(x,y);s+=`<circle cx="${p}" cy="${q}" r="19" fill="${col[c]}"/><circle cx="${p}" cy="${q}" r="7" fill="#f5f5f2"/>`});
- houses.forEach(([c,x,y,f])=>{const[p,q]=P(x,y);s+=`<rect x="${p-11}" y="${q-11}" width="22" height="22" fill="${col[c]}"/>`;if(f)s+=`<rect x="${p-14}" y="${q-24}" width="28" height="6" fill="#d8d8d2"/><rect x="${p-14}" y="${q-24}" width="${28*f}" height="6" fill="#111"/>`});
- cars.forEach(([c,x,y,d])=>{const[p,q]=P(x,y);s+=`<rect x="${p-(d==='v'?4:6)}" y="${q-(d==='v'?6:4)}" width="${d==='v'?8:12}" height="${d==='v'?12:8}" fill="${col[c]}" stroke="#f5f5f2" stroke-width="2"/>`});
- const[fx,fy]=P(...finger);s+=`<circle cx="${fx}" cy="${fy}" r="14" fill="none" stroke="#111" stroke-width="2"/><circle cx="${fx}" cy="${fy}" r="4" fill="#111"/>`;
- return svg(s+'</g>')}
+function scene(t){
+ let s=`<rect width="360" height="600" fill="${t.ground}"/><g transform="translate(0,${OY})">`;
+ t.blobs.forEach(b=>s+=`<polygon points="${b}" fill="${t.blob}" stroke="${t.blob}" stroke-width="46" stroke-linejoin="round"/>`);
+ s+=`<path d="${smoothRiver}" fill="none" stroke="${t.bank}" stroke-width="64" stroke-linecap="round" opacity=".9"/>`;
+ s+=`<path d="${smoothRiver}" fill="none" stroke="${t.water}" stroke-width="46" stroke-linecap="round"/>`;
+ /* routes : liseré, puis blanc */
+ const all=Object.values(roads).map(p=>smooth(p));
+ all.forEach(d=>s+=`<path d="${d}" fill="none" stroke="${t.edge}" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"/>`);
+ all.forEach(d=>s+=`<path d="${d}" fill="none" stroke="${t.road}" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>`);
+ /* pont existant : rambardes sur la traversée */
+ s+=`<path d="M205 129 H268 M205 151 H268" stroke="${t.ink}" stroke-width="3" stroke-linecap="round"/>`;
+ /* tracé en cours */
+ s+=`<path d="${smooth(ghost)}" fill="none" stroke="${t.ghost}" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1 12"/>`;
+ /* places des bâtiments */
+ dests.forEach(([c,x,y,n])=>{const[p,q]=P(x,y);s+=`<rect x="${p-27}" y="${q-27}" width="54" height="54" rx="12" fill="${t.road}" stroke="${t.edge}" stroke-width="3"/>`});
+ const cube=(x,y,w,L,c,notch)=>`<polygon points="${x+w},${y} ${x+w+L},${y+L} ${x+w+L},${y+w+L} ${x+L},${y+w+L} ${x},${y+w} ${x+w},${y+w}" fill="${t.shadow}"/>
+  <rect x="${x+3}" y="${y+5}" width="${w}" height="${w}" rx="4" fill="${c[1]}"/><rect x="${x}" y="${y}" width="${w}" height="${w}" rx="4" fill="${c[0]}"/>${notch?`<rect x="${x+w*.32}" y="${y+w-5}" width="${w*.36}" height="5" rx="2" fill="${c[1]}"/>`:''}`;
+ houses.forEach(([c,x,y,f])=>{const[p,q]=P(x,y);s+=cube(p-10,q-10,20,9,t.pal[c],true);if(f)s+=ringSvg(p+16,q-18,f,t.ink,t.road)});
+ dests.forEach(([c,x,y,n])=>{const[p,q]=P(x,y);s+=cube(p-17,q-17,34,16,t.pal[c],true);for(let i=0;i<n;i++)s+=pinSvg(p-12+i*12,q-26,t.ink)});
+ cars.forEach(([c,x,y,d])=>{const[p,q]=P(x-.5,y-.5);const w=d==='h'?11:7,h=d==='h'?7:11;s+=`<rect x="${p-w/2}" y="${q-h/2}" width="${w}" height="${h}" rx="3" fill="${t.pal[c][0]}" stroke="#fff" stroke-width="1.5"/>`});
+ const[fx,fy]=P(...finger);s+=`<circle cx="${fx}" cy="${fy}" r="21" fill="${t.ink}" opacity=".13"/><circle cx="${fx}" cy="${fy}" r="9" fill="${t.ink}" opacity=".55"/>`;
+ return `<svg viewBox="0 0 360 600" preserveAspectRatio="xMidYMid slice">${s}</g></svg>`}
 
-/* Scène C : isométrique, 7 × 7 */
-function Cc(){
- const N=7,TW=50,TH=25,OX=180,OYI=170;
- const pr=(x,y,z=0)=>[OX+(x-y)*TW/2,OYI+(x+y)*TH/2-z];
- const poly=(a,fill,extra='')=>`<polygon points="${a.map(q=>pr(...q).join(',')).join(' ')}" fill="${fill}" ${extra}/>`;
- const sq=(x,y,f,e='')=>poly([[x,y],[x+1,y],[x+1,y+1],[x,y+1]],f,e);
- const R={red:[[1,1],[1,3],[4,3]],blue:[[5,1],[5,2],[2,2],[2,5]],yellow:[[1,6],[5,6]]};
- const H=[['red',1,1],['blue',5,1],['yellow',1,6],['red',6,3,.7]];
- const D=[['red',4,3],['blue',2,5],['yellow',5,6]];
- const CAR=[['red',1,2],['red',3,3],['blue',5,2],['blue',3,2],['yellow',2,6],['yellow',4,6]];
- const lakeC=[[5,4],[6,4],[5,5],[6,5]];
- const pal={red:['#ff7a66','#e65a47','#c9422f'],blue:['#6aa5ff','#4d8ff0','#376fc4'],yellow:['#ffd35c','#f2bb32','#cf9a14']};
- let s=`<ellipse cx="180" cy="${OYI+N*TH+30}" rx="150" ry="24" fill="#2c3550" opacity=".10"/>`;
- s+=poly([[0,N,0],[N,N,0],[N,N,-14],[0,N,-14]],'#d4dae8')+poly([[N,0,0],[N,N,0],[N,N,-14],[N,0,-14]],'#bcc4d6');
- s+=poly([[0,0],[N,0],[N,N],[0,N]],'#f4f6f1');
- lakeC.forEach(([x,y])=>s+=sq(x,y,'#b4d9f2'));
- cellsOf(R).forEach(([x,y])=>s+=sq(x,y,'#4a546b','stroke="#4a546b" stroke-width="1"'));
- s+=sq(5.08,3.08,'#ffffff80','transform="translate(0,0)" stroke="#2c3550" stroke-width="1.6" stroke-dasharray="3 3"');
- const box=(x,y,i,h,c)=>{const x0=x+i,x1=x+1-i,y0=y+i,y1=y+1-i;return poly([[x0,y1,0],[x1,y1,0],[x1,y1,h],[x0,y1,h]],c[1])+poly([[x1,y0,0],[x1,y1,0],[x1,y1,h],[x1,y0,h]],c[2])+poly([[x0,y0,h],[x1,y0,h],[x1,y1,h],[x0,y1,h]],c[0])};
- const items=[];
- D.forEach(([c,x,y])=>items.push([x+y,()=>box(x,y,.1,26,pal[c])+poly([[x+.33,y+.33,26.1],[x+.67,y+.33,26.1],[x+.67,y+.67,26.1],[x+.33,y+.67,26.1]],'#fff','opacity=".9"')]));
- H.forEach(([c,x,y,f])=>items.push([x+y,()=>{let t=box(x,y,.18,16,pal[c]);if(f){const[a,b]=pr(x+.5,y+.5,40);t+=ring(a,b,'#2c3550',f,9,4,'#fff')}return t}]));
- CAR.forEach(([c,x,y])=>items.push([x+y+.5,()=>box(x,y,.34,5,pal[c])]));
- items.sort((a,b)=>a[0]-b[0]).forEach(i=>s+=i[1]());
- const[fx,fy]=pr(5.5,3.5,0);s+=`<circle cx="${fx}" cy="${fy}" r="20" fill="#2c3550" opacity=".14"/><circle cx="${fx}" cy="${fy}" r="8" fill="#fff" stroke="#2c3550" stroke-width="2"/>`;
- return svg(s)}
+const T={
+ A:{ground:'#f6f5f2',blob:'#fbd5e5',blobs:['40,170 120,120 140,250','300,380 340,470 250,500'],water:'#a4e4e8',bank:'#f4ecd2',road:'#ffffff',edge:'#b4c5cc',ink:'#4a3b36',ghost:'#4a3b3699',shadow:'rgba(74,59,54,.13)',track:'#fff',
+  pal:{red:['#ff6b61','#a8344a'],blue:['#6ad0ee','#2d7cb0'],yellow:['#ffd37a','#e39a4a']}},
+ B:{ground:'#f3dcb0',blob:'#ecc88c',blobs:['30,160 130,110 120,260','310,400 330,500 240,520'],water:'#a9e5dc',bank:'#faeccb',road:'#fffaf0',edge:'#d9c9a6',ink:'#5a3d2b',ghost:'#5a3d2b99',shadow:'rgba(90,61,43,.16)',
+  pal:{red:['#ff6aa6','#b83a7a'],blue:['#2ea8b5','#18707e'],yellow:['#ffb347','#d9772b']}},
+ C:{ground:'#232a3d',blob:'#2b3450',blobs:['40,170 120,120 140,250','300,380 340,470 250,500'],water:'#2b6f8c',bank:'#2d3a58',road:'#eef1f8',edge:'#4d5a7c',ink:'#232a3d',ghost:'#ffffffaa',shadow:'rgba(0,0,0,.28)',
+  pal:{red:['#ff7a66','#c2453a'],blue:['#59c7ff','#2a82c7'],yellow:['#ffd35c','#d99a1c']}}
+};
+T.C.ink='#e9eefb';
 
 const ic={
- road:'<path d="M6 20C6 10 18 14 18 4"/><path d="M10 20c0-4 8-2 8-6" opacity=".4"/>',
- bridge:'<path d="M3 18h18M5 18c0-7 14-7 14 0M8 12v6M12 10v8M16 12v6"/>',
- light:'<rect x="9" y="3" width="6" height="18" rx="3"/><circle cx="12" cy="8" r="1.1"/><circle cx="12" cy="12" r="1.1"/><circle cx="12" cy="16" r="1.1"/>',
- erase:'<path d="M5 15l8-8 6 6-5 5H9z"/><path d="M10 20h10"/>',
- pause:'<path d="M9 6v12M15 6v12"/>'
+ back:'<path d="M20 12H5M11 5l-7 7 7 7"/>',
+ car:'<path d="M4 16l1.6-5.2A2 2 0 017.5 9.4h9a2 2 0 011.9 1.4L20 16v3h-2.5v-1.5h-11V19H4z" fill="currentColor"/><circle cx="7.5" cy="14" r="1" fill="#fff" stroke="none"/><circle cx="16.5" cy="14" r="1" fill="#fff" stroke="none"/>',
+ clock:'<circle cx="12" cy="12" r="8.5"/><path d="M12 7v5l3 2"/>',
+ road:'<rect x="5" y="12" width="14" height="6" rx="2"/><rect x="5" y="7" width="14" height="6" rx="2" opacity=".5"/>',
+ bridge:'<path d="M3 16h18M5 16c0-6 14-6 14 0M8.5 11.5V16M12 10.2V16M15.5 11.5V16"/>',
+ light:'<rect x="8.5" y="3.5" width="7" height="17" rx="3.5"/><circle cx="12" cy="8" r="1.2" fill="currentColor"/><circle cx="12" cy="12" r="1.2" fill="currentColor"/><circle cx="12" cy="16" r="1.2" fill="currentColor"/>',
+ star:'<path d="M12 4l2.4 5 5.4.7-4 3.7 1 5.4-4.8-2.7-4.8 2.7 1-5.4-4-3.7 5.4-.7z"/>'
 };
 const I=k=>`<svg class="i" viewBox="0 0 24 24">${ic[k]}</svg>`;
-const tools=[['road','Route','12',1],['bridge','Pont','1',0],['light','Feu','2',0],['erase','Gomme','',0]];
-const toolsHtml=lab=>tools.map(([k,n,c,on])=>`<div class="tool${on?' on':''}">${I(k)}<span>${lab(n)}</span>${c?`<span class="badge">${c}</span>`:''}</div>`).join('');
+const tools=[['road','Routes','95',0],['bridge','Pont','1',0],['light','Feu','2',0],['star','Autoroute','1',1]];
+const hud=`<div class="hud top"><svg class="i back" viewBox="0 0 24 24" style="width:32px;height:32px;stroke-width:2.4">${ic.back}</svg>
+ <div class="right"><span>65</span>${I('car')}<span class="day">JEU</span><div class="clock">${I('clock')}</div></div></div>
+ <div class="hud bot">${tools.map(([k,n,c,off])=>`<div class="t"><div class="d${off?' off':''}">${I(k)}<span class="bd">${c}</span></div>${n}</div>`).join('')}</div>`;
 
 const dirs=[
- ['A','Direction A','Nuit',A,
-  `<div class="hud top"><div><div class="score">47</div><div class="day">Jeudi · semaine 3</div><div class="week"><i></i></div></div><div class="round">${I('pause')}</div></div>
-   <div class="hud bot"><div class="hint">Glisse de la maison vers son bâtiment</div><div class="tools">${toolsHtml(x=>x)}</div></div>`,
-  'Fond bleu nuit, routes en traits lumineux, maisons en pastilles et bâtiments en cadres. <b>Très calme et élégant</b>, le contraste fait ressortir l\'essentiel. Le fond sombre convient bien aux longues parties.'],
- ['B','Direction B','Suisse clair',B,
-  `<div class="hud top"><div><div class="score">47</div><div class="day">Jeudi · semaine 3</div><div class="week"><i></i><i></i><i></i><i class="o"></i><i class="o"></i><i class="o"></i><i class="o"></i></div></div><div class="round">${I('pause')}</div></div>
-   <div class="hud bot"><div class="hint">Glisse : maison → bâtiment</div><div class="tools">${toolsHtml(x=>x)}</div></div>`,
-  'Papier blanc, routes noires, trois couleurs vives, grosse typographie. <b>Le plus lisible et le plus graphique</b> : aucune décoration, tout se comprend d\'un regard. La jauge d\'impatience est une barre au-dessus de la maison.'],
- ['C','Direction C','Isométrique doux',Cc,
-  `<div class="hud top"><div class="card score">47<small>Jeudi · semaine 3</small></div><div class="card round">${I('pause')}</div></div>
-   <div class="hud bot"><div class="card next"><span><b></b>Prochaine maison : bleue</span><span style="color:#8a93ad">dans 12 s</span></div><div class="tools">${toolsHtml(x=>x)}</div></div>`,
-  'Petite ville en relief, pastel, avec des cartes blanches très douces. <b>Plus chaleureux, plus « jouet »</b>. Le relief demande un peu plus de place : la ville est plus petite à l\'écran.']
+ ['A','Direction A','Prairie pastel','Le plus proche de tes captures : fond blanc cassé, grandes taches roses, rivière turquoise, blocs orangés et rouges. <b>Doux, clair, très reposant</b>.'],
+ ['B','Direction B','Désert','Fond sable, rivière menthe, blocs rose, turquoise et orange, comme ta deuxième capture. <b>Plus chaud et plus coloré</b>, les couleurs se distinguent bien.'],
+ ['C','Direction C','Soirée','Le même style en mode sombre : fond bleu nuit, routes blanches qui ressortent, blocs lumineux. <b>Pour jouer le soir</b> sans fatiguer les yeux.']
 ];
-document.getElementById('row').innerHTML=dirs.map(([k,t,n,f,hud,note])=>`
+document.getElementById('row').innerHTML=dirs.map(([k,t,n,note])=>`
 <div class="col"><div class="tag">${t}</div><h2>${n}</h2>
-<div class="phone ${k}">${f()}${hud}</div><p class="note">${note}</p></div>`).join('');
+<div class="phone ${k}">${scene(T[k])}${hud}</div><p class="note">${note}</p></div>`).join('');
 </script>
