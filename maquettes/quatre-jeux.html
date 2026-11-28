@@ -144,7 +144,7 @@ details ul{margin:.3em 0;padding-left:1.1em}
 
 <main>
   <h1>Quatre maquettes de jeux</h1>
-  <p class="lead">Nurikabe, Code secret, Hnefatafl et Conquête hexagonale. Chaque onglet a les règles et une mini-démo jouable. Le sélecteur change la direction graphique de tout.</p>
+  <p class="lead">Nurikabe, Code secret et Conquête hexagonale (Hnefatafl a été retiré). Chaque onglet a les règles et une mini-démo jouable. Le sélecteur change la direction graphique de tout.</p>
 
   <div class="seg" id="dirs" role="group" aria-label="Direction graphique">
     <button data-d="A" aria-pressed="true">A · Atelier clair</button>
@@ -154,8 +154,7 @@ details ul{margin:.3em 0;padding-left:1.1em}
   <div class="seg tabs" id="tabs" role="tablist">
     <button data-t="nk" aria-pressed="true">Nurikabe</button>
     <button data-t="cs" aria-pressed="false">Code</button>
-    <button data-t="hn" aria-pressed="false">Tafl</button>
-    <button data-t="hx" aria-pressed="false">Conquête</button>
+        <button data-t="hx" aria-pressed="false">Conquête</button>
   </div>
 
   <!-- NURIKABE -->
@@ -188,7 +187,7 @@ details ul{margin:.3em 0;padding-left:1.1em}
   <section id="p-cs" class="card" hidden>
     <h2>Code secret</h2>
     <p class="lead">L'ordinateur cache 4 gemmes. Tu as 8 essais pour les retrouver, dans le bon ordre.</p>
-    <div class="seg" id="cs-md"><button data-m="g" aria-pressed="true">Indices sur les gemmes</button><button data-m="p" aria-pressed="false">Pastilles classiques</button></div>
+    <div class="seg" id="cs-md"><button data-m="g" aria-pressed="true">Normal : indices sur les gemmes</button><button data-m="p" aria-pressed="false">Difficile : pastilles</button></div>
     <div id="cs"></div>
     <div class="pal" id="cs-p"></div>
     <div class="msg" id="cs-m"></div>
@@ -196,37 +195,15 @@ details ul{margin:.3em 0;padding-left:1.1em}
     <details open><summary>Comment jouer</summary>
       <ul>
         <li>Pose 4 gemmes (touche une couleur en bas), puis <b>Valider</b>. Une couleur peut revenir plusieurs fois.</li>
-        <li><b>Mode « Indices sur les gemmes »</b> : chaque gemme que tu as posée reçoit son propre indice. <b>✓ vert</b> : bonne couleur, bon endroit. <b>~ orange</b> : cette couleur est dans le code, mais ailleurs. <b>✕ gris</b> : cette couleur n'est pas dans le code (ou plus assez de fois).</li>
-        <li><b>Mode « Pastilles classiques »</b> (le vrai Mastermind) : à droite, on te dit seulement <b>combien</b> de gemmes sont bien placées (pastilles pleines) et combien ont la bonne couleur au mauvais endroit (pastilles creuses). <b>L'ordre des pastilles ne désigne pas une gemme</b> : à toi de deviner lesquelles.</li>
+        <li><b>Niveau Normal (indices sur les gemmes)</b> : chaque gemme que tu as posée reçoit son propre indice. <b>✓ vert</b> : bonne couleur, bon endroit. <b>~ orange</b> : cette couleur est dans le code, mais ailleurs. <b>✕ gris</b> : cette couleur n'est pas dans le code (ou plus assez de fois).</li>
+        <li><b>Niveau Difficile (pastilles, le vrai Mastermind)</b> : à droite, on te dit seulement <b>combien</b> de gemmes sont bien placées (pastilles pleines) et combien ont la bonne couleur au mauvais endroit (pastilles creuses). <b>L'ordre des pastilles ne désigne pas une gemme</b> : à toi de deviner lesquelles.</li>
         <li>Le score est le nombre d'essais utilisés (8 maximum).</li>
       </ul>
-      <p><b>Dans la Ludothèque :</b> code du jour (même code pour toute la famille), Facile (indices sur les gemmes, 4 couleurs), Normal, Expert (pastilles, 5 gemmes sur 8 couleurs), indice qui élimine une couleur.</p>
+      <p><b>Dans la Ludothèque :</b> code du jour (même code pour toute la famille), deux niveaux : Normal (indices sur chaque gemme) et Difficile (pastilles classiques, un code et un classement chacun) ; code du jour dans les deux ; indice qui élimine une couleur.</p>
     </details>
   </section>
 
-  <!-- HNEFATAFL -->
-  <section id="p-hn" class="card" hidden>
-    <h2>Hnefatafl (Brandubh 7 × 7)</h2>
-    <p class="lead" id="hn-lead"></p>
-    <div class="seg" id="hn-lv"><button data-l="easy" aria-pressed="true">Débutant</button><button data-l="norm" aria-pressed="false">Normal</button></div>
-    <div id="hn"></div>
-    <div class="stat"><span id="hn-s">À toi de jouer</span><span id="hn-k"></span></div>
-    <div class="msg" id="hn-m"></div>
-    <div class="bar"><button class="btn main" id="hn-n">Nouvelle partie</button><button class="btn" id="hn-u">Annuler</button><button class="btn" id="hn-sw">Jouer l'autre camp</button><button class="btn" id="hn-d" aria-pressed="true">Menaces : oui</button></div>
-    <details open><summary>Règles</summary><ul>
-      <li><b>Plateau</b> 7 × 7. Le roi (couronne) est au centre, sur le trône, entouré de 4 défenseurs ; 8 attaquants occupent le milieu de chaque bord.</li>
-      <li><b>Déplacement</b> : comme une tour aux échecs, en ligne droite, sans sauter par-dessus une pièce.</li>
-      <li><b>Cases spéciales</b> (hachurées) : les 4 coins et le trône. Seul le roi peut s'y arrêter. Les autres pièces peuvent traverser le trône vide.</li>
-      <li><b>Capture</b> : une pièce est prise quand tu la coinces entre deux de tes pièces, en jouant le coup qui ferme le piège. Un coin ou un trône vide compte comme une pièce ennemie. Le roi aide à capturer. Un contour rouge montre les pièces que l'adversaire peut prendre au prochain coup.</li>
-      <li><b>Le roi</b> ne se prend pas à deux : il faut que ses 4 côtés soient fermés par des attaquants, le trône vide ou le bord du plateau.</li>
-      <li><b>Victoire</b> : défenseurs, amener le roi sur un coin. Attaquants, entourer le roi.</li>
-    </ul>
-    <p><b>Conseils pour le roi :</b> sors-le vite du centre par une ligne libre, et cherche une position d'où il voit <b>deux coins à la fois</b> : l'adversaire ne peut en boucher qu'un.</p>
-    <p><b>Dans la Ludothèque :</b> Brandubh 7 × 7 pour apprendre, puis Tablut 9 × 9 ; 3 niveaux d'IA ; parties à deux sur le même téléphone ; lien possible avec Le Thé des Jarls.</p></details>
-  </section>
-
-  
-<!-- CONQUETE -->
+  <!-- CONQUETE -->
   <section id="p-hx" class="card" hidden>
     <h2>Conquête hexagonale</h2>
     <p class="lead">Tu es le bleu, contre le rouge et l'or. Place tes renforts, puis envoie des troupes sur les cases voisines.</p>
@@ -246,7 +223,7 @@ details ul{margin:.3em 0;padding-left:1.1em}
     <p><b>Dans la Ludothèque :</b> parties de 10 minutes sur 3 tailles de carte ; chefs avec un pouvoir chacun ; terrains (forêt : défense +1, plaine : mouvement de 2 cases) ; sauvegarde de la partie ; carte du jour. À trancher : dés (Risk) ou résultat sans hasard (Advance Wars).</p></details>
   </section>
 
-  <p class="pend"><b>Version 2 (28/11) :</b> Conquête validée. Code secret : indices sur les gemmes. Nurikabe : règles réécrites avec exemple, grille d'initiation 4 × 4. Hnefatafl : roi pris par 4 côtés, niveau Débutant, menaces signalées, bouton Annuler. Les démos restent rudimentaires (IA simple, deux grilles de Nurikabe, une seule carte).</p>
+  <p class="pend"><b>Version 3 (28/11) :</b> Hnefatafl retiré. Code secret à deux niveaux, Normal (indices sur les gemmes) et Difficile (pastilles). Nurikabe passe en <b>carte illustrée</b> dans une maquette à part. <b>Version 2 :</b> Conquête validée. Code secret : indices sur les gemmes. Nurikabe : règles réécrites avec exemple, grille d'initiation 4 × 4. Hnefatafl : roi pris par 4 côtés, niveau Débutant, menaces signalées, bouton Annuler. Les démos restent rudimentaires (IA simple, deux grilles de Nurikabe, une seule carte).</p>
 </main>
 
 <script>
@@ -256,7 +233,7 @@ function el(t,c,p){const e=document.createElement(t);if(c)e.className=c;if(p)p.a
 $$('#dirs button').forEach(b=>b.onclick=()=>{document.documentElement.dataset.dir=b.dataset.d;$$('#dirs button').forEach(x=>x.setAttribute('aria-pressed',x===b))});
 document.documentElement.dataset.dir='A';
 $$('#tabs button').forEach(b=>b.onclick=()=>{$$('#tabs button').forEach(x=>x.setAttribute('aria-pressed',x===b));
-  ['nk','cs','hn','hx'].forEach(k=>$('#p-'+k).hidden=k!==b.dataset.t)});
+  ['nk','cs','hx'].forEach(k=>$('#p-'+k).hidden=k!==b.dataset.t)});
 
 /* ---------- NURIKABE ---------- */
 const NKP={4:{n:4,clues:{3:2,5:4,12:3},sol:'0010001011110001'},5:{n:5,clues:{4:3,7:2,17:2,19:2,20:2},sol:'1110010010111110101001010'}};
@@ -310,71 +287,6 @@ $('#cs-v').onclick=()=>{if(csOver||csCur.includes(null))return;const f=csFb(csCu
 $('#cs-n').onclick=csNew;
 $$('#cs-md button').forEach(b=>b.onclick=()=>{csMode=b.dataset.m;$$('#cs-md button').forEach(x=>x.setAttribute('aria-pressed',x===b));csDraw()});
 csNew();
-
-/* ---------- HNEFATAFL ---------- */
-const HC=[[0,0],[0,6],[6,0],[6,6]];
-const isCorner=(r,c)=>(r===0||r===6)&&(c===0||c===6), isThrone=(r,c)=>r===3&&c===3, special=(r,c)=>isCorner(r,c)||isThrone(r,c);
-const hStart=()=>{const b=Array.from({length:7},()=>Array(7).fill(0));b[3][3]='K';[[2,3],[4,3],[3,2],[3,4]].forEach(([r,c])=>b[r][c]='D');
-  [[0,3],[1,3],[5,3],[6,3],[3,0],[3,1],[3,5],[3,6]].forEach(([r,c])=>b[r][c]='A');return b};
-const side=p=>p==='A'?'A':'D';
-const D4=[[1,0],[-1,0],[0,1],[0,-1]];
-let hB,hTurn,hHuman,hSel,hOver,hLast,hLvl='easy',hHist=[],hDanger=true;
-function moves(b,r,c){const p=b[r][c],out=[];for(const[dr,dc]of D4){let y=r+dr,x=c+dc;
-  while(y>=0&&y<7&&x>=0&&x<7&&b[y][x]===0){if(p==='K'||!special(y,x))out.push([y,x]);else if(isCorner(y,x))break;y+=dr;x+=dc}}return out}
-function kingClosed(n,r,c){return D4.every(([a,d])=>{const y=r+a,x=c+d;if(y<0||y>6||x<0||x>6)return true;const q=n[y][x];return q==='A'||(q===0&&isThrone(y,x))})}
-function apply(b,fr,fc,tr,tc){const n=b.map(r=>r.slice()),p=n[fr][fc];n[fr][fc]=0;n[tr][tc]=p;const me=side(p);let cap=0,kingTaken=false;
-  const hostile=(y,x)=>{if(y<0||y>6||x<0||x>6)return false;const q=n[y][x];if(q)return side(q)===me;return isCorner(y,x)||isThrone(y,x)};
-  for(const[dr,dc]of D4){const y=tr+dr,x=tc+dc;if(y<0||y>6||x<0||x>6)continue;const q=n[y][x];if(!q||side(q)===me)continue;
-    if(q==='K'){if(me==='A'&&kingClosed(n,y,x)){n[y][x]=0;kingTaken=true}continue}
-    if(hostile(y+dr,x+dc)){n[y][x]=0;cap++}}
-  return{b:n,cap,kingTaken,win:p==='K'&&isCorner(tr,tc)}}
-function allMoves(b,s){const o=[];for(let r=0;r<7;r++)for(let c=0;c<7;c++){const p=b[r][c];if(p&&side(p)===s)for(const[y,x]of moves(b,r,c))o.push([r,c,y,x])}return o}
-function kingPos(b){for(let r=0;r<7;r++)for(let c=0;c<7;c++)if(b[r][c]==='K')return[r,c];return null}
-function evalB(b){const k=kingPos(b);if(!k)return 1e5;let a=0,d=0;b.forEach(r=>r.forEach(p=>{if(p==='A')a++;else if(p==='D')d++}));
-  let s=12*a-16*d;let open=0;for(const[cr,cc]of HC){const[kr,kc]=k;if(kr===cr||kc===cc){let ok=true;const dr=Math.sign(cr-kr),dc=Math.sign(cc-kc);let y=kr+dr,x=kc+dc;while(!(y===cr&&x===cc)){if(b[y][x]){ok=false;break}y+=dr;x+=dc}if(ok)open++}}
-  s-=open*(open>1?900:120);s+=Math.min(...HC.map(([r,c])=>Math.abs(r-k[0])+Math.abs(c-k[1])))*4;
-  let adj=0;for(const[a,d]of D4){const y=k[0]+a,x=k[1]+d;if(y<0||y>6||x<0||x>6||b[y][x]==='A')adj++}s+=adj*10;
-  s-=moves(b,k[0],k[1]).length*2;return s}
-function aiMove(b,s,lvl){const ms=allMoves(b,s);if(!ms.length)return null;
-  for(const m of ms){const r=apply(b,...m);if((s==='A'&&r.kingTaken)||(s==='D'&&r.win))return m}
-  if(lvl==='easy'&&Math.random()<.45)return ms[Math.random()*ms.length|0];
-  let best=null,bv=s==='A'?-Infinity:Infinity;const better=v=>s==='A'?v>bv:v<bv;
-  for(const m of ms){const r=apply(b,...m);let v;
-    if(lvl==='easy')v=evalB(r.b);
-    else{const o=s==='A'?'D':'A';let w=s==='A'?Infinity:-Infinity;const rep=allMoves(r.b,o);
-      if(!rep.length)w=s==='A'?1e5:-1e5;
-      for(const q of rep){const r2=apply(r.b,...q);let u;if(o==='D'&&r2.win)u=-1e6;else if(o==='A'&&r2.kingTaken)u=1e6;else u=evalB(r2.b);
-        if(s==='A'?u<w:u>w)w=u}
-      v=w}
-    v+=Math.random()*3;if(better(v)){bv=v;best=m}}
-  return best}
-function dangerSet(b,mine){const opp=mine==='A'?'D':'A',set=new Set();
-  for(const m of allMoves(b,opp)){const r=apply(b,...m);for(let y=0;y<7;y++)for(let x=0;x<7;x++){const p=b[y][x];if(p&&side(p)===mine&&r.b[y][x]===0&&!(m[0]===y&&m[1]===x))set.add(y+','+x)}}return set}
-function hNew(){hB=hStart();hTurn='D';hSel=null;hOver=false;hLast=null;hHist=[];$('#hn-m').textContent='';$('#hn-m').className='msg';hDraw();if(hHuman==='A')setTimeout(hAI,350)}
-function hDraw(){const g=$('#hn');g.innerHTML='';const mv=hSel?moves(hB,...hSel):[];const dg=hDanger&&!hOver&&hTurn===hHuman?dangerSet(hB,hHuman):new Set();
-  for(let r=0;r<7;r++)for(let c=0;c<7;c++){const p=hB[r][c];
-    const b=el('button','hc'+(special(r,c)?' sp':'')+(hSel&&hSel[0]===r&&hSel[1]===c?' sel':'')+(mv.some(([y,x])=>y===r&&x===c)?' hint':'')+(hLast&&hLast.some(([y,x])=>y===r&&x===c)?' last':''),g);
-    b.setAttribute('aria-label','case '+(r+1)+','+(c+1));if(p)el('i','pc '+p+(dg.has(r+','+c)?' danger':''),b);b.onclick=()=>hClick(r,c)}
-  const n=k=>hB.flat().filter(p=>p===k).length;$('#hn-k').textContent='Attaquants '+n('A')+' · Défenseurs '+n('D');
-  $('#hn-s').textContent=hOver?'Partie finie':(hTurn===hHuman?'À toi de jouer':'L\'ordinateur réfléchit…');$('#hn-u').disabled=!hHist.length||hTurn!==hHuman}
-function hEnd(r){if(r.kingTaken||r.win){hOver=true;const m=$('#hn-m');const humanWon=(r.win&&hHuman==='D')||(r.kingTaken&&hHuman==='A');
-  m.textContent=r.win?'Le roi a atteint un coin : victoire des défenseurs !':'Le roi est encerclé : victoire des attaquants !';m.className='msg '+(humanWon?'ok':'err');return true}return false}
-function hSay(t,k){const m=$('#hn-m');m.textContent=t;m.className='msg'+(k?' '+k:'')}
-function hClick(r,c){if(hOver||hTurn!==hHuman)return;const p=hB[r][c];
-  if(p&&side(p)===hHuman){hSel=[r,c];hDraw();return}
-  if(hSel&&moves(hB,...hSel).some(([y,x])=>y===r&&x===c)){hHist.push({b:hB,last:hLast});const res=apply(hB,hSel[0],hSel[1],r,c);hLast=[hSel,[r,c]];hB=res.b;hSel=null;hTurn=hHuman==='A'?'D':'A';
-    hSay(res.cap?'Bien joué : tu prends '+res.cap+' pièce'+(res.cap>1?'s':'')+'.':'','ok');hDraw();if(hEnd(res)){hDraw();return}
-    setTimeout(hAI,450)}}
-function hAI(){if(hOver)return;const s=hHuman==='A'?'D':'A';const m=aiMove(hB,s,hLvl);if(!m){hOver=true;hSay('L\'ordinateur ne peut plus bouger : tu gagnes.','ok');hDraw();return}
-  const res=apply(hB,...m);hLast=[[m[0],m[1]],[m[2],m[3]]];hB=res.b;hTurn=hHuman;if(res.cap)hSay('L\'ordinateur prend '+res.cap+' pièce'+(res.cap>1?'s':'')+'.','err');hDraw();hEnd(res);hDraw()}
-function hLead(){$('#hn-lead').textContent=hHuman==='D'?'Tu joues le roi (couronne) et ses défenseurs bleus : amène le roi sur un coin hachuré. L\'ordinateur joue les attaquants rouges.':'Tu joues les attaquants rouges : entoure le roi avant qu\'il atteigne un coin. L\'ordinateur joue le roi.'}
-hHuman='D';hLead();
-$('#hn-n').onclick=hNew;
-$('#hn-u').onclick=()=>{if(!hHist.length||hTurn!==hHuman)return;const h=hHist.pop();hB=h.b;hLast=h.last;hOver=false;hSel=null;hTurn=hHuman;hSay('Coup annulé.');hDraw()};
-$('#hn-sw').onclick=()=>{hHuman=hHuman==='D'?'A':'D';$('#hn-sw').textContent=hHuman==='D'?'Jouer l\'autre camp':'Jouer le roi';hLead();hNew()};
-$('#hn-d').onclick=()=>{hDanger=!hDanger;$('#hn-d').textContent='Menaces : '+(hDanger?'oui':'non');hDraw()};
-$$('#hn-lv button').forEach(b=>b.onclick=()=>{hLvl=b.dataset.l;$$('#hn-lv button').forEach(x=>x.setAttribute('aria-pressed',x===b))});
-hNew();
 
 /* ---------- CONQUETE HEXAGONALE ---------- */
 const S=26,SQ=Math.sqrt(3);
