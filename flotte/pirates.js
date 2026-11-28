@@ -25,7 +25,7 @@ function ajouterPatrouille(E) {
 function apparaitre(E, cibles) {
   const a = rnd(E, 0, Math.PI * 2), c = cibles[Math.floor(E.rng() * cibles.length)];
   E.pirates.push({ x: Math.cos(a) * rayon(E), y: Math.sin(a) * rayon(E), pv: R.PIRATE.pv + E.lv + Math.floor(E.h.n / 2), etat: "chasse", cible: c, loot: 0, hit: 0, ang: 0 });
-  F.Sim.log(E, "Alerte : pirate détecté.");
+  F.Sim.log(E, "Alerte : pirate détecté."); E.evt.push({ kind: "alerte", x: E.pirates[E.pirates.length - 1].x, y: E.pirates[E.pirates.length - 1].y });
 }
 
 function maj(E, dt) {
@@ -59,7 +59,7 @@ function maj(E, dt) {
     }
   }
   for (const q of E.patrouilles) for (const p of E.pirates) {
-    if (Math.hypot(q.x - p.x, q.y - p.y) < Pa.portee) { p.pv -= Pa.degats * dt; p.hit = 1; q.tir = 1; q.cible = p; }
+    if (Math.hypot(q.x - p.x, q.y - p.y) < Pa.portee) { if (p.hit < .3) E.evt.push({ kind: "tir", x: q.x, y: q.y }); p.pv -= Pa.degats * dt; p.hit = 1; q.tir = 1; q.cible = p; }
   }
   if (E.pirates.length) E.pirates = E.pirates.filter(p => {
     if (p.pv <= 0) {

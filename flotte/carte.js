@@ -15,12 +15,29 @@ const TEINTES_M = ["#f4b860", "#e8944a", "#f0d070", "#d98a5b"], TEINTES_T = ["#8
 const LONGUEUR = { m: 10, t: 12, p: 9, x: 11 };       // longueur d'un sprite à 100 % de zoom (px, échelle 1)
 const SEUIL_SPRITE = 1.15, ZOOM_MIN = .6, ZOOM_MAX = 3.2;
 
-const IMG = {};
+const IMG = {}, IMGV = {};
+// Teintes décalées (degrés) : quatre variantes par rôle, pour que la flotte ne soit pas uniforme (navigateurs sans ctx.filter : une seule teinte)
+const VARIANTES = { m: [0, 22, -18, 40], t: [0, 35, -25, 70], p: [0, 18, -14, 30], x: [0, -12, 12, 25] };
+function variantes() {
+  if (!("filter" in document.createElement("canvas").getContext("2d"))) return;
+  for (const k of Object.keys(IMG)) {
+    const im = IMG[k]; if (!im.width) continue;
+    IMGV[k] = VARIANTES[k].map(deg => { if (!deg) return im; const c = document.createElement("canvas"); c.width = im.width; c.height = im.height; const g = c.getContext("2d"); g.filter = "hue-rotate(" + deg + "deg)"; g.drawImage(im, 0, 0); g.filter = "none"; return c; });
+  }
+}
+// Lueurs de réacteur : un dégradé dessiné une fois (bleu pour la flotte, rose pour les pirates), puis simplement agrandi
+const LUEUR = {};
+function lueur(rose) {
+  const k = rose ? 1 : 0; if (LUEUR[k]) return LUEUR[k];
+  const c = document.createElement("canvas"); c.width = c.height = 64; const g = c.getContext("2d"), gr = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+  gr.addColorStop(0, rose ? "rgba(255,140,200,.9)" : "rgba(170,215,255,.9)"); gr.addColorStop(1, "rgba(0,0,0,0)"); g.fillStyle = gr; g.fillRect(0, 0, 64, 64);
+  return LUEUR[k] = c;
+}
 function charger() {
-  return Promise.all(Object.keys(F.SPRITES).map(k => new Promise(ok => { const i = new Image(); i.onload = i.onerror = ok; i.src = F.SPRITES[k].src; IMG[k] = i; })));
+  return Promise.all(Object.keys(F.SPRITES).map(k => new Promise(ok => { const i = new Image(); i.onload = i.onerror = ok; i.src = F.SPRITES[k].src; IMG[k] = i; }))).then(variantes);
 }
 
-function creerVue() { return { W: 0, H: 0, dpr: 1, z: 1, px: 0, py: 0, cam: R.ZONES[0].cam, sel: null, theme: "bleue", pops: [], booms: [], bg: null, etoiles: [], tilt: .62, u0: 1, cx0: 0, cy0: 0, sc: 1, ue: 1 }; }
+function creerVue() { return { W: 0, H: 0, dpr: 1, z: 1, px: 0, py: 0, cam: R.ZONES[0].cam, sel: null, seuil: 1.15, ms: 0, theme: "bleue", pops: [], booms: [], bg: null, etoiles: [], tilt: .62, u0: 1, cx0: 0, cy0: 0, sc: 1, ue: 1 }; }
 
 // Dimensions de la fenêtre : recalcule la géométrie et le fond (cache)
 function taille(V, cv, W, H) {
@@ -51,7 +68,7 @@ function avancer(E, V, dt) {
   const cible = V.sel && E.ships.includes(V.sel) ? V.sel : null;
   const tx = cible ? cible.x : 0, ty = cible ? cible.y : 0;
   V.px += (tx - V.px) * Math.min(1, dt * 3); V.py += (ty - V.py) * Math.min(1, dt * 3);
-  for (const e of E.evt) { if (e.kind === "boom") V.booms.push({ x: e.x, y: e.y, vie: 1 }); else V.pops.push({ x: e.x, y: e.y, n: e.n, col: e.col, perte: e.kind === "perte", vie: 1 }); }
+  for (const e of E.evt) { if (e.kind === "boom") V.booms.push({ x: e.x, y: e.y, vie: 1 }); else if (e.kind === "alerte" || e.kind === "tir") continue; else V.pops.push({ x: e.x, y: e.y, n: e.n, col: e.col, perte: e.kind === "perte", vie: 1 }); }
   E.evt.length = 0;
   for (const o of V.pops) o.vie -= dt * .7;
   for (const o of V.booms) o.vie -= dt * 1.4;
@@ -113,8 +130,13 @@ function dessiner(c, E, V) {
       c.strokeStyle = R.ORE[sh.a.ore].c; c.globalAlpha = .25 + .35 * pu; c.lineWidth = .7; c.beginPath(); c.moveTo(x, y); c.lineTo(mx, my); c.stroke(); c.globalAlpha = 1;
     }
     if (sh.etat === "vol" && sh.trace.length > 1) {
+      const t0 = ecran(V, sh.trace[0][0], sh.trace[0][1]); if (t0[0] < -60 || t0[1] < -60 || t0[0] > V.W + 60 || t0[1] > V.H + 60) continue;
       c.lineWidth = .8;
-      for (let i = 1; i < sh.trace.length; i++) { const a = ecran(V, sh.trace[i - 1][0], sh.trace[i - 1][1]), b = ecran(V, sh.trace[i][0], sh.trace[i][1]); c.strokeStyle = "rgba(255,255,255," + (i / sh.trace.length * .22) + ")"; c.beginPath(); c.moveTo(a[0], a[1]); c.lineTo(b[0], b[1]); c.stroke(); }
+      if (E.ships.length > 120) {                                            // grande flotte : un seul tracé, plus léger
+        c.strokeStyle = "rgba(255,255,255,.12)"; c.beginPath(); c.moveTo(t0[0], t0[1]);
+        for (let i = 1; i < sh.trace.length; i++) { const b = ecran(V, sh.trace[i][0], sh.trace[i][1]); c.lineTo(b[0], b[1]); }
+        c.stroke();
+      } else for (let i = 1; i < sh.trace.length; i++) { const a = ecran(V, sh.trace[i - 1][0], sh.trace[i - 1][1]), b = ecran(V, sh.trace[i][0], sh.trace[i][1]); c.strokeStyle = "rgba(255,255,255," + (i / sh.trace.length * .22) + ")"; c.beginPath(); c.moveTo(a[0], a[1]); c.lineTo(b[0], b[1]); c.stroke(); }
     }
   }
   for (const sh of E.ships) navire(c, V, sh, t);
@@ -141,7 +163,7 @@ function navire(c, V, sh, t) {
   const [x, y] = ecran(V, sh.x, sh.y), sc = V.sc;
   if (x < -40 || y < -40 || x > V.W + 40 || y > V.H + 40) return;
   const ang = Math.atan2(Math.sin(sh.ang) * V.tilt, Math.cos(sh.ang));      // cap à l'écran (la vue aplatit)
-  if (V.z >= SEUIL_SPRITE && IMG[sh.type] && IMG[sh.type].complete) { sprite(c, sh.type, x, y, ang, LONGUEUR[sh.type] * sc * clamp(V.z, .8, 2.6), t, sh.id, sh.etat === "vol"); return; }
+  if (V.z >= V.seuil && IMG[sh.type] && IMG[sh.type].complete) { sprite(c, sh.type, x, y, ang, LONGUEUR[sh.type] * sc * clamp(V.z, .8, 2.6), t, sh.id, sh.etat === "vol", V.dpr); c.setTransform(V.dpr, 0, 0, V.dpr, 0, 0); return; }
   c.save(); c.translate(x, y); c.rotate(ang);
   const q = sc * (sh.type === "t" ? 1.1 : 1);
   c.fillStyle = sh.type === "m" ? TEINTES_M[sh.id % 4] : sh.type === "t" ? TEINTES_T[sh.id % 4] : sh.type === "p" ? "#8ab4ff" : "#ff5a6e";
@@ -152,21 +174,18 @@ function navire(c, V, sh, t) {
 }
 
 // Sprite Relief (le vaisseau regarde vers le haut dans l'image), avec la lueur de ses réacteurs en vol
-function sprite(g, type, x, y, ang, len, t, id, vol) {
-  const v = F.SPRITES[type], im = IMG[type], k = len / v.h, fl = .75 + .25 * Math.sin(t * 28 + id * 3);
-  g.save(); g.translate(x, y); g.rotate(ang + Math.PI / 2);
+function sprite(g, type, x, y, ang, len, t, id, vol, dpr) {
+  const v = F.SPRITES[type], im = (IMGV[type] && IMGV[type][id % 4]) || IMG[type], k = len / v.h, fl = .75 + .25 * Math.sin(t * 28 + id * 3);
+  const a = ang + Math.PI / 2, co = Math.cos(a) * dpr, si = Math.sin(a) * dpr;
+  g.setTransform(co, si, -si, co, x * dpr, y * dpr);                    // plus léger que save / translate / rotate / restore
   if (vol) {
     g.globalCompositeOperation = "lighter";
-    for (const m of v.moteurs) {
-      const gx = (m[0] - v.w / 2) * k, gy = (m[1] - v.h / 2) * k, r = m[2] * k * 2.6 * fl, gr = g.createRadialGradient(gx, gy, 0, gx, gy, r);
-      gr.addColorStop(0, type === "x" ? "rgba(255,140,200,.9)" : "rgba(170,215,255,.9)"); gr.addColorStop(1, "rgba(0,0,0,0)");
-      g.fillStyle = gr; g.beginPath(); g.arc(gx, gy, r, 0, TAU); g.fill();
-    }
+    const L = lueur(type === "x");
+    for (const m of v.moteurs) { const gx = (m[0] - v.w / 2) * k, gy = (m[1] - v.h / 2) * k, r = m[2] * k * 2.6 * fl; g.drawImage(L, gx - r, gy - r, r * 2, r * 2); }
     g.globalCompositeOperation = "source-over";
   }
-  g.imageSmoothingEnabled = true; g.drawImage(im, -v.w * k / 2, -v.h * k / 2, v.w * k, v.h * k);
-  g.restore();
+  g.drawImage(im, -v.w * k / 2, -v.h * k / 2, v.w * k, v.h * k);
 }
 
-F.Carte = { THEMES, SEUIL_SPRITE, ZOOM_MIN, ZOOM_MAX, charger, creerVue, taille, theme, ecran, avancer, zoomer, choisir, dessiner, sprite };
+F.Carte = { rafraichir: variantes, THEMES, SEUIL_SPRITE, ZOOM_MIN, ZOOM_MAX, charger, creerVue, taille, theme, ecran, avancer, zoomer, choisir, dessiner, sprite };
 })();

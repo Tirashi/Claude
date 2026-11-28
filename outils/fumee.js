@@ -191,6 +191,7 @@ const shots = process.argv[2];
         J.app.fermerFiche(); await wait(300);
         E.credits += 1e6; if (!J.app.portee() || E.lv !== 1) return 'la portée n\'ouvre pas la zone 2'; J.app.ameliorer('mot'); if (E.up.mot !== 1) return 'amélioration des moteurs';
         E.credits += 1e5; if (J.app.acheter && !E.patrouilles.length) { J.app.setLot('1'); J.app.acheter('p'); } await wait(500); if (E.patrouilles.length !== 1 || document.getElementById('vP').textContent !== '1') return 'pas de patrouille'; if (!window.Flotte.Pirates) return 'pas de pirates';
+        if (!window.Flotte.Son || !window.Flotte.Son.dispo()) return 'pas de module de sons'; J.app.setPref('musique', false); J.app.setPref('sons', true); J.app.setPref('volume', .5); const pr = window.Flotte.Son.prefs(); if (pr.musique || !pr.sons || pr.volume !== .5) return 'réglages du son'; window.Flotte.Son.jouer('achat'); window.Flotte.Son.jouer('explosion', {pan: -.4});
         await wait(300); if (!document.getElementById('toast').classList.contains('on')) return 'pas d\'annonce de la zone'; if (document.querySelectorAll('#ameliorations .upg').length !== 3) return 'fenêtre Ingénierie';
         window.dispatchEvent(new Event('pagehide')); const sauve = JSON.parse(localStorage.getItem('flotte.partie') || 'null');
         if (!sauve || sauve.navires.length !== 18) return 'sauvegarde illisible';

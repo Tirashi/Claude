@@ -41,6 +41,9 @@ function init(a) {
   // ambiances
   $("themes").innerHTML = Object.keys(F.Carte.THEMES).map(k => '<button type="button" data-t="' + k + '" aria-pressed="false">' + F.Carte.THEMES[k].nom + "</button>").join("");
   $("themes").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; app.theme(b.dataset.t); maj(); });
+  $("bSons").addEventListener("click", () => { app.setPref("sons", !app.pref("sons")); maj(); });
+  $("bMusique").addEventListener("click", () => { app.setPref("musique", !app.pref("musique")); maj(); });
+  $("rVolume").addEventListener("input", e => app.setPref("volume", e.target.value / 100));
   $("bCineSuivi").addEventListener("click", () => { app.setCineSuivi(!app.cineSuivi()); maj(); });
   // nouvelle partie : deux touchers
   let attente = 0;
@@ -65,6 +68,8 @@ function maj(E, V) {
   $("vPir").textContent = E.pirates.length; $("vPir").style.color = E.pirates.length ? "#ff8aa0" : "";
   document.querySelectorAll("#lots button").forEach(b => b.setAttribute("aria-pressed", b.dataset.l === lot));
   $("bCineSuivi").setAttribute("aria-pressed", app.cineSuivi());
+  $("bSons").setAttribute("aria-pressed", !!app.pref("sons")); $("bMusique").setAttribute("aria-pressed", !!app.pref("musique"));
+  if (document.activeElement !== $("rVolume")) $("rVolume").value = Math.round(app.pref("volume") * 100);
   document.querySelectorAll("#themes button").forEach(b => b.setAttribute("aria-pressed", b.dataset.t === V.theme));
   document.querySelectorAll(".buy").forEach(b => {
     const k = b.dataset.k, n = E.buys[k];

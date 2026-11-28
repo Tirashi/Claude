@@ -107,7 +107,7 @@ Départ : 400 crédits, 5 mineurs, 3 marchands, zone 1.
 - **Sauvegarde** : `localStorage` (clé `flotte-v1`), toutes les 10 s et à la fermeture ; transfert `LUDO1-` par la fiche (`transfert`) ; pas de classement donc pas de `LudoScores`.
 - **Simulateur** `outils/flotte-simulateur.js` (sans écran, comme `terres-simulateur.js`) : joue une partie avec une stratégie d'achat simple, pour régler coûts, gains, durées de zone, seuil du prestige, et vérifier qu'une première partie dure **environ 2 à 3 heures actives** avant l'Horizon ; contrôle ajouté à `outils/verifications.js`.
 - **Performances** : cible 400 navires à 60 i/s sur téléphone moyen, 1 000 sur PC ; routes dessinées une fois par couple (pas par navire) ; traînées et détails coupés sous un seuil de zoom ; options « graphismes bas » (sans traînées) ; leçon de l'éditeur d'origine : les trajectoires dessinées étaient le goulot.
-- **Sons** (à décider) : aucun au début ; options sobres plus tard (achat, pirate, ouverture de zone), musique douce coupable.
+- **Sons** (fait le 28/11) : voulus par l'utilisateur « sobres, modernes et soignés » et une **musique très douce qu'on peut couper**. Tout est **synthétisé** dans le navigateur (Web Audio, aucun fichier, donc rien à créditer) : notes de sinus et de triangle à l'enveloppe lente sur une gamme pentatonique, réverbération partagée, compresseur doux, placement stéréo selon la position à l'écran. Sons : achat, amélioration, éclat, ouverture de zone, Horizon, retour, alerte pirate, pillage, tir, explosion, livraison (très discrète, espacée), clic. Musique : tapis générative en la mineur (quatre accords de 20 s) et rares cloches, environ trois fois plus douce que les effets. Options : Sons, Musique, Volume. Démarre au premier geste (règle des navigateurs).
 
 ## 13. Fusion et grandes flottes (plus tard)
 **Fusion** (idée du jeu d'origine) : 100 navires d'un rôle deviennent 1 **super-navire** (sprite agrandi ×1,6) qui compte pour 100 dans les calculs ; sert à garder la fluidité. À faire seulement si les essais de performance le demandent.
@@ -120,7 +120,7 @@ Voir la liste de contrôle de `specs/ludotheque.md` (skill `ajouter-un-jeu`) : d
 2. **Zones (fait le 26/11)** : portée du signal, avant-postes, Ingénierie (moteurs, soute), console, fiche d'un navire et suivi de caméra, cinéma.
 3. **Pirates (fait le 26/11)** : patrouilles, primes, alertes.
 4. **Prestige (fait le 27/11)** : Horizon, éclats, améliorations permanentes dont la Veille, simulateur et équilibrage.
-5. **Finitions** : sons, performances (super-navire si besoin), variété des coques, étiquette, jaquette, transfert, artefact.
+5. **Finitions (en cours, 28/11)** : sons et musique faits ; fluidité (lueurs précalculées, tracés allégés, seuil des sprites adaptatif) et teintes des coques faits ; reste : super-navire seulement si les essais sur téléphone le demandent, nouvelles coques, essais à la main.
 Modèle : opusplan pour les sessions 1 à 3 et 5 ; Opus pour la session 4 (équilibrage).
 
 ## 15 bis. État après les sessions 1 et 2 (26/11)
@@ -130,11 +130,14 @@ Modèle : opusplan pour les sessions 1 à 3 et 5 ; Opus pour la session 4 (équi
 ## 15 ter. État après la session 4 (27/11)
 L'Horizon est jouable ([artefact](https://claude.ai/artifact/G8fypxapvG7eFT7PaSvrzU)) : fenêtre **Horizon** (progression, relance, améliorations permanentes, friction affichée), éclats, nouveau tour avec les bonus, veille alimentée par l'Horizon (elle n'est plus une amélioration de crédits), sauvegarde. Les questions restent ouvertes (nom, sons, plafond d'absence) ; le thème « Horizon » est celui du cahier des charges, sans retour de l'utilisateur.
 
+## 15 quater. Sons, fluidité et coques (28/11, session 5)
+Sons et musique (§ 12), **teintes** : chaque sprite Relief existe en quatre teintes (décalage de teinte de quelques dizaines de degrés par rôle) pour que la flotte ne soit pas uniforme ; **fluidité** mesurée en Chromium sans carte graphique : 445 navires au zoom 100 % en ~3,5 ms par image, au zoom 240 % (sprites) en ~14 ms (un téléphone avec carte graphique sera plus à l'aise) ; remède adaptatif : si le dessin dépasse 14 ms en moyenne, les sprites n'apparaissent qu'à un zoom plus fort. La **fusion en super-navire** n'est pas faite : à décider après essais sur téléphone.
+
 ## 16. Questions ouvertes
 1. ~~Nom du jeu~~ : **« Armateur des étoiles »**, choisi par l'utilisateur le 27/11 (parmi Sillages, Cabotage, Comptoir céleste, etc.).
 2. **Prestige** : thème et nom (« Horizon »), seuil, friction ajoutée à chaque relance.
 3. ~~Plafond d'absence~~ : 24 h validé le 27/11 ; part de veille 25 % à 75 % en attente d'essais.
-4. **Sons** : aucun, sobres, ou musique douce ?
+4. ~~Sons~~ : sobres et musique très douce coupable, faits le 28/11.
 5. Garder en vue : expéditions, Bourse, plusieurs systèmes (après le premier prestige), fusion en super-navire.
 
 ## Annexe A : le jeu d'origine (analyse du 25/11)

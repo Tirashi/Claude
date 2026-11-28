@@ -31,6 +31,8 @@ body { font-family: var(--mono); color: var(--pf); -webkit-user-select: none; us
 .btn.buy .c { color: var(--ac); font-variant-numeric: tabular-nums; }
 .btn:disabled { opacity: .38; cursor: default; }
 .btn.danger { border-color: #e0506a; color: #ff9eb0; }
+.vol { display: flex; align-items: center; gap: 8px; color: var(--pd); }
+.vol input { flex: 1; min-width: 0; accent-color: var(--ac); height: 18px; }
 .log { max-height: 96px; overflow: auto; font-size: 10px; color: var(--pd); display: grid; gap: 1px; align-content: start; }
 .log div b { color: var(--ac); font-weight: 400; }
 .card .nm, .retour .nm { font: 600 16px/1.2 var(--texte); color: #fff; }
