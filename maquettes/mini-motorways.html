@@ -1,0 +1,115 @@
+<title>Mini Motorways, maquette</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Outfit:wght@400;600;700&family=Press+Start+2P&display=swap">
+<style>
+/* Trois téléphones côte à côte : même ville, trois directions. */
+:root{--bg:#1d2127;--fg:#eef0f3;--mut:#9aa3ae;--card:#262b33}
+body{background:var(--bg);color:var(--fg);font:15px/1.5 Outfit,system-ui,sans-serif;margin:0;
+ padding-block:24px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1{font:700 26px Outfit,sans-serif;margin:0 0 4px}
+.lead{color:var(--mut);margin:0 0 24px;max-width:60ch}
+.row{display:flex;flex-wrap:wrap;gap:28px;justify-content:center}
+.col{width:300px;max-width:100%;min-width:0}
+.tag{font:600 12px Outfit;letter-spacing:.1em;text-transform:uppercase;color:var(--mut);margin-bottom:6px}
+.col h2{font:700 19px Outfit;margin:0 0 10px}
+.phone{position:relative;width:100%;aspect-ratio:360/560;border-radius:26px;overflow:hidden;border:6px solid #0c0e11;box-shadow:0 10px 30px #0008}
+.phone svg{display:block;width:100%;height:100%}
+.hud{position:absolute;left:0;right:0;pointer-events:none}
+.top{top:0;padding:10px 14px;display:flex;justify-content:space-between;align-items:flex-start}
+.bot{bottom:0;padding:10px 12px;display:flex;gap:8px;justify-content:center}
+.note{color:var(--mut);font-size:14px;margin:12px 0 0}
+.note b{color:var(--fg)}
+/* A */
+.A{background:#f3efe6}
+.A .score{font:700 34px Outfit;color:#2f3542;line-height:1}
+.A .day{font:600 12px Outfit;color:#7b8190;letter-spacing:.08em;text-transform:uppercase}
+.A .tool{background:#fff;border-radius:14px;padding:8px 12px;font:600 13px Outfit;color:#2f3542;box-shadow:0 2px 6px #0002;text-align:center;min-width:64px}
+.A .tool small{display:block;font-weight:400;color:#7b8190}
+/* B */
+.B{background:#e6d5ae}
+.B .score{font:600 34px Fredoka;color:#5a4630;line-height:1}
+.B .day{font:500 13px Fredoka;color:#8a7552}
+.B .tool{background:#fffaf0;border-radius:12px;padding:8px 12px;font:600 13px Fredoka;color:#5a4630;box-shadow:0 3px 0 #b9a577;text-align:center;min-width:64px}
+.B .tool small{display:block;font-weight:500;color:#8a7552}
+/* C */
+.C{background:#2c4a28}
+.C .score{font:16px 'Press Start 2P';color:#fff;text-shadow:2px 2px #000}
+.C .day{font:8px 'Press Start 2P';color:#cde6a8;margin-top:6px}
+.C .tool{background:#101820;border:3px solid #fff;padding:7px 8px;font:8px 'Press Start 2P';color:#fff;text-align:center;min-width:64px}
+.C .tool small{display:block;margin-top:5px;color:#ffd447}
+</style>
+
+<h1>Mini Motorways, pour elle</h1>
+<p class="lead">Même ville dans les trois cas : trois maisons reliées à leur bâtiment de la même couleur, une maison rouge isolée qui s'impatiente, un lac. Seule la direction artistique change.</p>
+
+<div class="row" id="row"></div>
+
+<script>
+const W=9,H=13,C=40;
+const roads={red:[[1,2],[1,5],[5,5]],blue:[[7,2],[7,4],[3,4],[3,8]],yellow:[[1,10],[4,10],[4,9],[7,9]]};
+const houses=[['red',1,2,0],['blue',7,2,0],['yellow',1,10,0],['red',7,11,.8]];
+const dests=[['red',5,5],['blue',3,8],['yellow',7,9]];
+const cars=[['red',1,3.5,90],['red',3.2,5,0],['blue',7,3.1,90],['blue',5,4,0],['yellow',2.6,10,0],['yellow',5.4,9,0]];
+const lake={x:5,y:6,w:3,h:2};
+const P=(x,y)=>[(x+.5)*C,(y+.5)*C];
+const pts=p=>p.map(q=>P(...q).join(',')).join(' ');
+function roadCells(){const s=new Set();Object.values(roads).forEach(p=>{for(let i=0;i<p.length-1;i++){let[a,b]=p[i],[c,d]=p[i+1];while(a!==c||b!==d){s.add(a+','+b);a+=Math.sign(c-a);b+=Math.sign(d-b)}s.add(c+','+d)}});return[...s].map(k=>k.split(',').map(Number))}
+const pin=(x,y,col,f,bg,r=7)=>{const L=2*Math.PI*(r-2);return `<circle cx="${x}" cy="${y}" r="${r+1.5}" fill="${bg}"/><circle cx="${x}" cy="${y}" r="${r-2}" fill="none" stroke="${col}" stroke-width="4" stroke-dasharray="${L*f} ${L}" transform="rotate(-90 ${x} ${y})"/>`};
+function frame(inner,defs=''){return `<svg viewBox="0 0 ${W*C} ${H*C+80}" preserveAspectRatio="xMidYMid slice"><defs>${defs}</defs>${inner}</svg>`}
+const roadPolys=(w,col,extra='')=>Object.values(roads).map(p=>`<polyline points="${pts(p)}" fill="none" stroke="${col}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round" ${extra}/>`).join('');
+const o=60;/* décalage vertical : laisse la place au score */
+
+/* A : plan épuré */
+function A(){
+ const col={red:'#e4572e',blue:'#2e86de',yellow:'#f4b400'};
+ let s=`<rect width="${W*C}" height="${H*C+80}" fill="#f3efe6"/><g transform="translate(0,${o})">`;
+ s+=`<rect x="${lake.x*C+4}" y="${lake.y*C+4}" width="${lake.w*C-8}" height="${lake.h*C-8}" rx="22" fill="#b6d8e8"/>`;
+ s+=roadPolys(17,'#3a4150');
+ dests.forEach(([c,x,y])=>{const[p,q]=P(x,y);s+=`<rect x="${p-17}" y="${q-17}" width="34" height="34" rx="6" fill="${col[c]}"/><rect x="${p-9}" y="${q-9}" width="18" height="18" rx="3" fill="#fff" opacity=".85"/>`});
+ houses.forEach(([c,x,y,f])=>{const[p,q]=P(x,y);s+=`<rect x="${p-12}" y="${q-12}" width="24" height="24" rx="5" fill="${col[c]}"/><rect x="${p-4}" y="${q+2}" width="8" height="10" rx="2" fill="#fff" opacity=".9"/>`;if(f)s+=pin(p+14,q-14,col[c],f,'#fff')});
+ cars.forEach(([c,x,y,r])=>{const[p,q]=P(x-.5,y-.5);s+=`<rect x="${p-4}" y="${q-7}" width="8" height="14" rx="3" fill="${col[c]}" stroke="#fff" stroke-width="1.5" transform="rotate(${r} ${p} ${q})"/>`});
+ return frame(s+'</g>')}
+
+/* B : papier découpé */
+function B(){
+ const col={red:'#d9534f',blue:'#3f7cac',yellow:'#efb02e'};
+ const defs=`<filter id="sh" x="-10%" y="-10%" width="130%" height="130%"><feDropShadow dx="0" dy="3" stdDeviation="2" flood-color="#5a4630" flood-opacity=".45"/></filter>`;
+ let s=`<rect width="${W*C}" height="${H*C+80}" fill="#e6d5ae"/>`;
+ s+=`<rect x="14" y="${o-6}" width="${W*C-28}" height="${H*C-8}" rx="22" fill="#b9d49a" filter="url(#sh)"/><g transform="translate(0,${o})">`;
+ s+=`<rect x="${lake.x*C+2}" y="${lake.y*C+2}" width="${lake.w*C-4}" height="${lake.h*C-4}" rx="20" fill="#7fbfd3" filter="url(#sh)"/>`;
+ [0,1].forEach(i=>s+=`<path d="M${lake.x*C+16} ${lake.y*C+26+i*28} q12 -8 24 0 t24 0 t24 0" fill="none" stroke="#cfeaf1" stroke-width="3" stroke-linecap="round"/>`);
+ s+=`<g filter="url(#sh)">${roadPolys(22,'#fffaf0')}</g>${roadPolys(3,'#d9cdb2','stroke-dasharray="1 9"')}`;
+ dests.forEach(([c,x,y])=>{const[p,q]=P(x,y);s+=`<g filter="url(#sh)"><rect x="${p-18}" y="${q-18}" width="36" height="36" rx="8" fill="${col[c]}"/></g><rect x="${p-10}" y="${q-10}" width="20" height="20" rx="4" fill="#fffaf0"/><path d="M${p-4} ${q+5} V${q-6} L${p+7} ${q-3} L${p-4} ${q}" fill="${col[c]}"/>`});
+ houses.forEach(([c,x,y,f])=>{const[p,q]=P(x,y);s+=`<g filter="url(#sh)"><rect x="${p-13}" y="${q-13}" width="26" height="26" rx="4" fill="${col[c]}"/></g><rect x="${p-13}" y="${q-13}" width="13" height="26" rx="4" fill="#fff" opacity=".22"/><rect x="${p-2}" y="${q-13}" width="4" height="26" fill="#000" opacity=".12"/>`;if(f)s+=pin(p+15,q-15,col[c],f,'#fffaf0')});
+ cars.forEach(([c,x,y,r])=>{const[p,q]=P(x-.5,y-.5);s+=`<g filter="url(#sh)"><rect x="${p-5}" y="${q-8}" width="10" height="16" rx="4" fill="${col[c]}" transform="rotate(${r} ${p} ${q})"/></g>`});
+ return frame(s+'</g>',defs)}
+
+/* C : pixel 16 bits */
+function Cc(){
+ const col={red:['#e03c31','#8e1f1a'],blue:['#3a78e0','#1d3f8a'],yellow:['#f5c518','#a07c00']};
+ let s=`<rect width="${W*C}" height="${H*C+80}" fill="#3f7a35"/>`;
+ s+=`<g transform="translate(0,${o})" shape-rendering="crispEdges">`;
+ for(let i=0;i<W;i++)for(let j=0;j<H;j++)if((i+j)%2)s+=`<rect x="${i*C}" y="${j*C}" width="${C}" height="${C}" fill="#468a3b"/>`;
+ s+=`<rect x="${lake.x*C}" y="${lake.y*C}" width="${lake.w*C}" height="${lake.h*C}" fill="#2c5fa8"/>`;
+ for(let i=0;i<lake.w;i++)for(let j=0;j<lake.h;j++)s+=`<rect x="${(lake.x+i)*C+8}" y="${(lake.y+j)*C+16}" width="16" height="4" fill="#6ea6ea"/>`;
+ roadCells().forEach(([x,y])=>{s+=`<rect x="${x*C}" y="${y*C}" width="${C}" height="${C}" fill="#555a66"/><rect x="${x*C+16}" y="${y*C+16}" width="8" height="8" fill="#e8e8e8"/>`});
+ dests.forEach(([c,x,y])=>{const X=x*C+4,Y=y*C+4;s+=`<rect x="${X}" y="${Y}" width="32" height="32" fill="#101820"/><rect x="${X+4}" y="${Y+4}" width="24" height="24" fill="${col[c][0]}"/><rect x="${X+4}" y="${Y+20}" width="24" height="8" fill="${col[c][1]}"/><rect x="${X+12}" y="${Y+10}" width="8" height="8" fill="#fff"/>`});
+ houses.forEach(([c,x,y,f])=>{const X=x*C+8,Y=y*C+8;s+=`<rect x="${X}" y="${Y}" width="24" height="24" fill="#101820"/><rect x="${X+3}" y="${Y+3}" width="18" height="9" fill="${col[c][0]}"/><rect x="${X+3}" y="${Y+12}" width="18" height="9" fill="#e9dcc0"/><rect x="${X+9}" y="${Y+14}" width="6" height="7" fill="${col[c][1]}"/>`;if(f)s+=`<rect x="${X+16}" y="${Y-12}" width="18" height="14" fill="#101820"/><rect x="${X+19}" y="${Y-9}" width="${Math.round(12*f)}" height="8" fill="${col[c][0]}"/>`});
+ cars.forEach(([c,x,y,r])=>{const[p,q]=P(x-.5,y-.5);const v=r===90;s+=`<rect x="${p-(v?5:8)}" y="${q-(v?8:5)}" width="${v?10:16}" height="${v?16:10}" fill="#101820"/><rect x="${p-(v?3:6)}" y="${q-(v?6:3)}" width="${v?6:12}" height="${v?12:6}" fill="${col[c][0]}"/>`});
+ return frame(s+'</g>')}
+
+const dirs=[
+ ['A','Direction A','Plan épuré',A,[['Routes','12'],['Ponts','1'],['Feux','2']],
+  'Le plus proche du vrai Mini Motorways : formes plates, couleurs franches, routes sombres. <b>Lisible au premier coup d\'œil</b>, très calme. Moins de personnalité.'],
+ ['B','Direction B','Papier découpé',B,[['Routes','12'],['Ponts','1'],['Feux','2']],
+  'Une maquette de papier posée sur une table : ombres douces, routes crème, petits drapeaux. <b>Chaleureux et doux</b>, pas de rétro. Les routes se distinguent bien des maisons.'],
+ ['C','Direction C','Pixel 16 bits',Cc,[['ROUTES','12'],['PONTS','1'],['FEUX','2']],
+  'La même ville en pixel art, dans l\'esprit de la Ludothèque. <b>Cohérent avec le reste de la collection</b>, mais plus chargé et moins reposant à regarder longtemps.']
+];
+document.getElementById('row').innerHTML=dirs.map(([k,t,n,f,tools,note])=>`
+<div class="col"><div class="tag">${t}</div><h2>${n}</h2>
+<div class="phone ${k}">${f()}
+<div class="hud top"><div><div class="score">47</div><div class="day">${k==='C'?'LUNDI':'Lundi'}</div></div></div>
+<div class="hud bot">${tools.map(([a,b])=>`<div class="tool">${a}<small>${b}</small></div>`).join('')}</div></div>
+<p class="note">${note}</p></div>`).join('');
+</script>
