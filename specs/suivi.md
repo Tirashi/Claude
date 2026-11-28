@@ -204,3 +204,8 @@ Session 5d : trois quêtes de compagnons (menu des lanternes après la fin), Cat
 
 ## Picross Dex : Sinnoh (27/11)
 4e onglet **Sinnoh** (n° 387 à 493, 107 dessins), ouvert par la capture de Deoxys. Dessins faits d'après les icônes de menu de PokéAPI : celles de la 4e génération (32×32) pour 55 Pokémon et celles de la 7e (40×30) pour 52, au choix de l'utilisateur Pokémon par Pokémon via la maquette `maquettes/picross-sinnoh.html` ; méthode : moyenne de blocs en 15×15, couleurs lues sur l'icône. Chromatiques : 106 sur 107 (sprites Platinum normal contre chromatique, `chroma.js`). Légendaires (14, par étapes) : lacs à 10 captures, Dialga et Palkia après les lacs, Heatran à 30, Regigigas à 50, Giratina après Dialga et Palkia, Cresselia à 60, Darkrai après Cresselia, Phione et Manaphy à 70, Shaymin à 85, Arceus après tous les autres. Cache v135.
+- 26/11 — Les Bannis : comparaison avec Slotbound (cdc § 18) et maquette 5 « le dé d'abord » (A dés des condamnés, B un seul dé, C cartes), à choisir.
+- 27/11 — Les Bannis : maquette 6 « dés à symboles » (classe, équipement, rareté ; atelier qui remplace des faces), après le retour sur la maquette 5.
+- 27/11 — Les Bannis, session 3 : dés à symboles jouables (recrues par dés de case, objets QUOI + QUALITE, atelier, dé d'événement, tuto), direction B (cdc § 19).
+- 27/11 — Les Bannis, session 3b : interface moderne dans tout le jeu, dés qui roulent (rebond, faces qui défilent, ombre), fil d'étapes et consignes « A FAIRE » (cdc § 19).
+- **27/11 — Démineur, page qui défilait** (retour d'essai sur Android) : `#app` en `position: fixed` collé aux bords de l'écran visible au lieu de `100dvh`, grille recalculée sur `visualViewport`.

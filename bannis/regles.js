@@ -9,7 +9,7 @@ const W = 360;
 const ZONE = {x0: 64, x1: 350, y0: 262, y1: 528};
 const MUR_X = 50;
 const CASES = [[92,290],[92,385],[92,480],[162,290],[162,385],[162,480]];
-const VERSION_RUN = 1;
+const VERSION_RUN = 2;
 
 let alea = Math.random;
 const r = (a, b) => a + alea()*(b-a);
@@ -29,6 +29,12 @@ function creerHeros(cls, nomsPris){
   h.pv = stats(h).pv;
   return h;
 }
+// ---- dés à symboles (27/11) ----
+const faceAuHasard = t => t[Math.floor(alea()*t.length)];
+function nouvellesFaces(){ return JSON.parse(JSON.stringify(D.FACES_DEPART)); }
+// le héros de la case i : sa classe est la face du dé de la case ; renvoie un nouveau héros
+function recrueDeCase(run, i, pris){ return creerHeros(faceAuHasard(run.faces.slots[i]), pris); }
+function recruesDes(run){ const out = [], pris = []; for (let i = 0; i < 3; i++){ const h = recrueDeCase(run, i, pris); pris.push(h.nom); out.push(h); } return out; }
 function recrues(n, nomsPris){
   const cls = melange(Object.keys(D.CLASSES)); const out = [], pris = (nomsPris || []).slice();
   for (let i = 0; i < n; i++){ const h = creerHeros(cls[i % cls.length], pris); pris.push(h.nom); out.push(h); }
@@ -65,9 +71,12 @@ function peutEvoluer(h, debloquees){ return !h.leg && h.niv >= D.NIV_LEGENDAIRE 
 function evoluer(h){ h.leg = true; h.pv = stats(h).pv; }
 
 /* ---------- objets ---------- */
-function genererObjet(vague, mieux){
-  const slot = pick(Object.keys(D.SLOTS)), [nom, ic, pour] = pick(D.SLOTS[slot].noms);
-  let rar = tirage(D.RARETES.map((x, i) => Object.assign({}, x, {p: x.p * (i === 0 ? Math.max(0.3, 1 - vague*0.05) : 1 + (mieux ? 1.5 : 0) + vague*0.08), i})));
+// avec run.faces : le dé QUOI donne l'emplacement, le dé QUALITE la rareté ; minRar impose une rareté minimale (coffre, boss)
+function genererObjet(vague, mieux, run){
+  const des = run && run.faces;
+  const slot = des ? faceAuHasard(des.quoi) : pick(Object.keys(D.SLOTS)), [nom, ic, pour] = pick(D.SLOTS[slot].noms);
+  let rar = des ? {i: Math.max(faceAuHasard(des.qual), mieux ? 1 : 0)}
+    : tirage(D.RARETES.map((x, i) => Object.assign({}, x, {p: x.p * (i === 0 ? Math.max(0.3, 1 - vague*0.05) : 1 + (mieux ? 1.5 : 0) + vague*0.08), i})));
   const R = D.RARETES[rar.i], b = {};
   const possibles = melange(Object.keys(D.AFFIXES).filter(a => D.AFFIXES[a].s.includes(slot)));
   const echelle = R.k * (1 + vague*0.07);
@@ -77,7 +86,7 @@ function genererObjet(vague, mieux){
 // butin d'une vague : objets ; parfois un dé, et une page de grimoire après un boss
 function genererButin(run, boss){
   const n = boss ? 3 : 2, out = [];
-  for (let k = 0; k < n; k++) out.push(genererObjet(run.vague, boss));
+  for (let k = 0; k < n; k++) out.push(genererObjet(run.vague, boss && k === 0, run));
   const pages = Object.keys(D.SORTS).filter(s => !run.sorts.includes(s));
   if (boss && pages.length) out[0] = {type: "page", sort: pick(pages), n: "PAGE DE GRIMOIRE"};
   if (alea() < (boss ? 0.6 : 0.3) && run.des.length < D.MAX_DES){ const de = deTrouve(); out[out.length - 1] = {type: "de", de, n: de.n}; }
@@ -106,7 +115,7 @@ function equiper(h, o){ const ancien = h.equip[o.slot]; const avant = stats(h).p
 /* ---------- run ---------- */
 function nouvelleRun(){
   return {v: VERSION_RUN, vague: 1, or: 20, mur: 100, murMax: 100, heros: [], stock: {potion: 1, parchemin: 1, vue: 1}, kills: 0, boss: 0, revele: false, debut: Date.now(),
-    des: [nouveauDe("d6"), nouveauDe("d6")], sorts: D.SORTS_DEPART.slice()};
+    des: [nouveauDe("d6"), nouveauDe("d6")], sorts: D.SORTS_DEPART.slice(), faces: nouvellesFaces()};
 }
 function nomsPris(run){ return run.heros.map(h => h.nom); }
 function placerParDefaut(run){
@@ -335,6 +344,32 @@ function utiliserObjet(C, k){
 }
 
 /* ---------- fin de vague, fin de run ---------- */
+// ---- atelier : une amélioration remplace une face d'un dé ----
+// offre = {t: "slot" | "quoi" | "qual", f: face} ; "slot" va sur une face de n'importe quel dé de case
+function offresAtelier(run){
+  const classes = melange(Object.keys(D.CLASSES)), q = run.vague >= 6 ? [2, 3] : [1, 2], quoi = melange(Object.keys(D.SLOTS));
+  const o = [{t: "slot", f: classes[0]}, {t: "qual", f: pick(q)}, alea() < .5 ? {t: "slot", f: classes[1]} : {t: "quoi", f: quoi[0]}];
+  return o;
+}
+function graverSymbole(run, offre, d, i){   // d : indice de la case (offre "slot")
+  if (offre.t === "slot") run.faces.slots[d][i] = offre.f; else run.faces[offre.t][i] = offre.f;
+}
+// ---- événements ----
+function lancerEvenement(run){ return faceAuHasard(run.faces.event); }
+function classesDesDes(run){ const s = new Set(); for (const d of run.faces.slots) for (const c of d) s.add(c); return [...s]; }
+// applique l'événement ; renvoie {texte, h} (h : le nouveau héros)
+function appliquerEvenement(run, k){
+  if (k === "recrue"){
+    if (run.heros.length >= 4){ run.or += 20; return {texte: "La Muraille est pleine : il repart avec 20 pièces d'or de ta part."}; }
+    const h = creerHeros(pick(classesDesDes(run)), nomsPris(run)); h.slot = 0; run.heros.push(h); placerParDefaut(run);
+    return {texte: h.nom + " rejoint la Muraille.", h};
+  }
+  if (k === "benediction"){ for (const h of run.heros){ h.mort = false; h.pv = stats(h).pv; } return {texte: "Tous les héros sont soignés."}; }
+  if (k === "danger"){ run.mur = Math.max(1, run.mur - 15); run.or += 30; return {texte: "La Muraille perd 15 points, tu gagnes 30 pièces d'or."}; }
+  if (k === "calme"){ run.or += 10; run.mur = Math.min(run.murMax, run.mur + 10); return {texte: "+10 pièces d'or, la Muraille gagne 10 points."}; }
+  return {texte: ""};
+}
+
 function xpDeVague(run){ return 12 + run.vague*4; }
 function eclatsDeRun(run, gagne){ return run.vague*4 + Math.floor(run.kills/4) + run.boss*10 + (gagne ? 30 : 0); }
 
@@ -344,13 +379,14 @@ function charger(txt){
   try { const run = JSON.parse(txt); if (!run || run.v !== VERSION_RUN || !Array.isArray(run.heros) || !run.heros.length) return null;
     for (const h of run.heros) if (!D.CLASSES[h.cls]) return null;
     idSuivant = Math.max(idSuivant, ...run.heros.map(h => h.id + 1)); run.compo = composerVague(run.vague);
+    if (!run.faces || !Array.isArray(run.faces.slots) || run.faces.slots.length !== 3 || !run.faces.quoi || !run.faces.qual || !run.faces.event) return null;
     if (!Array.isArray(run.des) || !run.des.length) run.des = [nouveauDe("d6"), nouveauDe("d6")];
     if (!Array.isArray(run.sorts) || !run.sorts.length) run.sorts = D.SORTS_DEPART.slice();
     run.sorts = run.sorts.filter(k => D.SORTS[k]); return run; }
   catch (e){ return null; }
 }
 
-B.R = {W, ZONE, MUR_X, CASES, creerHeros, recrues, stats, classeDe, nivSuivant, gagnerXp, propositionsNiveau, appliquerBonus, peutEvoluer, evoluer,
+B.R = {W, ZONE, MUR_X, CASES, creerHeros, recrues, recruesDes, recrueDeCase, nouvellesFaces, faceAuHasard, offresAtelier, graverSymbole, lancerEvenement, appliquerEvenement, classesDesDes, stats, classeDe, nivSuivant, gagnerXp, propositionsNiveau, appliquerBonus, peutEvoluer, evoluer,
   genererObjet, genererButin, graverFace, nouveauDe, deTrouve, texteBonus, equiper, peutPorter, statsAvec, monterNiveau, nouvelleRun, nomsPris, placerParDefaut, preparerVague, composerVague, apercu, debutCombat, vivants, etape,
   lancerDes, resultatDes, tirerSort, jeterSort, utiliserObjet, xpDeVague, eclatsDeRun, sauver, charger,
   graine(f){ alea = f || Math.random; }};
