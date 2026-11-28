@@ -1,0 +1,217 @@
+<title>Les Bannis 9</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght@400;600;700;900&display=swap">
+<style>
+/* Maquette 9 « Les Bannis » (28/11) : le décor (ciel, volcan, sol, Muraille) à la hauteur de l'interface.
+   A pixel art riche et chaud, B illustration douce (hors pixel), C nuit bleutée plate, aux couleurs de l'interface.
+   Trois scènes animées, avec les héros, les monstres et les bandes d'interface par-dessus pour juger l'ensemble. */
+:root{--fond:#0b141a;--texte:#e8f4f2;--doux:#8fb0ad;--accent:#3ddcbe;--ligne:#1c3a44;--f:"Titillium Web",system-ui,sans-serif;color-scheme:dark}
+html,body{background:var(--fond);color:var(--texte)}
+body{margin:0;font-family:var(--f);font-size:17px;line-height:1.4;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px 48px}
+.page{max-width:900px;margin:0 auto;display:flex;flex-direction:column;gap:28px}
+h1{font-weight:900;font-size:clamp(22px,4.5vw,32px);margin:0}
+header p{margin:10px 0 0;color:var(--doux);max-width:80ch}
+b{color:var(--texte)}
+.dir{display:flex;flex-direction:column;gap:10px;min-width:0}
+.dir h2{font-size:18px;color:var(--accent);margin:0}
+.dir p{margin:0;color:var(--doux);max-width:80ch}
+.tel{border:9px solid #04090c;border-radius:30px;overflow:hidden;box-shadow:0 18px 40px rgba(0,0,0,.6);background:#0e1a22;line-height:0}
+.tel canvas{width:100%;aspect-ratio:760/360;display:block}
+.onglets{display:flex;gap:8px;flex-wrap:wrap}
+.onglets button{font:inherit;font-size:16px;padding:6px 14px;border-radius:999px;border:2px solid var(--ligne);background:transparent;color:var(--doux);cursor:pointer}
+.onglets button[aria-pressed=true]{background:var(--accent);color:#05211c;border-color:var(--accent)}
+button:focus-visible{outline:2px solid #fff;outline-offset:2px}
+section.q{border-top:1px solid var(--ligne);padding-top:20px;display:flex;flex-direction:column;gap:10px;min-width:0}
+section.q h2{font-size:18px;color:var(--accent);margin:0}
+section.q p,section.q li{color:var(--doux);max-width:80ch;margin:0}
+section.q li{margin:4px 0}
+.tabw{overflow-x:auto}
+table{border-collapse:collapse;min-width:640px;width:100%;font-size:16px}
+th,td{border:1px solid var(--ligne);padding:8px 10px;text-align:left;vertical-align:top;color:var(--doux)}
+th{color:var(--texte)}
+</style>
+<div class="page">
+<header>
+  <h1>LES BANNIS : LE DÉCOR</h1>
+  <p>Maintenant que l'interface est moderne, le ciel, la Gueule, le sol et la Muraille font simples. Voici trois façons de refaire le <b>décor</b>, animées, avec les héros et les monstres du jeu et les bandes d'interface par-dessus : <b>A</b> pixel art riche (couches, lave, briques, torches), <b>B</b> illustration douce hors pixel (dégradés, lueurs, brume), <b>C</b> nuit bleutée plate, aux couleurs de l'interface. Les boutons sous chaque scène changent l'ambiance (<b>nuit</b>, <b>orage</b>, <b>aube</b>) pour voir le décor réagir.</p>
+</header>
+<div id="grille" style="display:flex;flex-direction:column;gap:28px"></div>
+<section class="q">
+  <h2>COMPARAISON</h2>
+  <div class="tabw"><table>
+    <tr><th></th><th>A · Pixel art riche</th><th>B · Illustration douce</th><th>C · Nuit bleutée plate</th></tr>
+    <tr><th>Accord avec les sprites</th><td>total (même grain)</td><td>contraste net, les sprites ressortent</td><td>bon, formes simples</td></tr>
+    <tr><th>Accord avec l'interface</th><td>moyen (chaud contre froid)</td><td>bon (lueurs douces)</td><td>excellent (mêmes teintes)</td></tr>
+    <tr><th>Ambiance</th><td>volcan, braise, danger</td><td>sombre et cinématique</td><td>calme, lisible, élégante</td></tr>
+    <tr><th>Travail à faire dans le jeu</th><td>moyen (canvas bas, agrandi)</td><td>plus lourd (dégradés, flou)</td><td>léger</td></tr>
+    <tr><th>Risque</th><td>décor chargé, sprites noyés</td><td>perf sur vieux téléphone</td><td>un peu froid pour un volcan</td></tr>
+  </table></div>
+</section>
+<section class="q">
+  <h2>QUESTIONS</h2>
+  <ul>
+    <li>Quelle direction préférez-vous : A, B ou C ? Peut-on mélanger (par exemple le décor de B avec la palette de C) ?</li>
+    <li>La Muraille doit-elle être plus massive (une vraie tour avec une porte) ?</li>
+    <li>Voulez-vous que le décor change selon la vague (jour qui baisse, orage au boss) comme ici ?</li>
+  </ul>
+</section>
+</div>
+<script>
+const IMG = /*IMAGES*/{};
+try { document.fonts.load('700 20px "Titillium Web"'); } catch (e) {}
+const imH = new Image(); imH.src = IMG.heros; const imM = new Image(); imM.src = IMG.monstres;
+const W = 760, H = 360, K = 2;
+const CL = {guerriere:0,mercenaire:2,illusionniste:4,pretresse:8};
+const EQ = ["guerriere","mercenaire","illusionniste","pretresse"], NOMS = ["KESS","RHYS","BALDO","ILSE"], CLS = ["GUERRIÈRE","MERCENAIRE","ILLUSIONNISTE","PRÊTRESSE"];
+const MONS = [19,22,20,15,11,23,18];
+const pick = a => a[Math.floor(Math.random()*a.length)];
+function rng(seed){ return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function calque(w, h){ const c = document.createElement("canvas"); c.width = w; c.height = h; return c; }
+const rr = (g,x,y,w,h,r) => { g.beginPath(); g.moveTo(x+r,y); g.arcTo(x+w,y,x+w,y+h,r); g.arcTo(x+w,y+h,x,y+h,r); g.arcTo(x,y+h,x,y,r); g.arcTo(x,y,x+w,y,r); g.closePath(); };
+const txt = (g,t,x,y,px,c,al="left",gras=700) => { g.font = `${gras} ${px}px "Titillium Web",sans-serif`; g.textAlign = al; g.fillStyle = c; g.fillText(t,x,y); };
+
+/* ---------- décor A : pixel art riche (dessiné en 380 x 180 puis agrandi sans lissage) ---------- */
+function decorA(){
+  const w = 380, h = 180, c = calque(w, h), g = c.getContext("2d"), R = rng(11);
+  const bandes = ["#120a26","#1a0f34","#251345","#33184f","#4a1f55","#6a2a58","#8e3a54","#b8503f"];
+  bandes.forEach((col,i) => { g.fillStyle = col; g.fillRect(0, i*7, w, 8); });
+  g.fillStyle = "#fff"; for (let i = 0; i < 70; i++){ g.globalAlpha = .3 + R()*.6; g.fillRect(Math.floor(R()*w), Math.floor(R()*38), 1, 1); } g.globalAlpha = 1;
+  g.fillStyle = "#6a1f2f"; g.beginPath(); g.arc(70, 26, 14, 0, 7); g.fill(); g.fillStyle = "#8a2a3a"; g.beginPath(); g.arc(66, 22, 9, 0, 7); g.fill();   // lune rouge
+  const mont = (y0, amp, col, graine) => { const r = rng(graine); g.fillStyle = col; g.beginPath(); g.moveTo(0, 56); let y = y0; for (let x = 0; x <= w; x += 6){ y = y0 + Math.sin(x*.05 + graine)*amp + r()*amp*.5; g.lineTo(x, y); } g.lineTo(w, 60); g.fill(); };
+  mont(40, 9, "#2a1844", 3); mont(46, 7, "#32204f", 8);
+  // la Gueule : un cône à cratère
+  g.fillStyle = "#3a2252"; g.beginPath(); g.moveTo(205, 56); g.lineTo(240, 18); g.lineTo(285, 18); g.lineTo(320, 56); g.fill();
+  g.fillStyle = "#2a1844"; g.beginPath(); g.moveTo(240, 18); g.lineTo(285, 18); g.lineTo(300, 56); g.lineTo(230, 56); g.fill();
+  g.fillStyle = "#ff9a3a"; g.fillRect(244, 16, 38, 3); g.fillStyle = "#ffd36a"; g.fillRect(250, 16, 24, 2);
+  [[248,19,236,56],[262,19,262,56],[278,19,292,56]].forEach(([x0,y0,x1,y1],i) => { for (let t = 0; t <= 1; t += .02){ const x = x0 + (x1 - x0)*t + Math.sin(t*9+i)*3, y = y0 + (y1 - y0)*t; g.fillStyle = t < .5 ? "#ff7a2a" : "#c8421f"; g.fillRect(Math.round(x), Math.round(y), 2, 1); } });
+  // forêt morte à l'horizon
+  g.fillStyle = "#1c1030"; for (let x = 40; x < w; x += 9 + Math.floor(R()*14)){ const th = 8 + R()*10; g.fillRect(x, 58 - th, 1, th); g.fillRect(x - 2, 58 - th + 3, 5, 1); g.fillRect(x - 1, 58 - th + 6, 4, 1); }
+  // sol : terre craquelée en dalles
+  g.fillStyle = "#2b1c3a"; g.fillRect(0, 50, w, h - 50);
+  for (let y = 50; y < h; y += 4){ for (let x = (y % 8 ? 0 : 5); x < w; x += 10){ const v = R(); g.fillStyle = v < .33 ? "#33224a" : v < .66 ? "#2a1a38" : "#3a2858"; g.fillRect(x, y, 9, 3); g.fillStyle = "rgba(0,0,0,.25)"; g.fillRect(x, y + 3, 9, 1); } }
+  for (let i = 0; i < 40; i++){ const x = Math.floor(R()*w), y = 56 + Math.floor(R()*(h - 60)); g.fillStyle = "#1c1228"; g.fillRect(x, y, 3 + R()*3, 2); g.fillStyle = "#4a3868"; g.fillRect(x, y - 1, 2, 1); }
+  for (let i = 0; i < 12; i++){ const x = 40 + Math.floor(R()*(w - 60)), y = 70 + Math.floor(R()*(h - 80)); g.fillStyle = "#d8cfe0"; g.fillRect(x, y, 3, 1); g.fillRect(x + 1, y - 1, 1, 3); }   // os
+  g.fillStyle = "#120a1c"; for (let i = 0; i < 14; i++){ let x = 40 + R()*300, y = 60 + R()*100; g.beginPath(); g.moveTo(x, y); for (let k = 0; k < 6; k++){ x += R()*6 - 1; y += R()*4; g.lineTo(x, y); } g.lineWidth = 1; g.strokeStyle = "#120a1c"; g.stroke(); }
+  // la Muraille : briques ombrées, tour, créneaux, meurtrières
+  const mx = 30;
+  for (let y = 36; y < 151; y += 6){ for (let x = (y/6 % 2 ? -5 : 0); x < mx; x += 10){ const v = R(); g.fillStyle = v < .3 ? "#5c5670" : v < .7 ? "#4e4862" : "#463f58"; g.fillRect(x, y, 9, 5); g.fillStyle = "#6e6886"; g.fillRect(x, y, 9, 1); g.fillStyle = "#2c2638"; g.fillRect(x, y + 5, 10, 1); g.fillRect(x + 9, y, 1, 5); } }
+  g.fillStyle = "#2c2638"; g.fillRect(mx - 3, 36, 3, 115); g.fillStyle = "#1c1828"; g.fillRect(mx, 40, 7, 113);   // ombre sur le sol
+  g.fillStyle = "#6a6480"; for (let x = 0; x < mx; x += 8) g.fillRect(x, 30, 6, 6); g.fillStyle = "#8a84a0"; for (let x = 0; x < mx; x += 8) g.fillRect(x, 30, 6, 1);
+  g.fillStyle = "#12091c"; g.fillRect(9, 60, 3, 9); g.fillRect(9, 112, 3, 9);   // meurtrières
+  g.fillStyle = "#3a2a2a"; g.fillRect(6, 128, 18, 24); g.fillStyle = "#241818"; g.fillRect(8, 130, 14, 22); for (let x = 9; x < 22; x += 3) g.fillRect(x, 130, 1, 22);   // herse
+  g.fillStyle = "#7a1f2a"; g.fillRect(11, 4, 8, 24); g.fillStyle = "#a8303a"; g.fillRect(11, 4, 8, 2); g.fillStyle = "#4a1018"; g.beginPath(); g.moveTo(11, 28); g.lineTo(15, 24); g.lineTo(19, 28); g.fill();   // bannière
+  return c;
+}
+/* ---------- décor B : illustration douce ---------- */
+function decorB(){
+  const c = calque(W*K, H*K), g = c.getContext("2d"); g.scale(K, K); const R = rng(5);
+  let gr = g.createLinearGradient(0, 0, 0, 200); [[0,"#0f0a24"],[.35,"#2c1646"],[.65,"#7a2f5a"],[.9,"#d9633f"],[1,"#f19a52"]].forEach(([o,col]) => gr.addColorStop(o,col)); g.fillStyle = gr; g.fillRect(0, 0, W, 200);
+  g.fillStyle = "#fff"; for (let i = 0; i < 60; i++){ g.globalAlpha = .15 + R()*.5; g.beginPath(); g.arc(R()*W, R()*80, .6 + R()*.9, 0, 7); g.fill(); } g.globalAlpha = 1;
+  g.save(); g.filter = "blur(14px)"; for (let i = 0; i < 9; i++){ const x = R()*W, y = 50 + R()*70; g.fillStyle = `rgba(${150 + R()*60},${50 + R()*30},${70},${.2 + R()*.18})`; g.beginPath(); g.ellipse(x, y, 90 + R()*70, 14 + R()*10, 0, 0, 7); g.fill(); } g.restore();
+  g.save(); g.filter = "blur(2px)"; const mont = (y0, amp, col, s) => { const r = rng(s); g.fillStyle = col; g.beginPath(); g.moveTo(0, 120); for (let x = 0; x <= W; x += 20) g.lineTo(x, y0 + Math.sin(x*.012 + s)*amp + r()*amp*.4); g.lineTo(W, 120); g.fill(); }; mont(84, 20, "#2a1744", 2); mont(96, 14, "#1d1030", 7); g.restore();
+  // volcan lisse + lueur
+  gr = g.createRadialGradient(560, 56, 4, 560, 60, 190); gr.addColorStop(0, "rgba(255,170,70,.55)"); gr.addColorStop(1, "rgba(255,120,40,0)"); g.fillStyle = gr; g.fillRect(360, 0, 400, 200);
+  g.fillStyle = "#24133a"; g.beginPath(); g.moveTo(400, 110); g.bezierCurveTo(470, 90, 500, 50, 520, 40); g.lineTo(600, 40); g.bezierCurveTo(630, 56, 680, 92, 760, 108); g.lineTo(760, 120); g.lineTo(400, 120); g.fill();
+  g.save(); g.filter = "blur(3px)"; gr = g.createLinearGradient(0, 38, 0, 112); gr.addColorStop(0, "#ffd36a"); gr.addColorStop(1, "#d8421f"); g.strokeStyle = gr; g.lineWidth = 4; [[535,42,505,100],[560,42,562,108],[588,42,630,104]].forEach(([x0,y0,x1,y1]) => { g.beginPath(); g.moveTo(x0, y0); g.bezierCurveTo(x0 + 6, y0 + 20, x1 - 8, y1 - 20, x1, y1); g.stroke(); }); g.restore();
+  // sol : dégradé + grain, sol chaud près du volcan
+  gr = g.createLinearGradient(0, 100, 0, H); gr.addColorStop(0, "#4a2a46"); gr.addColorStop(.4, "#2c1a3c"); gr.addColorStop(1, "#150c22"); g.fillStyle = gr; g.fillRect(0, 100, W, H - 100);
+  gr = g.createRadialGradient(560, 110, 10, 560, 140, 340); gr.addColorStop(0, "rgba(255,140,70,.28)"); gr.addColorStop(1, "rgba(255,140,70,0)"); g.fillStyle = gr; g.fillRect(0, 100, W, 260);
+  for (let i = 0; i < 1600; i++){ g.fillStyle = R() < .5 ? "rgba(255,255,255,.035)" : "rgba(0,0,0,.08)"; g.fillRect(R()*W, 104 + R()*(H - 104), 1 + R()*3, 1 + R()*2); }
+  for (let i = 0; i < 26; i++){ const x = 80 + R()*W*.88, y = 130 + R()*(H - 150); g.fillStyle = "rgba(0,0,0,.25)"; g.beginPath(); g.ellipse(x, y + 4, 7 + R()*8, 3, 0, 0, 7); g.fill(); g.fillStyle = "#4a3a62"; g.beginPath(); g.ellipse(x, y, 6 + R()*7, 3 + R()*3, 0, 0, 7); g.fill(); }
+  // Muraille : grosses pierres lisses, lumière à droite
+  const mx = 60; gr = g.createLinearGradient(0, 0, mx, 0); gr.addColorStop(0, "#3a3450"); gr.addColorStop(1, "#6a6482"); g.fillStyle = gr; g.fillRect(0, 70, mx, 232);
+  for (let y = 78; y < 300; y += 26) for (let x = (y/26 % 2 ? -14 : 4); x < mx; x += 34){ gr = g.createLinearGradient(0, y, 0, y + 22); gr.addColorStop(0, "rgba(255,255,255,.12)"); gr.addColorStop(1, "rgba(0,0,0,.2)"); g.fillStyle = gr; rr(g, x, y, 31, 22, 4); g.fill(); }
+  g.fillStyle = "#4a4466"; for (let x = 0; x < mx; x += 20){ rr(g, x + 1, 56, 16, 18, 3); g.fill(); }
+  gr = g.createLinearGradient(mx, 0, mx + 40, 0); gr.addColorStop(0, "rgba(0,0,0,.5)"); gr.addColorStop(1, "rgba(0,0,0,0)"); g.fillStyle = gr; g.fillRect(mx, 100, 40, 205);
+  g.fillStyle = "#14101e"; rr(g, 18, 118, 10, 22, 4); g.fill(); rr(g, 34, 214, 10, 22, 4); g.fill();
+  const vg = g.createRadialGradient(W/2, H/2, 160, W/2, H/2, 460); vg.addColorStop(0, "rgba(0,0,0,0)"); vg.addColorStop(1, "rgba(5,2,14,.55)"); g.fillStyle = vg; g.fillRect(0, 0, W, H);
+  return c;
+}
+/* ---------- décor C : nuit bleutée plate, aux couleurs de l'interface ---------- */
+function decorC(){
+  const c = calque(W*K, H*K), g = c.getContext("2d"); g.scale(K, K); const R = rng(9);
+  let gr = g.createLinearGradient(0, 0, 0, 220); gr.addColorStop(0, "#0a1319"); gr.addColorStop(.6, "#16303a"); gr.addColorStop(1, "#24505a"); g.fillStyle = gr; g.fillRect(0, 0, W, 220);
+  g.fillStyle = "#e8f4f2"; for (let i = 0; i < 70; i++){ g.globalAlpha = .2 + R()*.6; g.fillRect(R()*W, R()*80, 1.6, 1.6); } g.globalAlpha = 1;
+  g.fillStyle = "#e8f4f2"; g.beginPath(); g.arc(150, 62, 26, 0, 7); g.fill(); g.fillStyle = "#c8dcd8"; g.beginPath(); g.arc(142, 56, 6, 0, 7); g.arc(160, 72, 4, 0, 7); g.arc(154, 50, 3, 0, 7); g.fill();
+  const poly = (pts, col) => { g.fillStyle = col; g.beginPath(); pts.forEach(([x,y],i) => i ? g.lineTo(x,y) : g.moveTo(x,y)); g.closePath(); g.fill(); };
+  poly([[0,120],[60,86],[120,104],[200,70],[290,106],[380,80],[470,108],[540,84],[W,104],[W,130],[0,130]], "#1c4048");
+  poly([[0,130],[90,102],[170,120],[260,92],[340,118],[430,96],[W,122],[W,140],[0,140]], "#16303a");
+  poly([[450,132],[560,44],[640,44],[760,132]], "#10242c"); poly([[560,44],[600,44],[660,132],[540,132]], "#0c1a21");
+  g.fillStyle = "#ff8a3a"; g.fillRect(562, 41, 76, 6); g.fillStyle = "#ffd36a"; g.fillRect(578, 41, 44, 3);
+  g.strokeStyle = "#ff8a3a"; g.lineWidth = 2.5; g.lineCap = "round"; [[575,50,556,106],[600,50,604,112],[628,50,652,104]].forEach(([x0,y0,x1,y1]) => { g.beginPath(); g.moveTo(x0, y0); g.bezierCurveTo(x0 + 8, y0 + 22, x1 - 10, y1 - 24, x1, y1); g.stroke(); });
+  gr = g.createLinearGradient(0, 120, 0, H); gr.addColorStop(0, "#1b3a44"); gr.addColorStop(1, "#0f2229"); g.fillStyle = gr; g.fillRect(0, 120, W, H - 120);
+  g.strokeStyle = "rgba(61,220,190,.08)"; g.lineWidth = 1; for (let x = -H; x < W; x += 36){ g.beginPath(); g.moveTo(x, H); g.lineTo(x + 190, 120); g.stroke(); } for (let y = 140; y < H; y += 30){ g.beginPath(); g.moveTo(0, y); g.lineTo(W, y); g.stroke(); }
+  g.fillStyle = "rgba(0,0,0,.2)"; for (let i = 0; i < 18; i++){ const x = 90 + R()*620, y = 140 + R()*190; g.beginPath(); g.ellipse(x, y, 14, 4, 0, 0, 7); g.fill(); g.fillStyle = "#2b5560"; g.beginPath(); g.ellipse(x, y - 2, 12, 5, 0, 0, 7); g.fill(); g.fillStyle = "rgba(0,0,0,.2)"; }
+  const mx = 60; g.fillStyle = "#3a6670"; g.fillRect(0, 70, mx, 232); g.fillStyle = "#4a7e88"; for (let y = 70; y < 302; y += 29){ g.fillRect(0, y, mx, 2); for (let x = (y/29 % 2 ? 12 : 30); x < mx; x += 36) g.fillRect(x, y, 2, 29); }
+  g.fillStyle = "#2c5560"; g.fillRect(mx - 6, 70, 6, 232); g.fillStyle = "#6aa0a8"; g.fillRect(0, 70, mx, 4);
+  g.fillStyle = "#3a6670"; for (let x = 0; x < mx; x += 20) g.fillRect(x, 54, 14, 18); g.fillStyle = "#6aa0a8"; for (let x = 0; x < mx; x += 20) g.fillRect(x, 54, 14, 3);
+  g.fillStyle = "rgba(0,0,0,.28)"; g.fillRect(mx, 100, 26, 202);
+  g.fillStyle = "#0e1e25"; g.fillRect(20, 120, 8, 20); g.fillRect(34, 216, 8, 20);
+  g.fillStyle = "#3dd0b4"; g.fillRect(24, 4, 18, 50); g.fillStyle = "#2a9d88"; g.beginPath(); g.moveTo(24, 54); g.lineTo(33, 46); g.lineTo(42, 54); g.fill();   // bannière à l'accent de l'interface
+  return c;
+}
+
+/* ---------- animations par-dessus ---------- */
+const lumieres = {A:[[14*2,84*2],[14*2,134*2]], B:[[18,122],[40,222]], C:[[24,130],[38,226]]};
+function animer(g, d, t, amb){
+  const f = .75 + .25*Math.sin(t*9) + .08*Math.sin(t*23);
+  // lueur du volcan
+  const volc = d === "C" ? [600, 44] : d === "A" ? [526, 36] : [560, 50];
+  g.save(); g.globalCompositeOperation = "lighter";
+  let gr = g.createRadialGradient(volc[0], volc[1], 4, volc[0], volc[1], 160); gr.addColorStop(0, `rgba(255,150,60,${(.22 + .1*Math.sin(t*1.7))*(amb.lave)})`); gr.addColorStop(1, "rgba(255,120,40,0)"); g.fillStyle = gr; g.fillRect(volc[0] - 170, 0, 340, 200);
+  // torches
+  lumieres[d].forEach(([x,y]) => { const gx = d === "A" ? x : x, gy = d === "A" ? y : y; const r = 90*f; gr = g.createRadialGradient(gx + 8, gy, 2, gx + 8, gy, r); gr.addColorStop(0, `rgba(255,170,70,${.42*amb.torche})`); gr.addColorStop(1, "rgba(255,150,60,0)"); g.fillStyle = gr; g.fillRect(gx - 90, gy - 90, 220, 180); });
+  g.restore();
+  lumieres[d].forEach(([x,y]) => { const fx = x + 4, fy = y; g.fillStyle = "#3a2a2a"; g.fillRect(fx - 2, fy + 2, 6, 10);
+    g.fillStyle = "#ff7a2a"; g.beginPath(); g.moveTo(fx - 4, fy + 4); g.quadraticCurveTo(fx - 3 + Math.sin(t*14)*2, fy - 10*f, fx + 2, fy - 12*f); g.quadraticCurveTo(fx + 5, fy - 4, fx + 6, fy + 4); g.fill();
+    g.fillStyle = "#ffd36a"; g.beginPath(); g.moveTo(fx - 2, fy + 4); g.quadraticCurveTo(fx, fy - 6*f, fx + 2, fy - 7*f); g.quadraticCurveTo(fx + 3, fy, fx + 4, fy + 4); g.fill(); });
+  // braises
+  for (let i = 0; i < 44; i++){ const s = i*13.7; const x = (s*37 + t*(12 + i%5*5)) % (W + 40) - 20, y = H - ((s*17 + t*(26 + i%7*9)) % (H + 20)); g.globalAlpha = .25 + .5*((i*7)%5)/5*amb.braise; g.fillStyle = d === "C" && i % 3 === 0 ? "#3ddcbe" : "#ffae6a"; const z = d === "B" ? 1.2 + i%3 : 2; if (d === "B"){ g.beginPath(); g.arc(x, y, z, 0, 7); g.fill(); } else g.fillRect(Math.round(x/2)*2, Math.round(y/2)*2, 2, 2); } g.globalAlpha = 1;
+  // brume
+  for (let k = 0; k < 3; k++){ const y = 150 + k*60, o = (t*(14 + k*7)) % 400; g.save(); g.globalAlpha = (d === "C" ? .1 : .08)*amb.brume; g.fillStyle = d === "C" ? "#8fd8cc" : "#d8b8d8"; for (let i = -1; i < 4; i++){ g.beginPath(); g.ellipse(i*300 + o, y, 170, 14 + k*3, 0, 0, 7); g.fill(); } g.restore(); }
+  // éclair
+  if (amb.eclair && (t % 6) < .18){ g.fillStyle = `rgba(220,235,255,${.5 - (t % 6)*2.6})`; g.fillRect(0, 0, W, H); }
+}
+
+function scene(titre, texte, d, fabrique){
+  const w = document.createElement("div"); w.className = "dir";
+  w.innerHTML = `<h2>${titre}</h2><p>${texte}</p><div class="onglets"><button data-a="nuit">NUIT</button><button data-a="orage">ORAGE</button><button data-a="aube">AUBE</button></div><div class="tel"><canvas width="${W*K}" height="${H*K}"></canvas></div>`;
+  const cv = w.querySelector("canvas"), g = cv.getContext("2d"); g.imageSmoothingEnabled = d === "A" ? false : true;
+  const fond = fabrique(), amb = {nom:"nuit", lave:1, torche:1, braise:1, brume:1, eclair:false, teinte:null};
+  const AMB = {nuit:{lave:1,torche:1,braise:1,brume:1,eclair:false,teinte:null}, orage:{lave:.5,torche:.9,braise:.5,brume:1.8,eclair:true,teinte:"rgba(20,30,70,.38)"}, aube:{lave:.7,torche:.5,braise:.7,brume:1.4,eclair:false,teinte:"rgba(255,150,100,.22)"}};
+  const set = n => { Object.assign(amb, AMB[n]); amb.nom = n; w.querySelectorAll(".onglets button").forEach(b => b.setAttribute("aria-pressed", b.dataset.a === n)); };
+  w.querySelectorAll(".onglets button").forEach(b => b.onclick = () => set(b.dataset.a)); set("nuit");
+  document.getElementById("grille").append(w);
+  const mons = [], flo = []; let spawn = 0, kills = 0;
+  return (t, dt) => {
+    g.setTransform(1,0,0,1,0,0); g.clearRect(0,0,W*K,H*K);
+    if (d === "A") g.drawImage(fond, 0, 0, 380, 180, 0, 0, W*K, 360*K/1.0*0 + (180*4)); else g.drawImage(fond, 0, 0);
+    g.setTransform(K,0,0,K,0,0);
+    animer(g, d, t, amb);
+    // unités
+    const pos = [[230,215],[230,280],[150,180],[150,250]];
+    spawn -= dt; if (spawn <= 0 && mons.length < 6){ mons.push({x:790,y:140+Math.random()*140,i:pick(MONS),stop:330+Math.floor(Math.random()*4)*34,hit:0}); spawn = 1.6; }
+    mons.forEach(m => { m.x -= 60*dt; if (m.x < m.stop) m.x = m.stop; if (m.x <= m.stop + 2){ m.hit += dt; if (m.hit > 1.2){ m.dead = true; flo.push({x:m.x,y:m.y-60,t:0}); } } });
+    for (let i = mons.length - 1; i >= 0; i--) if (mons[i].dead) mons.splice(i, 1);
+    const L = [...EQ.map((c,i) => ({k:"h",c,i,x:pos[i][0],y:pos[i][1]})), ...mons.map(m => ({k:"m",m,x:m.x,y:m.y}))].sort((a,b) => a.y - b.y);
+    g.imageSmoothingEnabled = false;
+    L.forEach(u => { g.fillStyle = "rgba(0,0,0,.3)"; g.beginPath(); g.ellipse(u.x, u.y + 2, u.k === "m" ? 24 : 16, 6, 0, 0, 7); g.fill();
+      if (u.k === "h"){ const f = Math.floor(t*4 + u.i)%3; g.drawImage(imH, f*32, CL[u.c]*192 + 32, 32, 32, u.x - 27, u.y - 51, 54, 54); }
+      else g.drawImage(imM, (u.m.i - 1)*96, 0, 96, 96, u.x - 43, u.y - 83, 86, 86); });
+    flo.forEach(f => { f.t += dt; g.globalAlpha = Math.max(0, 1 - f.t); txt(g, "+4", f.x, f.y - f.t*30, 15, "#ffd76a", "center"); g.globalAlpha = 1; }); for (let i = flo.length - 1; i >= 0; i--) if (flo[i].t > 1) flo.splice(i, 1);
+    if (amb.teinte){ g.fillStyle = amb.teinte; g.fillRect(0, 0, W, H); }
+    // bandes d'interface
+    g.fillStyle = "rgba(10,20,26,.92)"; rr(g, 4, 3, W - 8, 28, 10); g.fill(); g.strokeStyle = "#24505a"; g.lineWidth = 2; rr(g, 4, 3, W - 8, 28, 10); g.stroke(); txt(g, "VAGUE 3/12", 16, 23, 16, "#e8f4f2", "left", 900); txt(g, "84", 150, 23, 16, "#ffd76a");
+    EQ.forEach((c,i) => { const x = 8 + i*124, y = 302; g.fillStyle = "rgba(14,26,34,.93)"; rr(g, x, y, 120, 52, 10); g.fill(); g.strokeStyle = "#24505a"; rr(g, x, y, 120, 52, 10); g.stroke(); txt(g, NOMS[i], x + 10, y + 20, 16, "#e8f4f2"); txt(g, CLS[i], x + 10, y + 35, 11, "#d8e4ff", "left", 600); g.fillStyle = "#08121a"; rr(g, x + 10, y + 40, 100, 6, 3); g.fill(); g.fillStyle = "#4ad05a"; rr(g, x + 10, y + 40, 70, 6, 3); g.fill(); });
+    g.fillStyle = "#3ddcbe"; rr(g, 628, 304, 124, 48, 10); g.fill(); txt(g, "LANCER", 690, 326, 17, "#05211c", "center", 900);
+  };
+}
+const scenes = [
+  scene("A · Pixel art riche","Le décor garde le grain des sprites : quatre bandes de ciel, lune rouge, la Gueule et ses coulées de lave, forêt morte, dalles craquelées avec os et fissures, Muraille en briques ombrées avec herse, meurtrières et bannière. Torches et lave qui vacillent, braises, brume.","A", decorA),
+  scene("B · Illustration douce","Hors pixel : nuages flous éclairés par le bas, la Gueule en silhouette lisse avec sa lueur, sol à grain et ombres douces, Muraille en grosses pierres lisses éclairée par la droite, vignette. Les sprites ressortent par contraste.","B", decorB),
+  scene("C · Nuit bleutée plate","Aux couleurs de l'interface : ciel marine et teal, grande lune, relief en aplats, sol à motif discret, Muraille claire avec bannière turquoise. Seuls le volcan, les torches et les braises restent chauds.","C", decorC)
+];
+let der = performance.now(), T = 0;
+function boucle(now){ const dt = Math.min(.1, (now - der)/1000); der = now; T += dt; scenes.forEach(f => f(T, dt)); requestAnimationFrame(boucle); }
+requestAnimationFrame(boucle);
+</script>

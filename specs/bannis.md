@@ -311,3 +311,9 @@ Recommandation de Claude : 1 + 2 d'abord (le dé reste notre signature, mais ser
 - **Orientation** : sur un téléphone en portrait (`max-width: 700px`), message « Tourne ton téléphone » (`#tourne` dans `index.html`) et combat mis en pause ; au premier toucher, `screen.orientation.lock("landscape")` est essayé (accepté en appli installée, sinon plein écran puis verrouillage) ; ◀ LUDOTHEQUE déverrouille. Dans l'artefact, seul le message sert.
 - **Étiquette et jaquette** refaites (`outils/etiquettes.js`, vue 760 × 360).
 - **À voir** : essai sur le téléphone (verrouillage du sens, lisibilité des textes de 11 à 13 px, boutons aux pouces) ; le retour à la Ludothèque en portrait.
+
+## 25. Maquette 9 : le décor (28/11)
+
+**Retour de l'utilisateur (28/11)** : le paysage « rend bien » ; maintenant que l'interface a été revue, le **décor** (Muraille, sol, fond) est trop simpliste et en décalage avec le reste.
+
+**[Maquette 9](https://claude.ai/artifact/VHqJzXB1VpcPw6kRmTZMFp)** (`maquettes/bannis-9.html`, sources `outils/bannis-maquette/source9.html` + `fabriquer9.py`) : trois scènes animées avec héros, monstres et bandes d'interface par-dessus ; boutons NUIT / ORAGE / AUBE. **A** pixel art riche (ciel en bandes, lune rouge, la Gueule et ses coulées de lave, forêt morte, dalles craquelées avec os et fissures, Muraille en briques ombrées avec herse, meurtrières et bannière ; torches, lave, braises, brume animées), **B** illustration douce hors pixel (nuages flous, volcan lisse et lueur, sol à grain, grosses pierres lisses, vignette), **C** nuit bleutée plate aux couleurs de l'interface (marine et teal, grande lune, aplats, bannière turquoise, seuls le volcan, les torches et les braises restent chauds). Choix de l'utilisateur : en attente. Pas de pack d'images : tout est dessiné en code (comme les sprites sont déjà dans `bannis/img/`).
