@@ -104,3 +104,7 @@ Pistes :
 - Validés par l'utilisateur le 28/11 ; l'artiste de la planche rétro n'a pas encore confirmé qu'il est d'accord (mentionné dans les crédits).
 - Noms français des badges à vérifier (Hoenn et Sinnoh en particulier).
 - Reste : 5e génération (icônes PokéAPI n° 494 à 649, même méthode que Sinnoh), chromatiques du Pokédex rétro (non prévus), badges des régions suivantes.
+
+## Menus et interfaces à retravailler (28/11)
+- Constat de l'utilisateur : trop d'onglets (7), le menu de transfert de sauvegarde en bas du Dex est superflu. Le transfert de l'accueil (`picross/fiche.js` : `transfert`) exporte et importe déjà tout (code `LUDO1-`) et lit aussi les anciens `PICROSSDEX1-` ; il ne gardait pas les chromatiques : corrigé le 28/11 (champ `s`), et le compteur de la fiche ignore les objets, le rétro et les badges.
+- **Maquette** : [`maquettes/picross-menus.html`](../maquettes/picross-menus.html), [artefact](https://claude.ai/artifact/JL29CmTYULshN4ZoxmHfzM) : A console à flèches de région (POKÉDEX / EXTRAS), B console à boutons du bas (DEX, RÉTRO, ARÈNE, BOUTIQUE) avec puces de région, C interface moderne hors rétro (barre du bas, cartes de région). Communs : transfert retiré, un seul bandeau de message (+ journal « i »), aide derrière « ? », herbes en un bouton. Choix de l'utilisateur à noter ici avant de programmer.

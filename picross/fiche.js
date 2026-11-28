@@ -6,7 +6,7 @@ Ludo.fiche({
   meta: {genres: ["LOGIQUE"]},
   nom: "Picross Dex",
   enCours: () => { const n = count(rk("picrossdex.progress", {})); return n ? `${n} GRILLE${n > 1 ? "S" : ""}` : null; },
-  records: () => { const cap = rk("picrossdex.captured", {}) || {}, n = Object.keys(cap).filter(id => cap[id] && !cap[id].test && id !== "pokeball").length;
+  records: () => { const cap = rk("picrossdex.captured", {}) || {}, n = Object.keys(cap).filter(id => cap[id] && !cap[id].test && !cap[id].side && id !== "pokeball").length;
     return [["Pokémon capturés", num(n)], ["Grilles commencées", num(count(rk("picrossdex.progress", {})))]]; },
   classements: [{label: "PAR POKEMON", ctl: ["pokemon"], game: "picross", board: () => "t:" + st.poke, fmt: T, title: () => st.poke ? Ludo.pokeLabel(st.poke) : "PAR POKEMON",
      note: "Temps de la grille, plus 30 secondes par indice utilisé.", empty: "Personne n'a encore capturé de Pokémon."},
@@ -17,7 +17,7 @@ Ludo.fiche({
     collecter(g){
       const cap = readKey("picrossdex.captured", {}), prog = readKey("picrossdex.progress", {});
       const c = {}, p = {};
-      for (const [id, v] of Object.entries(cap || {})) if (v && v.time > 0) c[id] = Object.assign({t: v.time, h: v.hints || 0}, v.test ? {x: 1} : {});
+      for (const [id, v] of Object.entries(cap || {})) if (v && v.time > 0) c[id] = Object.assign({t: v.time, h: v.hints || 0}, v.test ? {x: 1} : {}, v.shiny ? {s: 1} : {});
       for (const [id, v] of Object.entries(prog || {})) if (v && Array.isArray(v.cells)) p[id] = {c: v.cells.join(""), e: Math.round(v.elapsed || 0), h: v.hints || 0};
       if (Object.keys(c).length || Object.keys(p).length) g.picross = {c, p};
     },
@@ -30,10 +30,11 @@ Ludo.fiche({
         let added = 0, faster = 0, grids = 0;
         for (const [id, v] of Object.entries(g.picross.c || {})){
           if (!/^[a-z0-9_-]+$/.test(id) || !(v.t > 0)) continue;
-          const mk = () => Object.assign({time: Math.round(v.t), hints: v.h || 0}, v.x ? {test: true} : {});
+          const mk = () => Object.assign({time: Math.round(v.t), hints: v.h || 0}, v.x ? {test: true} : {}, v.s ? {shiny: true} : {});
           const score = (t, n) => t + 30000 * (n || 0);
           if (!cap[id]){ cap[id] = mk(); added++; }
-          else if (score(v.t, v.h) < score(cap[id].time, cap[id].hints)){ cap[id] = mk(); faster++; }
+          else if (score(v.t, v.h) < score(cap[id].time, cap[id].hints)){ const was = cap[id].shiny; cap[id] = mk(); if (was) cap[id].shiny = true; faster++; }
+          if (v.s && cap[id] && !cap[id].shiny) cap[id].shiny = true;   // un chromatique n'est jamais perdu
         }
         for (const [id, v] of Object.entries(g.picross.p || {})){
           if (!/^[a-z0-9_-]+$/.test(id) || cap[id] || prog[id] || typeof v.c !== "string" || !/^[012]+$/.test(v.c)) continue;
