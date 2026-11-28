@@ -1,0 +1,169 @@
+<title>Petit Bourg, écrans</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&display=swap">
+<style>
+/* Même finition que la première maquette, trois idées de jeu différentes. */
+:root{--bg:#1b1e24;--fg:#eef0f3;--mut:#9aa3ae}
+body{background:var(--bg);color:var(--fg);font:15px/1.5 Outfit,system-ui,sans-serif;margin:0;
+ padding-block:24px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1{font:700 26px Outfit,sans-serif;margin:0 0 4px}
+.lead{color:var(--mut);margin:0 0 24px;max-width:62ch}
+.row{display:flex;flex-wrap:wrap;gap:28px;justify-content:center}
+.col{width:300px;max-width:100%;min-width:0}
+.tag{font:600 12px Outfit;letter-spacing:.1em;text-transform:uppercase;color:var(--mut);margin-bottom:6px}
+.col h2{font:700 19px Outfit;margin:0 0 10px}
+.phone{position:relative;width:100%;aspect-ratio:360/600;border-radius:30px;overflow:hidden;border:6px solid #0b0d10;box-shadow:0 10px 30px #0008}
+.phone>svg{position:absolute;inset:0;width:100%;height:100%;display:block}
+.hud{position:absolute;left:0;right:0;color:var(--ink)}
+.note{color:var(--mut);font-size:14px;margin:12px 0 0}
+.note b{color:var(--fg)}
+.top{top:0;padding:14px 14px 0;display:flex;justify-content:space-between;align-items:center}
+.right{display:flex;align-items:center;gap:10px;font:800 18px Outfit}
+.right .day{font-size:17px}
+.clock{width:40px;height:40px;border-radius:50%;background:var(--btn);color:var(--btnfg);display:grid;place-items:center}
+svg.i{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.bot{bottom:0;padding:0 18px 16px;display:flex;justify-content:space-around;align-items:flex-end}
+.t{display:flex;flex-direction:column;align-items:center;gap:14px;font:700 10px Outfit;letter-spacing:.06em;text-transform:uppercase;width:66px}
+.d{position:relative;width:44px;height:44px;border-radius:13px;background:var(--btn);color:var(--btnfg);transform:rotate(45deg);margin-top:8px;box-shadow:-5px 5px 0 var(--btn2)}
+.d>svg{position:absolute;inset:0;margin:auto;transform:rotate(-45deg)}
+.bd{position:absolute;right:-12px;top:-12px;transform:rotate(-45deg);min-width:24px;height:24px;border-radius:12px;background:var(--bd);color:var(--bdfg);border:2px solid var(--ink);font:800 12px/20px Outfit;text-align:center}
+.A{--ink:#37423b;--btn:#37423b;--btn2:#37423b33;--btnfg:#fff;--bd:#fff;--bdfg:#37423b;background:#e6efd9}
+.B{--ink:#6b4a2f;--btn:#6b4a2f;--btn2:#6b4a2f33;--btnfg:#fff4e0;--bd:#fff4e0;--bdfg:#6b4a2f;background:#fbf3e4}
+.C{--ink:#2f4a66;--btn:#2f4a66;--btn2:#2f4a6633;--btnfg:#fff;--bd:#fff;--bdfg:#2f4a66;background:#e9f1f8}
+.ring{width:40px;height:40px}
+.pill{display:flex;align-items:center;gap:8px;background:#fff;border-radius:20px;padding:6px 12px 6px 8px;box-shadow:0 2px 0 #6b4a2f22;font:800 15px Outfit}
+.pill .bar{width:34px;height:8px;border-radius:4px;background:#f0e3cd;overflow:hidden}.pill .bar i{display:block;height:100%;background:#ef6f6c;border-radius:4px}
+.sheet{position:absolute;left:10px;right:10px;bottom:10px;background:#fff;border-radius:24px;padding:14px 14px 12px;box-shadow:0 10px 28px #6b4a2f40;color:var(--ink)}
+.sheet h3{margin:0;font:800 17px Outfit}.sheet .sub{font:600 12px Outfit;color:#a08968;margin-bottom:10px}
+.need{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid #f0e6d3}
+.chip{width:36px;height:36px;border-radius:11px;display:grid;place-items:center;flex:none}
+.need .tx{flex:1;min-width:0;font:700 13px Outfit}.need .tx small{display:block;font:600 11px Outfit;color:#a08968}
+.meter{height:6px;border-radius:3px;background:#f0e3cd;margin-top:5px;overflow:hidden}.meter i{display:block;height:100%;background:#ef6f6c}
+.st{font:800 11px Outfit;padding:4px 8px;border-radius:10px;white-space:nowrap}
+.st.ok{background:#e2f5e6;color:#2f8a46}.st.wait{background:#fde4e4;color:#c13d3d}
+.btn{margin-top:10px;display:flex;align-items:center;justify-content:center;gap:8px;background:var(--btn);color:var(--btnfg);border-radius:16px;padding:11px;font:800 13px Outfit}
+.dim svg{filter:blur(2.5px) saturate(.8)}
+.veil{position:absolute;inset:0;background:#fbf3e4d9}
+.week{position:absolute;left:0;right:0;top:56px;text-align:center;color:var(--ink)}
+.week small{font:700 11px Outfit;letter-spacing:.12em;text-transform:uppercase;color:#a08968}.week b{display:block;font:800 26px Outfit;margin-top:2px}
+.stats{display:flex;gap:10px;margin:0 16px}
+.stats div{flex:1;background:#fff;border-radius:16px;padding:8px;text-align:center;font:800 20px Outfit;color:var(--ink)}.stats small{display:block;font:600 10px Outfit;color:#a08968;letter-spacing:.04em;text-transform:uppercase}
+.cards{position:absolute;left:14px;right:14px;top:215px;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.card{background:#fff;border-radius:22px;padding:14px 10px 12px;text-align:center;box-shadow:0 8px 0 #6b4a2f22;color:var(--ink)}
+.card .big{width:64px;height:64px;border-radius:18px;margin:0 auto 10px;display:grid;place-items:center}
+.card b{display:block;font:800 15px Outfit}.card span{display:block;font:600 11.5px/1.35 Outfit;color:#a08968;margin-top:4px}
+.card .tagn{display:inline-block;margin-top:8px;font:800 10px Outfit;letter-spacing:.06em;text-transform:uppercase;background:#ffe9b8;color:#8a5a00;padding:3px 8px;border-radius:9px}
+.skip{position:absolute;left:0;right:0;bottom:22px;text-align:center;font:700 12px Outfit;color:#a08968}
+
+</style>
+
+<h1>Petit Bourg, trois écrans</h1>
+<p class="lead">Direction « les besoins du village » : une partie en cours, la fiche d'une maison quand on la touche, et le choix de fin de semaine.</p>
+<div class="row" id="row"></div>
+
+<script>
+const C=40,OY=66;
+const P=(x,y)=>[(x+.5)*C,(y+.5)*C];
+const roads={red:[[1,2],[4,2]],blue:[[7,1],[7,3],[2,3],[2,6]],yellow:[[1,9],[4,9]]};
+const ghost=[[7,7],[4,7],[4,2]], finger=[5.5,7];
+const cars=[['red',2.5,2,'h'],['blue',7,2,'v'],['blue',4.5,3,'h'],['blue',2,4.6,'v'],['yellow',2.6,9,'h']];
+const hex=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16));
+const mix=(a,b,t)=>{const A=hex(a),B=hex(b);return '#'+A.map((v,i)=>Math.round(v+(B[i]-v)*t).toString(16).padStart(2,'0')).join('')};
+const shade=(c,k)=>k>=0?mix(c,'#ffffff',k):mix(c,'#000000',-k);
+const rnd=(i,j)=>{const v=Math.sin(i*12.9898+j*78.233)*43758.5453;return v-Math.floor(v)};
+
+function smooth(p,r=16){const q=p.map(a=>P(...a));let d=`M${q[0]}`;
+ for(let i=1;i<q.length-1;i++){const a=q[i-1],b=q[i],c=q[i+1];
+  const l1=Math.hypot(a[0]-b[0],a[1]-b[1]),l2=Math.hypot(c[0]-b[0],c[1]-b[1]),rr=Math.min(r,l1/2,l2/2);
+  const p1=[b[0]+(a[0]-b[0])/l1*rr,b[1]+(a[1]-b[1])/l1*rr],p2=[b[0]+(c[0]-b[0])/l2*rr,b[1]+(c[1]-b[1])/l2*rr];
+  d+=` L${p1} Q${b} ${p2}`}
+ return d+` L${q[q.length-1]}`}
+const river=[[270,-20],[252,100],[218,200],[216,300],[246,400],[236,560]];
+const smoothRiver=(()=>{let d=`M${river[0]}`;for(let i=1;i<river.length-1;i++){const m=[(river[i][0]+river[i+1][0])/2,(river[i][1]+river[i+1][1])/2];d+=` Q${river[i]} ${m}`}return d+` L${river[river.length-1]}`})();
+
+const cube=(t,x,y,w,L,c,notch=true)=>`<polygon points="${x+w},${y} ${x+w+L},${y+L} ${x+w+L},${y+w+L} ${x+L},${y+w+L} ${x},${y+w} ${x+w},${y+w}" fill="${t.shadow}"/>
+ <rect x="${x+3}" y="${y+5}" width="${w}" height="${w}" rx="4" fill="${c[1]}"/><rect x="${x}" y="${y}" width="${w}" height="${w}" rx="4" fill="${c[0]}"/>${notch?`<rect x="${x+w*.32}" y="${y+w-5}" width="${w*.36}" height="5" rx="2" fill="${c[1]}"/>`:''}`;
+const ringSvg=(x,y,f,ink,track)=>{const r=8,L=2*Math.PI*r;return `<circle cx="${x}" cy="${y}" r="11" fill="${track}"/><circle cx="${x}" cy="${y}" r="${r}" fill="none" stroke="${ink}" stroke-width="5" stroke-dasharray="${L*f} ${L}" transform="rotate(-90 ${x} ${y})"/>`};
+const roadPath=(t,d,extra='')=>`<path d="${d}" fill="none" stroke="${t.edge}" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"/><path d="${d}" fill="none" stroke="${t.road}" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>`;
+const carsSvg=t=>cars.map(([c,x,y,d])=>{const[p,q]=P(x-.5,y-.5);const w=d==='h'?11:7,h=d==='h'?7:11;return `<rect x="${p-w/2}" y="${q-h/2}" width="${w}" height="${h}" rx="3" fill="${t.pal[c][0]}" stroke="#fff" stroke-width="1.5"/>`}).join('');
+const ghostSvg=t=>{const[fx,fy]=P(...finger);return `<path d="${smooth(ghost)}" fill="none" stroke="${t.ghost}" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1 12"/><circle cx="${fx}" cy="${fy}" r="21" fill="${t.ink}" opacity=".13"/><circle cx="${fx}" cy="${fy}" r="9" fill="${t.ink}" opacity=".55"/>`};
+const plot=(t,x,y)=>{const[p,q]=P(x,y);return `<rect x="${p-27}" y="${q-27}" width="54" height="54" rx="12" fill="${t.road}" stroke="${t.edge}" stroke-width="3"/>`};
+const wrap=(t,inner)=>`<svg viewBox="0 0 360 600" preserveAspectRatio="xMidYMid slice"><rect width="360" height="600" fill="${t.ground}"/><g transform="translate(0,${OY})">${inner}</g></svg>`;
+
+/* ---------- scène du village ---------- */
+const icoPaths={
+ bread:(fg,bg)=>`<rect x="-11" y="-4.5" width="22" height="9" rx="4.5" transform="rotate(-35)" fill="${fg}"/><path d="M-4 -7l4 5M1 -9l4 5M-1 -1l4 5" stroke="${bg}" stroke-width="1.8" stroke-linecap="round" transform="rotate(-35) translate(0 2)"/>`,
+ book:(fg,bg)=>`<path d="M-11 -7h9a2 2 0 0 1 2 2v12a2 2 0 0 0 -2 -2h-9zM11 -7h-9a2 2 0 0 0 -2 2v12a2 2 0 0 1 2 -2h9z" fill="${fg}"/>`,
+ flower:(fg,bg)=>[0,72,144,216,288].map(a=>`<circle cx="${(6*Math.cos(a*Math.PI/180)).toFixed(1)}" cy="${(6*Math.sin(a*Math.PI/180)).toFixed(1)}" r="4.4" fill="${fg}"/>`).join('')+`<circle r="3.2" fill="${bg}"/>`,
+ cafe:(fg,bg)=>`<path d="M-9 -5h13v8a5 5 0 0 1-5 5h-3a5 5 0 0 1-5-5z" fill="${fg}"/><path d="M4 -2h2.5a3 3 0 0 1 0 6H4" fill="none" stroke="${fg}" stroke-width="2.2"/>`,
+ ok:(fg,bg)=>`<path d="M-6 0l4 4 8-9" fill="none" stroke="${fg}" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>`
+};
+const ico=(k,x,y,fg,bg,s=1)=>`<g transform="translate(${x} ${y}) scale(${s})">${icoPaths[k](fg,bg)}</g>`;
+const shops={bread:['#ff9f4a','#c9692a'],book:['#5aa9e6','#2f6fae'],flower:['#ff7fb0','#c24a7e'],cafe:['#a9744f','#6f4a30']};
+const icoSvg=(k,fg,bg,sz=34)=>`<svg viewBox="-14 -14 28 28" width="${sz}" height="${sz}">${icoPaths[k](fg,bg)}</svg>`;
+function sceneB(t,o={}){
+ let s='';
+ t.blobs.forEach(b=>s+=`<polygon points="${b}" fill="${t.blob}" stroke="${t.blob}" stroke-width="44" stroke-linejoin="round"/>`);
+ s+=`<ellipse cx="292" cy="445" rx="54" ry="30" fill="${t.bank}"/><ellipse cx="292" cy="445" rx="46" ry="23" fill="${t.water}"/>`;
+ [roads.red,roads.blue,roads.yellow].forEach(p=>s+=roadPath(t,smooth(p)));
+ if(o.focus){const[tx,ty]=P(4,9);s+=`<circle cx="${tx}" cy="${ty}" r="40" fill="none" stroke="#e0629a" stroke-width="3" stroke-dasharray="4 6"/>`}
+ s+=ghostSvg(t);
+ const tree=(x,y)=>`<ellipse cx="${x+6}" cy="${y+8}" rx="11" ry="7" fill="${t.shadow}"/><circle cx="${x}" cy="${y}" r="10" fill="#8cc08a"/><circle cx="${x-2}" cy="${y-2}" r="6.5" fill="#a9d6a2"/>`;
+ [[25,200],[46,216],[20,230],[338,200],[318,226],[346,238],[56,470],[80,492],[36,494]].forEach(([x,y])=>s+=tree(x,y));
+ [['bread',4,2,2],['book',2,6,0],['flower',4,9,0]].forEach(([k,x,y,qn])=>{const[p,q]=P(x,y);s+=plot(t,x,y)+cube(t,p-17,q-17,34,16,shops[k],false)+ico(k,p,q-1,'#fff',shops[k][0],1.05);if(o.queue&&qn)s+=`<circle cx="${p+19}" cy="${q-19}" r="9" fill="${t.ink}" stroke="#fff" stroke-width="2"/><text x="${p+19}" y="${q-15.5}" text-anchor="middle" font-family="Outfit" font-weight="800" font-size="11" fill="#fff">${qn}</text>`});
+ const house=['#fff8ea','#dcc79c'];
+ const bubble=(x,y,items)=>{const w=10+items.length*20;return `<g transform="translate(${x} ${y})"><path d="M-6 17h12l-6 8z" fill="#fff"/><rect x="${-w/2}" y="-8" width="${w}" height="26" rx="13" fill="#fff" stroke="${t.edge}" stroke-width="2"/>${items.map(([k,c],i)=>ico(k,-w/2+10+i*20,5,c,'#fff',.72)).join('')}</g>`};
+ [[1,2,'ok'],[7,1,'ok'],[1,9,'ok'],[7,7,null]].forEach(([x,y,st])=>{const[p,q]=P(x,y);
+  if(!st&&o.focus)s+=`<circle cx="${p}" cy="${q}" r="26" fill="#fff" opacity=".8"/><circle cx="${p}" cy="${q}" r="26" fill="none" stroke="${t.ink}" stroke-width="3"/>`;
+  s+=cube(t,p-10,q-10,20,9,house);
+  s+=st==='ok'?`<g transform="translate(${p+13} ${q-22})"><circle r="10" fill="#fff" stroke="#8fcf9a" stroke-width="2.5"/>${ico('ok',0,0,'#4fae63','#fff',.8)}</g>`:bubble(p,q-38,[['bread','#e9852b'],['flower','#e0629a']])+ringSvg(p+16,q-14,.7,t.ink,'#fff')});
+ return wrap(t,s+carsSvg(t))}
+
+const T={
+ B:{ground:'#fbf3e4',blob:'#e6f0d2',blobs:['40,170 110,125 125,250','300,520 330,560 250,570'],water:'#bfe6ee',bank:'#e9f6f8',road:'#ffffff',edge:'#d9cbb0',ink:'#6b4a2f',ghost:'#6b4a2fb0',shadow:'rgba(107,74,47,.14)',pal:{red:['#ff9f4a','#c9692a'],blue:['#5aa9e6','#2f6fae'],yellow:['#ff7fb0','#c24a7e']}}
+};
+const ic={
+ car:'<path d="M4 16l1.6-5.2A2 2 0 017.5 9.4h9a2 2 0 011.9 1.4L20 16v3h-2.5v-1.5h-11V19H4z" fill="currentColor"/><circle cx="7.5" cy="14" r="1" fill="#fff" stroke="none"/><circle cx="16.5" cy="14" r="1" fill="#fff" stroke="none"/>',
+ smile:'<circle cx="12" cy="12" r="8.5"/><path d="M8.5 14c1 1.8 2.2 2.6 3.5 2.6s2.5-.8 3.5-2.6"/><circle cx="9" cy="9.6" r=".9" fill="currentColor"/><circle cx="15" cy="9.6" r=".9" fill="currentColor"/>',
+ clock:'<circle cx="12" cy="12" r="8.5"/><path d="M12 7v5l3 2"/>',
+ road:'<rect x="5" y="12" width="14" height="6" rx="2"/><rect x="5" y="7" width="14" height="6" rx="2" opacity=".5"/>',
+ bridge:'<path d="M3 16h18M5 16c0-6 14-6 14 0M8.5 11.5V16M12 10.2V16M15.5 11.5V16"/>',
+ light:'<rect x="8.5" y="3.5" width="7" height="17" rx="3.5"/><circle cx="12" cy="8" r="1.2" fill="currentColor"/><circle cx="12" cy="12" r="1.2" fill="currentColor"/><circle cx="12" cy="16" r="1.2" fill="currentColor"/>',
+ tunnel:'<path d="M4 19V12a8 8 0 0116 0v7M9 19v-5a3 3 0 016 0v5"/>',
+ viaduct:'<path d="M3 8h18M6 8v11M12 8v11M18 8v11M3 19h18"/>',
+ round:'<circle cx="12" cy="12" r="5"/><path d="M12 3v4M12 17v4M3 12h4M17 12h4"/>',
+ oneway:'<path d="M4 12h14M13 6l6 6-6 6"/>',
+ salt:'<path d="M12 3v18M4.5 7.5l15 9M19.5 7.5l-15 9"/>'
+};
+const I=k=>`<svg class="i" viewBox="0 0 24 24">${ic[k]}</svg>`;
+const seasonRing=()=>{const cols=['#ff9ec4','#ffd24d','#ff9340','#6fb6f2'];let s='';cols.forEach((c,i)=>{const a0=-90+i*90+6,a1=-90+(i+1)*90-6,r=15,x0=20+r*Math.cos(a0*Math.PI/180),y0=20+r*Math.sin(a0*Math.PI/180),x1=20+r*Math.cos(a1*Math.PI/180),y1=20+r*Math.sin(a1*Math.PI/180);s+=`<path d="M${x0} ${y0} A${r} ${r} 0 0 1 ${x1} ${y1}" stroke="${c}" stroke-width="6" fill="none" stroke-linecap="round"/>`});
+ return `<svg class="ring" viewBox="0 0 40 40">${s}<circle cx="20" cy="20" r="9" fill="#2f4a66"/><path d="M20 15v10M15.7 17.5l8.6 5M24.3 17.5l-8.6 5" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/></svg>`};
+const topBar=(left,right)=>`<div class="hud top"><div class="right">${left}</div><div class="right">${right}</div></div>`;
+const heart=pct=>`<div class="pill"><svg class="i" viewBox="0 0 24 24" style="width:20px;height:20px;fill:#ef6f6c;stroke:#ef6f6c"><path d="M12 20s-7-4.4-7-10a4 4 0 017-2.6A4 4 0 0119 10c0 5.6-7 10-7 10z"/></svg>${pct}<span class="bar"><i style="width:${pct}%"></i></span></div>`;
+const clockBtn=`<span class="day">JEU</span><div class="clock">${I('clock')}</div>`;
+const toolsBar=tools=>`<div class="hud bot">${tools.map(([k,n,c])=>`<div class="t"><div class="d">${I(k)}<span class="bd">${c}</span></div>${n}</div>`).join('')}</div>`;
+const tools=[['road','Routes','95'],['bridge','Pont','1'],['round','Rond-point','2'],['oneway','Sens unique','3']];
+const left=heart(82)+'<span style="margin-left:2px">65</span>'+I('smile');
+
+const s1=`<div class="phone B">${sceneB(T.B,{queue:1})}${topBar(left,clockBtn)}${toolsBar(tools)}</div>`;
+const need=(k,state,txt,sub,meter)=>`<div class="need"><div class="chip" style="background:${shops[k][0]}">${icoSvg(k,'#fff',shops[k][0],26)}</div><div class="tx">${txt}<small>${sub}</small>${meter?`<div class="meter"><i style="width:${meter}%"></i></div>`:''}</div><span class="st ${state[0]}">${state[1]}</span></div>`;
+const s2=`<div class="phone B"><div class="dim">${sceneB(T.B,{focus:1})}</div>${topBar(left,clockBtn)}
+ <div class="sheet"><h3>Maison des Lambert</h3><div class="sub">3 habitants · quartier nord</div>
+ ${need('bread',['wait','En attente'],'Pain','Boulangerie la plus proche : 9 routes',70)}
+ ${need('flower',['wait','Pas relié'],'Fleurs','Aucun fleuriste relié à cette maison',45)}
+ ${need('book',['ok','Content'],'Livres','Livrés il y a 40 s',0)}
+ <div class="btn">${I('road')}Relier au fleuriste</div></div></div>`;
+const card=(k,title,desc,tag)=>`<div class="card"><div class="big" style="background:${shops[k][0]}">${icoSvg(k,'#fff',shops[k][0],40)}</div><b>${title}</b><span>${desc}</span><div class="tagn">${tag}</div></div>`;
+const s3=`<div class="phone B"><div class="dim">${sceneB(T.B,{})}</div><div class="veil"></div>
+ <div class="week"><small>Fin de semaine</small><b>Semaine 3 terminée</b></div>
+ <div class="hud" style="top:124px"><div class="stats"><div>82 %<small>Bonheur</small></div><div>65<small>Contents</small></div><div>+12<small>Record</small></div></div></div>
+ <div class="cards">${card('cafe','Un café','Les habitants en ont besoin l\'après-midi.','Nouveau commerce')}
+ <div class="card"><div class="big" style="background:#5a8f4a;color:#fff">${I('road').replace('class="i"','class="i" style="width:38px;height:38px"')}</div><b>+40 routes</b><span>Et un pont de plus pour la rivière.</span><div class="tagn">Matériel</div></div></div>
+ <div class="skip">Choisis une carte pour lancer la semaine 4</div></div>`;
+const dirs=[
+ ['Écran 1','En partie',s1,'Les maisons sont neutres : <b>ce sont les bulles qui parlent</b>. Coche verte = besoin satisfait, bulle avec anneau = quelqu\'un attend. Le badge noir sur un commerce est sa file d\'attente. En haut à gauche, la jauge de bonheur du village.'],
+ ['Écran 2','Toucher une maison',s2,'Un appui sur une maison ouvre sa fiche : ses besoins, lequel attend, depuis combien de temps, et un bouton qui <b>propose le tracé vers le commerce manquant</b>. On comprend sans lire de règles.'],
+ ['Écran 3','Fin de semaine',s3,'Chaque semaine, un bilan puis <b>une carte sur deux</b> : un nouveau commerce (café, marché, soins) ou du matériel. Les cartes façonnent le village sans jamais punir.']
+];
+document.getElementById('row').innerHTML=dirs.map(([t,n,ph,note])=>`<div class="col"><div class="tag">${t}</div><h2>${n}</h2>${ph}<p class="note">${note}</p></div>`).join('');
+</script>
