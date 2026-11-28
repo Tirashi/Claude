@@ -63,11 +63,46 @@ function bruit(dest, t, d, o) {
   s.connect(fl); fl.connect(g); g.connect(dest); s.start(t); s.stop(t + d + .05);
 }
 
+// Souffle : du bruit passé dans un filtre passe-bande qui monte (un sas, un lancement)
+function souffle(dest, t, d, f0, f1, o) {
+  o = o || {};
+  const n = Math.floor(ac.sampleRate * d), b = ac.createBuffer(1, n, ac.sampleRate), x = b.getChannelData(0);
+  for (let i = 0; i < n; i++) x[i] = Math.random() * 2 - 1;
+  const s = ac.createBufferSource(); s.buffer = b;
+  const fl = ac.createBiquadFilter(); fl.type = "bandpass"; fl.Q.value = o.q || 1.1; fl.frequency.setValueAtTime(f0, t); fl.frequency.exponentialRampToValueAtTime(f1, t + d);
+  const g = ac.createGain(); g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(o.v || .08, t + d * .35); g.gain.exponentialRampToValueAtTime(.0001, t + d);
+  s.connect(fl); fl.connect(g); let sortie = g;
+  if (o.pan != null && ac.createStereoPanner) { const p = ac.createStereoPanner(); p.pan.value = clamp(o.pan, -.8, .8); g.connect(p); sortie = p; }
+  sortie.connect(dest); s.start(t); s.stop(t + d + .05);
+}
+// Balayage : une dent de scie qui monte, dont le filtre s'ouvre (une machine qui se met en route)
+function balayage(dest, t, f, d, o) {
+  o = o || {};
+  const osc = ac.createOscillator(), fl = ac.createBiquadFilter(), g = ac.createGain();
+  osc.type = "sawtooth"; osc.frequency.setValueAtTime(f, t); osc.frequency.exponentialRampToValueAtTime(f * (o.monte || 1.8), t + d);
+  fl.type = "lowpass"; fl.Q.value = 3; fl.frequency.setValueAtTime(o.f0 || 250, t); fl.frequency.exponentialRampToValueAtTime(o.f1 || 2200, t + d * .9);
+  g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(o.v || .05, t + d * .5); g.gain.exponentialRampToValueAtTime(.0001, t + d);
+  osc.connect(fl); fl.connect(g); g.connect(dest); osc.start(t); osc.stop(t + d + .05);
+}
+
 // ---- les sons ----
 const SONS = {
   clic: t => note(bSons, t, 1350, .06, { v: .025, filtre: 3000 }),
-  achat: t => { note(bSons, t, 523.25, .26, { v: .1, type: "triangle", filtre: 2600, glisse: 1.04 }); note(bSons, t + .07, 783.99, .34, { v: .085, filtre: 3200 }); },
-  amelio: t => [392, 523.25, 659.25, 783.99].forEach((f, i) => note(bSons, t + i * .06, f, .6, { v: .075, filtre: 3400 })),
+  // Un navire part : verrou mécanique, souffle de sas, poussée grave (plus grave pour un mineur, plus vive pour une patrouille) ; plusieurs navires = lancements décalés
+  achat: (t, o) => {
+    const role = (o && o.role) || "m", base = { m: 78, t: 96, p: 130 }[role] || 90, rep = Math.min(3, Math.max(1, (o && o.n) || 1)), pan = o && o.pan;
+    for (let i = 0; i < rep; i++) {
+      const u = t + i * .085, k = 1 + i * .07;
+      bruit(bSons, u, .05, { v: .05, debut: 3200, fin: 900 });
+      souffle(bSons, u + .02, role === "p" ? .34 : .5, 420 * k, (role === "p" ? 3200 : 2300) * k, { v: .075 - i * .015, pan });
+      note(bSons, u + .02, base * k, .55, { v: .1 - i * .02, a: .09, type: "triangle", filtre: 320, glisse: 1.9, pan });
+    }
+  },
+  // Un système se met en service : balayage qui s'ouvre, puis deux tics secs de validation
+  amelio: (t, o) => {
+    balayage(bSons, t, 130, .55, { v: .08, f0: 260, f1: 2400 });
+    note(bSons, t + .5, 660, .09, { v: .045, type: "triangle", filtre: 2200 }); note(bSons, t + .58, 880, .12, { v: .04, type: "triangle", filtre: 2200 });
+  },
   eclat: t => { note(bSons, t, 880, .7, { v: .08 }); note(bSons, t + .09, 1318.5, .9, { v: .07 }); note(bSons, t + .18, 1760, 1.1, { v: .04 }); },
   zone: t => {
     [220, 329.63, 440, 554.37].forEach((f, i) => note(bSons, t + i * .12, f, 3.4, { v: .06, a: .7, type: "triangle", filtre: 1600 }));

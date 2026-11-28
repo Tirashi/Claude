@@ -38,7 +38,7 @@ function entrerCinema() { cine = true; UI.cine(true); cineSuite = 0; if (prefs.c
 const app = {
   E: () => E, V: () => V,
   lot: () => prefs.lot, setLot: l => { prefs.lot = l; Sv.enregistrerPrefs(prefs); },
-  acheter(k) { const n = S.acheter(E, k, prefs.lot === "max" ? "max" : Number(prefs.lot)); if (n) { Sv.enregistrer(E); F.Son.jouer("achat"); } return n; },
+  acheter(k) { const n = S.acheter(E, k, prefs.lot === "max" ? "max" : Number(prefs.lot)); if (n) { Sv.enregistrer(E); F.Son.jouer("achat", { role: k, n }); } return n; },
   ameliorer(k) { if (S.ameliorer(E, k)) { Sv.enregistrer(E); F.Son.jouer("amelio"); } },
   portee() {
     if (!S.ouvrirZone(E)) return false;
