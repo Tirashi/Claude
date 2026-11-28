@@ -210,3 +210,4 @@ Session 5d : trois quêtes de compagnons (menu des lanternes après la fin), Cat
 - 28/11 — Les Bannis : maquette 9 « le décor » (A pixel riche, B illustration douce, C nuit bleutée), cdc § 25.
 - 28/11 — Les Bannis : maquette 9 (décor de profil) refusée, maquette 10 (décor vu de dessus, Muraille avec chemin de ronde et tours, route pavée, coulées de lave), cdc § 26.
 - 28/11 — Les Bannis : retours sur la maquette 10 (style A retenu, lave déconnectée du sol, Muraille et torches trop simples, assets à chercher) et idée des cercles de fortifications (cdc § 27).
+- 28/11 — Les Bannis : décisions sur les cercles de fortifications (une run = autant de cercles que possible, amélioration pour commencer plus loin), assets téléchargés, maquette 11 (3 tableaux, cdc § 28), crédits ajoutés.

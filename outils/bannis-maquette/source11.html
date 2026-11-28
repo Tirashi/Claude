@@ -1,0 +1,189 @@
+<title>Les Bannis 11</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght@400;600;700;900&display=swap">
+<style>
+/* Maquette 11 « Les Bannis » (28/11) : les cercles de fortifications. Trois tableaux à traverser, du plus loin de la Gueule à la bouche :
+   1 la lisière herbeuse et boisée (palissade de bois), 2 la ceinture de pierre, 3 la bouche (la lave arrive sur le champ de bataille).
+   Pixel art en vue de dessus oblique ; assets : The Fan-tasy Tileset (Free) pour l'herbe, la terre, les arbres, rochers, feux de camp, lampadaires et bannières ;
+   Dark Dungeon & Castle 16x16 (Max_M42) pour les briques, torches et statues ; le reste est dessiné en code. */
+:root{--fond:#0b141a;--texte:#e8f4f2;--doux:#8fb0ad;--accent:#3ddcbe;--ligne:#1c3a44;--f:"Titillium Web",system-ui,sans-serif;color-scheme:dark}
+html,body{background:var(--fond);color:var(--texte)}
+body{margin:0;font-family:var(--f);font-size:17px;line-height:1.4;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px 48px}
+.page{max-width:900px;margin:0 auto;display:flex;flex-direction:column;gap:24px}
+h1{font-weight:900;font-size:clamp(22px,4.5vw,32px);margin:0}
+p{margin:0;color:var(--doux);max-width:80ch}
+b{color:var(--texte)}
+.onglets{display:flex;gap:8px;flex-wrap:wrap}
+.onglets button{font:inherit;font-size:16px;padding:6px 14px;border-radius:999px;border:2px solid var(--ligne);background:transparent;color:var(--doux);cursor:pointer}
+.onglets button[aria-pressed=true]{background:var(--accent);color:#05211c;border-color:var(--accent)}
+.tel{border:9px solid #04090c;border-radius:30px;overflow:hidden;box-shadow:0 18px 40px rgba(0,0,0,.6);background:#0e1a22;line-height:0}
+.tel canvas{width:100%;aspect-ratio:760/360;display:block}
+button:focus-visible{outline:2px solid #fff;outline-offset:2px}
+section.q{border-top:1px solid var(--ligne);padding-top:20px;display:flex;flex-direction:column;gap:10px}
+section.q h2{font-size:18px;color:var(--accent);margin:0}
+section.q li{color:var(--doux);margin:4px 0;max-width:80ch}
+.tabw{overflow-x:auto}
+table{border-collapse:collapse;min-width:640px;width:100%;font-size:16px}
+th,td{border:1px solid var(--ligne);padding:8px 10px;text-align:left;vertical-align:top;color:var(--doux)}
+th{color:var(--texte)}
+</style>
+<div class="page">
+<header><h1>LES BANNIS : LES CERCLES DE FORTIFICATIONS</h1>
+<p style="margin-top:10px">La troupe part de la Muraille et <b>repousse</b> les hordes. On commence loin de la Gueule, puis chaque cercle franchi rapproche de la bouche. Trois tableaux, en vue de dessus oblique : la <b>lisière</b> (herbe, bois, palissade), la <b>ceinture de pierre</b> (pavés, torches, statues) et <b>la bouche</b> (la lave arrive sur le champ de bataille). Touchez un tableau, ou <b>« Avancer »</b> pour voir le décor défiler d'un cercle au suivant.</p></header>
+<div class="onglets" id="onglets"><button data-t="0">1 · LISIÈRE</button><button data-t="1">2 · CEINTURE DE PIERRE</button><button data-t="2">3 · LA BOUCHE</button><button data-a="avance">AVANCER ▶</button></div>
+<div class="tel"><canvas id="cv" width="1520" height="720"></canvas></div>
+<section class="q"><h2>CE QUI EST UTILISÉ</h2><ul>
+<li><b>The Fan-tasy Tileset (Free)</b> : herbe, terre, arbres, buissons, rochers, feu de camp animé, lampadaire, bannière.</li>
+<li><b>Dark Dungeon &amp; Castle 16x16 (Max_M42)</b> : briques, torches, statues, tonneaux, grilles.</li>
+<li>Palissade, tours, escalier, lave, volcan, brume, braises : dessinés en code.</li></ul></section>
+<section class="q"><h2>QUESTIONS</h2><ul>
+<li>La progression en trois cercles vous convient-elle ? Faut-il un quatrième (marais, cendres) ?</li>
+<li>Les assets (colorés, un peu « village ») sont assombris pour coller au ton : est-ce assez sombre, trop sombre ?</li>
+<li>La Muraille de chaque cercle (palissade, pierre, ruine) vous plaît-elle mieux que l'ancienne ?</li></ul></section>
+</div>
+<script>
+const IMG = /*IMAGES*/{}, ATLAS = /*ATLAS*/{};
+try { document.fonts.load('700 20px "Titillium Web"'); } catch (e) {}
+const A = new Image(); A.src = IMG.atlas; const imH = new Image(); imH.src = IMG.heros; const imM = new Image(); imM.src = IMG.monstres;
+const W = 760, H = 360, K = 2;
+const CL = {guerriere:0,mercenaire:2,illusionniste:4,pretresse:8};
+const EQ = ["guerriere","mercenaire","illusionniste","pretresse"], NOMS = ["KESS","RHYS","BALDO","ILSE"], CLS = ["GUERRIÈRE","MERCENAIRE","ILLUSIONNISTE","PRÊTRESSE"];
+const MONS = [19,22,20,15,11,23,18];
+const pick = a => a[Math.floor(Math.random()*a.length)];
+function rng(seed){ return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function hach(a, b){ let h = (a*374761393 + b*668265263) | 0; h = (h ^ (h >>> 13))*1274126177 | 0; return ((h ^ (h >>> 16)) >>> 0)/4294967296; }
+const calque = (w, h) => { const c = document.createElement("canvas"); c.width = w; c.height = h; return c; };
+const rr = (g,x,y,w,h,r) => { g.beginPath(); g.moveTo(x+r,y); g.arcTo(x+w,y,x+w,y+h,r); g.arcTo(x+w,y+h,x,y+h,r); g.arcTo(x,y+h,x,y,r); g.arcTo(x,y,x+w,y,r); g.closePath(); };
+const txt = (g,t,x,y,px,c,al="left",gras=700) => { g.font = `${gras} ${px}px "Titillium Web",sans-serif`; g.textAlign = al; g.fillStyle = c; g.fillText(t,x,y); };
+/* sprite de l'atlas : nom, position en px CSS (coin haut gauche), échelle (2 = chaque pixel du pack vaut 2 px CSS) */
+function spr(g, nom, x, y, e = 2, sx = 0, sy = 0, sw = null, sh = null){ const r = ATLAS[nom]; if (!r) return; const w = sw ?? r[2], h = sh ?? r[3]; g.drawImage(A, r[0] + sx, r[1] + sy, w, h, Math.round(x), Math.round(y), w*e, h*e); }
+const tuile = (g, c, r, x, y, e = 2) => spr(g, "chateau", x, y, e, c*16, r*16, 16, 16);   // tuile (colonne, ligne) du pack de briques
+
+/* ---------- les trois décors, dessinés en coordonnées CSS puis réduits de moitié (pixel art) ---------- */
+function sol(g, fn){ for (let ty = 1; ty < 12; ty++) for (let tx = 0; tx < 24; tx++) fn(tx*32, ty*32 + 2, tx, ty); }
+function ombre(g, x, y, rx, ry){ g.fillStyle = "rgba(0,0,0,.3)"; g.beginPath(); g.ellipse(x, y, rx, ry, 0, 0, 7); g.fill(); }
+function fond1(){   // la lisière
+  const c = calque(380, 180), g = c.getContext("2d"); g.scale(.5, .5); g.imageSmoothingEnabled = false; const R = rng(21);
+  sol(g, (x, y, tx, ty) => spr(g, "herbe" + Math.floor(hach(tx, ty)*12), x, y - 2));
+  // route de terre qui serpente
+  const centre = x => 182 + Math.sin(x*.011)*16;
+  for (let x = 64; x < W; x += 32){ const cy = centre(x); for (let k = -1; k <= 1; k++){ const ty = Math.round(cy/32) + k; spr(g, "terre" + Math.floor(hach(x/32, ty)*6), x, ty*32 + 2); } }
+  g.fillStyle = "rgba(0,0,0,.18)"; for (let i = 0; i < 60; i++){ const x = 70 + R()*(W - 80), y = 40 + R()*260; g.fillRect(x, y, 4, 2); }
+  g.fillStyle = "#5a8a3a"; for (let i = 0; i < 90; i++){ const x = 70 + R()*(W - 80), y = 40 + R()*260; g.fillRect(x, y, 2, 6); g.fillRect(x + 4, y + 2, 2, 4); }   // brins d'herbe
+  // volcan lointain, dans la brume (en haut à droite)
+  g.fillStyle = "#5a5a86"; g.beginPath(); g.moveTo(560, 40); g.lineTo(640, 14); g.lineTo(680, 14); g.lineTo(752, 40); g.fill(); g.fillStyle = "#e0743a"; g.fillRect(640, 14, 40, 4);
+  g.fillStyle = "rgba(210,200,230,.45)"; for (let i = 0; i < 5; i++){ g.beginPath(); g.arc(660 + Math.sin(i)*12, 12 - i*7, 12 + i*3, 0, 7); g.fill(); }
+  // forêt : conifères et feuillus au nord, buissons et rochers dispersés, quelques troncs au sud
+  const arbres = [["arbre0",90,18],["arbre1",230,22],["arbre0",330,6],["arbre1",440,20],["arbre0",540,60],["arbre1",640,62],["arbre0",700,92],["arbre0",120,258],["arbre1",300,262],["arbre0",470,268],["arbre1",640,264]];
+  arbres.sort((a,b) => a[2] - b[2]).forEach(([n,x,y]) => { const r = ATLAS[n]; ombre(g, x + r[2], y + r[3]*2 - 6, r[2]*.8, 10); spr(g, n, x, y); });
+  [["arbre4",160,100],["arbre5",290,92],["arbre4",410,80],["arbre5",520,110],["arbre4",600,264],["arbre5",200,284]].forEach(([n,x,y]) => spr(g, n, x, y));
+  [["roc0",360,300],["roc3",250,60],["roc1",520,300],["roc4",150,300],["roc0",700,230]].forEach(([n,x,y]) => { ombre(g, x + 20, y + 40, 20, 6); spr(g, n, x, y); });
+  // palissade de bois : chemin de ronde en planches, rondins pointus, deux tours de guet
+  for (let y = 34; y < 302; y += 24) for (let x = 6; x < 46; x += 10){ g.fillStyle = hach(x, y) < .5 ? "#6b4a2e" : "#5a3c26"; g.fillRect(x, y, 9, 23); g.fillStyle = "#3a2618"; g.fillRect(x + 9, y, 1, 23); }
+  g.fillStyle = "#3a2618"; g.fillRect(0, 34, 6, 268); g.fillStyle = "#7a5636"; g.fillRect(0, 34, 3, 268);
+  for (let y = 90; y < 250; y += 14){ ombre(g, 66, y + 8, 8, 3); g.fillStyle = "#4a3220"; g.fillRect(46, y, 14, 12); g.fillStyle = "#7a5636"; g.fillRect(46, y, 14, 3); g.fillStyle = "#c8b890"; g.fillRect(52, y - 4, 2, 5); }
+  const tourBois = y => { ombre(g, 78, y + 34, 16, 8); g.fillStyle = "#5a3c26"; g.fillRect(0, y, 64, 34); g.fillStyle = "#6b4a2e"; for (let x = 0; x < 64; x += 8) g.fillRect(x, y, 7, 34); g.fillStyle = "#3a2618"; g.fillRect(0, y + 17, 64, 2); g.fillRect(0, y + 34, 64, 18); g.fillStyle = "#4a3220"; for (let x = 0; x < 64; x += 8) g.fillRect(x, y + 34, 7, 18); g.fillStyle = "#2a1a10"; g.fillRect(28, y + 40, 6, 10); };
+  tourBois(34); tourBois(246);
+  for (let i = 0; i < 6; i++){ g.fillStyle = i % 2 ? "#5a3c26" : "#6b4a2e"; g.fillRect(46, 150 + i*8, 26 - i*2, 7); }
+  spr(g, "banniere", 36, 34, 1.6); spr(g, "lampadaire", 14, 106, 1.4); spr(g, "lampadaire", 14, 226, 1.4);
+  return c;
+}
+function fondPierre(ruine){   // la ceinture de pierre, ou la bouche (ruine = true)
+  const c = calque(380, 180), g = c.getContext("2d"); g.scale(.5, .5); g.imageSmoothingEnabled = false; const R = rng(ruine ? 33 : 31);
+  const sols = ruine ? ["#2b1c2c","#271828","#321f30","#241526"] : ["#2f2044","#2b1c3c","#33244a","#291a38"], route = ruine ? ["#3f2a38","#392532","#46303f"] : ["#46375e","#403156","#4d3d68"], joint = ruine ? "#150a14" : "#1c1228";
+  sol(g, (x, y, tx, ty) => { for (let a = 0; a < 2; a++) for (let b = 0; b < 2; b++){ g.fillStyle = sols[Math.floor(hach(tx*2 + a, ty*2 + b)*4)]; g.fillRect(x + a*16, y + b*16 - 2, 16, 16); } });
+  const centre = x => 178 + Math.sin(x*.012)*14;
+  for (let x = 64; x < W; x += 16){ const c0 = centre(x); for (let y = c0 - 34; y < c0 + 34; y += 16){ const ty = Math.round(y/16), tx = x/16; g.fillStyle = route[Math.floor(hach(tx + 7, ty + 3)*3)]; g.fillRect(x, ty*16, 16, 16); g.fillStyle = joint; g.fillRect(x, ty*16 + 15, 16, 1); g.fillRect(x + 15, ty*16, 1, 16); } }
+  for (let i = 0; i < 80; i++){ let x = 70 + R()*(W - 90), y = 40 + R()*262; const k = R();
+    if (k < .4){ g.fillStyle = "rgba(0,0,0,.28)"; g.fillRect(x, y + 3, 7, 2); g.fillStyle = ruine ? "#4a2a3a" : "#3a2252"; g.fillRect(x, y, 6, 4); }
+    else if (k < .55){ g.fillStyle = "#d8cfe0"; g.fillRect(x, y, 6, 2); g.fillRect(x + 1, y - 2, 2, 6); }
+    else if (k < .65){ g.fillStyle = "#d8cfe0"; g.fillRect(x, y, 6, 5); g.fillStyle = "#12091c"; g.fillRect(x + 1, y + 1, 1, 2); g.fillRect(x + 4, y + 1, 1, 2); }
+    else { g.strokeStyle = joint; g.lineWidth = 1; g.beginPath(); g.moveTo(x, y); for (let j = 0; j < 5; j++) g.lineTo(x += R()*8 - 1, y += R()*4); g.stroke(); } }
+  // la Gueule : plus proche ; dans la bouche (ruine) le cratère déborde sur la plaine
+  const roche = ["#4a2c62","#38204e","#2a1840"], croute = "#3a1a26", lave = "#ff7a2a", lave2 = "#ffd36a", dy = ruine ? 20 : 30;
+  g.save(); g.translate(0, dy);
+  const coulees = ruine ? [[610,40,[[560,70],[520,108],[470,150],[420,196],[380,230]]],[640,42,[[670,80],[690,130],[690,180],[640,226],[600,262]]],[590,38,[[560,70],[580,120],[540,170],[500,214],[470,260]]]] : [[610,44,[[560,64],[520,92],[470,104]]],[640,46,[[670,70],[690,100],[730,120]]]];
+  const onde = (x0, y0, pts) => { const out = []; let px = x0, py = y0; pts.forEach(([x,y]) => { for (let i = 1; i <= 8; i++){ const u = i/8; out.push([px + (x - px)*u + Math.sin(u*Math.PI*3 + x*.07)*7, py + (y - py)*u + Math.cos(u*Math.PI*2 + y*.05)*3]); } px = x; py = y; }); return out; };
+  coulees.forEach(([x0,y0,pts0]) => { const pts = ruine ? onde(x0, y0, pts0) : pts0; g.lineCap = "round"; g.lineJoin = "round"; [[croute,ruine?12:9],[lave,ruine?7:5],[lave2,ruine?3:2]].forEach(([col,wd]) => { g.strokeStyle = col; g.lineWidth = wd; g.beginPath(); g.moveTo(x0, y0); pts.forEach(([x,y]) => g.lineTo(x, y)); g.stroke(); });
+    const [lx, ly] = pts0[pts0.length - 1]; g.fillStyle = croute; g.beginPath(); g.ellipse(lx, ly, ruine?22:14, ruine?11:7, 0, 0, 7); g.fill(); g.fillStyle = lave; g.beginPath(); g.ellipse(lx, ly, ruine?15:9, ruine?7:4, 0, 0, 7); g.fill(); g.fillStyle = lave2; g.beginPath(); g.ellipse(lx - 2, ly - 1, ruine?6:3, ruine?3:2, 0, 0, 7); g.fill(); });
+  g.fillStyle = roche[2]; g.beginPath(); g.moveTo(460, 40); g.bezierCurveTo(490, 8, 540, -8, 610, -10); g.bezierCurveTo(690, -8, 740, 10, 770, 40); g.lineTo(770, 20); g.lineTo(460, 20); g.fill();
+  const pente = (pts, col) => { g.fillStyle = col; g.beginPath(); pts.forEach(([x,y],i) => i ? g.lineTo(x,y) : g.moveTo(x,y)); g.closePath(); g.fill(); };
+  pente([[470,80],[515,38],[560,24],[670,24],[725,40],[765,82],[740,88],[700,68],[650,72],[600,66],[540,76],[500,90]], roche[1]); pente([[515,38],[560,24],[580,34],[540,58],[500,66]], roche[0]); pente([[670,24],[725,40],[745,64],[700,56]], roche[0]);
+  g.fillStyle = croute; g.beginPath(); g.ellipse(615, 34, ruine?70:62, ruine?18:15, 0, 0, 7); g.fill(); g.fillStyle = lave; g.beginPath(); g.ellipse(615, 35, ruine?60:52, ruine?13:11, 0, 0, 7); g.fill(); g.fillStyle = lave2; g.beginPath(); g.ellipse(612, 34, 32, 7, 0, 0, 7); g.fill();
+  g.restore();
+  // arbres morts, rochers
+  const arbre = (x, y) => { ombre(g, x, y + 2, 14, 5); g.fillStyle = "#1c1030"; g.fillRect(x - 3, y - 22, 6, 24); g.fillRect(x - 12, y - 30, 3, 14); g.fillRect(x - 12, y - 18, 10, 3); g.fillRect(x + 9, y - 34, 3, 16); g.fillRect(x + 2, y - 22, 10, 3); g.fillRect(x - 7, y - 40, 3, 14); g.fillRect(x - 5, y - 30, 8, 3); };
+  (ruine ? [[130,98],[260,92]] : [[120,92],[245,86],[372,98]]).forEach(([x,y]) => arbre(x, y));
+  // la fortification : chemin de ronde en briques du pack, créneaux, tours, escalier
+  const brique = (ruine ? [[0,0],[1,0],[2,0]] : [[0,0],[1,0],[0,0]]);
+  for (let y = 34; y < 302; y += 32) for (let x = 0; x < 46; x += 32){ const [bc, br] = brique[Math.floor(hach(x, y)*3)]; tuile(g, bc, br, x, y); }
+  if (ruine){ g.fillStyle = "rgba(40,0,20,.35)"; g.fillRect(0, 34, 46, 268); }
+  g.fillStyle = "#443e5a"; g.fillRect(0, 34, 6, 268); g.fillStyle = "#6e688a"; g.fillRect(0, 34, 6, 3);
+  for (let y = 92; y < 246; y += 26){ ombre(g, 66, y + 12, 8, 6); g.fillStyle = "#6e688a"; g.fillRect(46, y, 14, 9); g.fillStyle = "#443e5a"; g.fillRect(46, y + 9, 14, 11); g.fillStyle = "rgba(0,0,0,.25)"; g.fillRect(46, y + 17, 14, 3); }
+  const tour = y => { ombre(g, 74, y + 36, 14, 12); for (let yy = 0; yy < 34; yy += 32) for (let x = 0; x < 64; x += 32) tuile(g, 1, 0, x, y + yy); g.fillStyle = "#6e688a"; for (let x = 0; x < 64; x += 16) g.fillRect(x + 1, y - 6, 13, 7); g.fillStyle = "#443e5a"; g.fillRect(0, y + 34, 64, 20); g.fillStyle = "#2c2640"; for (let x = 0; x < 64; x += 12) g.fillRect(x, y + 34, 1, 20); g.fillStyle = "#0c0714"; g.fillRect(28, y + 38, 6, 12); g.fillRect(48, y + 38, 6, 12); };
+  tour(34); tour(246);
+  for (let i = 0; i < 6; i++){ g.fillStyle = i % 2 ? "#524c6c" : "#484262"; g.fillRect(46, 150 + i*8, 26 - i*2, 7); }
+  // statues et grilles du pack près de la porte
+  spr(g, "chateau", 66, 118, 2, 7*16, 0, 16, 32); spr(g, "chateau", 66, 198, 2, 7*16, 0, 16, 32);
+  if (ruine){ spr(g, "chateau", 640, 270, 2, 4*16, 3*16, 16, 16); spr(g, "chateau", 600, 280, 2, 5*16, 3*16, 16, 16); }
+  else { spr(g, "chateau", 330, 52, 2, 4*16, 3*16, 16, 16); spr(g, "chateau", 372, 58, 2, 5*16, 3*16, 16, 16); }
+  return c;
+}
+let FONDS = [];
+const TEINTES = ["rgba(30,34,80,.34)", "rgba(20,10,50,.2)", "rgba(80,10,20,.22)"];
+const NOMS_TAB = ["LA LISIÈRE", "LA CEINTURE DE PIERRE", "LA BOUCHE"];
+
+/* ---------- animations par-dessus (coordonnées CSS, dessinées dans le canvas haute résolution) ---------- */
+function animer(g, tab, t){
+  const f = .8 + .2*Math.sin(t*9) + .06*Math.sin(t*23);
+  g.save(); g.globalCompositeOperation = "lighter";
+  const lumieres = tab === 0 ? [[22,126],[22,246],[745,126],[745,246]] : [[28,118],[28,230],[745,130],[745,250]];
+  lumieres.forEach(([x,y],i) => { const r = (x > 400 ? 70 : 95)*f; const gr = g.createRadialGradient(x, y, 2, x, y, r); gr.addColorStop(0, `rgba(${tab === 2 && x < 400 ? "110,150,255" : "255,170,70"},${.26})`); gr.addColorStop(1, "rgba(255,150,60,0)"); g.fillStyle = gr; g.fillRect(x - 110, y - 110, 220, 220); });
+  if (tab >= 1){ const v = [615, tab === 2 ? 54 : 64]; const gr = g.createRadialGradient(v[0], v[1], 4, v[0], v[1], tab === 2 ? 260 : 160); gr.addColorStop(0, `rgba(255,140,60,${(tab === 2 ? .4 : .22) + .08*Math.sin(t*1.7)})`); gr.addColorStop(1, "rgba(255,120,40,0)"); g.fillStyle = gr; g.fillRect(300, 0, 460, 360); }
+  if (tab === 2) [[380,260],[470,300],[600,282]].forEach(([x,y],i) => { const gr = g.createRadialGradient(x, y, 2, x, y, 60); gr.addColorStop(0, `rgba(255,140,60,${.35 + .12*Math.sin(t*2 + i)})`); gr.addColorStop(1, "rgba(255,120,40,0)"); g.fillStyle = gr; g.fillRect(x - 60, y - 60, 120, 120); });
+  g.restore();
+  // feux de camp animés (pack) à droite, torches du pack à gauche
+  if (tab === 0){ [[736,102],[736,222]].forEach(([x,y]) => spr(g, "feu" + (Math.floor(t*8) % 8), x - 32, y - 40, 2)); }
+  else lumieres.slice(2).forEach(([x,y]) => spr(g, "feu" + (Math.floor(t*8 + x) % 8), x - 32, y - 40, 2));
+  if (tab > 0){ [[28,118],[28,230]].forEach(([x,y]) => { const fr = Math.floor(t*6) % 2; spr(g, "chateau", x - 16, y - 30, 2, 16, 64 + fr*16, 16, 16); if (tab === 2) { g.save(); g.globalCompositeOperation = "source-atop"; g.restore(); } }); }
+  // braises
+  for (let i = 0; i < 40; i++){ const s = i*13.7, x = (s*37 + t*(12 + i%5*5)) % (W + 40) - 20, y = H - ((s*17 + t*(26 + i%7*9)) % (H + 20)); g.globalAlpha = .25 + .45*((i*7)%5)/5; g.fillStyle = tab === 0 ? "#d8e8a0" : "#ffae6a"; g.fillRect(Math.round(x/2)*2, Math.round(y/2)*2, 2, 2); } g.globalAlpha = 1;
+  // brume
+  for (let k = 0; k < 3; k++){ const y = 150 + k*60, o = (t*(14 + k*7)) % 400; g.save(); g.globalAlpha = tab === 0 ? .1 : .07; g.fillStyle = tab === 0 ? "#dce8e0" : "#d8b8d8"; for (let i = -1; i < 4; i++){ g.beginPath(); g.ellipse(i*300 + o, y, 170, 14 + k*3, 0, 0, 7); g.fill(); } g.restore(); }
+}
+
+/* ---------- la scène ---------- */
+const cv = document.getElementById("cv"), g = cv.getContext("2d"); g.imageSmoothingEnabled = false;
+const mons = [], flo = []; let spawn = 0, tab = 0, ancien = 0, trans = -1, T = 0, der = performance.now();
+const boutons = [...document.querySelectorAll("#onglets button[data-t]")];
+function choisir(n){ if (n === tab) return; ancien = tab; tab = n; trans = T; majBoutons(); mons.length = 0; }
+function majBoutons(){ boutons.forEach(b => b.setAttribute("aria-pressed", +b.dataset.t === tab)); }
+boutons.forEach(b => b.onclick = () => choisir(+b.dataset.t)); document.querySelector("[data-a=avance]").onclick = () => choisir((tab + 1) % 3); majBoutons();
+function frame(now){
+  const dt = Math.min(.1, (now - der)/1000); der = now; T += dt;
+  g.setTransform(1,0,0,1,0,0); g.clearRect(0,0,W*K,H*K); g.imageSmoothingEnabled = false;
+  const u = trans >= 0 ? Math.min(1, (T - trans)/1.1) : 1, e = u < 1 ? u*u*(3 - 2*u) : 1, dx = u < 1 ? Math.round(W*K*(1 - e)) : 0;
+  if (u < 1){ g.drawImage(FONDS[ancien], 0, 0, 380, 180, -Math.round(W*K*e), 0, W*K, H*K); }
+  g.drawImage(FONDS[tab], 0, 0, 380, 180, dx, 0, W*K, H*K);
+  g.setTransform(K,0,0,K,dx/1,0); g.save(); g.translate(0, 0); animer(g, tab, T); g.restore();
+  g.setTransform(K,0,0,K,0,0);
+  g.fillStyle = TEINTES[tab]; g.fillRect(0, 0, W, H);
+  // unités : les héros marchent pendant la transition (le front avance)
+  const marche = u < 1; const pos = [[230,215],[230,280],[150,180],[150,250]];
+  spawn -= dt; if (!marche && spawn <= 0 && mons.length < 6){ mons.push({x:790,y:140+Math.random()*140,i:pick(MONS),stop:330+Math.floor(Math.random()*4)*34,hit:0}); spawn = 1.6; }
+  mons.forEach(m => { m.x -= 60*dt; if (m.x < m.stop) m.x = m.stop; if (m.x <= m.stop + 2){ m.hit += dt; if (m.hit > 1.2){ m.dead = true; flo.push({x:m.x,y:m.y-60,t:0}); } } });
+  for (let i = mons.length - 1; i >= 0; i--) if (mons[i].dead) mons.splice(i, 1);
+  const L = [...EQ.map((c,i) => ({k:"h",c,i,x:pos[i][0],y:pos[i][1]})), ...mons.map(m => ({k:"m",m,x:m.x,y:m.y}))].sort((a,b) => a.y - b.y);
+  L.forEach(un => { g.fillStyle = "rgba(0,0,0,.3)"; g.beginPath(); g.ellipse(un.x, un.y + 2, un.k === "m" ? 24 : 16, 6, 0, 0, 7); g.fill();
+    if (un.k === "h"){ const f = Math.floor(T*(marche ? 8 : 4) + un.i)%3; g.drawImage(imH, f*32, CL[un.c]*192 + (marche ? 0 : 32), 32, 32, un.x - 27, un.y - 51, 54, 54); }
+    else g.drawImage(imM, (un.m.i - 1)*96, 0, 96, 96, un.x - 43, un.y - 83, 86, 86); });
+  flo.forEach(f => { f.t += dt; g.globalAlpha = Math.max(0, 1 - f.t); txt(g, "+4", f.x, f.y - f.t*30, 15, "#ffd76a", "center"); g.globalAlpha = 1; }); for (let i = flo.length - 1; i >= 0; i--) if (flo[i].t > 1) flo.splice(i, 1);
+  // bandes d'interface
+  g.fillStyle = "rgba(10,20,26,.92)"; rr(g, 4, 3, W - 8, 28, 10); g.fill(); g.strokeStyle = "#24505a"; g.lineWidth = 2; rr(g, 4, 3, W - 8, 28, 10); g.stroke(); txt(g, "VAGUE " + (tab*4 + 2) + "/12", 16, 23, 16, "#e8f4f2", "left", 900); txt(g, NOMS_TAB[tab], 380, 23, 14, "#3ddcbe", "center");
+  EQ.forEach((c,i) => { const x = 8 + i*124, y = 302; g.fillStyle = "rgba(14,26,34,.93)"; rr(g, x, y, 120, 52, 10); g.fill(); g.strokeStyle = "#24505a"; rr(g, x, y, 120, 52, 10); g.stroke(); txt(g, NOMS[i], x + 10, y + 20, 16, "#e8f4f2"); txt(g, CLS[i], x + 10, y + 35, 11, "#d8e4ff", "left", 600); g.fillStyle = "#08121a"; rr(g, x + 10, y + 40, 100, 6, 3); g.fill(); g.fillStyle = "#4ad05a"; rr(g, x + 10, y + 40, 70, 6, 3); g.fill(); });
+  g.fillStyle = "#3ddcbe"; rr(g, 628, 304, 124, 48, 10); g.fill(); txt(g, "LANCER", 690, 326, 17, "#05211c", "center", 900);
+  requestAnimationFrame(frame);
+}
+const demarre = () => { FONDS = [fond1(), fondPierre(false), fondPierre(true)]; requestAnimationFrame(frame); };
+if (A.complete && A.naturalWidth) demarre(); else A.onload = demarre;
+</script>
