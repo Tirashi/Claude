@@ -1,0 +1,179 @@
+<title>Routes, variantes</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&display=swap">
+<style>
+/* Même finition que la première maquette, trois idées de jeu différentes. */
+:root{--bg:#1b1e24;--fg:#eef0f3;--mut:#9aa3ae}
+body{background:var(--bg);color:var(--fg);font:15px/1.5 Outfit,system-ui,sans-serif;margin:0;
+ padding-block:24px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1{font:700 26px Outfit,sans-serif;margin:0 0 4px}
+.lead{color:var(--mut);margin:0 0 24px;max-width:62ch}
+.row{display:flex;flex-wrap:wrap;gap:28px;justify-content:center}
+.col{width:300px;max-width:100%;min-width:0}
+.tag{font:600 12px Outfit;letter-spacing:.1em;text-transform:uppercase;color:var(--mut);margin-bottom:6px}
+.col h2{font:700 19px Outfit;margin:0 0 10px}
+.phone{position:relative;width:100%;aspect-ratio:360/600;border-radius:30px;overflow:hidden;border:6px solid #0b0d10;box-shadow:0 10px 30px #0008}
+.phone>svg{position:absolute;inset:0;width:100%;height:100%;display:block}
+.hud{position:absolute;left:0;right:0;color:var(--ink)}
+.note{color:var(--mut);font-size:14px;margin:12px 0 0}
+.note b{color:var(--fg)}
+.top{top:0;padding:14px 14px 0;display:flex;justify-content:space-between;align-items:center}
+.right{display:flex;align-items:center;gap:10px;font:800 18px Outfit}
+.right .day{font-size:17px}
+.clock{width:40px;height:40px;border-radius:50%;background:var(--btn);color:var(--btnfg);display:grid;place-items:center}
+svg.i{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.bot{bottom:0;padding:0 18px 16px;display:flex;justify-content:space-around;align-items:flex-end}
+.t{display:flex;flex-direction:column;align-items:center;gap:14px;font:700 10px Outfit;letter-spacing:.06em;text-transform:uppercase;width:66px}
+.d{position:relative;width:44px;height:44px;border-radius:13px;background:var(--btn);color:var(--btnfg);transform:rotate(45deg);margin-top:8px;box-shadow:-5px 5px 0 var(--btn2)}
+.d>svg{position:absolute;inset:0;margin:auto;transform:rotate(-45deg)}
+.bd{position:absolute;right:-12px;top:-12px;transform:rotate(-45deg);min-width:24px;height:24px;border-radius:12px;background:var(--bd);color:var(--bdfg);border:2px solid var(--ink);font:800 12px/20px Outfit;text-align:center}
+.A{--ink:#37423b;--btn:#37423b;--btn2:#37423b33;--btnfg:#fff;--bd:#fff;--bdfg:#37423b;background:#e6efd9}
+.B{--ink:#6b4a2f;--btn:#6b4a2f;--btn2:#6b4a2f33;--btnfg:#fff4e0;--bd:#fff4e0;--bdfg:#6b4a2f;background:#fbf3e4}
+.C{--ink:#2f4a66;--btn:#2f4a66;--btn2:#2f4a6633;--btnfg:#fff;--bd:#fff;--bdfg:#2f4a66;background:#e9f1f8}
+.ring{width:40px;height:40px}
+</style>
+
+<h1>Routes, trois variantes</h1>
+<p class="lead">La première maquette reste de côté. Ici la finition est la même (blocs, ombres longues, routes blanches arrondies), mais chaque idée change ce qu'on fait : le terrain, ce que veulent les maisons, ou la saison.</p>
+<div class="row" id="row"></div>
+
+<script>
+const C=40,OY=66;
+const P=(x,y)=>[(x+.5)*C,(y+.5)*C];
+const roads={red:[[1,2],[4,2]],blue:[[7,1],[7,3],[2,3],[2,6]],yellow:[[1,9],[4,9]]};
+const ghost=[[7,7],[4,7],[4,2]], finger=[5.5,7];
+const cars=[['red',2.5,2,'h'],['blue',7,2,'v'],['blue',4.5,3,'h'],['blue',2,4.6,'v'],['yellow',2.6,9,'h']];
+const hex=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16));
+const mix=(a,b,t)=>{const A=hex(a),B=hex(b);return '#'+A.map((v,i)=>Math.round(v+(B[i]-v)*t).toString(16).padStart(2,'0')).join('')};
+const shade=(c,k)=>k>=0?mix(c,'#ffffff',k):mix(c,'#000000',-k);
+const rnd=(i,j)=>{const v=Math.sin(i*12.9898+j*78.233)*43758.5453;return v-Math.floor(v)};
+
+function smooth(p,r=16){const q=p.map(a=>P(...a));let d=`M${q[0]}`;
+ for(let i=1;i<q.length-1;i++){const a=q[i-1],b=q[i],c=q[i+1];
+  const l1=Math.hypot(a[0]-b[0],a[1]-b[1]),l2=Math.hypot(c[0]-b[0],c[1]-b[1]),rr=Math.min(r,l1/2,l2/2);
+  const p1=[b[0]+(a[0]-b[0])/l1*rr,b[1]+(a[1]-b[1])/l1*rr],p2=[b[0]+(c[0]-b[0])/l2*rr,b[1]+(c[1]-b[1])/l2*rr];
+  d+=` L${p1} Q${b} ${p2}`}
+ return d+` L${q[q.length-1]}`}
+const river=[[270,-20],[252,100],[218,200],[216,300],[246,400],[236,560]];
+const smoothRiver=(()=>{let d=`M${river[0]}`;for(let i=1;i<river.length-1;i++){const m=[(river[i][0]+river[i+1][0])/2,(river[i][1]+river[i+1][1])/2];d+=` Q${river[i]} ${m}`}return d+` L${river[river.length-1]}`})();
+
+const cube=(t,x,y,w,L,c,notch=true)=>`<polygon points="${x+w},${y} ${x+w+L},${y+L} ${x+w+L},${y+w+L} ${x+L},${y+w+L} ${x},${y+w} ${x+w},${y+w}" fill="${t.shadow}"/>
+ <rect x="${x+3}" y="${y+5}" width="${w}" height="${w}" rx="4" fill="${c[1]}"/><rect x="${x}" y="${y}" width="${w}" height="${w}" rx="4" fill="${c[0]}"/>${notch?`<rect x="${x+w*.32}" y="${y+w-5}" width="${w*.36}" height="5" rx="2" fill="${c[1]}"/>`:''}`;
+const ringSvg=(x,y,f,ink,track)=>{const r=8,L=2*Math.PI*r;return `<circle cx="${x}" cy="${y}" r="11" fill="${track}"/><circle cx="${x}" cy="${y}" r="${r}" fill="none" stroke="${ink}" stroke-width="5" stroke-dasharray="${L*f} ${L}" transform="rotate(-90 ${x} ${y})"/>`};
+const roadPath=(t,d,extra='')=>`<path d="${d}" fill="none" stroke="${t.edge}" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"/><path d="${d}" fill="none" stroke="${t.road}" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>`;
+const carsSvg=t=>cars.map(([c,x,y,d])=>{const[p,q]=P(x-.5,y-.5);const w=d==='h'?11:7,h=d==='h'?7:11;return `<rect x="${p-w/2}" y="${q-h/2}" width="${w}" height="${h}" rx="3" fill="${t.pal[c][0]}" stroke="#fff" stroke-width="1.5"/>`}).join('');
+const ghostSvg=t=>{const[fx,fy]=P(...finger);return `<path d="${smooth(ghost)}" fill="none" stroke="${t.ghost}" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1 12"/><circle cx="${fx}" cy="${fy}" r="21" fill="${t.ink}" opacity=".13"/><circle cx="${fx}" cy="${fy}" r="9" fill="${t.ink}" opacity=".55"/>`};
+const plot=(t,x,y)=>{const[p,q]=P(x,y);return `<rect x="${p-27}" y="${q-27}" width="54" height="54" rx="12" fill="${t.road}" stroke="${t.edge}" stroke-width="3"/>`};
+const wrap=(t,inner)=>`<svg viewBox="0 0 360 600" preserveAspectRatio="xMidYMid slice"><rect width="360" height="600" fill="${t.ground}"/><g transform="translate(0,${OY})">${inner}</g></svg>`;
+
+/* ---------- A : les collines (terrain en facettes) ---------- */
+function hgt(x,y){const rx=235+14*Math.sin(y/70);const ridge=Math.exp(-((x-rx)**2)/(2*52*52));const pass=1-.6*Math.exp(-((y-300)**2)/(2*48*48));const hill2=.6*Math.exp(-(((x-30)**2)+((y-440)**2))/(2*70*70));return ridge*pass+hill2}
+const stops=[[0,'#cfe6c4'],[.25,'#e3eccb'],[.5,'#f0e6c4'],[.75,'#e4cdb0'],[1,'#f5f1ee']];
+const ramp=h=>{h=Math.max(0,Math.min(1,h));for(let i=1;i<stops.length;i++)if(h<=stops[i][0]){const[a,ca]=stops[i-1],[b,cb]=stops[i];return mix(ca,cb,(h-a)/(b-a))}return stops[4][1]};
+function terrain(){
+ const V={};const S=75;
+ for(let i=0;i<=9;i++)for(let j=-2;j<=15;j++){let x=i*40+((i>0&&i<9)?(rnd(i,j)-.5)*18:0),y=j*40+(rnd(j,i+9)-.5)*18;V[i+','+j]=[x,y,hgt(x,y)*S]}
+ let s='';const L=[-.45,-.55,.7],ln=Math.hypot(...L);
+ const tri=(a,b,c)=>{const u=[b[0]-a[0],b[1]-a[1],b[2]-a[2]],v=[c[0]-a[0],c[1]-a[1],c[2]-a[2]];let n=[u[1]*v[2]-u[2]*v[1],u[2]*v[0]-u[0]*v[2],u[0]*v[1]-u[1]*v[0]];if(n[2]<0)n=n.map(z=>-z);const nl=Math.hypot(...n);
+  const d=(n[0]*L[0]+n[1]*L[1]+n[2]*L[2])/(nl*ln);const k=Math.max(-.16,Math.min(.16,(d-.7)*1.1));
+  const col=shade(ramp((a[2]+b[2]+c[2])/3/S),k);return `<polygon points="${a[0]},${a[1]} ${b[0]},${b[1]} ${c[0]},${c[1]}" fill="${col}" stroke="${col}" stroke-width=".8" stroke-linejoin="round"/>`};
+ for(let i=0;i<9;i++)for(let j=-2;j<15;j++){const a=V[i+','+j],b=V[(i+1)+','+j],c=V[(i+1)+','+(j+1)],d=V[i+','+(j+1)];
+  if((i+j)%2===0){s+=tri(a,b,c)+tri(a,c,d)}else{s+=tri(a,b,d)+tri(b,c,d)}}
+ return s}
+function sceneA(t){
+ let s=terrain();
+ const r1=smooth([[7,1],[7,3],[6.2,3]]),r2=smooth([[4.6,3],[2,3],[2,6]]);
+ [smooth(roads.red),r1,r2,smooth(roads.yellow)].forEach(d=>s+=roadPath(t,d));
+ /* tunnel : deux entrées et un trait sous la colline */
+ s+=`<path d="M205 140 H268" stroke="${t.edge}" stroke-width="5" stroke-linecap="round" stroke-dasharray="1 9" opacity=".9"/>`;
+ [[268,140],[205,140]].forEach(([x,y])=>s+=`<path d="M${x-12} ${y+11} V${y-1} a12 12 0 0 1 24 0 V${y+11}Z" fill="#4a423c"/><path d="M${x-7} ${y+11} V${y} a7 7 0 0 1 14 0 V${y+11}Z" fill="#2a2522"/><path d="M${x-12} ${y+11} V${y-1} a12 12 0 0 1 24 0 V${y+11}" fill="none" stroke="#fff" stroke-width="2" opacity=".7"/>`);
+ s+=ghostSvg(t);
+ /* étiquette de pente sur le tracé en cours */
+ s+=`<g transform="translate(228,258)"><rect x="-44" y="-15" width="88" height="30" rx="15" fill="#fff" stroke="${t.edge}" stroke-width="2"/><path d="M-32 6l9-12 9 12" fill="none" stroke="${t.ink}" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><text x="2" y="-1" font-family="Outfit" font-weight="800" font-size="11" fill="${t.ink}">PENTE 14 %</text><text x="2" y="10" font-family="Outfit" font-weight="600" font-size="9" fill="#8a948d">coûte 3 routes</text></g>`;
+ [['red',4,2],['blue',2,6],['yellow',4,9]].forEach(([c,x,y])=>{const[p,q]=P(x,y);s+=plot(t,x,y)+cube(t,p-17,q-17,34,16,t.pal[c])});
+ [['red',1,2],['blue',7,1],['yellow',1,9],['red',7,7,.7]].forEach(([c,x,y,f])=>{const[p,q]=P(x,y);s+=cube(t,p-10,q-10,20,9,t.pal[c]);if(f)s+=ringSvg(p+16,q-18,f,t.ink,'#fff')});
+ return wrap(t,s+carsSvg(t))}
+
+/* ---------- B : le village (des besoins, pas des couleurs) ---------- */
+const icoPaths={
+ bread:(fg,bg)=>`<rect x="-11" y="-4.5" width="22" height="9" rx="4.5" transform="rotate(-35)" fill="${fg}"/><path d="M-4 -7l4 5M1 -9l4 5M-1 -1l4 5" stroke="${bg}" stroke-width="1.8" stroke-linecap="round" transform="rotate(-35) translate(0 2)"/>`,
+ book:(fg,bg)=>`<path d="M-11 -7h9a2 2 0 0 1 2 2v12a2 2 0 0 0 -2 -2h-9zM11 -7h-9a2 2 0 0 0 -2 2v12a2 2 0 0 1 2 -2h9z" fill="${fg}"/>`,
+ flower:(fg,bg)=>[0,72,144,216,288].map(a=>`<circle cx="${(6*Math.cos(a*Math.PI/180)).toFixed(1)}" cy="${(6*Math.sin(a*Math.PI/180)).toFixed(1)}" r="4.4" fill="${fg}"/>`).join('')+`<circle r="3.2" fill="${bg}"/>`,
+ ok:(fg,bg)=>`<path d="M-6 0l4 4 8-9" fill="none" stroke="${fg}" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>`
+};
+const ico=(k,x,y,fg,bg,s=1)=>`<g transform="translate(${x} ${y}) scale(${s})">${icoPaths[k](fg,bg)}</g>`;
+function sceneB(t){
+ let s='';
+ t.blobs.forEach(b=>s+=`<polygon points="${b}" fill="${t.blob}" stroke="${t.blob}" stroke-width="44" stroke-linejoin="round"/>`);
+ s+=`<ellipse cx="292" cy="445" rx="54" ry="30" fill="${t.bank}"/><ellipse cx="292" cy="445" rx="46" ry="23" fill="${t.water}"/>`;
+ [roads.red,roads.blue,roads.yellow].forEach(p=>s+=roadPath(t,smooth(p)));
+ s+=ghostSvg(t);
+ const tree=(x,y)=>`<ellipse cx="${x+6}" cy="${y+8}" rx="11" ry="7" fill="${t.shadow}"/><circle cx="${x}" cy="${y}" r="10" fill="#8cc08a"/><circle cx="${x-2}" cy="${y-2}" r="6.5" fill="#a9d6a2"/>`;
+ [[25,200],[46,216],[20,230],[338,200],[318,226],[346,238],[56,470],[80,492],[36,494]].forEach(([x,y])=>s+=tree(x,y));
+ const shops={bread:['#ff9f4a','#c9692a'],book:['#5aa9e6','#2f6fae'],flower:['#ff7fb0','#c24a7e']};
+ [['bread',4,2],['book',2,6],['flower',4,9]].forEach(([k,x,y])=>{const[p,q]=P(x,y);s+=plot(t,x,y)+cube(t,p-17,q-17,34,16,shops[k],false)+ico(k,p,q-1,'#fff',shops[k][0],1.05)});
+ const house=['#fff8ea','#dcc79c'];
+ const bubble=(x,y,items,wait)=>{const w=10+items.length*20;return `<g transform="translate(${x} ${y})"><path d="M-6 17h12l-6 8z" fill="#fff"/><rect x="${-w/2}" y="-8" width="${w}" height="26" rx="13" fill="#fff" stroke="${t.edge}" stroke-width="2"/>${items.map(([k,c],i)=>ico(k,-w/2+20+i*20-10+0,5,c,'#fff',.72)).join('')}</g>`};
+ [[1,2,'ok'],[7,1,'ok'],[1,9,'ok'],[7,7,null]].forEach(([x,y,st])=>{const[p,q]=P(x,y);s+=cube(t,p-10,q-10,20,9,house);
+  s+=st==='ok'?`<g transform="translate(${p+13} ${q-22})"><circle r="10" fill="#fff" stroke="#8fcf9a" stroke-width="2.5"/>${ico('ok',0,0,'#4fae63','#fff',.8)}</g>`:bubble(p,q-38,[['bread','#e9852b'],['flower','#e0629a']])+ringSvg(p+16,q-14,.7,t.ink,'#fff')});
+ return wrap(t,s+carsSvg(t))}
+
+/* ---------- C : les saisons (hiver) ---------- */
+function sceneC(t){
+ let s='';
+ t.blobs.forEach(b=>s+=`<polygon points="${b}" fill="${t.blob}" stroke="${t.blob}" stroke-width="46" stroke-linejoin="round"/>`);
+ s+=`<path d="${smoothRiver}" fill="none" stroke="${t.bank}" stroke-width="64" stroke-linecap="round"/><path d="${smoothRiver}" fill="none" stroke="${t.water}" stroke-width="46" stroke-linecap="round"/>`;
+ [[232,60,228,82],[240,150,236,168],[226,230,222,250],[230,330,236,350],[244,420,238,440]].forEach(([a,b,c,d])=>s+=`<path d="M${a} ${b} L${c} ${d}" stroke="#fff" stroke-width="2.5" stroke-linecap="round" opacity=".85"/>`);
+ [roads.red,roads.blue,roads.yellow].forEach(p=>s+=roadPath(t,smooth(p)));
+ /* tronçons salés (asphalte mouillé) */
+ s+=`<path d="${smooth(roads.red)}" fill="none" stroke="#8b9db3" stroke-width="14" stroke-linecap="round"/><path d="${smooth([[7,1],[7,3],[5,3]])}" fill="none" stroke="#8b9db3" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>`;
+ s+=`<path d="M205 129 H268 M205 151 H268" stroke="${t.ink}" stroke-width="3" stroke-linecap="round"/>`;
+ s+=ghostSvg(t);
+ const pine=(x,y)=>`<ellipse cx="${x+7}" cy="${y+9}" rx="12" ry="6" fill="${t.shadow}"/><polygon points="${x},${y-18} ${x-10},${y+7} ${x+10},${y+7}" fill="#5d8f78"/><polygon points="${x},${y-18} ${x-5.5},${y-6} ${x+5.5},${y-6}" fill="#fff"/>`;
+ [[28,200],[48,216],[22,236],[340,196],[322,226],[56,470],[84,490],[330,470],[310,500]].forEach(([x,y])=>s+=pine(x,y));
+ const snow=(x,y,w,r)=>`<rect x="${x-1}" y="${y-2}" width="${w+2}" height="${w*.56}" rx="${r}" fill="#fff"/><path d="M${x+w*.2} ${y+w*.56-2} v5 M${x+w*.6} ${y+w*.56-2} v7" stroke="#fff" stroke-width="3" stroke-linecap="round"/>`;
+ [['red',4,2],['blue',2,6],['yellow',4,9]].forEach(([c,x,y])=>{const[p,q]=P(x,y);s+=plot(t,x,y)+cube(t,p-17,q-17,34,16,t.pal[c])+snow(p-17,q-17,34,6)});
+ [['red',1,2],['blue',7,1],['yellow',1,9],['red',7,7,.7]].forEach(([c,x,y,f])=>{const[p,q]=P(x,y);s+=cube(t,p-10,q-10,20,9,t.pal[c])+snow(p-10,q-10,20,4);if(f)s+=ringSvg(p+16,q-18,f,t.ink,'#fff')});
+ s+=carsSvg(t);
+ /* saleuse */
+ const[sx,sy]=P(2.5-.5,2-.5);s+=`<rect x="${sx-10}" y="${sy-6}" width="20" height="12" rx="4" fill="#ff9f1c" stroke="#fff" stroke-width="1.5"/><circle cx="${sx+3}" cy="${sy}" r="2.2" fill="#fff"/><circle cx="${sx-7}" cy="${sy-9}" r="2.6" fill="#ffb84d"/>`;
+ for(let i=0;i<44;i++){const x=rnd(i,1)*360,y=rnd(i,2)*540-20,r=1.4+rnd(i,3)*2.2;s+=`<circle cx="${x.toFixed(0)}" cy="${y.toFixed(0)}" r="${r.toFixed(1)}" fill="#fff" opacity="${(.55+rnd(i,4)*.4).toFixed(2)}"/>`}
+ return wrap(t,s)}
+
+const T={
+ A:{ground:'#e6efd9',road:'#ffffff',edge:'#a9b8ac',ink:'#37423b',ghost:'#37423bb0',shadow:'rgba(55,66,59,.16)',pal:{red:['#ff6b61','#a8344a'],blue:['#6ad0ee','#2d7cb0'],yellow:['#ffd37a','#e39a4a']}},
+ B:{ground:'#fbf3e4',blob:'#e6f0d2',blobs:['40,170 110,125 125,250','300,520 330,560 250,570'],water:'#bfe6ee',bank:'#e9f6f8',road:'#ffffff',edge:'#d9cbb0',ink:'#6b4a2f',ghost:'#6b4a2fb0',shadow:'rgba(107,74,47,.14)',pal:{red:['#ff9f4a','#c9692a'],blue:['#5aa9e6','#2f6fae'],yellow:['#ff7fb0','#c24a7e']}},
+ C:{ground:'#e9f1f8',blob:'#dce8f3',blobs:['40,170 120,120 140,250','300,380 340,470 250,500'],water:'#cdebf6',bank:'#f8fcff',road:'#eef3f8',edge:'#9db0c4',ink:'#2f4a66',ghost:'#2f4a66b0',shadow:'rgba(47,74,102,.15)',pal:{red:['#ff7a66','#c2453a'],blue:['#59a8f0','#2f6fc0'],yellow:['#ffc94d','#d98f1c']}}
+};
+const ic={
+ car:'<path d="M4 16l1.6-5.2A2 2 0 017.5 9.4h9a2 2 0 011.9 1.4L20 16v3h-2.5v-1.5h-11V19H4z" fill="currentColor"/><circle cx="7.5" cy="14" r="1" fill="#fff" stroke="none"/><circle cx="16.5" cy="14" r="1" fill="#fff" stroke="none"/>',
+ smile:'<circle cx="12" cy="12" r="8.5"/><path d="M8.5 14c1 1.8 2.2 2.6 3.5 2.6s2.5-.8 3.5-2.6"/><circle cx="9" cy="9.6" r=".9" fill="currentColor"/><circle cx="15" cy="9.6" r=".9" fill="currentColor"/>',
+ clock:'<circle cx="12" cy="12" r="8.5"/><path d="M12 7v5l3 2"/>',
+ road:'<rect x="5" y="12" width="14" height="6" rx="2"/><rect x="5" y="7" width="14" height="6" rx="2" opacity=".5"/>',
+ bridge:'<path d="M3 16h18M5 16c0-6 14-6 14 0M8.5 11.5V16M12 10.2V16M15.5 11.5V16"/>',
+ light:'<rect x="8.5" y="3.5" width="7" height="17" rx="3.5"/><circle cx="12" cy="8" r="1.2" fill="currentColor"/><circle cx="12" cy="12" r="1.2" fill="currentColor"/><circle cx="12" cy="16" r="1.2" fill="currentColor"/>',
+ tunnel:'<path d="M4 19V12a8 8 0 0116 0v7M9 19v-5a3 3 0 016 0v5"/>',
+ viaduct:'<path d="M3 8h18M6 8v11M12 8v11M18 8v11M3 19h18"/>',
+ round:'<circle cx="12" cy="12" r="5"/><path d="M12 3v4M12 17v4M3 12h4M17 12h4"/>',
+ oneway:'<path d="M4 12h14M13 6l6 6-6 6"/>',
+ salt:'<path d="M12 3v18M4.5 7.5l15 9M19.5 7.5l-15 9"/>'
+};
+const I=k=>`<svg class="i" viewBox="0 0 24 24">${ic[k]}</svg>`;
+const seasonRing=()=>{const cols=['#ff9ec4','#ffd24d','#ff9340','#6fb6f2'];let s='';cols.forEach((c,i)=>{const a0=-90+i*90+6,a1=-90+(i+1)*90-6,r=15,x0=20+r*Math.cos(a0*Math.PI/180),y0=20+r*Math.sin(a0*Math.PI/180),x1=20+r*Math.cos(a1*Math.PI/180),y1=20+r*Math.sin(a1*Math.PI/180);s+=`<path d="M${x0} ${y0} A${r} ${r} 0 0 1 ${x1} ${y1}" stroke="${c}" stroke-width="6" fill="none" stroke-linecap="round"/>`});
+ return `<svg class="ring" viewBox="0 0 40 40">${s}<circle cx="20" cy="20" r="9" fill="#2f4a66"/><path d="M20 15v10M15.7 17.5l8.6 5M24.3 17.5l-8.6 5" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/></svg>`};
+const hud=(counter,end,tools)=>`<div class="hud top"><div class="right"><span>65</span>${I(counter)}</div><div class="right"><span class="day">JEU</span>${end}</div></div>
+ <div class="hud bot">${tools.map(([k,n,c])=>`<div class="t"><div class="d">${I(k)}<span class="bd">${c}</span></div>${n}</div>`).join('')}</div>`;
+const clockBtn=`<div class="clock">${I('clock')}</div>`;
+
+const dirs=[
+ ['A','Idée A','Les collines',sceneA,hud('car',clockBtn,[['road','Routes','95'],['tunnel','Tunnel','1'],['viaduct','Viaduc','1'],['light','Feu','2']]),
+  'Le terrain compte : <b>collines en facettes (low poly)</b>, pentes qui coûtent plus de routes, tunnels pour traverser une crête, viaducs pour franchir un creux. On choisit où passer plutôt que de tracer en ligne droite.'],
+ ['B','Idée B','Le village',sceneB,hud('smile',clockBtn,[['road','Routes','95'],['bridge','Pont','1'],['round','Rond-point','2'],['oneway','Sens unique','3']]),
+  'Plus de couleurs à assortir : <b>chaque maison a des besoins</b> (pain, livres, fleurs) montrés par des bulles, et doit être reliée à un commerce de chaque sorte. Le score compte les habitants contents.'],
+ ['C','Idée C','Les saisons',sceneC,hud('car',seasonRing(),[['road','Routes','95'],['bridge','Pont','1'],['light','Feu','2'],['salt','Sel','3']]),
+  'La carte change : <b>la neige recouvre les routes</b>, le trafic ralentit, la rivière gèle. On sale les axes importants avec la saleuse, puis le printemps revient.']
+];
+document.getElementById('row').innerHTML=dirs.map(([k,t,n,f,h,note])=>`
+<div class="col"><div class="tag">${t}</div><h2>${n}</h2>
+<div class="phone ${k}">${f(T[k])}${h}</div><p class="note">${note}</p></div>`).join('');
+</script>
