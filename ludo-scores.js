@@ -193,7 +193,7 @@
     var pc = readKey("injagility.parcours", {}) || {}, best = pc.best || {}, total = 0;
     Object.keys(best).forEach(function (n){ if (/^\d{1,3}$/.test(n)){ hi("parcours", "lvl:" + n, best[n]); total += Number(best[n]) || 0; } });
     hi("parcours", "total", total);
-    var cap = readKey("picrossdex.captured", {}) || {}, ids = Object.keys(cap).filter(function (id){ return cap[id] && !cap[id].test; });
+    var cap = readKey("picrossdex.captured", {}) || {}, ids = Object.keys(cap).filter(function (id){ return cap[id] && !cap[id].test && !cap[id].side; });
     ids.forEach(function (id){ var c = cap[id]; if (c.time > 0 && /^[a-z0-9_-]{1,36}$/.test(id)) lo("picross", "t:" + id, c.time + HINT_PENALTY * (c.hints || 0)); });
     hi("picross", "dex", ids.filter(function (id){ return id !== "pokeball"; }).length);
     var tc = readKey("touchecoule.best", {}) || {};

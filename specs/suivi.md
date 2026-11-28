@@ -209,3 +209,8 @@ Session 5d : trois quêtes de compagnons (menu des lanternes après la fin), Cat
 - 27/11 — Les Bannis, session 3 : dés à symboles jouables (recrues par dés de case, objets QUOI + QUALITE, atelier, dé d'événement, tuto), direction B (cdc § 19).
 - 27/11 — Les Bannis, session 3b : interface moderne dans tout le jeu, dés qui roulent (rebond, faces qui défilent, ombre), fil d'étapes et consignes « A FAIRE » (cdc § 19).
 - **27/11 — Démineur, page qui défilait** (retour d'essai sur Android) : `#app` en `position: fixed` collé aux bords de l'écran visible au lieu de `100dvh`, grille recalculée sur `visualViewport`.
+
+## Picross Dex : Pokédex rétro et Arène (28/11)
+- **Rétro** : 5e onglet, 152 dessins (151 + Missingno caché), tirés de la planche de @emimonserrate (icônes 16×16 en 3 tons, [lien](https://www.deviantart.com/emimonserrate/art/Pokemon-1st-Gen-699926938)) avec la méthode du Minidex (16×16 moins une rangée et une colonne) ; ouvert dès le début, sans herbes, noms cachés jusqu'à la résolution ; ne compte pas pour les légendaires ; Missingno apparaît à 151/151.
+- **Arène** : 6e onglet, 32 badges (images PokéAPI `sprites/badges/1-32`, convertis en 15×15 version « contour et 4 couleurs ») ; le badge n d'une région s'ouvre à n huitièmes des Pokémon non légendaires capturés dans cette région (`arenaNeed`).
+- Les trois sections « à côté » (Boutique, Rétro, Arène) partagent `sideDex(p)` : jamais sauvages, hors des seuils de légendaires, captures marquées `side: true` et ignorées par le classement familial (`ludo-scores.js`). Cache v138.

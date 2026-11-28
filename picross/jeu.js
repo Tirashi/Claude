@@ -8,6 +8,7 @@ const PAL = {k:"#20182e", r:"#e0383e", w:"#f6f4ee", b:"#a86a3c", p:"#f4a3b8", n:
   C:"#a8b8cc", D:"#a898c8", E:"#a09a8a", F:"#6e685c", H:"#c8e890"};
 // "w" is white: visible in the reveal but empty in the puzzle.
 const filled = ch => ch !== "." && ch !== "w";
+const sideDex = p => !!(p.shop || p.retro || p.arena);   // Boutique, Pokédex rétro, Arène : hors du Dex principal
 
 /* ---------- helpers ---------- */
 const $ = id => document.getElementById(id);
@@ -68,6 +69,7 @@ let progress = store.get("progress", {});   // unfinished grids, per puzzle id
 let testMode = store.get("testmode", false);   // 5 taps on the title: every grid of the Dex can be opened
 let encounters = store.get("encounters", {}); // current wild encounter per grid size, e.g. {"15x15": "pikachu"}
 let encShiny = store.get("encShiny", {});     // wild Pokémon met in their shiny colours, e.g. {"pikachu": true}
+for (const q of PUZZLES) if (sideDex(q) && captured[q.id] && !captured[q.id].side){ captured[q.id].side = true; store.set("captured", captured); }
 let shinyRun = false;                         // the grid being played is a shiny encounter
 
 /* ---------- save transfer between browsers (e.g. Facebook's in-app browser -> Chrome) ---------- */
@@ -153,11 +155,11 @@ const LOCK = {art:[
   ".kkkkkkkk.",
   ".........."]};
 const MEWTWO_AT = 40;
-const solvedCount = () => PUZZLES.filter(p => (!p.legend || p.legend === "mew") && !p.shop && captured[p.id]).length;
+const solvedCount = () => PUZZLES.filter(p => (!p.legend || p.legend === "mew") && !sideDex(p) && captured[p.id]).length;
 const legendsOpen = () => solvedCount() >= UNLOCK_AT;
 const BIRDS = PUZZLES.filter(p => p.legend === true);
 const birdsDone = () => BIRDS.filter(p => captured[p.id]).length;
-const allDone = () => PUZZLES.filter(p => p.legend !== "mewtwo" && !p.shop && captured[p.id]).length;   // oiseaux compris
+const allDone = () => PUZZLES.filter(p => p.legend !== "mewtwo" && !sideDex(p) && captured[p.id]).length;   // oiseaux compris
 const mewtwoOpen = () => birdsDone() === BIRDS.length && allDone() >= MEWTWO_AT;
 const MEWTWO = PUZZLES.find(p => p.legend === "mewtwo");
 const mewOpen = () => !!captured[MEWTWO.id];
@@ -181,7 +183,7 @@ const lugiaOpen = () => johtoUnlocked() && johtoCount() >= lugiaAt();
 const celebiOpen = () => PUZZLES.filter(p => p.legend === "lugia" || p.legend === "hooh").every(p => captured[p.id]);
 const johtoLegendOpen = p => isDog(p) ? Object.values(encounters).includes(p.id)
   : p.legend === "hooh" ? hoohOpen() : p.legend === "lugia" ? lugiaOpen() : celebiOpen();
-const isLocked = p => !captured[p.id] && (isSinnohLegend(p) ? !sinnohLegendOpen(p) : isHoennLegend(p) ? !hoennLegendOpen(p) : isJohtoLegend(p) ? !johtoLegendOpen(p) : p.legend === "mew" ? !mewOpen() : p.legend === "mewtwo" ? !mewtwoOpen() : (!!p.legend && !legendsOpen()));
+const isLocked = p => !captured[p.id] && (p.arena ? arenaCount(p) < arenaNeed(p) : p.legend === "missingno" ? retroCount() < RETRO_TOTAL : isSinnohLegend(p) ? !sinnohLegendOpen(p) : isHoennLegend(p) ? !hoennLegendOpen(p) : isJohtoLegend(p) ? !johtoLegendOpen(p) : p.legend === "mew" ? !mewOpen() : p.legend === "mewtwo" ? !mewtwoOpen() : (!!p.legend && !legendsOpen()));
 function legendMsg(){
   const left = UNLOCK_AT - solvedCount();
   if (left > 0) return `Termine encore <b>${left}</b> picross pour réveiller les trois oiseaux légendaires.`;
@@ -231,6 +233,14 @@ function sinnohMeta(p){
   return {lake: () => c(10), dp: () => "après les trois lacs", heatran: () => c(30), regigigas: () => c(50), giratina: () => "après Dialga et Palkia",
     cresselia: () => c(60), darkrai: () => "après Cresselia", manaphy: () => c(70), shaymin: () => c(85), arceus: () => "après les autres légendaires"}[p.legend]();
 }
+/* Rétro : les 151 de Kanto en deux tons, ouverts dès le début ; Missingno apparaît quand les 151 sont capturés.
+   Arène : le badge n d'une région (8 par région) s'ouvre quand on a capturé n huitièmes de ses Pokémon (légendaires exclus). */
+const retroCount = () => PUZZLES.filter(p => p.retro && !p.legend && captured[p.id]).length;
+const RETRO_TOTAL = PUZZLES.filter(p => p.retro && !p.legend).length;
+const arenaTotal = reg => PUZZLES.filter(p => !p.legend && !sideDex(p) && regionOf(p) === reg).length;
+const arenaCount = p => PUZZLES.filter(q => !q.legend && !sideDex(q) && captured[q.id] && regionOf(q) === p.arena).length;
+const arenaNeed = p => Math.ceil(arenaTotal(p.arena) * p.badge / 8);
+const REGION_NAME = {kanto: "Kanto", johto: "Johto", hoenn: "Hoenn", sinnoh: "Sinnoh"};
 const dexNum = p => p.no === "OBJ" ? 0 : parseInt(p.no, 10);
 const DEX_ORDER = PUZZLES.map((_, i) => i).sort((a, b) => dexNum(PUZZLES[a]) - dexNum(PUZZLES[b]));
 
@@ -238,7 +248,7 @@ const DEX_ORDER = PUZZLES.map((_, i) => i).sort((a, b) => dexNum(PUZZLES[a]) - d
 const johtoUnlocked = () => !!captured[MEWTWO.id];
 const johtoVisible = () => johtoUnlocked() || testMode;
 // Togepi (#175) waits in the Kanto Dex and moves to Johto when it opens
-const regionOf = p => { if (p.shop) return "boutique"; if (p.no === "OBJ") return "kanto"; const n = dexNum(p); return n > 386 ? "sinnoh" : n > 251 ? "hoenn" : n > 151 && (p.id !== "togepi" || johtoUnlocked()) ? "johto" : "kanto"; };
+const regionOf = p => { if (p.shop) return "boutique"; if (p.retro) return "retro"; if (p.arena) return "arene"; if (p.no === "OBJ") return "kanto"; const n = dexNum(p); return n > 386 ? "sinnoh" : n > 251 ? "hoenn" : n > 151 && (p.id !== "togepi" || johtoUnlocked()) ? "johto" : "kanto"; };
 // Hoenn (n° 252 à 386) opens once Celebi, the last Pokémon of Johto, is captured
 const CELEBI = PUZZLES.find(p => p.legend === "celebi");
 const hoennUnlocked = () => !!captured[CELEBI.id];
@@ -248,8 +258,8 @@ const DEOXYS = PUZZLES.find(p => p.legend === "deoxys");
 const sinnohUnlocked = () => !!captured[DEOXYS.id];
 const sinnohVisible = () => sinnohUnlocked() || testMode;
 let region = store.get("region", "kanto");
-const curRegion = () => region === "boutique" ? "boutique" : region === "sinnoh" && sinnohVisible() ? "sinnoh" : region === "hoenn" && hoennVisible() ? "hoenn" : region === "johto" && johtoVisible() ? "johto" : "kanto";
-function setRegion(r){ region = r; store.set("region", r); if (r === "johto") store.set("johtoSeen", true); if (r === "hoenn") store.set("hoennSeen", true); if (r === "sinnoh") store.set("sinnohSeen", true); if (r === "boutique") store.set("boutiqueSeen", true); renderList(); }
+const curRegion = () => region === "boutique" || region === "retro" || region === "arene" ? region : region === "sinnoh" && sinnohVisible() ? "sinnoh" : region === "hoenn" && hoennVisible() ? "hoenn" : region === "johto" && johtoVisible() ? "johto" : "kanto";
+function setRegion(r){ region = r; store.set("region", r); if (r === "johto") store.set("johtoSeen", true); if (r === "hoenn") store.set("hoennSeen", true); if (r === "sinnoh") store.set("sinnohSeen", true); if (r === "boutique" || r === "retro" || r === "arene") store.set(r + "Seen", true); renderList(); }
 
 function sinnohMsg(){
   const n = sinnohCount(), out = [], pick = l => PUZZLES.filter(p => p.legend === l);
@@ -263,6 +273,23 @@ function sinnohMsg(){
   return out.join("<br>");
 }
 
+function retroMsg(){
+  const n = retroCount(), out = [`Le Pokédex <b>rétro</b> : les ${RETRO_TOTAL} Pokémon de Kanto en deux tons, ouverts dès le début (${n}/${RETRO_TOTAL}). Les noms se révèlent une fois la grille résolue.`];
+  const mn = PUZZLES.find(p => p.legend === "missingno");
+  if (n < RETRO_TOTAL) out.push(`Termine-les tous : quelque chose se cache derrière le dernier.`);
+  else if (!captured[mn.id]) out.push(`Un bug brille dans le Dex : <b>MISSINGNO</b> est apparu !`);
+  return out.join("<br>");
+}
+function areneMsg(){
+  const out = ["Bienvenue à l'<b>Arène</b> ! Chaque badge est un picross. Il s'ouvre en capturant des Pokémon de sa région : un badge tous les huitièmes."];
+  const done = PUZZLES.filter(p => p.arena && captured[p.id]).length;
+  for (const reg of Object.keys(REGION_NAME)){
+    const total = arenaTotal(reg), n = PUZZLES.filter(q => !q.legend && !sideDex(q) && captured[q.id] && regionOf(q) === reg).length;
+    if (reg === "kanto" || n || reg === "johto" && johtoVisible() || reg === "hoenn" && hoennVisible() || reg === "sinnoh" && sinnohVisible())
+      out.push(`${REGION_NAME[reg]} : <b>${n}/${total}</b> captures, ${PUZZLES.filter(p => p.arena === reg && captured[p.id]).length}/8 badges`);
+  }
+  return out.join("<br>");
+}
 function boutiqueMsg(){
   const got = PUZZLES.filter(p => p.shop && captured[p.id]).length, all = PUZZLES.filter(p => p.shop).length;
   const out = [`Bienvenue à la <b>Boutique</b> ! Chaque grille est un objet à obtenir (${got}/${all}), sans condition.`];
@@ -309,7 +336,7 @@ function dogRunsAway(p){
 const sizeOf = p => p.art[0].length + "x" + p.art.length;
 const bySize = (a, b) => { const [aw, ah] = a.split("x").map(Number), [bw, bh] = b.split("x").map(Number); return aw*ah - bw*bh; };
 const sizesOf = r => [...new Set(PUZZLES.filter(p => regionOf(p) === r).map(sizeOf))].sort(bySize);
-const wildPool = (size, r = curRegion()) => PUZZLES.filter(p => !p.legend && !p.shop && !captured[p.id] && sizeOf(p) === size && regionOf(p) === r);
+const wildPool = (size, r = curRegion()) => PUZZLES.filter(p => !p.legend && !sideDex(p) && !captured[p.id] && sizeOf(p) === size && regionOf(p) === r);
 const encKey = (size, r = curRegion()) => r === "kanto" ? size : r + ":" + size;   // Kanto keeps the old keys
 function currentEncounter(size, r = curRegion()){
   const k = encKey(size, r), id = encounters[k], p = id && PUZZLES.find(q => q.id === id);
@@ -318,7 +345,7 @@ function currentEncounter(size, r = curRegion()){
   return null;
 }
 const inPlay = p => !!progress[p.id] || Object.values(encounters).includes(p.id);
-const isWild = p => !p.legend && !p.shop && !captured[p.id];   // still hidden in the grass
+const isWild = p => !p.legend && !sideDex(p) && !captured[p.id];   // still hidden in the grass
 function encounter(size){
   let p = currentEncounter(size);
   if (!p){
@@ -396,7 +423,11 @@ function renderList(){
   $("tabs").hidden = false; $("tabJohto").hidden = !johtoVisible(); $("tabHoenn").hidden = !hoennVisible(); $("tabSinnoh").hidden = !sinnohVisible();
   $("tabSinnoh").setAttribute("aria-selected", r === "sinnoh"); $("tabSinnoh").classList.toggle("new", !store.get("sinnohSeen", false) && r !== "sinnoh");
   $("dexView").classList.toggle("sinnoh", r === "sinnoh");
-  document.querySelector(".grass").hidden = r === "boutique";
+  document.querySelector(".grass").hidden = r === "boutique" || r === "retro" || r === "arene";
+  for (const t of ["retro", "arene"]){
+    const id = "tab" + t[0].toUpperCase() + t.slice(1);
+    $(id).setAttribute("aria-selected", r === t); $(id).classList.toggle("new", !store.get(t + "Seen", false) && r !== t); $("dexView").classList.toggle(t, r === t);
+  }
   $("tabBoutique").setAttribute("aria-selected", r === "boutique"); $("tabBoutique").classList.toggle("new", !store.get("boutiqueSeen", false) && r !== "boutique");
   $("dexView").classList.toggle("boutique", r === "boutique");
   $("tabKanto").setAttribute("aria-selected", r === "kanto"); $("tabJohto").setAttribute("aria-selected", r === "johto"); $("tabHoenn").setAttribute("aria-selected", r === "hoenn");
@@ -407,10 +438,18 @@ function renderList(){
     const got = captured[p.id];
     const b = document.createElement("button");
     b.className = "entry" + (p.legend ? " legend" : ""); b.type = "button";
-    b.innerHTML = `<span class="no">${p.shop ? "OBJ" : p.no === "OBJ" && !got ? "#???" : p.no === "OBJ" ? "OBJ" : "#"+p.no}</span>`;
+    b.innerHTML = `<span class="no">${p.arena ? "BADGE" : p.shop ? "OBJ" : p.no === "OBJ" && !got ? "#???" : p.no === "OBJ" ? "OBJ" : "#"+p.no}</span>`;
     if (isLocked(p) && !testMode){
       b.classList.add("locked");
       const cv = document.createElement("canvas"); drawArt(cv, LOCK, 60); b.appendChild(cv);
+      if (p.arena || p.legend === "missingno"){   // badge pas encore gagné, ou glitch caché
+        const need = p.arena ? arenaNeed(p) : RETRO_TOTAL, have = p.arena ? Math.min(arenaCount(p), need) : retroCount();
+        b.insertAdjacentHTML("beforeend", `<span class="nm">${p.arena ? p.name : "???"}</span><span class="meta">${have}/${need}${p.arena ? " " + REGION_NAME[p.arena] : " rétro"}</span>`);
+        b.setAttribute("aria-label", p.arena ? `${p.name}, pas encore gagné : ${have} sur ${need} captures` : "Pokémon caché, pas encore apparu");
+        b.onclick = () => { blip([196, 147], "square", .08, .05); $("dexMsg").hidden = false;
+          $("dexMsg").innerHTML = p.arena ? `Il faut <b>${need}</b> Pokémon capturés à ${REGION_NAME[p.arena]} pour ce badge (tu en as ${have}).` : retroMsg(); };
+        list.appendChild(b); return;
+      }
       const mew = p.legend === "mewtwo", hl = isHoennLegend(p), sl = isSinnohLegend(p), fab = p.legend === "mew" || p.legend === "celebi" || p.legend === "jirachi" || p.legend === "deoxys" || p.legend === "manaphy" || p.legend === "darkrai" || p.legend === "shaymin" || p.legend === "arceus", jl = isJohtoLegend(p) || hl || sl;
       const hc = (n) => `${Math.min(hoennCount(), hoennAt(n))}/${hoennAt(n)} à Hoenn`;
       const jmeta = !jl ? "" : sl ? sinnohMeta(p) : hl ? (p.legend === "regi" ? hc(REGI_AT) : p.legend === "lati" ? (latisAwake() ? "rôde à Hoenn" : hc(LATI_AT))
@@ -449,7 +488,7 @@ function renderList(){
     }
     if (got){ const cv = document.createElement("canvas"); drawArt(cv, p, 60, got.shiny); b.appendChild(cv); if (got.shiny) b.classList.add("shiny"); }
     else { const u = document.createElement("div"); u.className = "unk"; u.textContent = "?"; b.appendChild(u); }
-    b.insertAdjacentHTML("beforeend", `<span class="nm">${got || p.shop ? p.name : "???"}</span><span class="meta">${p.art[0].length}×${p.art.length}${got ? " · "+fmt(got.time) : progress[p.id] ? " · en cours" : ""}</span>`);
+    b.insertAdjacentHTML("beforeend", `<span class="nm">${got || p.shop || p.arena ? p.name : "???"}</span><span class="meta">${p.art[0].length}×${p.art.length}${got ? " · "+fmt(got.time) : progress[p.id] ? " · en cours" : ""}</span>`);
     b.setAttribute("aria-label", got ? `${p.name}, capturé en ${fmt(got.time)}` : isWild(p) ? `Pokémon sauvage en cours, grille ${p.art[0].length} par ${p.art.length}` : `N° ${p.no}, grille ${p.art[0].length} par ${p.art.length}, pas encore capturé`);
     if (!got && isWild(p)) b.querySelector(".no").textContent = "#???";
     if (got) b.dataset.id = p.id;
@@ -461,7 +500,7 @@ function renderList(){
   const shinies = shown.filter(idx => captured[PUZZLES[idx].id] && captured[PUZZLES[idx].id].shiny).length;
   $("capCount").textContent = `${n}/${shown.length}` + (shinies ? ` · ★${shinies}` : "");
   $("capBar").style.width = (100*n/shown.length)+"%";
-  const msg = r === "kanto" ? legendMsg() : r === "johto" ? johtoMsg() : r === "hoenn" ? hoennMsg() : r === "sinnoh" ? sinnohMsg() : boutiqueMsg();
+  const msg = r === "kanto" ? legendMsg() : r === "johto" ? johtoMsg() : r === "hoenn" ? hoennMsg() : r === "sinnoh" ? sinnohMsg() : r === "retro" ? retroMsg() : r === "arene" ? areneMsg() : boutiqueMsg();
   $("dexMsg").innerHTML = msg; $("dexMsg").hidden = !msg;
   renderSizes();
   $("testNote").hidden = !testMode;
@@ -496,7 +535,7 @@ function open(idx, saved){
   $("win").hidden = true; $("tools").hidden = false; $("gpad").classList.remove("off");
   if (window.scrollY > $("playView").getBoundingClientRect().top + window.scrollY) window.scrollTo(0, 0);
   const roaming = isDog(P) && !captured[P.id];
-  $("pNo").textContent = isWild(P) ? "???" : P.no; $("pName").textContent = captured[P.id] || roaming || P.shop ? P.name : "???";
+  $("pNo").textContent = isWild(P) ? "???" : P.no; $("pName").textContent = captured[P.id] || roaming || P.shop || P.arena ? P.name : "???";
   $("fleeBtn").hidden = !(isWild(P) || roaming); $("fleeBtn").textContent = "FUIR";
   build(); render(); applyZoom();
   if (roaming){
@@ -504,7 +543,7 @@ function open(idx, saved){
     setTimeout(() => blip([131, 196, 262, 196, 262, 330, 392, 523], "sawtooth", .09, .05), 150);
   }
   setMsg(roaming ? `<span class="hl">${P.name}</span> surgit des hautes herbes ! Termine la grille sans la quitter, sinon il s'enfuit.` : captured[P.id] ? `Déjà capturé. Rejoue pour battre <span class="hl">${fmt(captured[P.id].time)}</span>.`
-    : P.shop ? `Résous la grille pour obtenir <span class="hl">${P.name}</span>.`
+    : P.shop || P.arena ? `Résous la grille pour obtenir <span class="hl">${P.name}</span>.`
     : isWild(P) ? (shinyRun ? `<span class="hl">★ Quelque chose brille dans les hautes herbes !</span> ` : "") + (cells.some(v => v) ? `Le Pokémon sauvage t'attend toujours…` : `Un Pokémon sauvage apparaît ! Qui se cache dans cette grille ?`)
     : `Qui se cache dans cette grille ?`);
   startT = performance.now() - elapsed; clearInterval(timer); timer = setInterval(tick, 250); tick();
@@ -644,7 +683,11 @@ function win(){
   $("pName").textContent = P.name;
   SFX.win();
   $("tools").hidden = true; $("gpad").classList.add("off"); padHold = null; setMsg("");
-  $("winTitle").innerHTML = P.shop ? `Tu as obtenu : <span class="hl">${P.name}</span> !`
+  if (sideDex(P) && captured[P.id]) captured[P.id].side = true;
+  store.set("captured", captured);
+  $("winTitle").innerHTML = P.shop || P.arena ? `Tu as obtenu : <span class="hl">${P.name}</span> !`
+    : P.legend === "missingno" ? `<span class="hl">${P.name}</span> a surgi du glitch !`
+    : P.retro ? `<span class="hl">${P.name}</span> rejoint le Dex rétro !`
     : P.no === "OBJ" ? `Tu as trouvé une <span class="hl">${P.name}</span> !`
     : P.legend === "mew" || P.legend === "celebi" ? `<span class="hl">${P.name}</span>, Pokémon fabuleux, rejoint ton Dex !`
     : P.legend ? `<span class="hl">${P.name}</span>, Pokémon légendaire, rejoint ton Dex !`
@@ -656,7 +699,7 @@ function win(){
   const L = window.LudoScores;
   if (L && !testMode){
     const id = P.id, name = P.name, value = Math.round(elapsed) + HINT_MS * hints, same = () => myWin === winToken && P && P.id === id && solved;
-    L.submit("picross", "dex", Object.entries(captured).filter(([k, v]) => k !== "pokeball" && !v.test && !(PUZZLES.find(q => q.id === k) || {}).shop).length, false);
+    L.submit("picross", "dex", Object.entries(captured).filter(([k, v]) => k !== "pokeball" && !v.test && !sideDex(PUZZLES.find(q => q.id === k) || {})).length, false);
     if (L.joined()) L.submit("picross", "t:" + id, value, true).then(r => {
       crowns = null; if (!$("dexView").hidden) markCrowns();
       if (!r || !same()) return;
@@ -846,6 +889,8 @@ let titleTaps = 0, titleT = null;
 $("tabKanto").onclick = () => { if (curRegion() !== "kanto"){ SFX.nav(); setRegion("kanto"); } };
 $("tabJohto").onclick = () => { if (curRegion() !== "johto"){ SFX.nav(); setRegion("johto"); } };
 $("tabBoutique").onclick = () => { if (curRegion() !== "boutique"){ SFX.nav(); setRegion("boutique"); } };
+$("tabRetro").onclick = () => { if (curRegion() !== "retro"){ SFX.nav(); setRegion("retro"); } };
+$("tabArene").onclick = () => { if (curRegion() !== "arene"){ SFX.nav(); setRegion("arene"); } };
 $("tabSinnoh").onclick = () => { if (curRegion() !== "sinnoh"){ SFX.nav(); setRegion("sinnoh"); } };
 $("tabHoenn").onclick = () => { if (curRegion() !== "hoenn"){ SFX.nav(); setRegion("hoenn"); } };
 $("title").addEventListener("click", () => {

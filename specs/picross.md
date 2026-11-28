@@ -99,3 +99,8 @@ Pistes :
 ## Arène et Pokédex rétro : analyse du 28/11
 - **Rétro** : `reference-retro-kanto.gif` (783×882), fan art de **@emimonserrate** (nom écrit sur la planche ; lien et permission à demander). 12 colonnes × 13 rangées d'icônes **16×16** (agrandies ×3), 4 couleurs (noir, rouge, orange, blanc), les 151 de Kanto plus un dernier glitch (Missingno ?). Même méthode que le Minidex : 16×16 moins une rangée et une colonne, couleurs de la planche gardées (3 tons). Toutes les formes diffèrent de celles du Dex principal.
 - **Arène** : les images de badges de PokéAPI (`sprites/badges/1.png` à `32.png` : Kanto 1-8, Johto 9-16, Hoenn 17-24, Sinnoh 25-32, plus d'autres au-delà) sont en grand format ; essai de conversion automatique en 15×15 : [aperçu](https://claude.ai/artifact/9LU2V8JaFLrx4fK3hX99rw). Les formes simples (ronds, cœur, goutte) passent bien, les badges détaillés deviennent confus : prévoir une conversion avec contour et palette réduite, puis retouches à la main.
+
+## Rétro et Arène faits le 28/11
+- Validés par l'utilisateur le 28/11 ; l'artiste de la planche rétro n'a pas encore confirmé qu'il est d'accord (mentionné dans les crédits).
+- Noms français des badges à vérifier (Hoenn et Sinnoh en particulier).
+- Reste : 5e génération (icônes PokéAPI n° 494 à 649, même méthode que Sinnoh), chromatiques du Pokédex rétro (non prévus), badges des régions suivantes.
